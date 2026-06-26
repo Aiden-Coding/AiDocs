@@ -15,16 +15,14 @@
 
 ### 1. BIO、NIO、AIO 模型辨析
 
-$$
-\begin{array}{|l|l|l|l|}
-\hline
-\textbf{I/O 模型} & \textbf{第一阶段（数据准备）} & \textbf{第二阶段（数据拷贝）} & \textbf{适用场景} \\ \hline
-\textbf{BIO (Blocking I/O)} & \text{阻塞（挂起线程）} & \text{阻塞} & \text{低并发、连接数少且长连接} \\ \hline
-\textbf{NIO (Non-blocking I/O)} & \text{不阻塞（通过轮询状态返回）} & \text{阻塞} & \text{中高并发、弹性的连接调度} \\ \hline
-\textbf{I/O Multiplexing} & \text{阻塞在 select/poll/epoll 挂起} & \text{阻塞} & \text{超高并发（Netty 的核心底座）} \\ \hline
-\textbf{AIO (Asynchronous I/O)} & \text{不阻塞（由内核异步准备）} & \text{不阻塞（内核拷贝完成后回调）} & \text{高吞吐、操作系统支持深度相关的场景} \\ \hline
-\end{array}
-$$
+以下是 BIO、NIO、AIO 模型的对比。由于本站编译采用了 MDX 规范，这里使用标准表格表示：
+
+| I/O 模型 | 第一阶段（数据准备） | 第二阶段（数据拷贝） | 适用场景 |
+| :--- | :--- | :--- | :--- |
+| **BIO (Blocking I/O)** | 阻塞（挂起线程） | 阻塞 | 低并发、连接数少且长连接 |
+| **BIO (Non-blocking I/O)** | 不阻塞（通过轮询状态返回） | 阻塞 | 中高并发、弹性的连接调度 |
+| **I/O Multiplexing** | 阻塞在 select/poll/epoll 挂起 | 阻塞 | 超高并发（Netty 的核心底座） |
+| **AIO (Asynchronous I/O)** | 不阻塞（由内核异步准备） | 不阻塞（内核拷贝完成后回调） | 高吞吐、操作系统支持深度相关的场景 |
 
 ### 2. Linux 内核驱动：select、poll 与 epoll 深度对比
 
