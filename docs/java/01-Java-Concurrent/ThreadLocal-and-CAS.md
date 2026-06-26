@@ -61,7 +61,7 @@ static class Entry extends WeakReference {
 
 虽然 Key 被设计为弱引用，但 **Value 是强引用**。
 当 Key 变为 `null`（被 GC 回收）后，只要当前线程不结束，这条强引用链就会一直存在：
-$$\text{Thread} \rightarrow \text{ThreadLocalMap} \rightarrow \text{Entry} \rightarrow \text{Value}$$
+`Thread -> ThreadLocalMap -> Entry -> Value`
 由于 Value 无法被回收，而 Key 已经是 `null`，我们再也无法访问到这个 Value，这就导致了**内存泄漏**。
 
 **解决方案**：
