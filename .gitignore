@@ -21,6 +21,8 @@ Desktop.ini
 
 # mdBook build output
 book/
+mermaid-init.js
+mermaid.min.js
 
 # Log files
 *.log
