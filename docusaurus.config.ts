@@ -113,25 +113,54 @@ const config: Config = {
       style: 'dark',
       links: [
         {
-          title: '文档',
+          title: '核心技术栈',
           items: [
             {
-              label: '开始阅读',
-              to: '/docs/intro',
+              label: 'Java 体系',
+              to: '/docs/java/jvm',
+            },
+            {
+              label: '数据库原理',
+              to: '/docs/database/mysql',
+            },
+            {
+              label: '分布式架构',
+              to: '/docs/distributed/system',
+            },
+            {
+              label: 'Rust 探索',
+              to: '/docs/rust/concurrency',
             },
           ],
         },
         {
-          title: '更多',
+          title: '推荐资源',
           items: [
             {
-              label: 'GitHub',
-              href: 'https://github.com/Aiden-Coding/AiDocs',
+              label: 'Docusaurus',
+              href: 'https://docusaurus.io/',
+            },
+            {
+              label: 'React Native',
+              href: 'https://reactnative.dev/',
+            },
+          ],
+        },
+        {
+          title: '开源与社区',
+          items: [
+            {
+              label: 'GitHub 仓库',
+              href: 'https://github.com/dwx/AiDocs',
+            },
+            {
+              label: '提交 Issue',
+              href: 'https://github.com/dwx/AiDocs/issues',
             },
           ],
         },
       ],
-      copyright: `Copyright © ${new Date().getFullYear()} AiDocs. Built with Docusaurus.`,
+      copyright: `Copyright © ${new Date().getFullYear()} AiDocs 架构知识库. 基于 Docusaurus 驱动.`,
     },
     prism: {
       theme: prismThemes.github,
