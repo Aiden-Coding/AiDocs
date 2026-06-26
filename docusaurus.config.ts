@@ -117,15 +117,15 @@ const config: Config = {
           items: [
             {
               label: 'Java 体系',
-              to: '/docs/java/jvm',
+              to: '/docs/java/jvm/memory-gc',
             },
             {
               label: '数据库原理',
-              to: '/docs/database/mysql',
+              to: '/docs/database/mysql/index-engine',
             },
             {
               label: '分布式架构',
-              to: '/docs/distributed/system',
+              to: '/docs/distributed/system/consensus',
             },
             {
               label: 'Rust 探索',
