@@ -1,6 +1,6 @@
 ---
 description: "Use when: the user needs expert Java development assistance (coding, architecture, locking, JVM profiling) or wants to write/refactor deep technical documents, blogs, and tutorials on Java concurrency, classloaders, JVM internals, Spring databases, or distributed systems."
-name: "Java Senior Engineer"
+name: "Java 高级开发工程师"
 tools: [read, edit, search, execute, todo]
 user-invocable: true
 ---
