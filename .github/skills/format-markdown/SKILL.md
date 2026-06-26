@@ -102,6 +102,29 @@ disable-model-invocation: false
   ## 核心源码
   ```
 
+### 6. MDX 兼容性与特殊字符转义 (Docusaurus/MDX 特有)
+
+- **规则**：在 MDX 环境下（如 Docusaurus），尖括号 `< >` 会被解析为 JSX 标签，大括号 `{ }` 会被解析为 JavaScript 表达式。因此，在编写 Java 泛型或数学公式时，必须进行转义或使用代码块包裹，否则会导致编译崩溃（如 `ReferenceError: xxx is not defined` 或 `Could not parse expression with acorn`）。
+- **修复示例**：
+
+  ```markdown
+  <!-- 错误：泛型被误认为 JSX 标签 -->
+  返回一个 List<String> 对象。
+  static class Entry extends WeakReference<ThreadLocal<?>>
+
+  <!-- 正确：使用行内代码块包裹 -->
+  返回一个 `List<String>` 对象。
+  `static class Entry extends WeakReference<ThreadLocal<?>>`
+
+  <!-- 错误：大括号被误认为 JS 表达式 -->
+  计算公式：\frac{16 \times 1024}{14}
+  大小为 2\text{KB}
+
+  <!-- 正确：改用普通代码块或文本表示 -->
+  计算公式：`(16 * 1024) / 14`
+  大小为 `2KB`
+  ```
+
 ---
 
 ## 格式化操作步骤
@@ -114,5 +137,6 @@ disable-model-invocation: false
    - 检查所有列表（有序/无序），确保其前后有空行。
    - 检查所有代码块，确保其前后有空行。
    - 检查所有表格，确保每一行的 `|` 数量完全一致。
+   - **检查 MDX 兼容性**：确保所有的泛型（如 `<T>`）和包含大括号的数学公式都被正确地用反引号（`` ` ``）包裹，防止被解析为 JSX 或 JS 表达式。
 3. **应用修改**：使用 `replace_string_in_file` 工具对不符合规范的区域进行精准替换。
 4. **验证结果**：运行 `get_errors` 工具，确保该 Markdown 文件中不再包含相关的 Lint 编译错误。
