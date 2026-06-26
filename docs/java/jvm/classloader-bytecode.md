@@ -84,8 +84,8 @@ graph TD
   graph TD
       A[Common ClassLoader] --> B[Catalina ClassLoader 容器私有]
       A --> C[Shared ClassLoader 共享]
-      C --> D[WebApp ClassLoader 应用1]
-      C --> E[WebApp ClassLoader 应用2]
+      C --> D[WebApp ClassLoader 应用 1]
+      C --> E[WebApp ClassLoader 应用 2]
   ```
 
   `WebAppClassLoader` 优先加载自己目录下的类（`/WEB-INF/classes`），如果找不到才委派给父加载器，这直接违背了双亲委派模型中“优先委派给父加载器”的原则。

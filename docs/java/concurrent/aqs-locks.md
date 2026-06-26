@@ -203,18 +203,18 @@ protected final boolean tryRelease(int releases) {
 | 锁状态 | 25bit | 31bit | 1bit (unused) | 4bit (分代年龄) | 1bit (是否偏向) | 2bit (锁标志位) |
 | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
 | **无锁** | 未使用 | HashCode | 0 | 分代年龄 | 0 | 01 |
-| **偏向锁** | 线程ID | Epoch | 0 | 分代年龄 | 1 | 01 |
-| **轻量级锁** | 指向栈中锁记录 (Lock Record) 的指针 | 指向栈中锁记录 (Lock Record) 的指针 | 指向栈中锁记录 (Lock Record) 的指针 | 指向栈中锁记录 (Lock Record) 的指针 | 指向栈中锁记录 (Lock Record) 的指针 | 00 |
-| **重量级锁** | 指向互斥量 (Monitor) 的指针 | 指向互斥量 (Monitor) 的指针 | 指向互斥量 (Monitor) 的指针 | 指向互斥量 (Monitor) 的指针 | 指向互斥量 (Monitor) 的指针 | 10 |
-| **GC标记** | 空 | 空 | 空 | 空 | 空 | 11 |
+| **偏向锁** | 线程 ID | Epoch | 0 | 分代年龄 | 1 | 01 |
+| **轻量级锁** | 指向栈中锁记录（Lock Record）的指针 | 指向栈中锁记录（Lock Record）的指针 | 指向栈中锁记录（Lock Record）的指针 | 指向栈中锁记录（Lock Record）的指针 | 指向栈中锁记录（Lock Record）的指针 | 00 |
+| **重量级锁** | 指向互斥量（Monitor）的指针 | 指向互斥量（Monitor）的指针 | 指向互斥量（Monitor）的指针 | 指向互斥量（Monitor）的指针 | 指向互斥量（Monitor）的指针 | 10 |
+| **GC 标记** | 空 | 空 | 空 | 空 | 空 | 11 |
 
 ### 2. 锁升级链路
 
 ```mermaid
 graph TD
     A[无锁状态] -->|单线程访问| B[偏向锁]
-    B -->|多线程轻度竞争/CAS失败| C[轻量级锁]
-    C -->|自适应自旋失败/重度竞争| D[重量级锁]
+    B -->|多线程轻度竞争 / CAS 失败| C[轻量级锁]
+    C -->|自适应自旋失败 / 重度竞争| D[重量级锁]
 ```
 
 **无锁 -> 偏向锁**：

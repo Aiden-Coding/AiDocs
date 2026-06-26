@@ -85,7 +85,7 @@ JDK 自带了许多强大的命令行工具，位于 `bin` 目录下：
 | 工具名称 | 主要功能 | 常用命令示例 |
 | :--- | :--- | :--- |
 | **`jps`** | 查看正在运行的 Java 进程 PID 及主类名 | `jps -l` |
-| **`jstat`** | 监视 JVM 内存、垃圾回收（GC）运行状态 | `jstat -gcutil PID 1000 10` (每秒打印一次，共10次) |
+| **`jstat`** | 监视 JVM 内存、垃圾回收（GC）运行状态 | `jstat -gcutil PID 1000 10` （每秒打印一次，共 10 次） |
 | **`jinfo`** | 查看和动态修改 JVM 配置参数 | `jinfo -flag MaxHeapSize PID` |
 | **`jmap`** | 导出堆内存快照（Heap Dump）或查看内存占用 | `jmap -dump:format=b,file=heap.hprof PID` |
 | **`jstack`** | 导出线程栈，排查死锁和 CPU 飙高 | `jstack -l PID` |
@@ -100,7 +100,7 @@ JDK 自带了许多强大的命令行工具，位于 `bin` 目录下：
 graph TD
     A[启动 Arthas] --> B[Attach 到目标 Java 进程]
     B --> C{选择诊断命令}
-    C -->|查看CPU/内存| D[dashboard / thread]
+    C -->|查看 CPU / 内存| D[dashboard / thread]
     C -->|反编译代码| E[jad]
     C -->|监控方法耗时| F[trace]
     C -->|查看入参出参| G[watch]
