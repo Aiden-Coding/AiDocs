@@ -9,21 +9,14 @@ Spring 声明式事务（`@Transactional`）是开发中最常用的功能之一
 事务传播行为定义了当一个事务方法被另一个事务方法调用时，该如何运行。Spring 在 `TransactionDefinition` 中定义了 7 种传播行为：
 
 | 传播行为名称 | 含义说明 | 常用场景 |
-| :--
-
- **`REQUIRED`（默认）*
-
- **`REQUIRES_NEW`*
-
- **`NESTED`*
-
- **`SUPPORTS`*
-
- **`NOT_SUPPORTED`*
-
- **`MANDATORY`*
-
- **`NEVER`** | 以非事务方式执行，如果当前存在事务，则抛出异常。 | 严格禁止事务的场景。 |
+| :--- | :--- | :--- |
+| **`REQUIRED`（默认）** | 如果当前存在事务，则加入该事务；如果当前没有事务，则创建一个新的事务。 | 绝大多数业务场景，如订单创建、支付等。 |
+| **`REQUIRES_NEW`** | 创建一个新的事务，如果当前存在事务，则将当前事务挂起。新事务与外部事务相互独立。 | 独立记录日志、发送短信通知等不影响主业务流程的场景。 |
+| **`NESTED`** | 如果当前存在事务，则在嵌套事务内执行；如果当前没有事务，则执行与 `REQUIRED` 类似的操作。 | 外部事务失败需要回滚全部，但内部子事务失败可以单独回滚，不影响外部事务。 |
+| **`SUPPORTS`** | 如果当前存在事务，则加入该事务；如果当前没有事务，则以非事务方式执行。 | 查询操作，既可以单独运行，也可以在事务中运行。 |
+| **`NOT_SUPPORTED`** | 以非事务方式执行，如果当前存在事务，则将当前事务挂起。 | 耗时较长的非数据库操作，如调用第三方接口，避免长时间占用数据库连接。 |
+| **`MANDATORY`** | 如果当前存在事务，则加入该事务；如果当前没有事务，则抛出异常。 | 必须在已有事务中运行的子方法。 |
+| **`NEVER`** | 以非事务方式执行，如果当前存在事务，则抛出异常。 | 严格禁止事务的场景。 |
 
 ### `REQUIRES_NEW` 与 `NESTED` 的核心区别
 
@@ -41,62 +34,61 @@ Spring 声明式事务（`@Transactional`）是开发中最常用的功能之一
 
 在高级面试中，要求列举并解释 `@Transactional` 失效的场景是高频考点。以下是经过系统整理的 12 种失效场景及底层原理：
 
- **现象**：同一个类中，非事务方法 A 调用事务方法 B，B 的事务失效
+1. **自身调用（Self-Invocation）**：
+   - **现象**：同一个类中，非事务方法 A 调用事务方法 B，B 的事务失效。
+   - **原理**：Spring 事务是基于 AOP 代理实现的。当我们在外部调用 `service.B()` 时，调用的是代理对象，代理对象会开启事务。而方法 A 调用方法 B 是通过 `this.B()` 调用的，绕过了代理对象，因此事务不会生效。
+   - **解决办法**：
+     - 将方法 B 拆分到另一个 Service 类中。
+     - 在类中注入自身代理对象（使用 `@Autowired` 注入自己，或使用 `AopContext.currentProxy()`）。
+       ```java
+       ((MyService) AopContext.currentProxy()).B(); // 需配置 @EnableAspectJAutoProxy(exposeProxy = true)
+       ```
 
-**原理**：Spring 事务是基于 AOP 代理实现的。当我们在外部调用 `service.B()` 时，调用的是代理对象，代理对象会开启事务。而方法 A 调用方法 B 是通过 `this.B()` 调用的，绕过了代理对象，因此事务不会生效
+2. **方法修饰符不是 `public`**：
+   - **现象**：在 `private`、`protected` 或 `default` 方法上加 `@Transactional`，事务失效。
+   - **原理**：Spring 事务拦截器 `TransactionInterceptor` 在解析方法时，默认会检查方法的修饰符。如果不是 `public`，则直接忽略，不进行事务增强。
 
-**解决办法**：
+3. **异常被吞掉（`try-catch` 消化）**：
+   - **现象**：方法内部抛出异常，但被 `try-catch` 捕获且没有重新抛出，事务不回滚。
+   - **原理**：Spring 只有在捕获到未处理的异常时，才会触发回滚逻辑。如果异常在方法内部被捕获并消化了，Spring 认为方法执行成功，照常提交事务。
 
-
-
-
-    ```java
-     ((MyService) AopContext.currentProxy()).B(); // 需配置 @EnableAspectJAutoProxy(exposeProxy = true)
+4. **抛出受检异常（Checked Exception）**：
+   - **现象**：方法抛出 `IOException` 或 `SQLException`，事务不回滚。
+   - **原理**：Spring 默认只在遇到 `RuntimeException`（运行时异常）和 `Error` 时才会回滚。对于受检异常（Checked Exception），默认不回滚。
+   - **解决办法**：显式指定回滚异常类型：
+     ```java
+     @Transactional(rollbackFor = Exception.class)
      ```
 
- **现象**：在 `private`、`protected` 或 `default` 方法上加 `@Transactional`，事务失效
+5. **数据库引擎不支持事务**：
+   - **现象**：MySQL 数据库表使用的是 **MyISAM** 引擎，事务失效。
+   - **原理**：Spring 事务最终是依赖数据库本身的事务支持。MyISAM 引擎本身不支持事务，Spring 即使发送了 `commit` 或 `rollback` 指令，数据库也无法执行。
+   - **解决办法**：将表引擎修改为 **InnoDB**。
 
-**原理**：Spring 事务拦截器 `TransactionInterceptor` 在解析方法时，默认会检查方法的修饰符。如果不是 `public`，则直接忽略，不进行事务增强。
+6. **错误的事务传播行为**：
+   - **现象**：配置了 `NOT_SUPPORTED` 或 `NEVER` 等不支持事务的传播行为，导致事务未按预期运行。
 
- **现象**：方法内部抛出异常，但被 `try-catch` 捕获且没有重新抛出，事务不回滚
+7. **Bean 没有被 Spring 容器管理**：
+   - **现象**：类上没有加 `@Service`、`@Component` 等注解，或者没有注入到 Spring 容器中。
+   - **原理**：Spring 无法为非 Spring Bean 生成 AOP 代理，自然无法进行事务管理。
 
-**原理**：Spring 只有在捕获到未处理的异常时，才会触发回滚逻辑。如果异常在方法内部被捕获并消化了，Spring 认为方法执行成功，照常提交事务。
+8. **方法被 `final` 或 `static` 修饰**：
+   - **现象**：方法加了 `final` 或 `static`，事务失效。
+   - **原理**：CGLIB 动态代理是通过生成子类并重写父类方法来实现的。被 `final` 修饰的方法无法被子类重写，被 `static` 修饰的方法属于类本身，无法被代理，因此事务失效。
 
- **现象**：方法抛出 `IOException` 或 `SQLException`，事务不回滚
+9. **多线程调用**：
+   - **现象**：在事务方法 A 内部，启动了一个新线程去执行数据库操作，新线程中的操作不受 A 的事务控制。
+   - **原理**：Spring 的事务管理器（如 `DataSourceTransactionManager`）是通过 `ThreadLocal` 将数据库连接（Connection）与当前线程绑定的。多线程下，新线程获取到的是不同的数据库连接，因此无法共享同一个事务。
 
-**原理**：Spring 默认只在遇到 `RuntimeException`（运行时异常）和 `Error` 时才会回滚。对于受检异常（Checked Exception），默认不回滚
+10. **父子方法异常处理不当（`UnexpectedRollbackException`）**：
+    - **现象**：在使用 `REQUIRED` 传播行为时，子方法抛出异常，父方法 `try-catch` 了该异常，期望父方法不回滚，但最终整个事务依然回滚，并抛出 `UnexpectedRollbackException`。
+    - **原理**：由于传播行为是 `REQUIRED`，父子方法共享同一个事务。子方法抛出异常时，已将当前事务标记为 `rollback-only`。即使父方法捕获了异常，在提交事务时，Spring 发现事务已被标记为回滚，因此强制回滚整个事务。
 
-**解决办法**：显式指定回滚异常类型：
-  ```java
-  @Transactional(rollbackFor = Exception.class)
-  ```
+11. **异步调用（`@Async`）**：
+    - **现象**：在同一个类中，事务方法调用了异步方法，或者异步方法上加了 `@Transactional`。
+    - **原理**：与多线程调用类似，`@Async` 会启动新线程执行，导致 `ThreadLocal` 中的事务上下文丢失。
 
- **现象**：MySQL 数据库表使用的是 **MyISAM** 引擎，事务失效
+12. **未配置事务管理器**：
+    - **现象**：项目中没有配置 `PlatformTransactionManager`（在 Spring Boot 中通常会自动装配，但在传统 Spring 项目中需要手动配置）。
 
-**原理**：Spring 事务最终是依赖数据库本身的事务支持。MyISAM 引擎本身不支持事务，Spring 即使发送了 `commit` 或 `rollback` 指令，数据库也无法执行
-
-**解决办法**：将表引擎修改为 **InnoDB**。
-
- **现象**：配置了 `NOT_SUPPORTED` 或 `NEVER` 等不支持事务的传播行为，导致事务未按预期运行。
-
- **现象**：类上没有加 `@Service`、`@Component` 等注解，或者没有注入到 Spring 容器中
-
-**原理**：Spring 无法为非 Spring Bean 生成 AOP 代理，自然无法进行事务管理。
-
- **现象**：方法加了 `final` 或 `static`，事务失效
-
-**原理**：CGLIB 动态代理是通过生成子类并重写父类方法来实现的。被 `final` 修饰的方法无法被子类重写，被 `static` 修饰的方法属于类本身，无法被代理，因此事务失效。
-
- **现象**：在事务方法 A 内部，启动了一个新线程去执行数据库操作，新线程中的操作不受 A 的事务控制
-
-**原理**：Spring 的事务管理器（如 `DataSourceTransactionManager`）是通过 `ThreadLocal` 将数据库连接（Connection）与当前线程绑定的。多线程下，新线程获取到的是不同的数据库连接，因此无法共享同一个事务。
-
- **现象**：在使用 `REQUIRED` 传播行为时，子方法抛出异常，父方法 `try-catch` 了该异常，期望父方法不回滚，但最终整个事务依然回滚，并抛出 `UnexpectedRollbackException`
-
-**原理**：由于传播行为是 `REQUIRED`，父子方法共享同一个事务。子方法抛出异常时，已将当前事务标记为 `rollback-only`。即使父方法捕获了异常，在提交事务时，Spring 发现事务已被标记为回滚，因此强制回滚整个事务。
-
- **现象**：在同一个类中，事务方法调用了异步方法，或者异步方法上加了 `@Transactional`
-
-**原理**：与多线程调用类似，`@Async` 会启动新线程执行，导致 `ThreadLocal` 中的事务上下文丢失。
-
- **现象**：项目中没有配置 `PlatformTransactionManager`（在 Spring Boot 中通常会自动装配，但在传统 Spring 项目中需要手动配置）。
+这些场景的总结是：Spring 事务的失效往往源于对 AOP 代理机制、方法修饰符、异常处理、数据库引擎和事务传播行为的误解或误用。理解这些场景的原理，有助于我们更好地设计和实现事务管理策略。
