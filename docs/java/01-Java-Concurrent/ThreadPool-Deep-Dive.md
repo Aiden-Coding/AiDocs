@@ -16,7 +16,7 @@ public ThreadPoolExecutor(
     int maximumPoolSize,            // 最大线程数
     long keepAliveTime,             // 非核心空闲线程存活时间
     TimeUnit unit,                  // 存活时间单位
-    BlockingQueue<Runnable> workQueue, // 任务队列
+    BlockingQueue workQueue, // 任务队列
     ThreadFactory threadFactory,    // 线程工厂
     RejectedExecutionHandler handler // 拒绝策略
 ) {

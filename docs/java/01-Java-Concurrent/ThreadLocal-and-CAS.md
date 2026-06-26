@@ -41,11 +41,11 @@ public class Thread implements Runnable {
 `ThreadLocalMap` 的内部类 `Entry` 继承了 `WeakReference`：
 
 ```java
-static class Entry extends WeakReference<ThreadLocal<?>> {
+static class Entry extends WeakReference<ThreadLocal> {
     /** The value associated with this ThreadLocal. */
     Object value;
 
-    Entry(ThreadLocal<?> k, Object v) {
+    Entry(ThreadLocal k, Object v) {
         super(k); // Key 被包装为弱引用
         value = v;
     }
@@ -69,7 +69,7 @@ $$\text{Thread} \rightarrow \text{ThreadLocalMap} \rightarrow \text{Entry} \righ
 - **手动调用 `remove()`**：在使用完 `ThreadLocal` 变量后，必须显式调用其 `remove()` 方法，清除 `ThreadLocalMap` 中对应的 Entry。
 
   ```java
-  private static final ThreadLocal<UserContext> userHolder = new ThreadLocal<>();
+  private static final ThreadLocal userHolder = new ThreadLocal();
 
   try {
       userHolder.set(currentUser);
@@ -133,15 +133,15 @@ Java 提供了 `AtomicStampedReference` 来解决 ABA 问题：
 
 ```java
 // 核心 Entry 结构
-private static class Pair<T> {
-    final T reference;
+private static class Pair {
+    final Object reference;
     final int stamp; // 版本戳
-    private Pair(T reference, int stamp) {
+    private Pair(Object reference, int stamp) {
         this.reference = reference;
         this.stamp = stamp;
     }
-    static <T> Pair<T> of(T reference, int stamp) {
-        return new Pair<T>(reference, stamp);
+    static Pair of(Object reference, int stamp) {
+        return new Pair(reference, stamp);
     }
 }
 ```

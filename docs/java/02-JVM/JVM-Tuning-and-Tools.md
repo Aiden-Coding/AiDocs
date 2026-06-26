@@ -18,7 +18,7 @@
    ```
 
 2. **定位高 CPU 线程**：
-   使用 `top -Hp <PID>` 展示该进程下所有线程的 CPU 消耗情况，找出最耗 CPU 的线程 TID。
+   使用 `top -Hp PID` 展示该进程下所有线程的 CPU 消耗情况，找出最耗 CPU 的线程 TID。
 
    ```bash
    top -Hp 12345
@@ -32,7 +32,7 @@
    ```
 
 4. **打印线程栈**：
-   使用 `jstack <PID>` 导出线程栈，并通过 `grep` 过滤出对应的十六进制线程 ID。
+   使用 `jstack PID` 导出线程栈，并通过 `grep` 过滤出对应的十六进制线程 ID。
 
    ```bash
    jstack 12345 | grep -A 20 0x303a
@@ -55,7 +55,7 @@
    - **主动导出**：
 
      ```bash
-     jmap -dump:format=b,file=/tmp/heapdump.hprof <PID>
+     jmap -dump:format=b,file=/tmp/heapdump.hprof PID
      ```
 
    - **被动导出（推荐，生产环境必备参数）**：
@@ -85,10 +85,10 @@ JDK 自带了许多强大的命令行工具，位于 `bin` 目录下：
 | 工具名称 | 主要功能 | 常用命令示例 |
 | :--- | :--- | :--- |
 | **`jps`** | 查看正在运行的 Java 进程 PID 及主类名 | `jps -l` |
-| **`jstat`** | 监视 JVM 内存、垃圾回收（GC）运行状态 | `jstat -gcutil <PID> 1000 10` (每秒打印一次，共10次) |
-| **`jinfo`** | 查看和动态修改 JVM 配置参数 | `jinfo -flag MaxHeapSize <PID>` |
-| **`jmap`** | 导出堆内存快照（Heap Dump）或查看内存占用 | `jmap -dump:format=b,file=heap.hprof <PID>` |
-| **`jstack`** | 导出线程栈，排查死锁和 CPU 飙高 | `jstack -l <PID>` |
+| **`jstat`** | 监视 JVM 内存、垃圾回收（GC）运行状态 | `jstat -gcutil PID 1000 10` (每秒打印一次，共10次) |
+| **`jinfo`** | 查看和动态修改 JVM 配置参数 | `jinfo -flag MaxHeapSize PID` |
+| **`jmap`** | 导出堆内存快照（Heap Dump）或查看内存占用 | `jmap -dump:format=b,file=heap.hprof PID` |
+| **`jstack`** | 导出线程栈，排查死锁和 CPU 飙高 | `jstack -l PID` |
 
 ---
 
@@ -145,7 +145,7 @@ graph TD
 监控报警显示，某微服务接口平均响应时间从 50ms 飙升至 2000ms，CPU 使用率达到 90%。
 
 1. **观察 GC 状态**：
-   使用 `jstat -gcutil <PID> 1000` 观察，发现 **FGC（Full GC）** 计数每分钟增加 5 次，且每次 FGC 后，老年代（O）的内存占用几乎没有下降（保持在 85% 以上）。
+   使用 `jstat -gcutil PID 1000` 观察，发现 **FGC（Full GC）** 计数每分钟增加 5 次，且每次 FGC 后，老年代（O）的内存占用几乎没有下降（保持在 85% 以上）。
 2. **定位内存占用**：
    使用 Arthas 的 `dashboard` 观察，确认老年代内存已满。
 3. **导出并分析堆快照**：

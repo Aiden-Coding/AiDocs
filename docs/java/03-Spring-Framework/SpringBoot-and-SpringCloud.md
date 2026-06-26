@@ -47,10 +47,10 @@ public class AutoConfigurationImportSelector implements DeferredImportSelector, 
         AnnotationAttributes attributes = getAttributes(annotationMetadata);
         // 在 Spring Boot 2.7 之前，使用 SpringFactoriesLoader 加载 META-INF/spring.factories
         // 在 Spring Boot 2.7+ / 3.x 中，加载 META-INF/spring/org.springframework.boot.autoconfigure.AutoConfiguration.imports
-        List<String> configurations = getCandidateConfigurations(annotationMetadata, attributes);
+        List configurations = getCandidateConfigurations(annotationMetadata, attributes);
 
         configurations = removeDuplicates(configurations);
-        Set<String> exclusions = getExclusions(annotationMetadata, attributes);
+        Set exclusions = getExclusions(annotationMetadata, attributes);
         configurations.removeAll(exclusions);
 
         configurations = filter(configurations, argument);
