@@ -1,7 +1,6 @@
 [book]
 authors = ["dwx"]
 language = "zh-CN"
-multilingual = false
 src = "."
 title = "Java 高级开发工程师技术解析文档"
 
