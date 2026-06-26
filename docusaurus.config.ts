@@ -74,9 +74,33 @@ const config: Config = {
       items: [
         {
           type: 'docSidebar',
-          sidebarId: 'docsSidebar',
+          sidebarId: 'javaSidebar',
           position: 'left',
-          label: '文档',
+          label: 'Java',
+        },
+        {
+          type: 'docSidebar',
+          sidebarId: 'databaseSidebar',
+          position: 'left',
+          label: '数据库',
+        },
+        {
+          type: 'docSidebar',
+          sidebarId: 'cacheSidebar',
+          position: 'left',
+          label: '缓存',
+        },
+        {
+          type: 'docSidebar',
+          sidebarId: 'distributedSidebar',
+          position: 'left',
+          label: '分布式',
+        },
+        {
+          type: 'docSidebar',
+          sidebarId: 'rustSidebar',
+          position: 'left',
+          label: 'Rust',
         },
         {
           href: 'https://github.com/Aiden-Coding/AiDocs',
