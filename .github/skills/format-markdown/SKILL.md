@@ -1,6 +1,6 @@
 ---
 name: format-markdown
-description: 'Format and lint Markdown files to ensure compliance with standard rules (e.g., MD022, MD031, MD032, MD056). Use when: formatting markdown documents, fixing markdown lint errors, ensuring proper spacing around headings, lists, and code blocks, or correcting table column counts.'
+description: "Format and lint Markdown files to ensure compliance with standard markdownlint rules (e.g., MD022, MD031, MD032, MD056, MD026). Use when: formatting markdown documents, fixing markdown lint errors, ensuring proper spacing around headings, lists, and code blocks, correcting table column counts, or removing trailing punctuation from headings."
 argument-hint: '[file-path]'
 user-invocable: true
 disable-model-invocation: false
