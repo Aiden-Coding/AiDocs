@@ -10,11 +10,10 @@ AQS 是 Java 并发包（`java.util.concurrent`）的核心基石，像 `Reentra
 
 ### 1. AQS 的核心结构
 
-AQS 内部主要维护了两个部分
+AQS 内部主要维护了两个部分：
 
-**状态变量 `state`**：一个被 `volatile` 修饰的 `int` 类型变量，代表共享资源的状态。
-
-**CLH 队列**：一个 FIFO（先进先出）的双向队列，用于存放等待获取资源的线程。
+- **状态变量 `state`**：一个被 `volatile` 修饰的 `int` 类型变量，代表共享资源的状态。
+- **CLH 队列**：一个 FIFO（先进先出）的双向队列，用于存放等待获取资源的线程。
 
 ```mermaid
 graph LR
@@ -42,28 +41,21 @@ public abstract class AbstractQueuedSynchronizer extends AbstractOwnableSynchron
 CLH 队列中的每个线程都会被封装成一个 `Node` 节点。在 JDK 8 中，`Node` 的 `waitStatus` 决定了线程的等待状态：
 
 - **`CANCELLED` (1)**：表示线程获取锁的请求已经取消（由于超时或中断）
-
-**`SIGNAL` (-1)**：表示后继节点的线程处于等待状态，当前节点在释放锁或取消时，必须唤醒（`unpark`）其后继节点
-
-**`CONDITION` (-2)**：表示节点在等待队列中，节点线程等待在 `Condition` 上，当其他线程对 `Condition` 调用了 `signal()` 后，该节点会从等待队列转移到同步队列中
-
-**`PROPAGATE` (-3)**：共享模式下，释放锁的动作需要传播到其他节点
-
-**`0`**：新节点入队时的默认状态。
+- **`SIGNAL` (-1)**：表示后继节点的线程处于等待状态，当前节点在释放锁或取消时，必须唤醒（`unpark`）其后继节点
+- **`CONDITION` (-2)**：表示节点在等待队列中，节点线程等待在 `Condition` 上，当其他线程对 `Condition` 调用了 `signal()` 后，该节点会从等待队列转移到同步队列中
+- **`PROPAGATE` (-3)**：共享模式下，释放锁的动作需要传播到其他节点
+- **`0`**：新节点入队时的默认状态。
 
 > **注意**：在 JDK 9+ 中，AQS 进行了重构，引入了 `VarHandle`，并将 `Node` 拆分为了 `ExclusiveNode` 和 `SharedNode`，但其核心的 FIFO 双向链表和状态传播逻辑依然保持一致。
 
 ### 3. 独占模式与共享模式
 
-AQS 支持两种资源共享方式
+AQS 支持两种资源共享方式：
 
-**独占模式（Exclusive）**：每次只能有一个线程持有锁，如 `ReentrantLock`。
-
-- 需实现 `tryAcquire(int)` 和 `tryRelease(int)`
-
-**共享模式（Shared）**：多个线程可同时持有锁，如 `Semaphore`、`CountDownLatch`。
-
-- 需实现 `tryAcquireShared(int)` 和 `tryReleaseShared(int)`。
+- **独占模式（Exclusive）**：每次只能有一个线程持有锁，如 `ReentrantLock`。
+  - 需实现 `tryAcquire(int)` 和 `tryRelease(int)`
+- **共享模式（Shared）**：多个线程可同时持有锁，如 `Semaphore`、`CountDownLatch`。
+  - 需实现 `tryAcquireShared(int)` 和 `tryReleaseShared(int)`。
 
 ---
 
