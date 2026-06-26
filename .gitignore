@@ -19,6 +19,9 @@ ehthumbs.db
 Desktop.ini
 .DS_Store
 
+# mdBook build output
+book/
+
 # Log files
 *.log
 logs/
