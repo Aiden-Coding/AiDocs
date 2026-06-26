@@ -1,0 +1,376 @@
+<!DOCTYPE HTML>
+<html lang="zh-CN" class="light" dir="ltr">
+    <head>
+        <!-- Book generated using mdBook -->
+        <meta charset="UTF-8">
+        <title>Spring IoC 与 AOP 源码 - Java 高级开发工程师技术解析文档</title>
+
+
+        <!-- Custom HTML head -->
+        
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="theme-color" content="#ffffff">
+
+        <link rel="icon" href="../favicon.svg">
+        <link rel="shortcut icon" href="../favicon.png">
+        <link rel="stylesheet" href="../css/variables.css">
+        <link rel="stylesheet" href="../css/general.css">
+        <link rel="stylesheet" href="../css/chrome.css">
+        <link rel="stylesheet" href="../css/print.css" media="print">
+
+        <!-- Fonts -->
+        <link rel="stylesheet" href="../FontAwesome/css/font-awesome.css">
+        <link rel="stylesheet" href="../fonts/fonts.css">
+
+        <!-- Highlight.js Stylesheets -->
+        <link rel="stylesheet" href="../highlight.css">
+        <link rel="stylesheet" href="../tomorrow-night.css">
+        <link rel="stylesheet" href="../ayu-highlight.css">
+
+        <!-- Custom theme stylesheets -->
+
+    </head>
+    <body class="sidebar-visible no-js">
+    <div id="body-container">
+        <!-- Provide site root to javascript -->
+        <script>
+            var path_to_root = "../";
+            var default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? "navy" : "light";
+        </script>
+
+        <!-- Work around some values being stored in localStorage wrapped in quotes -->
+        <script>
+            try {
+                var theme = localStorage.getItem('mdbook-theme');
+                var sidebar = localStorage.getItem('mdbook-sidebar');
+
+                if (theme.startsWith('"') && theme.endsWith('"')) {
+                    localStorage.setItem('mdbook-theme', theme.slice(1, theme.length - 1));
+                }
+
+                if (sidebar.startsWith('"') && sidebar.endsWith('"')) {
+                    localStorage.setItem('mdbook-sidebar', sidebar.slice(1, sidebar.length - 1));
+                }
+            } catch (e) { }
+        </script>
+
+        <!-- Set the theme before any content is loaded, prevents flash -->
+        <script>
+            var theme;
+            try { theme = localStorage.getItem('mdbook-theme'); } catch(e) { }
+            if (theme === null || theme === undefined) { theme = default_theme; }
+            var html = document.querySelector('html');
+            html.classList.remove('light')
+            html.classList.add(theme);
+            var body = document.querySelector('body');
+            body.classList.remove('no-js')
+            body.classList.add('js');
+        </script>
+
+        <input type="checkbox" id="sidebar-toggle-anchor" class="hidden">
+
+        <!-- Hide / unhide sidebar before it is displayed -->
+        <script>
+            var body = document.querySelector('body');
+            var sidebar = null;
+            var sidebar_toggle = document.getElementById("sidebar-toggle-anchor");
+            if (document.body.clientWidth >= 1080) {
+                try { sidebar = localStorage.getItem('mdbook-sidebar'); } catch(e) { }
+                sidebar = sidebar || 'visible';
+            } else {
+                sidebar = 'hidden';
+            }
+            sidebar_toggle.checked = sidebar === 'visible';
+            body.classList.remove('sidebar-visible');
+            body.classList.add("sidebar-" + sidebar);
+        </script>
+
+        <nav id="sidebar" class="sidebar" aria-label="Table of contents">
+            <div class="sidebar-scrollbox">
+                <ol class="chapter"><li class="chapter-item expanded "><a href="../index.html"><strong aria-hidden="true">1.</strong> 前言</a></li><li class="chapter-item expanded "><a href="../01-Java-Concurrent/AQS-and-Locks.html"><strong aria-hidden="true">2.</strong> 一、 Java 并发编程</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../01-Java-Concurrent/AQS-and-Locks.html"><strong aria-hidden="true">2.1.</strong> AQS 机制与锁实现</a></li><li class="chapter-item expanded "><a href="../01-Java-Concurrent/ThreadLocal-and-CAS.html"><strong aria-hidden="true">2.2.</strong> ThreadLocal 与 CAS 原理</a></li><li class="chapter-item expanded "><a href="../01-Java-Concurrent/ThreadPool-Deep-Dive.html"><strong aria-hidden="true">2.3.</strong> 线程池深度解析与调优</a></li><li class="chapter-item expanded "><a href="../01-Java-Concurrent/HashMap-and-ConcurrentHashMap.html"><strong aria-hidden="true">2.4.</strong> HashMap 与 ConcurrentHashMap</a></li></ol></li><li class="chapter-item expanded "><a href="../02-JVM/ClassLoader-and-Bytecode.html"><strong aria-hidden="true">3.</strong> 二、 JVM 虚拟机</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../02-JVM/ClassLoader-and-Bytecode.html"><strong aria-hidden="true">3.1.</strong> 类加载机制与字节码技术</a></li><li class="chapter-item expanded "><a href="../02-JVM/JVM-Memory-and-GC.html"><strong aria-hidden="true">3.2.</strong> JVM 内存模型与垃圾回收</a></li><li class="chapter-item expanded "><a href="../02-JVM/JVM-Tuning-and-Tools.html"><strong aria-hidden="true">3.3.</strong> JVM 调优实战与 Arthas</a></li></ol></li><li class="chapter-item expanded "><a href="../03-Spring-Framework/Spring-IoC-and-AOP.html" class="active"><strong aria-hidden="true">4.</strong> 三、 Spring 框架</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../03-Spring-Framework/Spring-IoC-and-AOP.html" class="active"><strong aria-hidden="true">4.1.</strong> Spring IoC 与 AOP 源码</a></li><li class="chapter-item expanded "><a href="../03-Spring-Framework/Spring-Transaction.html"><strong aria-hidden="true">4.2.</strong> Spring 事务传播与失效</a></li><li class="chapter-item expanded "><a href="../03-Spring-Framework/SpringBoot-and-SpringCloud.html"><strong aria-hidden="true">4.3.</strong> SpringBoot 与微服务组件</a></li></ol></li><li class="chapter-item expanded "><a href="../04-Database-MySQL/MySQL-Index-and-Engine.html"><strong aria-hidden="true">5.</strong> 四、 MySQL 数据库</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../04-Database-MySQL/MySQL-Index-and-Engine.html"><strong aria-hidden="true">5.1.</strong> B+树索引与 InnoDB 引擎</a></li><li class="chapter-item expanded "><a href="../04-Database-MySQL/MySQL-MVCC-and-Locks.html"><strong aria-hidden="true">5.2.</strong> MVCC 机制与锁机制</a></li><li class="chapter-item expanded "><a href="../04-Database-MySQL/MySQL-Optimization.html"><strong aria-hidden="true">5.3.</strong> 慢 SQL 优化与分库分表</a></li><li class="chapter-item expanded "><a href="../04-Database-MySQL/MySQL-Logs-and-Replication.html"><strong aria-hidden="true">5.4.</strong> MySQL 日志与主从复制</a></li></ol></li><li class="chapter-item expanded "><a href="../05-Cache-Redis/Redis-DataStructures-and-IO.html"><strong aria-hidden="true">6.</strong> 五、 Redis 缓存</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../05-Cache-Redis/Redis-DataStructures-and-IO.html"><strong aria-hidden="true">6.1.</strong> 核心数据结构与单线程</a></li><li class="chapter-item expanded "><a href="../05-Cache-Redis/Redis-HighAvailability.html"><strong aria-hidden="true">6.2.</strong> Redis 高可用与集群</a></li><li class="chapter-item expanded "><a href="../05-Cache-Redis/Redis-Scenarios.html"><strong aria-hidden="true">6.3.</strong> Redis 缓存实战与分布式锁</a></li><li class="chapter-item expanded "><a href="../05-Cache-Redis/Redis-Consistency-and-Eviction.html"><strong aria-hidden="true">6.4.</strong> 双写一致性与内存淘汰</a></li></ol></li><li class="chapter-item expanded "><a href="../06-Distributed-System/Distributed-Consensus.html"><strong aria-hidden="true">7.</strong> 六、 分布式系统</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../06-Distributed-System/Distributed-Consensus.html"><strong aria-hidden="true">7.1.</strong> 分布式共识协议</a></li><li class="chapter-item expanded "><a href="../06-Distributed-System/Distributed-Transactions.html"><strong aria-hidden="true">7.2.</strong> 分布式事务原理与 Seata</a></li><li class="chapter-item expanded "><a href="../06-Distributed-System/Message-Queue.html"><strong aria-hidden="true">7.3.</strong> 消息队列高可用与防丢失</a></li><li class="chapter-item expanded "><a href="../06-Distributed-System/Distributed-Lock-ZooKeeper.html"><strong aria-hidden="true">7.4.</strong> ZooKeeper 分布式锁</a></li></ol></li></ol>
+            </div>
+            <div id="sidebar-resize-handle" class="sidebar-resize-handle">
+                <div class="sidebar-resize-indicator"></div>
+            </div>
+        </nav>
+
+        <!-- Track and set sidebar scroll position -->
+        <script>
+            var sidebarScrollbox = document.querySelector('#sidebar .sidebar-scrollbox');
+            sidebarScrollbox.addEventListener('click', function(e) {
+                if (e.target.tagName === 'A') {
+                    sessionStorage.setItem('sidebar-scroll', sidebarScrollbox.scrollTop);
+                }
+            }, { passive: true });
+            var sidebarScrollTop = sessionStorage.getItem('sidebar-scroll');
+            sessionStorage.removeItem('sidebar-scroll');
+            if (sidebarScrollTop) {
+                // preserve sidebar scroll position when navigating via links within sidebar
+                sidebarScrollbox.scrollTop = sidebarScrollTop;
+            } else {
+                // scroll sidebar to current active section when navigating via "next/previous chapter" buttons
+                var activeSection = document.querySelector('#sidebar .active');
+                if (activeSection) {
+                    activeSection.scrollIntoView({ block: 'center' });
+                }
+            }
+        </script>
+
+        <div id="page-wrapper" class="page-wrapper">
+
+            <div class="page">
+                                <div id="menu-bar-hover-placeholder"></div>
+                <div id="menu-bar" class="menu-bar sticky">
+                    <div class="left-buttons">
+                        <label id="sidebar-toggle" class="icon-button" for="sidebar-toggle-anchor" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="sidebar">
+                            <i class="fa fa-bars"></i>
+                        </label>
+                        <button id="theme-toggle" class="icon-button" type="button" title="Change theme" aria-label="Change theme" aria-haspopup="true" aria-expanded="false" aria-controls="theme-list">
+                            <i class="fa fa-paint-brush"></i>
+                        </button>
+                        <ul id="theme-list" class="theme-popup" aria-label="Themes" role="menu">
+                            <li role="none"><button role="menuitem" class="theme" id="light">Light</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="rust">Rust</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="coal">Coal</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="navy">Navy</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="ayu">Ayu</button></li>
+                        </ul>
+                        <button id="search-toggle" class="icon-button" type="button" title="Search. (Shortkey: s)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="S" aria-controls="searchbar">
+                            <i class="fa fa-search"></i>
+                        </button>
+                    </div>
+
+                    <h1 class="menu-title">Java 高级开发工程师技术解析文档</h1>
+
+                    <div class="right-buttons">
+                        <a href="../print.html" title="Print this book" aria-label="Print this book">
+                            <i id="print-button" class="fa fa-print"></i>
+                        </a>
+                        <a href="https://github.com/dwx/AiDocs" title="Git repository" aria-label="Git repository">
+                            <i id="git-repository-button" class="fa fa-github"></i>
+                        </a>
+
+                    </div>
+                </div>
+
+                <div id="search-wrapper" class="hidden">
+                    <form id="searchbar-outer" class="searchbar-outer">
+                        <input type="search" id="searchbar" name="searchbar" placeholder="Search this book ..." aria-controls="searchresults-outer" aria-describedby="searchresults-header">
+                    </form>
+                    <div id="searchresults-outer" class="searchresults-outer hidden">
+                        <div id="searchresults-header" class="searchresults-header"></div>
+                        <ul id="searchresults">
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Apply ARIA attributes after the sidebar and the sidebar toggle button are added to the DOM -->
+                <script>
+                    document.getElementById('sidebar-toggle').setAttribute('aria-expanded', sidebar === 'visible');
+                    document.getElementById('sidebar').setAttribute('aria-hidden', sidebar !== 'visible');
+                    Array.from(document.querySelectorAll('#sidebar a')).forEach(function(link) {
+                        link.setAttribute('tabIndex', sidebar === 'visible' ? 0 : -1);
+                    });
+                </script>
+
+                <div id="content" class="content">
+                    <main>
+                        <h1 id="spring-ioc-与-aop-源码级解析"><a class="header" href="#spring-ioc-与-aop-源码级解析">Spring IoC 与 AOP 源码级解析</a></h1>
+<p>Spring 框架是 Java 企业级开发的事实标准。在高级面试中，Spring 的底层源码（如 Bean 的生命周期、三级缓存解决循环依赖、AOP 动态代理）是必考的硬核内容。</p>
+<hr />
+<h2 id="一-spring-bean-的生命周期"><a class="header" href="#一-spring-bean-的生命周期">一、 Spring Bean 的生命周期</a></h2>
+<p>Spring Bean 的生命周期非常复杂，但可以概括为四个核心阶段：<strong>实例化 -&gt; 属性赋值 -&gt; 初始化 -&gt; 销毁</strong>。</p>
+<pre class="mermaid">graph TD
+    A[实例化 Instantiation] --&gt; B[属性赋值 Populate]
+    B --&gt; C[初始化 Initialization]
+    C --&gt; D[销毁 Destruction]
+</pre>
+<h3 id="1-详细生命周期链路"><a class="header" href="#1-详细生命周期链路">1. 详细生命周期链路</a></h3>
+<ol>
+<li><strong>实例化（Instantiation）</strong>：
+<ul>
+<li>对应方法：<code>createBeanInstance()</code>。通过反射或工厂方法创建 Bean 实例。</li>
+</ul>
+</li>
+<li><strong>属性赋值（Populate）</strong>：
+<ul>
+<li>对应方法：<code>populateBean()</code>。进行依赖注入（DI），填充 Bean 的属性。</li>
+</ul>
+</li>
+<li><strong>初始化（Initialization）</strong>：
+<ul>
+<li><strong>Aware 接口回调</strong>：如果 Bean 实现了 <code>BeanNameAware</code>、<code>BeanFactoryAware</code> 等接口，Spring 会回调对应方法，注入容器上下文。</li>
+<li><strong>BeanPostProcessor 前置处理</strong>：执行所有已注册的 <code>BeanPostProcessor</code> 的 <code>postProcessBeforeInitialization()</code> 方法。</li>
+<li><strong>初始化方法回调</strong>：
+<ul>
+<li>如果实现了 <code>InitializingBean</code> 接口，执行 <code>afterPropertiesSet()</code>。</li>
+<li>如果配置了自定义的 <code>init-method</code>，执行该初始化方法。</li>
+</ul>
+</li>
+<li><strong>BeanPostProcessor 后置处理</strong>：执行所有已注册的 <code>BeanPostProcessor</code> 的 <code>postProcessAfterInitialization()</code> 方法。<strong>AOP 动态代理通常就是在此阶段生成的。</strong></li>
+</ul>
+</li>
+<li><strong>销毁（Destruction）</strong>：
+<ul>
+<li>当容器关闭时，触发销毁流程：
+<ul>
+<li>如果实现了 <code>DisposableBean</code> 接口，执行 <code>destroy()</code>。</li>
+<li>如果配置了自定义的 <code>destroy-method</code>，执行该方法。</li>
+</ul>
+</li>
+</ul>
+</li>
+</ol>
+<hr />
+<h2 id="二-三级缓存与循环依赖"><a class="header" href="#二-三级缓存与循环依赖">二、 三级缓存与循环依赖</a></h2>
+<p>循环依赖是指两个或多个 Bean 互相持有对方的引用，例如 Class A 依赖 Class B，Class B 又依赖 Class A。</p>
+<p>Spring 默认支持<strong>单例（Singleton）<strong>作用域下的</strong>属性注入</strong>循环依赖，而不支持构造器注入的循环依赖。Spring 是通过<strong>三级缓存</strong>机制来解决这个问题的。</p>
+<h3 id="1-三级缓存的定义"><a class="header" href="#1-三级缓存的定义">1. 三级缓存的定义</a></h3>
+<p>在 <code>DefaultSingletonBeanRegistry</code> 类中，定义了以下三个 Map：</p>
+<pre><code class="language-java">// 一级缓存：存放完全初始化好的单例 Bean（可以直接使用的成品）
+private final Map&lt;String, Object&gt; singletonObjects = new ConcurrentHashMap&lt;&gt;(256);
+
+// 二级缓存：存放早期暴露的单例 Bean（已经实例化但尚未填充属性、未初始化的半成品）
+private final Map&lt;String, Object&gt; earlySingletonObjects = new ConcurrentHashMap&lt;&gt;(16);
+
+// 三级缓存：存放单例工厂对象（ObjectFactory），用于生成早期暴露的 Bean 或者是其 AOP 代理对象
+private final Map&lt;String, ObjectFactory&lt;?&gt;&gt; singletonFactories = new HashMap&lt;&gt;(16);
+</code></pre>
+<h3 id="2-解决循环依赖的核心流程"><a class="header" href="#2-解决循环依赖的核心流程">2. 解决循环依赖的核心流程</a></h3>
+<p>假设 A 和 B 互相依赖：</p>
+<pre class="mermaid">sequenceDiagram
+    autonumber
+    participant Spring as Spring 容器
+    participant A as Bean A (半成品)
+    participant B as Bean B (半成品)
+
+    Spring-&gt;&gt;A: 1. 实例化 A (放入三级缓存 singletonFactories)
+    Spring-&gt;&gt;A: 2. 属性赋值 A (发现依赖 B)
+    A-&gt;&gt;Spring: 3. getBean(B)
+    Spring-&gt;&gt;B: 4. 实例化 B (放入三级缓存 singletonFactories)
+    Spring-&gt;&gt;B: 5. 属性赋值 B (发现依赖 A)
+    B-&gt;&gt;Spring: 6. getBean(A) (从缓存中查找)
+    Spring-&gt;&gt;B: 7. 从三级缓存获取 A 的 ObjectFactory 并调用 getObject()
+    Note over Spring, B: 若 A 有 AOP 代理，则在此处生成 A 的代理对象并放入二级缓存
+    B-&gt;&gt;Spring: 8. 注入 A (半成品/代理对象)
+    Spring-&gt;&gt;B: 9. 初始化 B 成功 (放入一级缓存 singletonObjects)
+    Spring-&gt;&gt;A: 10. 注入 B (成品)
+    Spring-&gt;&gt;A: 11. 初始化 A 成功 (放入一级缓存 singletonObjects)
+</pre>
+<h3 id="3-为什么必须是三级缓存二级缓存不行吗"><a class="header" href="#3-为什么必须是三级缓存二级缓存不行吗">3. 为什么必须是三级缓存？二级缓存不行吗？</a></h3>
+<ul>
+<li>如果<strong>没有 AOP</strong>，确实只需要二级缓存。在实例化 A 之后，直接把 A（半成品）放入二级缓存，B 注入 A 时直接从二级缓存拿即可</li>
+</ul>
+<p>如果<strong>存在 AOP</strong>，A 需要被代理。按照 Spring 的设计原则，<strong>代理对象应该在 Bean 初始化阶段（AnnotationAwareAspectJAutoProxyCreator）创建</strong>，而不是在实例化阶段创建</p>
+<p>但是，如果发生了循环依赖，B 必须在初始化之前就注入 A 的代理对象</p>
+<p><strong>三级缓存的作用</strong>：三级缓存中存放的是 <code>ObjectFactory</code>。当 B 需要注入 A 时，B 会调用 A 的 <code>ObjectFactory.getObject()</code>。这个工厂方法会判断 A 是否需要被代理：如果需要，就提前创建 A 的代理对象并返回；如果不需要，就返回原始的 A</p>
+<p>因为 <code>ObjectFactory.getObject()</code> 每次调用都会生成一个新的代理对象（或者执行一次判断逻辑）。为了保证单例，必须将生成的早期代理对象放入二级缓存中缓存起来，确保后续其他地方注入 A 时拿到的是同一个代理对象。</p>
+<hr />
+<h2 id="三-spring-aop-底层原理"><a class="header" href="#三-spring-aop-底层原理">三、 Spring AOP 底层原理</a></h2>
+<p>Spring AOP 是基于动态代理实现的。在运行时，Spring 会根据目标类是否实现了接口，动态选择使用 <strong>JDK 动态代理</strong> 还是 <strong>CGLIB 动态代理</strong>。</p>
+<h3 id="1-代理的选择策略defaultaopproxyfactory"><a class="header" href="#1-代理的选择策略defaultaopproxyfactory">1. 代理的选择策略（<code>DefaultAopProxyFactory</code>）</a></h3>
+<pre><code class="language-java">public class DefaultAopProxyFactory implements AopProxyFactory, Serializable {
+    @Override
+    public AopProxy createAopProxy(AdvisedSupport config) throws AopConfigException {
+        if (config.isOptimize() || config.isProxyTargetClass() || hasNoUserSuppliedProxyInterfaces(config)) {
+            Class&lt;?&gt; targetClass = config.getTargetClass();
+            if (targetClass == null) {
+                throw new AopConfigException(&quot;TargetSource cannot determine target class&quot;);
+            }
+            // 如果目标类是接口，或者目标类是 Proxy 的子类（已经是JDK代理类），依然使用 JDK 动态代理
+            if (targetClass.isInterface() || Proxy.isProxyClass(targetClass)) {
+                return new JdkDynamicAopProxy(config);
+            }
+            // 否则，使用 CGLIB 动态代理
+            return new ObjenesisCglibAopProxy(config);
+        } else {
+            // 默认情况下，如果目标类实现了接口，使用 JDK 动态代理
+            return new JdkDynamicAopProxy(config);
+        }
+    }
+}
+</code></pre>
+<h3 id="2-aop-链式调用与责任链模式"><a class="header" href="#2-aop-链式调用与责任链模式">2. AOP 链式调用与责任链模式</a></h3>
+<p>Spring AOP 将切面（Aspect）中的通知（Advice，如 <code>@Before</code>、<code>@After</code>、<code>@Around</code>）统一封装为 <strong><code>MethodInterceptor</code>（方法拦截器）</strong>。</p>
+<p>当目标方法被调用时，Spring 会将所有适用于该方法的拦截器组成一个<strong>拦截器链（Interceptor Chain）</strong>，并通过<strong>责任链模式</strong>进行链式调用。</p>
+<pre><code class="language-java">public class ReflectiveMethodInvocation implements MethodInvocation, Cloneable {
+    protected final Object proxy;
+    protected final Object target;
+    protected final Method method;
+    protected Object[] arguments;
+    private final List&lt;?&gt; interceptorsAndDynamicMethodMatchers;
+    // 当前执行的拦截器索引，初始化为 -1
+    private int currentInterceptorIndex = -1;
+
+    public Object proceed() throws Throwable {
+        // 如果已经执行完了所有的拦截器，直接调用目标方法（通过反射）
+        if (this.currentInterceptorIndex == this.interceptorsAndDynamicMethodMatchers.size() - 1) {
+            return invokeJoinpoint();
+        }
+
+        // 获取下一个拦截器
+        Object interceptorOrInterceptionAdvice =
+            this.interceptorsAndDynamicMethodMatchers.get(++this.currentInterceptorIndex);
+
+        // 链式调用：将当前 MethodInvocation 对象（this）传给拦截器
+        // 拦截器内部会再次调用 invocation.proceed()，从而形成递归调用
+        return ((MethodInterceptor) interceptorOrInterceptionAdvice).invoke(this);
+    }
+}
+</code></pre>
+<p>这种基于递归的责任链模式，优雅地实现了前置通知、后置通知、环绕通知以及异常通知的嵌套执行。</p>
+
+                    </main>
+
+                    <nav class="nav-wrapper" aria-label="Page navigation">
+                        <!-- Mobile navigation buttons -->
+                            <a rel="prev" href="../02-JVM/JVM-Tuning-and-Tools.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                                <i class="fa fa-angle-left"></i>
+                            </a>
+
+                            <a rel="next prefetch" href="../03-Spring-Framework/Spring-IoC-and-AOP.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                                <i class="fa fa-angle-right"></i>
+                            </a>
+
+                        <div style="clear: both"></div>
+                    </nav>
+                </div>
+            </div>
+
+            <nav class="nav-wide-wrapper" aria-label="Page navigation">
+                    <a rel="prev" href="../02-JVM/JVM-Tuning-and-Tools.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                        <i class="fa fa-angle-left"></i>
+                    </a>
+
+                    <a rel="next prefetch" href="../03-Spring-Framework/Spring-IoC-and-AOP.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                        <i class="fa fa-angle-right"></i>
+                    </a>
+            </nav>
+
+        </div>
+
+
+
+
+        <script>
+            window.playground_copyable = true;
+        </script>
+
+
+        <script src="../elasticlunr.min.js"></script>
+        <script src="../mark.min.js"></script>
+        <script src="../searcher.js"></script>
+
+        <script src="../clipboard.min.js"></script>
+        <script src="../highlight.js"></script>
+        <script src="../book.js"></script>
+
+        <!-- Custom JS scripts -->
+        <script src="../mermaid.min.js"></script>
+        <script src="../mermaid-init.js"></script>
+
+
+    </div>
+    </body>
+</html>

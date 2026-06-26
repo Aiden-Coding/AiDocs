@@ -1,0 +1,376 @@
+<!DOCTYPE HTML>
+<html lang="zh-CN" class="light" dir="ltr">
+    <head>
+        <!-- Book generated using mdBook -->
+        <meta charset="UTF-8">
+        <title>双写一致性与内存淘汰 - Java 高级开发工程师技术解析文档</title>
+
+
+        <!-- Custom HTML head -->
+        
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="theme-color" content="#ffffff">
+
+        <link rel="icon" href="../favicon.svg">
+        <link rel="shortcut icon" href="../favicon.png">
+        <link rel="stylesheet" href="../css/variables.css">
+        <link rel="stylesheet" href="../css/general.css">
+        <link rel="stylesheet" href="../css/chrome.css">
+        <link rel="stylesheet" href="../css/print.css" media="print">
+
+        <!-- Fonts -->
+        <link rel="stylesheet" href="../FontAwesome/css/font-awesome.css">
+        <link rel="stylesheet" href="../fonts/fonts.css">
+
+        <!-- Highlight.js Stylesheets -->
+        <link rel="stylesheet" href="../highlight.css">
+        <link rel="stylesheet" href="../tomorrow-night.css">
+        <link rel="stylesheet" href="../ayu-highlight.css">
+
+        <!-- Custom theme stylesheets -->
+
+    </head>
+    <body class="sidebar-visible no-js">
+    <div id="body-container">
+        <!-- Provide site root to javascript -->
+        <script>
+            var path_to_root = "../";
+            var default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? "navy" : "light";
+        </script>
+
+        <!-- Work around some values being stored in localStorage wrapped in quotes -->
+        <script>
+            try {
+                var theme = localStorage.getItem('mdbook-theme');
+                var sidebar = localStorage.getItem('mdbook-sidebar');
+
+                if (theme.startsWith('"') && theme.endsWith('"')) {
+                    localStorage.setItem('mdbook-theme', theme.slice(1, theme.length - 1));
+                }
+
+                if (sidebar.startsWith('"') && sidebar.endsWith('"')) {
+                    localStorage.setItem('mdbook-sidebar', sidebar.slice(1, sidebar.length - 1));
+                }
+            } catch (e) { }
+        </script>
+
+        <!-- Set the theme before any content is loaded, prevents flash -->
+        <script>
+            var theme;
+            try { theme = localStorage.getItem('mdbook-theme'); } catch(e) { }
+            if (theme === null || theme === undefined) { theme = default_theme; }
+            var html = document.querySelector('html');
+            html.classList.remove('light')
+            html.classList.add(theme);
+            var body = document.querySelector('body');
+            body.classList.remove('no-js')
+            body.classList.add('js');
+        </script>
+
+        <input type="checkbox" id="sidebar-toggle-anchor" class="hidden">
+
+        <!-- Hide / unhide sidebar before it is displayed -->
+        <script>
+            var body = document.querySelector('body');
+            var sidebar = null;
+            var sidebar_toggle = document.getElementById("sidebar-toggle-anchor");
+            if (document.body.clientWidth >= 1080) {
+                try { sidebar = localStorage.getItem('mdbook-sidebar'); } catch(e) { }
+                sidebar = sidebar || 'visible';
+            } else {
+                sidebar = 'hidden';
+            }
+            sidebar_toggle.checked = sidebar === 'visible';
+            body.classList.remove('sidebar-visible');
+            body.classList.add("sidebar-" + sidebar);
+        </script>
+
+        <nav id="sidebar" class="sidebar" aria-label="Table of contents">
+            <div class="sidebar-scrollbox">
+                <ol class="chapter"><li class="chapter-item expanded "><a href="../index.html"><strong aria-hidden="true">1.</strong> 前言</a></li><li class="chapter-item expanded "><a href="../01-Java-Concurrent/AQS-and-Locks.html"><strong aria-hidden="true">2.</strong> 一、 Java 并发编程</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../01-Java-Concurrent/AQS-and-Locks.html"><strong aria-hidden="true">2.1.</strong> AQS 机制与锁实现</a></li><li class="chapter-item expanded "><a href="../01-Java-Concurrent/ThreadLocal-and-CAS.html"><strong aria-hidden="true">2.2.</strong> ThreadLocal 与 CAS 原理</a></li><li class="chapter-item expanded "><a href="../01-Java-Concurrent/ThreadPool-Deep-Dive.html"><strong aria-hidden="true">2.3.</strong> 线程池深度解析与调优</a></li><li class="chapter-item expanded "><a href="../01-Java-Concurrent/HashMap-and-ConcurrentHashMap.html"><strong aria-hidden="true">2.4.</strong> HashMap 与 ConcurrentHashMap</a></li></ol></li><li class="chapter-item expanded "><a href="../02-JVM/ClassLoader-and-Bytecode.html"><strong aria-hidden="true">3.</strong> 二、 JVM 虚拟机</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../02-JVM/ClassLoader-and-Bytecode.html"><strong aria-hidden="true">3.1.</strong> 类加载机制与字节码技术</a></li><li class="chapter-item expanded "><a href="../02-JVM/JVM-Memory-and-GC.html"><strong aria-hidden="true">3.2.</strong> JVM 内存模型与垃圾回收</a></li><li class="chapter-item expanded "><a href="../02-JVM/JVM-Tuning-and-Tools.html"><strong aria-hidden="true">3.3.</strong> JVM 调优实战与 Arthas</a></li></ol></li><li class="chapter-item expanded "><a href="../03-Spring-Framework/Spring-IoC-and-AOP.html"><strong aria-hidden="true">4.</strong> 三、 Spring 框架</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../03-Spring-Framework/Spring-IoC-and-AOP.html"><strong aria-hidden="true">4.1.</strong> Spring IoC 与 AOP 源码</a></li><li class="chapter-item expanded "><a href="../03-Spring-Framework/Spring-Transaction.html"><strong aria-hidden="true">4.2.</strong> Spring 事务传播与失效</a></li><li class="chapter-item expanded "><a href="../03-Spring-Framework/SpringBoot-and-SpringCloud.html"><strong aria-hidden="true">4.3.</strong> SpringBoot 与微服务组件</a></li></ol></li><li class="chapter-item expanded "><a href="../04-Database-MySQL/MySQL-Index-and-Engine.html"><strong aria-hidden="true">5.</strong> 四、 MySQL 数据库</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../04-Database-MySQL/MySQL-Index-and-Engine.html"><strong aria-hidden="true">5.1.</strong> B+树索引与 InnoDB 引擎</a></li><li class="chapter-item expanded "><a href="../04-Database-MySQL/MySQL-MVCC-and-Locks.html"><strong aria-hidden="true">5.2.</strong> MVCC 机制与锁机制</a></li><li class="chapter-item expanded "><a href="../04-Database-MySQL/MySQL-Optimization.html"><strong aria-hidden="true">5.3.</strong> 慢 SQL 优化与分库分表</a></li><li class="chapter-item expanded "><a href="../04-Database-MySQL/MySQL-Logs-and-Replication.html"><strong aria-hidden="true">5.4.</strong> MySQL 日志与主从复制</a></li></ol></li><li class="chapter-item expanded "><a href="../05-Cache-Redis/Redis-DataStructures-and-IO.html"><strong aria-hidden="true">6.</strong> 五、 Redis 缓存</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../05-Cache-Redis/Redis-DataStructures-and-IO.html"><strong aria-hidden="true">6.1.</strong> 核心数据结构与单线程</a></li><li class="chapter-item expanded "><a href="../05-Cache-Redis/Redis-HighAvailability.html"><strong aria-hidden="true">6.2.</strong> Redis 高可用与集群</a></li><li class="chapter-item expanded "><a href="../05-Cache-Redis/Redis-Scenarios.html"><strong aria-hidden="true">6.3.</strong> Redis 缓存实战与分布式锁</a></li><li class="chapter-item expanded "><a href="../05-Cache-Redis/Redis-Consistency-and-Eviction.html" class="active"><strong aria-hidden="true">6.4.</strong> 双写一致性与内存淘汰</a></li></ol></li><li class="chapter-item expanded "><a href="../06-Distributed-System/Distributed-Consensus.html"><strong aria-hidden="true">7.</strong> 六、 分布式系统</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../06-Distributed-System/Distributed-Consensus.html"><strong aria-hidden="true">7.1.</strong> 分布式共识协议</a></li><li class="chapter-item expanded "><a href="../06-Distributed-System/Distributed-Transactions.html"><strong aria-hidden="true">7.2.</strong> 分布式事务原理与 Seata</a></li><li class="chapter-item expanded "><a href="../06-Distributed-System/Message-Queue.html"><strong aria-hidden="true">7.3.</strong> 消息队列高可用与防丢失</a></li><li class="chapter-item expanded "><a href="../06-Distributed-System/Distributed-Lock-ZooKeeper.html"><strong aria-hidden="true">7.4.</strong> ZooKeeper 分布式锁</a></li></ol></li></ol>
+            </div>
+            <div id="sidebar-resize-handle" class="sidebar-resize-handle">
+                <div class="sidebar-resize-indicator"></div>
+            </div>
+        </nav>
+
+        <!-- Track and set sidebar scroll position -->
+        <script>
+            var sidebarScrollbox = document.querySelector('#sidebar .sidebar-scrollbox');
+            sidebarScrollbox.addEventListener('click', function(e) {
+                if (e.target.tagName === 'A') {
+                    sessionStorage.setItem('sidebar-scroll', sidebarScrollbox.scrollTop);
+                }
+            }, { passive: true });
+            var sidebarScrollTop = sessionStorage.getItem('sidebar-scroll');
+            sessionStorage.removeItem('sidebar-scroll');
+            if (sidebarScrollTop) {
+                // preserve sidebar scroll position when navigating via links within sidebar
+                sidebarScrollbox.scrollTop = sidebarScrollTop;
+            } else {
+                // scroll sidebar to current active section when navigating via "next/previous chapter" buttons
+                var activeSection = document.querySelector('#sidebar .active');
+                if (activeSection) {
+                    activeSection.scrollIntoView({ block: 'center' });
+                }
+            }
+        </script>
+
+        <div id="page-wrapper" class="page-wrapper">
+
+            <div class="page">
+                                <div id="menu-bar-hover-placeholder"></div>
+                <div id="menu-bar" class="menu-bar sticky">
+                    <div class="left-buttons">
+                        <label id="sidebar-toggle" class="icon-button" for="sidebar-toggle-anchor" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="sidebar">
+                            <i class="fa fa-bars"></i>
+                        </label>
+                        <button id="theme-toggle" class="icon-button" type="button" title="Change theme" aria-label="Change theme" aria-haspopup="true" aria-expanded="false" aria-controls="theme-list">
+                            <i class="fa fa-paint-brush"></i>
+                        </button>
+                        <ul id="theme-list" class="theme-popup" aria-label="Themes" role="menu">
+                            <li role="none"><button role="menuitem" class="theme" id="light">Light</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="rust">Rust</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="coal">Coal</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="navy">Navy</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="ayu">Ayu</button></li>
+                        </ul>
+                        <button id="search-toggle" class="icon-button" type="button" title="Search. (Shortkey: s)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="S" aria-controls="searchbar">
+                            <i class="fa fa-search"></i>
+                        </button>
+                    </div>
+
+                    <h1 class="menu-title">Java 高级开发工程师技术解析文档</h1>
+
+                    <div class="right-buttons">
+                        <a href="../print.html" title="Print this book" aria-label="Print this book">
+                            <i id="print-button" class="fa fa-print"></i>
+                        </a>
+                        <a href="https://github.com/dwx/AiDocs" title="Git repository" aria-label="Git repository">
+                            <i id="git-repository-button" class="fa fa-github"></i>
+                        </a>
+
+                    </div>
+                </div>
+
+                <div id="search-wrapper" class="hidden">
+                    <form id="searchbar-outer" class="searchbar-outer">
+                        <input type="search" id="searchbar" name="searchbar" placeholder="Search this book ..." aria-controls="searchresults-outer" aria-describedby="searchresults-header">
+                    </form>
+                    <div id="searchresults-outer" class="searchresults-outer hidden">
+                        <div id="searchresults-header" class="searchresults-header"></div>
+                        <ul id="searchresults">
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Apply ARIA attributes after the sidebar and the sidebar toggle button are added to the DOM -->
+                <script>
+                    document.getElementById('sidebar-toggle').setAttribute('aria-expanded', sidebar === 'visible');
+                    document.getElementById('sidebar').setAttribute('aria-hidden', sidebar !== 'visible');
+                    Array.from(document.querySelectorAll('#sidebar a')).forEach(function(link) {
+                        link.setAttribute('tabIndex', sidebar === 'visible' ? 0 : -1);
+                    });
+                </script>
+
+                <div id="content" class="content">
+                    <main>
+                        <h1 id="redis-双写一致性与内存淘汰策略"><a class="header" href="#redis-双写一致性与内存淘汰策略">Redis 双写一致性与内存淘汰策略</a></h1>
+<p>在现代高并发架构中，Redis 缓存与 MySQL 数据库的配合使用是标准配置。然而，如何保证缓存与数据库的数据一致性，以及如何管理 Redis 有限的内存空间，是高级 Java 工程师必须攻克的两大核心难题。</p>
+<hr />
+<h2 id="一-redis-与-mysql-双写一致性方案"><a class="header" href="#一-redis-与-mysql-双写一致性方案">一、 Redis 与 MySQL 双写一致性方案</a></h2>
+<p>当数据发生变更时，我们需要同时更新数据库和缓存。由于这是两个独立的系统，无法保证原子性，因此极易产生数据不一致问题。</p>
+<h3 id="1-经典方案对比"><a class="header" href="#1-经典方案对比">1. 经典方案对比</a></h3>
+<h4 id="方案一先更新缓存再更新数据库"><a class="header" href="#方案一先更新缓存再更新数据库">方案一：先更新缓存，再更新数据库</a></h4>
+<ul>
+<li><strong>致命缺陷</strong>：如果缓存更新成功，但数据库更新失败，会导致缓存中是新值，数据库中是旧值。后续读请求会一直读取到缓存中的错误新值，产生严重的脏数据。<strong>此方案严禁在生产环境使用</strong>。</li>
+</ul>
+<h4 id="方案二先更新数据库再更新缓存"><a class="header" href="#方案二先更新数据库再更新缓存">方案二：先更新数据库，再更新缓存</a></h4>
+<ul>
+<li><strong>缺陷（并发竞争）</strong>：
+设有两个并发写请求 A 和 B：
+<ol>
+<li>请求 A 更新数据库（值为 1）。</li>
+<li>请求 B 更新数据库（值为 2）。</li>
+<li>由于网络抖动，请求 B 先更新了缓存（值为 2）。</li>
+<li>请求 A 随后更新了缓存（值为 1）。
+最终：数据库的值是 2，缓存的值是 1，产生<strong>数据不一致</strong>。</li>
+</ol>
+</li>
+</ul>
+<h4 id="方案三先删除缓存再更新数据库"><a class="header" href="#方案三先删除缓存再更新数据库">方案三：先删除缓存，再更新数据库</a></h4>
+<ul>
+<li><strong>缺陷（并发读写）</strong>：
+设有一个写请求 A 和一个读请求 B：
+<ol>
+<li>写请求 A 先删除缓存。</li>
+<li>读请求 B 过来，发现缓存失效，去查询数据库（拿到旧值），并准备写入缓存。</li>
+<li>写请求 A 更新数据库（写入新值）。</li>
+<li>读请求 B 将刚刚拿到的旧值写入缓存。
+最终：数据库是新值，缓存是旧值，产生<strong>数据不一致</strong>。</li>
+</ol>
+</li>
+</ul>
+<hr />
+<h3 id="2-工业级高可用解决方案"><a class="header" href="#2-工业级高可用解决方案">2. 工业级高可用解决方案</a></h3>
+<h4 id="方案一先更新数据库再删除缓存cache-aside-pattern"><a class="header" href="#方案一先更新数据库再删除缓存cache-aside-pattern">方案一：先更新数据库，再删除缓存（Cache Aside Pattern）</a></h4>
+<p>这是目前业界应用最广泛的经典模式。</p>
+<ul>
+<li><strong>为什么是删除缓存而不是更新缓存？</strong>
+<ol>
+<li><strong>懒加载思想</strong>：如果该缓存是一个复杂的计算结果，频繁更新会浪费 CPU 性能。删除缓存，让其在下次被读取时再懒加载重建，效率更高。</li>
+<li><strong>避免并发竞争</strong>：如前文所述，更新缓存极易因为并发写导致顺序错乱，而删除缓存是幂等的。</li>
+</ol>
+</li>
+<li><strong>该方案的极端缺陷</strong>：
+<ol>
+<li>缓存刚好失效。</li>
+<li>读请求 B 查询数据库，拿到旧值。</li>
+<li>写请求 A 更新数据库，并删除缓存。</li>
+<li>读请求 B 将旧值写入缓存。
+最终导致不一致。但由于写数据库的速度（毫秒级）远慢于写缓存的速度（微秒级），步骤 3 几乎必然在步骤 4 之前完成，因此该场景发生的概率极低。</li>
+</ol>
+</li>
+</ul>
+<h4 id="方案二延迟双删针对先删缓存后写库方案的补救"><a class="header" href="#方案二延迟双删针对先删缓存后写库方案的补救">方案二：延迟双删（针对先删缓存，后写库方案的补救）</a></h4>
+<p>为了解决“先删缓存，后写库”方案中，读请求将旧值写回缓存的问题：</p>
+<pre class="mermaid">sequenceDiagram
+    autonumber
+    participant Client as 客户端
+    participant Redis as Redis
+    participant DB as MySQL
+
+    Client-&gt;&gt;Redis: 1. 删除缓存
+    Client-&gt;&gt;DB: 2. 更新数据库
+    Note over Client: 3. 线程 Sleep (如 500ms)
+    Client-&gt;&gt;Redis: 4. 再次删除缓存
+</pre>
+<ul>
+<li><strong>原理</strong>：在写请求更新完数据库后，先 <code>Sleep</code> 一段时间（确保读请求已经完成了“查库并写回缓存”的操作），然后<strong>再次删除缓存</strong>。</li>
+<li><strong>痛点</strong>：<code>Sleep</code> 的时间极难评估，且同步阻塞会降低接口的吞吐量（可以通过异步线程或消息队列进行第二次删除）。</li>
+</ul>
+<h4 id="方案三canal-异步订阅-binlog终极解耦方案"><a class="header" href="#方案三canal-异步订阅-binlog终极解耦方案">方案三：Canal 异步订阅 Binlog（终极解耦方案）</a></h4>
+<p>为了实现真正的业务解耦，并保证最终一致性：</p>
+<pre class="mermaid">graph LR
+    A[业务系统] --&gt;|1. 写操作| B[(MySQL)]
+    B --&gt;|2. 产生| C[Binlog]
+    C --&gt;|3. 订阅| D[Canal 伪装成 Slave]
+    D --&gt;|4. 解析并发送| E[MQ 消息队列]
+    F[缓存更新服务] --&gt;|5. 消费消息| E
+    F --&gt;|6. 删除/更新| G[(Redis)]
+</pre>
+<ol>
+<li>业务系统只管更新 MySQL，不直接操作 Redis。</li>
+<li>阿里开源的 <strong>Canal</strong> 伪装成 MySQL 的 Slave，订阅并解析 MySQL 的 Binlog。</li>
+<li>Canal 将变更数据发送到消息队列（MQ）。</li>
+<li>缓存更新服务消费 MQ 消息，异步、幂等地去删除或更新 Redis 缓存。</li>
+</ol>
+<ul>
+<li><strong>优点</strong>：业务代码零侵入，高吞吐，且 MQ 的重试机制保证了缓存删除的绝对成功，实现<strong>最终一致性</strong>。</li>
+</ul>
+<hr />
+<h2 id="二-redis-过期删除策略"><a class="header" href="#二-redis-过期删除策略">二、 Redis 过期删除策略</a></h2>
+<p>Redis 内存是有限的，必须有机制清理过期的 key。Redis 采用 <strong>定期删除 + 惰性删除</strong> 配合的策略。</p>
+<h3 id="1-惰性删除passive-eviction"><a class="header" href="#1-惰性删除passive-eviction">1. 惰性删除（Passive Eviction）</a></h3>
+<ul>
+<li><strong>原理</strong>：当客户端尝试访问某个 key 时，Redis 会先检查该 key 是否过期。如果过期，则删除并返回 <code>nil</code>；如果没过期，则正常返回。</li>
+<li><strong>优点</strong>：对 CPU 极度友好，只有在访问时才占用 CPU 进行删除。</li>
+<li><strong>缺点</strong>：对内存极度不友好。如果大量过期的 key 长期没有被访问，它们会一直驻留在内存中，造成内存浪费。</li>
+</ul>
+<h3 id="2-定期删除active-eviction"><a class="header" href="#2-定期删除active-eviction">2. 定期删除（Active Eviction）</a></h3>
+<ul>
+<li><strong>原理</strong>：Redis 默认每隔 100ms（可以通过 <code>hz</code> 参数配置）运行一次后台任务，<strong>随机</strong>抽取一部分设置了过期时间的 key，检查并删除其中过期的 key。</li>
+<li><strong>具体流程</strong>：
+<ol>
+<li>从过期字典中随机抽取 20 个 key。</li>
+<li>删除这 20 个 key 中已经过期的 key。</li>
+<li>如果过期的 key 比例超过 25%（即超过 5 个），则重复步骤 1 和 2。</li>
+<li>为了防止定期删除任务占用太多 CPU 时间，该任务有严格的执行时间上限（默认 25ms）。</li>
+</ol>
+</li>
+</ul>
+<hr />
+<h2 id="三-redis-8-种内存淘汰策略eviction-policies"><a class="header" href="#三-redis-8-种内存淘汰策略eviction-policies">三、 Redis 8 种内存淘汰策略（Eviction Policies）</a></h2>
+<p>当 Redis 的内存使用量达到了最大限制（<code>maxmemory</code>），且过期删除策略清理后内存依然不足时，Redis 会触发<strong>内存淘汰策略</strong>。</p>
+<p>Redis 提供了 8 种淘汰策略，主要分为四大类：</p>
+<div class="table-wrapper"><table><thead><tr><th style="text-align: left">策略名称</th><th style="text-align: left">淘汰行为说明</th></tr></thead><tbody>
+<tr><td style="text-align: left"><strong><code>noeviction</code>（默认）</strong></td><td style="text-align: left">不淘汰任何数据。当内存不足时，新写入/修改命令直接报错，只允许读和删除操作。</td></tr>
+<tr><td style="text-align: left"><strong><code>volatile-lru</code></strong></td><td style="text-align: left">在设置了过期时间（TTL）的 key 中，使用 <strong>LRU 算法</strong> 淘汰最近最少使用的 key。</td></tr>
+<tr><td style="text-align: left"><strong><code>allkeys-lru</code></strong></td><td style="text-align: left">在所有的 key 中，使用 <strong>LRU 算法</strong> 淘汰最近最少使用的 key。</td></tr>
+<tr><td style="text-align: left"><strong><code>volatile-lfu</code></strong></td><td style="text-align: left">在设置了过期时间（TTL）的 key 中，使用 <strong>LFU 算法</strong> 淘汰使用频率最低的 key。</td></tr>
+<tr><td style="text-align: left"><strong><code>allkeys-lfu</code></strong></td><td style="text-align: left">在所有的 key 中，使用 <strong>LFU 算法</strong> 淘汰使用频率最低的 key。</td></tr>
+<tr><td style="text-align: left"><strong><code>volatile-random</code></strong></td><td style="text-align: left">在设置了过期时间（TTL）的 key 中，<strong>随机</strong>淘汰 key。</td></tr>
+<tr><td style="text-align: left"><strong><code>allkeys-random</code></strong></td><td style="text-align: left">在所有的 key 中，<strong>随机</strong>淘汰 key。</td></tr>
+<tr><td style="text-align: left"><strong><code>volatile-ttl</code></strong></td><td style="text-align: left">在设置了过期时间（TTL）的 key 中，优先淘汰 <strong>剩余存活时间（TTL）最短</strong> 的 key。</td></tr>
+</tbody></table>
+</div>
+<h3 id="核心算法解析lru-与-lfu-的区别"><a class="header" href="#核心算法解析lru-与-lfu-的区别">核心算法解析：LRU 与 LFU 的区别</a></h3>
+<ul>
+<li><strong>LRU (Least Recently Used) 最近最少使用</strong>：
+<ul>
+<li><strong>核心思想</strong>：如果数据最近被访问过，那么将来被访问的概率也更高。它看重的是<strong>时间（Recency）</strong>。</li>
+<li><strong>Redis 的近似 LRU 实现</strong>：标准的 LRU 需要维护一个双向链表，开销极大。Redis 采用近似 LRU：在每个 key 的对象头中记录一个 24 位的 <code>lru</code> 时间戳。当需要淘汰时，随机抽取 5 个（可配置）key，淘汰其中时间戳最旧的那个。</li>
+</ul>
+</li>
+<li><strong>LFU (Least Frequently Used) 最不经常使用</strong>：
+<ul>
+<li><strong>核心思想</strong>：如果数据在过去被访问的次数最多，那么将来被访问的概率也更高。它看重的是<strong>频次（Frequency）</strong>。</li>
+<li><strong>引入原因</strong>：解决 LRU 的“缓存污染”问题。例如，一个 key 长期无人访问，但在淘汰前一秒突然被访问了一次，LRU 会认为它是热点数据而保留它。而 LFU 会记录访问频次，能更精准地识别真正的热点数据。</li>
+</ul>
+</li>
+</ul>
+
+                    </main>
+
+                    <nav class="nav-wrapper" aria-label="Page navigation">
+                        <!-- Mobile navigation buttons -->
+                            <a rel="prev" href="../05-Cache-Redis/Redis-Scenarios.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                                <i class="fa fa-angle-left"></i>
+                            </a>
+
+                            <a rel="next prefetch" href="../06-Distributed-System/Distributed-Consensus.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                                <i class="fa fa-angle-right"></i>
+                            </a>
+
+                        <div style="clear: both"></div>
+                    </nav>
+                </div>
+            </div>
+
+            <nav class="nav-wide-wrapper" aria-label="Page navigation">
+                    <a rel="prev" href="../05-Cache-Redis/Redis-Scenarios.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                        <i class="fa fa-angle-left"></i>
+                    </a>
+
+                    <a rel="next prefetch" href="../06-Distributed-System/Distributed-Consensus.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                        <i class="fa fa-angle-right"></i>
+                    </a>
+            </nav>
+
+        </div>
+
+
+
+
+        <script>
+            window.playground_copyable = true;
+        </script>
+
+
+        <script src="../elasticlunr.min.js"></script>
+        <script src="../mark.min.js"></script>
+        <script src="../searcher.js"></script>
+
+        <script src="../clipboard.min.js"></script>
+        <script src="../highlight.js"></script>
+        <script src="../book.js"></script>
+
+        <!-- Custom JS scripts -->
+        <script src="../mermaid.min.js"></script>
+        <script src="../mermaid-init.js"></script>
+
+
+    </div>
+    </body>
+</html>

@@ -1,0 +1,14 @@
+[book]
+authors = ["dwx"]
+language = "zh-CN"
+multilingual = false
+src = "."
+title = "Java 高级开发工程师技术解析文档"
+
+[preprocessor.mermaid]
+command = "mdbook-mermaid"
+
+[output.html]
+git-repository-url = "https://github.com/dwx/AiDocs"
+preferred-dark-theme = "navy"
+additional-js = ["mermaid.min.js", "mermaid-init.js"]

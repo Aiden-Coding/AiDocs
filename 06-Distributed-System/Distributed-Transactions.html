@@ -1,0 +1,414 @@
+<!DOCTYPE HTML>
+<html lang="zh-CN" class="light" dir="ltr">
+    <head>
+        <!-- Book generated using mdBook -->
+        <meta charset="UTF-8">
+        <title>分布式事务原理与 Seata - Java 高级开发工程师技术解析文档</title>
+
+
+        <!-- Custom HTML head -->
+        
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="theme-color" content="#ffffff">
+
+        <link rel="icon" href="../favicon.svg">
+        <link rel="shortcut icon" href="../favicon.png">
+        <link rel="stylesheet" href="../css/variables.css">
+        <link rel="stylesheet" href="../css/general.css">
+        <link rel="stylesheet" href="../css/chrome.css">
+        <link rel="stylesheet" href="../css/print.css" media="print">
+
+        <!-- Fonts -->
+        <link rel="stylesheet" href="../FontAwesome/css/font-awesome.css">
+        <link rel="stylesheet" href="../fonts/fonts.css">
+
+        <!-- Highlight.js Stylesheets -->
+        <link rel="stylesheet" href="../highlight.css">
+        <link rel="stylesheet" href="../tomorrow-night.css">
+        <link rel="stylesheet" href="../ayu-highlight.css">
+
+        <!-- Custom theme stylesheets -->
+
+    </head>
+    <body class="sidebar-visible no-js">
+    <div id="body-container">
+        <!-- Provide site root to javascript -->
+        <script>
+            var path_to_root = "../";
+            var default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? "navy" : "light";
+        </script>
+
+        <!-- Work around some values being stored in localStorage wrapped in quotes -->
+        <script>
+            try {
+                var theme = localStorage.getItem('mdbook-theme');
+                var sidebar = localStorage.getItem('mdbook-sidebar');
+
+                if (theme.startsWith('"') && theme.endsWith('"')) {
+                    localStorage.setItem('mdbook-theme', theme.slice(1, theme.length - 1));
+                }
+
+                if (sidebar.startsWith('"') && sidebar.endsWith('"')) {
+                    localStorage.setItem('mdbook-sidebar', sidebar.slice(1, sidebar.length - 1));
+                }
+            } catch (e) { }
+        </script>
+
+        <!-- Set the theme before any content is loaded, prevents flash -->
+        <script>
+            var theme;
+            try { theme = localStorage.getItem('mdbook-theme'); } catch(e) { }
+            if (theme === null || theme === undefined) { theme = default_theme; }
+            var html = document.querySelector('html');
+            html.classList.remove('light')
+            html.classList.add(theme);
+            var body = document.querySelector('body');
+            body.classList.remove('no-js')
+            body.classList.add('js');
+        </script>
+
+        <input type="checkbox" id="sidebar-toggle-anchor" class="hidden">
+
+        <!-- Hide / unhide sidebar before it is displayed -->
+        <script>
+            var body = document.querySelector('body');
+            var sidebar = null;
+            var sidebar_toggle = document.getElementById("sidebar-toggle-anchor");
+            if (document.body.clientWidth >= 1080) {
+                try { sidebar = localStorage.getItem('mdbook-sidebar'); } catch(e) { }
+                sidebar = sidebar || 'visible';
+            } else {
+                sidebar = 'hidden';
+            }
+            sidebar_toggle.checked = sidebar === 'visible';
+            body.classList.remove('sidebar-visible');
+            body.classList.add("sidebar-" + sidebar);
+        </script>
+
+        <nav id="sidebar" class="sidebar" aria-label="Table of contents">
+            <div class="sidebar-scrollbox">
+                <ol class="chapter"><li class="chapter-item expanded "><a href="../index.html"><strong aria-hidden="true">1.</strong> 前言</a></li><li class="chapter-item expanded "><a href="../01-Java-Concurrent/AQS-and-Locks.html"><strong aria-hidden="true">2.</strong> 一、 Java 并发编程</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../01-Java-Concurrent/AQS-and-Locks.html"><strong aria-hidden="true">2.1.</strong> AQS 机制与锁实现</a></li><li class="chapter-item expanded "><a href="../01-Java-Concurrent/ThreadLocal-and-CAS.html"><strong aria-hidden="true">2.2.</strong> ThreadLocal 与 CAS 原理</a></li><li class="chapter-item expanded "><a href="../01-Java-Concurrent/ThreadPool-Deep-Dive.html"><strong aria-hidden="true">2.3.</strong> 线程池深度解析与调优</a></li><li class="chapter-item expanded "><a href="../01-Java-Concurrent/HashMap-and-ConcurrentHashMap.html"><strong aria-hidden="true">2.4.</strong> HashMap 与 ConcurrentHashMap</a></li></ol></li><li class="chapter-item expanded "><a href="../02-JVM/ClassLoader-and-Bytecode.html"><strong aria-hidden="true">3.</strong> 二、 JVM 虚拟机</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../02-JVM/ClassLoader-and-Bytecode.html"><strong aria-hidden="true">3.1.</strong> 类加载机制与字节码技术</a></li><li class="chapter-item expanded "><a href="../02-JVM/JVM-Memory-and-GC.html"><strong aria-hidden="true">3.2.</strong> JVM 内存模型与垃圾回收</a></li><li class="chapter-item expanded "><a href="../02-JVM/JVM-Tuning-and-Tools.html"><strong aria-hidden="true">3.3.</strong> JVM 调优实战与 Arthas</a></li></ol></li><li class="chapter-item expanded "><a href="../03-Spring-Framework/Spring-IoC-and-AOP.html"><strong aria-hidden="true">4.</strong> 三、 Spring 框架</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../03-Spring-Framework/Spring-IoC-and-AOP.html"><strong aria-hidden="true">4.1.</strong> Spring IoC 与 AOP 源码</a></li><li class="chapter-item expanded "><a href="../03-Spring-Framework/Spring-Transaction.html"><strong aria-hidden="true">4.2.</strong> Spring 事务传播与失效</a></li><li class="chapter-item expanded "><a href="../03-Spring-Framework/SpringBoot-and-SpringCloud.html"><strong aria-hidden="true">4.3.</strong> SpringBoot 与微服务组件</a></li></ol></li><li class="chapter-item expanded "><a href="../04-Database-MySQL/MySQL-Index-and-Engine.html"><strong aria-hidden="true">5.</strong> 四、 MySQL 数据库</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../04-Database-MySQL/MySQL-Index-and-Engine.html"><strong aria-hidden="true">5.1.</strong> B+树索引与 InnoDB 引擎</a></li><li class="chapter-item expanded "><a href="../04-Database-MySQL/MySQL-MVCC-and-Locks.html"><strong aria-hidden="true">5.2.</strong> MVCC 机制与锁机制</a></li><li class="chapter-item expanded "><a href="../04-Database-MySQL/MySQL-Optimization.html"><strong aria-hidden="true">5.3.</strong> 慢 SQL 优化与分库分表</a></li><li class="chapter-item expanded "><a href="../04-Database-MySQL/MySQL-Logs-and-Replication.html"><strong aria-hidden="true">5.4.</strong> MySQL 日志与主从复制</a></li></ol></li><li class="chapter-item expanded "><a href="../05-Cache-Redis/Redis-DataStructures-and-IO.html"><strong aria-hidden="true">6.</strong> 五、 Redis 缓存</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../05-Cache-Redis/Redis-DataStructures-and-IO.html"><strong aria-hidden="true">6.1.</strong> 核心数据结构与单线程</a></li><li class="chapter-item expanded "><a href="../05-Cache-Redis/Redis-HighAvailability.html"><strong aria-hidden="true">6.2.</strong> Redis 高可用与集群</a></li><li class="chapter-item expanded "><a href="../05-Cache-Redis/Redis-Scenarios.html"><strong aria-hidden="true">6.3.</strong> Redis 缓存实战与分布式锁</a></li><li class="chapter-item expanded "><a href="../05-Cache-Redis/Redis-Consistency-and-Eviction.html"><strong aria-hidden="true">6.4.</strong> 双写一致性与内存淘汰</a></li></ol></li><li class="chapter-item expanded "><a href="../06-Distributed-System/Distributed-Consensus.html"><strong aria-hidden="true">7.</strong> 六、 分布式系统</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../06-Distributed-System/Distributed-Consensus.html"><strong aria-hidden="true">7.1.</strong> 分布式共识协议</a></li><li class="chapter-item expanded "><a href="../06-Distributed-System/Distributed-Transactions.html" class="active"><strong aria-hidden="true">7.2.</strong> 分布式事务原理与 Seata</a></li><li class="chapter-item expanded "><a href="../06-Distributed-System/Message-Queue.html"><strong aria-hidden="true">7.3.</strong> 消息队列高可用与防丢失</a></li><li class="chapter-item expanded "><a href="../06-Distributed-System/Distributed-Lock-ZooKeeper.html"><strong aria-hidden="true">7.4.</strong> ZooKeeper 分布式锁</a></li></ol></li></ol>
+            </div>
+            <div id="sidebar-resize-handle" class="sidebar-resize-handle">
+                <div class="sidebar-resize-indicator"></div>
+            </div>
+        </nav>
+
+        <!-- Track and set sidebar scroll position -->
+        <script>
+            var sidebarScrollbox = document.querySelector('#sidebar .sidebar-scrollbox');
+            sidebarScrollbox.addEventListener('click', function(e) {
+                if (e.target.tagName === 'A') {
+                    sessionStorage.setItem('sidebar-scroll', sidebarScrollbox.scrollTop);
+                }
+            }, { passive: true });
+            var sidebarScrollTop = sessionStorage.getItem('sidebar-scroll');
+            sessionStorage.removeItem('sidebar-scroll');
+            if (sidebarScrollTop) {
+                // preserve sidebar scroll position when navigating via links within sidebar
+                sidebarScrollbox.scrollTop = sidebarScrollTop;
+            } else {
+                // scroll sidebar to current active section when navigating via "next/previous chapter" buttons
+                var activeSection = document.querySelector('#sidebar .active');
+                if (activeSection) {
+                    activeSection.scrollIntoView({ block: 'center' });
+                }
+            }
+        </script>
+
+        <div id="page-wrapper" class="page-wrapper">
+
+            <div class="page">
+                                <div id="menu-bar-hover-placeholder"></div>
+                <div id="menu-bar" class="menu-bar sticky">
+                    <div class="left-buttons">
+                        <label id="sidebar-toggle" class="icon-button" for="sidebar-toggle-anchor" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="sidebar">
+                            <i class="fa fa-bars"></i>
+                        </label>
+                        <button id="theme-toggle" class="icon-button" type="button" title="Change theme" aria-label="Change theme" aria-haspopup="true" aria-expanded="false" aria-controls="theme-list">
+                            <i class="fa fa-paint-brush"></i>
+                        </button>
+                        <ul id="theme-list" class="theme-popup" aria-label="Themes" role="menu">
+                            <li role="none"><button role="menuitem" class="theme" id="light">Light</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="rust">Rust</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="coal">Coal</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="navy">Navy</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="ayu">Ayu</button></li>
+                        </ul>
+                        <button id="search-toggle" class="icon-button" type="button" title="Search. (Shortkey: s)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="S" aria-controls="searchbar">
+                            <i class="fa fa-search"></i>
+                        </button>
+                    </div>
+
+                    <h1 class="menu-title">Java 高级开发工程师技术解析文档</h1>
+
+                    <div class="right-buttons">
+                        <a href="../print.html" title="Print this book" aria-label="Print this book">
+                            <i id="print-button" class="fa fa-print"></i>
+                        </a>
+                        <a href="https://github.com/dwx/AiDocs" title="Git repository" aria-label="Git repository">
+                            <i id="git-repository-button" class="fa fa-github"></i>
+                        </a>
+
+                    </div>
+                </div>
+
+                <div id="search-wrapper" class="hidden">
+                    <form id="searchbar-outer" class="searchbar-outer">
+                        <input type="search" id="searchbar" name="searchbar" placeholder="Search this book ..." aria-controls="searchresults-outer" aria-describedby="searchresults-header">
+                    </form>
+                    <div id="searchresults-outer" class="searchresults-outer hidden">
+                        <div id="searchresults-header" class="searchresults-header"></div>
+                        <ul id="searchresults">
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Apply ARIA attributes after the sidebar and the sidebar toggle button are added to the DOM -->
+                <script>
+                    document.getElementById('sidebar-toggle').setAttribute('aria-expanded', sidebar === 'visible');
+                    document.getElementById('sidebar').setAttribute('aria-hidden', sidebar !== 'visible');
+                    Array.from(document.querySelectorAll('#sidebar a')).forEach(function(link) {
+                        link.setAttribute('tabIndex', sidebar === 'visible' ? 0 : -1);
+                    });
+                </script>
+
+                <div id="content" class="content">
+                    <main>
+                        <h1 id="分布式事务原理与-seata-实战"><a class="header" href="#分布式事务原理与-seata-实战">分布式事务原理与 Seata 实战</a></h1>
+<p>在微服务架构中，一个复杂的业务流程往往需要调用多个微服务，每个微服务都拥有自己独立的数据库。传统的本地事务（ACID）无法保证跨服务、跨数据库的数据一致性，必须引入<strong>分布式事务</strong>。</p>
+<hr />
+<h2 id="一-分布式事务理论基石cap-与-base"><a class="header" href="#一-分布式事务理论基石cap-与-base">一、 分布式事务理论基石：CAP 与 BASE</a></h2>
+<p>在设计分布式事务方案之前，必须理解分布式系统的基本理论。</p>
+<h3 id="1-cap-定理"><a class="header" href="#1-cap-定理">1. CAP 定理</a></h3>
+<p>CAP 定理指出，在一个分布式系统中，以下三个特性<strong>无法同时满足</strong>，最多只能同时满足两个：</p>
+<ul>
+<li><strong>Consistency（一致性）</strong>：所有节点在同一时刻看到的数据完全一致。</li>
+<li><strong>Availability（可用性）</strong>：系统提供的服务必须一直处于可用状态，每个请求都能收到非错响应（但不保证数据最新）。</li>
+<li><strong>Partition Tolerance（分区容错性）</strong>：分布式系统在遇到任何网络分区故障时，仍然能够对外提供服务。</li>
+</ul>
+<blockquote>
+<p><strong>核心结论</strong>：在分布式系统中，网络分区（P）是客观存在的，无法避免。因此，架构师只能在 <strong>CP（强一致性）</strong> 和 <strong>AP（高可用性）</strong> 之间进行权衡：</p>
+</blockquote>
+<ul>
+<li><strong>CP 架构</strong>：为了保证强一致性，在网络分区发生时，必须拒绝部分请求或让其等待，牺牲可用性（如 ZooKeeper）。</li>
+<li><strong>AP 架构</strong>：为了保证高可用，允许不同节点的数据在短时间内不一致，牺牲强一致性，追求<strong>最终一致性</strong>（如 Eureka、Nacos AP 模式、Seata AT 模式）。</li>
+</ul>
+<h3 id="2-base-理论"><a class="header" href="#2-base-理论">2. BASE 理论</a></h3>
+<p>BASE 理论是对 CAP 中 AP 方案的延伸，是现代分布式系统设计的核心指导思想：</p>
+<ul>
+<li><strong>Basically Available（基本可用）</strong>：分布式系统在出现故障时，允许损失部分可用性（如响应时间延长、非核心功能降级），但保证核心功能可用。</li>
+<li><strong>Soft State（软状态）</strong>：允许系统中的数据存在中间状态（如“支付中”、“处理中”），并认为该中间状态不影响系统的整体可用性。</li>
+<li><strong>Eventually Consistent（最终一致性）</strong>：系统中的所有数据副本，在经过一段时间的同步后，最终能够达到一致的状态，而不需要实时强一致。</li>
+</ul>
+<hr />
+<h2 id="二-常见分布式事务解决方案"><a class="header" href="#二-常见分布式事务解决方案">二、 常见分布式事务解决方案</a></h2>
+<pre class="mermaid">graph TD
+    A[分布式事务方案] --&gt; B[强一致性 CP]
+    A --&gt; C[最终一致性 AP]
+    B --&gt; D[2PC 二阶段提交]
+    B --&gt; E[3PC 三阶段提交]
+    C --&gt; F[TCC 补偿型事务]
+    C --&gt; G[Saga 柔性事务]
+    C --&gt; H[本地消息表 / MQ 事务消息]
+</pre>
+<h3 id="1-2pc-two-phase-commit-二阶段提交"><a class="header" href="#1-2pc-two-phase-commit-二阶段提交">1. 2PC (Two-Phase Commit) 二阶段提交</a></h3>
+<ul>
+<li><strong>角色</strong>：协调者（Coordinator）和参与者（Participants）。</li>
+<li><strong>流程</strong>：
+<ol>
+<li><strong>准备阶段（Prepare Phase）</strong>：协调者向所有参与者发送 <code>prepare</code> 请求，参与者执行本地事务但不提交，并锁定资源，向协调者反馈是否就绪。</li>
+<li><strong>提交阶段（Commit Phase）</strong>：如果所有参与者都反馈就绪，协调者发送 <code>commit</code> 指令，参与者提交事务并释放锁；如果有任意一个参与者反馈失败或超时，协调者发送 <code>rollback</code> 指令，参与者回滚本地事务。</li>
+</ol>
+</li>
+<li><strong>致命缺点</strong>：
+<ul>
+<li><strong>同步阻塞</strong>：所有参与者在等待协调者指令时都处于阻塞状态，占用数据库连接和锁资源，并发性能极差。</li>
+<li><strong>单点故障</strong>：如果协调者在第二阶段宕机，参与者将一直处于悬挂状态，无法释放资源。</li>
+<li><strong>数据不一致</strong>：如果在第二阶段，协调者发送的 <code>commit</code> 指令因为网络原因只被部分参与者收到，会导致部分提交、部分未提交的数据不一致问题。</li>
+</ul>
+</li>
+</ul>
+<hr />
+<h3 id="2-tcc-try-confirm-cancel-补偿型事务"><a class="header" href="#2-tcc-try-confirm-cancel-补偿型事务">2. TCC (Try-Confirm-Cancel) 补偿型事务</a></h3>
+<p>TCC 是一种应用层面的柔性事务方案，将业务逻辑拆分为三个方法：</p>
+<ul>
+<li><strong>Try（尝试）</strong>：完成所有业务检查，<strong>预留/冻结</strong>业务资源。</li>
+<li><strong>Confirm（确认）</strong>：真正执行业务，只使用 Try 阶段预留的资源。Confirm 阶段默认不会出错，如果出错需要重试。</li>
+<li><strong>Cancel（取消）</strong>：释放 Try 阶段预留的资源。</li>
+</ul>
+<p><strong>TCC 的三大核心痛点及解决方案</strong>：</p>
+<ul>
+<li><strong>空回滚（Null-Cancel）</strong>：
+<ul>
+<li><strong>场景</strong>：Try 阶段因为网络超时未执行，但协调者已决定回滚，发送了 Cancel 请求。</li>
+<li><strong>解决办法</strong>：在分支事务记录表中增加状态字段。Cancel 执行时，先判断 Try 是否执行过，若未执行，则进行空回滚。</li>
+</ul>
+</li>
+<li><strong>幂等性（Idempotence）</strong>：
+<ul>
+<li><strong>场景</strong>：由于网络抖动，Confirm 或 Cancel 请求被重复发送。</li>
+<li><strong>解决办法</strong>：通过全局唯一的事务 ID（XID）和分支 ID 进行幂等校验，确保多次执行结果一致。</li>
+</ul>
+</li>
+<li><strong>悬挂（Hanging）</strong>：
+<ul>
+<li><strong>场景</strong>：Cancel 请求因为网络拥堵先于 Try 请求到达参与者。此时执行了空回滚，随后 Try 请求到达，导致预留的资源被永久悬挂。</li>
+<li><strong>解决办法</strong>：在执行 Try 时，先检查当前分支的 Cancel 是否已经执行过。如果 Cancel 已经执行过，则直接拒绝 Try 的执行。</li>
+</ul>
+</li>
+</ul>
+<hr />
+<h2 id="三-seata-分布式事务框架"><a class="header" href="#三-seata-分布式事务框架">三、 Seata 分布式事务框架</a></h2>
+<p>Seata（Simple Extensible Autonomous Transaction Architecture）是阿里开源的工业级分布式事务解决方案。它提供了 <strong>AT</strong>、<strong>TCC</strong>、<strong>SAGA</strong> 和 <strong>XA</strong> 四种事务模式。</p>
+<h3 id="1-seata-at-模式无侵入最常用"><a class="header" href="#1-seata-at-模式无侵入最常用">1. Seata AT 模式（无侵入、最常用）</a></h3>
+<p>AT 模式是 Seata 的王牌模式，对业务代码<strong>零侵入</strong>。其底层基于<strong>拦截 JDBC 驱动</strong>，自动生成回滚日志（Undo Log）来实现。</p>
+<pre class="mermaid">sequenceDiagram
+    autonumber
+    participant Client as 业务系统
+    participant TC as Seata TC (事务协调器)
+    participant DB as 数据库
+
+    Note over Client,DB: 一阶段 (本地提交)
+    Client-&gt;&gt;DB: 1. 解析 SQL，保存【前镜像】数据
+    Client-&gt;&gt;DB: 2. 执行业务 SQL
+    Client-&gt;&gt;DB: 3. 保存【后镜像】数据，生成 undo_log
+    Client-&gt;&gt;TC: 4. 注册分支事务，申请全局锁
+    Client-&gt;&gt;DB: 5. 提交本地事务 (业务数据与 undo_log 一起提交)
+
+    Note over Client,DB: 二阶段 (全局提交/回滚)
+    alt 全局提交 (Success)
+        TC-&gt;&gt;Client: 6a. 发送提交请求
+        Client-&gt;&gt;DB: 7a. 异步、批量删除对应的 undo_log 记录 (极快)
+    else 全局回滚 (Fail)
+        TC-&gt;&gt;Client: 6b. 发送回滚请求
+        Client-&gt;&gt;DB: 7b. 校验当前数据与【后镜像】是否一致 (防脏写)
+        Client-&gt;&gt;DB: 8b. 一致则用【前镜像】还原数据，并提交本地事务
+    end
+</pre>
+<p><strong>AT 模式的读写隔离机制</strong>：</p>
+<ul>
+<li><strong>写隔离</strong>：
+<ul>
+<li>在一阶段本地事务提交前，Seata 会向 TC（Transaction Coordinator）申请<strong>全局锁</strong>。</li>
+<li>如果另一个非 Seata 管理的事务尝试修改同一行数据，由于无法获取全局锁，该修改会被阻塞或拒绝，从而在全局层面避免了脏写。</li>
+</ul>
+</li>
+<li><strong>读隔离</strong>：
+<ul>
+<li>默认隔离级别是读未提交（Read Uncommitted）。</li>
+<li>如果需要达到读已提交（Read Committed），需要使用 <code>SELECT ... FOR UPDATE</code>，Seata 会拦截该语句并申请全局锁，确保读取到的是已提交的全局事务数据。</li>
+</ul>
+</li>
+</ul>
+<hr />
+<h2 id="四-seata-生产实战与高频追问"><a class="header" href="#四-seata-生产实战与高频追问">四、 Seata 生产实战与高频追问</a></h2>
+<h3 id="1-seata-at-模式的脏写与脏读问题及解决方案"><a class="header" href="#1-seata-at-模式的脏写与脏读问题及解决方案">1. Seata AT 模式的脏写与脏读问题及解决方案</a></h3>
+<ul>
+<li><strong>脏写（Dirty Write）</strong>：
+<ul>
+<li><strong>场景</strong>：事务 A（Seata 管理）在一阶段修改了数据并提交，但尚未释放全局锁。此时，非 Seata 管理的本地事务 B 绕过 Seata 直接修改了同一行数据并提交。随后事务 A 发生异常需要回滚，回滚时 Seata 校验【后镜像】与当前数据库数据，发现不一致（已被 B 修改），导致<strong>回滚失败</strong>，必须人工介入。</li>
+<li><strong>解决方案</strong>：
+<ol>
+<li><strong>全员接入 Seata</strong>：所有对该表进行写操作的业务方法都必须加上 <code>@GlobalTransactional</code>，确保全部受全局锁控制。</li>
+<li><strong>引入 <code>@GlobalLock</code></strong>：对于不需要开启全局事务但会修改相关数据的本地方法，加上 <code>@GlobalLock</code> 注解。它不会开启全局事务，但在本地事务提交前会去申请全局锁，从而避免脏写。</li>
+</ol>
+</li>
+</ul>
+</li>
+<li><strong>脏读（Dirty Read）</strong>：
+<ul>
+<li><strong>场景</strong>：事务 A（Seata 管理）在一阶段修改了数据并提交了本地事务，但全局事务尚未提交。此时，事务 B（普通查询）读取了该行数据。如果事务 A 随后回滚，事务 B 读取到的就是脏数据。</li>
+<li><strong>解决方案</strong>：
+<ul>
+<li>如果业务对读隔离有极高要求，查询语句必须使用 <code>SELECT ... FOR UPDATE</code>。Seata 会拦截该语句，在本地事务提交前去 TC 申请全局锁。如果全局锁被其他未提交的全局事务持有，则查询会被阻塞，直到锁释放，从而实现<strong>读已提交（RC）</strong>。</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<h3 id="2-seata-与本地事务-transactional-混用的坑"><a class="header" href="#2-seata-与本地事务-transactional-混用的坑">2. Seata 与本地事务 <code>@Transactional</code> 混用的坑</a></h3>
+<ul>
+<li><strong>问题描述</strong>：
+<ul>
+<li>在 Spring 中，我们经常将 <code>@GlobalTransactional</code> 和 <code>@Transactional</code> 混用。</li>
+<li>如果 <code>@GlobalTransactional</code> 标注在最外层方法，而内层方法标注了 <code>@Transactional</code>，当内层本地事务提交后，一阶段数据已经落库并生成了 <code>undo_log</code>。</li>
+<li>如果外层方法在后续步骤中抛出异常，<code>@GlobalTransactional</code> 会触发全局回滚，通过 <code>undo_log</code> 还原数据。</li>
+<li><strong>致命陷阱</strong>：如果内层本地事务因为某些原因（如数据库连接超时）回滚了，但外层方法捕获了异常并继续执行，TC 无法感知到内层本地事务已经回滚，在全局提交时可能会因为找不到对应的 <code>undo_log</code> 或数据不一致而报错。</li>
+</ul>
+</li>
+<li><strong>最佳实践</strong>：
+<ul>
+<li>尽量避免在同一个方法链中无节制地混用。</li>
+<li>确保外层 <code>@GlobalTransactional</code> 包裹的方法内部，所有本地事务的异常都能正确向上抛出，让 Seata 协调器（TC）能够精准感知分支事务的状态。</li>
+</ul>
+</li>
+</ul>
+<h3 id="3-seata-tc事务协调器的高可用部署"><a class="header" href="#3-seata-tc事务协调器的高可用部署">3. Seata TC（事务协调器）的高可用部署</a></h3>
+<p>在生产环境中，TC 是整个分布式事务的核心枢纽，必须保证其高可用：</p>
+<ul>
+<li><strong>注册中心与配置中心</strong>：TC 支持接入 Nacos、Consul、Eureka 等注册中心，实现服务发现与动态扩容。</li>
+<li><strong>存储模式（Store Mode）</strong>：
+<ul>
+<li><strong>file 模式</strong>：单机运行，事务日志存在本地文件中，性能高但不具备高可用性。</li>
+<li><strong>db 模式（推荐）</strong>：多实例共享同一个数据库，事务日志存在数据库中，通过数据库保证一致性，支持水平扩展。</li>
+<li><strong>redis 模式</strong>：高并发场景下推荐。将事务日志存在 Redis 中，兼顾了高可用与极高的读写性能。</li>
+</ul>
+</li>
+</ul>
+<hr />
+
+                    </main>
+
+                    <nav class="nav-wrapper" aria-label="Page navigation">
+                        <!-- Mobile navigation buttons -->
+                            <a rel="prev" href="../06-Distributed-System/Distributed-Consensus.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                                <i class="fa fa-angle-left"></i>
+                            </a>
+
+                            <a rel="next prefetch" href="../06-Distributed-System/Message-Queue.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                                <i class="fa fa-angle-right"></i>
+                            </a>
+
+                        <div style="clear: both"></div>
+                    </nav>
+                </div>
+            </div>
+
+            <nav class="nav-wide-wrapper" aria-label="Page navigation">
+                    <a rel="prev" href="../06-Distributed-System/Distributed-Consensus.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                        <i class="fa fa-angle-left"></i>
+                    </a>
+
+                    <a rel="next prefetch" href="../06-Distributed-System/Message-Queue.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                        <i class="fa fa-angle-right"></i>
+                    </a>
+            </nav>
+
+        </div>
+
+
+
+
+        <script>
+            window.playground_copyable = true;
+        </script>
+
+
+        <script src="../elasticlunr.min.js"></script>
+        <script src="../mark.min.js"></script>
+        <script src="../searcher.js"></script>
+
+        <script src="../clipboard.min.js"></script>
+        <script src="../highlight.js"></script>
+        <script src="../book.js"></script>
+
+        <!-- Custom JS scripts -->
+        <script src="../mermaid.min.js"></script>
+        <script src="../mermaid-init.js"></script>
+
+
+    </div>
+    </body>
+</html>
