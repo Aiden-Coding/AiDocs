@@ -13,8 +13,10 @@ disable-model-invocation: false
 ## 常见 Markdown 规范与修复方案
 
 ### 1. 标题前后空行 (MD022 / blanks-around-headings)
+
 - **规则**：所有标题（`#` 到 `######`）的上方和下方必须各有一个空行。
 - **修复示例**：
+
   ```markdown
   <!-- 错误 -->
   ## 标题
@@ -27,8 +29,10 @@ disable-model-invocation: false
   ```
 
 ### 2. 列表前后空行 (MD032 / blanks-around-lists)
+
 - **规则**：无序列表（`-`、`*`）和有序列表（`1.`）的前后必须有空行，不能与普通文本或标题紧挨着。
 - **修复示例**：
+
   ```markdown
   <!-- 错误 -->
   普通文本
@@ -46,9 +50,11 @@ disable-model-invocation: false
   ```
 
 ### 3. 代码块前后空行 (MD031 / blanks-around-fences)
+
 - **规则**：使用三个反引号（```）包裹的代码块前后必须有空行。
 - **修复示例**：
-  ```markdown
+
+  ````markdown
   <!-- 错误 -->
   普通文本
   ```java
@@ -64,11 +70,13 @@ disable-model-invocation: false
   ```
 
   普通文本
-  ```
+  ````
 
 ### 4. 表格列数一致性 (MD056 / table-column-count)
+
 - **规则**：Markdown 表格的每一行（包括表头、分割线和数据行）的列数（即 `|` 的数量）必须完全一致。
 - **修复示例**：
+
   ```markdown
   <!-- 错误 (第二行和第三行少了一个列) -->
   | 锁状态 | 25bit | 31bit | 1bit | 4bit | 1bit | 2bit |
@@ -82,8 +90,10 @@ disable-model-invocation: false
   ```
 
 ### 5. 标题末尾标点符号 (MD026 / no-trailing-punctuation)
+
 - **规则**：标题末尾不应包含不必要的标点符号（如中文冒号 `：`、英文冒号 `:`、问号、感叹号等）。
 - **修复示例**：
+
   ```markdown
   <!-- 错误 -->
   ## 核心源码：
