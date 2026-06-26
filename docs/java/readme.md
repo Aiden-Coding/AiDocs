@@ -58,6 +58,8 @@ mindmap
 - **[memory-gc.md](jvm/memory-gc.md)**：辨析堆外零拷贝 Direct Memory 与基于本地内存的 Metaspace 优缺点；深度解构并发标记下的三色标记漏标细节，对比 G1 的 SATB 原始快照与 CMS 的增量更新解决方案；剖析 ZGC 染色指针、读屏障与自 healed。
 - **[tuning-tools.md](jvm/tuning-tools.md)**：实战演练线上 CPU 飙高 100% 极速排查，使用 MAT 分析 `Shallow/Retained Heap`、Dominator Tree 追踪 GC Roots；熟练运用 Arthas `dashboard`、`thread -b` 查死锁、`jad` 反编译、`watch`/`trace` 链路时延诊断。
 
+- **[interview.md](interview.md)**：Java 核心高频面试题与底层原理解析。精选 Java 基础与集合框架、高并发与多线程（AQS/volatile/线程池）、JVM 虚拟机深度原理、Spring 底层与微服务生态、数据持久化与缓存高并发（MySQL/Redis）的核心八股题库与大厂实战排障方案。
+
 ### 3. Spring 原理与微服务生态 (Spring Ecosystem)
 
 Spring 是企业级开发的事实标准。本板块直面 Spring IoC, AOP 源码、事务、自动装配及微服务高可用方案。
