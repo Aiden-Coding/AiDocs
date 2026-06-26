@@ -48,12 +48,12 @@ sequenceDiagram
 1. **Proposer** 选择一个唯一的提议编号 $N$，向半数以上（Quorum）的 **Acceptor** 发送 `Prepare(N)` 请求。
 2. **Acceptor** 收到 `Prepare(N)` 请求后，做出如下承诺（Promise）：
    - 承诺不再接受任何编号小于或等于 $N$ 的提议。
-   - 如果之前已经通过（Accepted）过提议，则返回已通过的提议中编号最大的那个提议的值 $V_{max}$ 和编号 $N_{max}$。
+   - 如果之前已经通过（Accepted）过提议，则返回已通过的提议中编号最大的那个提议的值 `V_max` 和编号 `N_max`。
 
 **第二阶段：Accept 阶段**：
 
 1. 当 **Proposer** 收到半数以上 Acceptor 的 Promise 响应后，它需要决定提议的值 $V$：
-   - 如果响应中包含任何已被通过的值，则 $V$ 必须等于这些值中编号最大的那个值 $V_{max}$。
+   - 如果响应中包含任何已被通过的值，则 $V$ 必须等于这些值中编号最大的那个值 `V_max`。
    - 如果响应中不包含任何已被通过的值，则 Proposer 可以自由决定提议的值 $V$。
 2. 随后，Proposer 向这些 Acceptor 发送 `Accept(N, V)` 请求。
 3. **Acceptor** 收到 `Accept(N, V)` 请求后，只要它没有承诺过拒绝编号为 $N$ 的提议，就会通过（Accepted）该提议。

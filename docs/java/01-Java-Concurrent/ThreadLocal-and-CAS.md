@@ -41,7 +41,7 @@ public class Thread implements Runnable {
 `ThreadLocalMap` 的内部类 `Entry` 继承了 `WeakReference`：
 
 ```java
-static class Entry extends WeakReference<ThreadLocal> {
+static class Entry extends WeakReference {
     /** The value associated with this ThreadLocal. */
     Object value;
 
