@@ -81,7 +81,9 @@ $$\text{Thread} \rightarrow \text{ThreadLocalMap} \rightarrow \text{Entry} \righ
 
 **AQS/线程池复用问题**：在线程池场景下，线程是被复用的。如果不调用 `remove()`，下一个任务可能会读取到上一个任务遗留的数据，造成业务逻辑混乱。
 
----\n\n## 二、 CAS (Compare And Swap) 与 Unsafe 类
+---
+
+## 二、 CAS (Compare And Swap) 与 Unsafe 类
 
 CAS 是一种无锁（Lock-Free）的原子操作，它利用 CPU 的硬件指令来实现并发安全。
 
@@ -114,9 +116,13 @@ public final int getAndAddInt(Object o, long offset, int delta) {
 
 在 CPU 层面，对于 x86 架构，CAS 底层对应的是 `lock cmpxchg` 指令。`lock` 前缀指令会锁住系统总线（或缓存行），确保多核 CPU 下的内存操作原子性。
 
----\n\n## 三、 CAS 的三大缺点及解决方案
+---
 
-### 1. ABA 问题
+## 三、 CAS 的三大缺点及解决方案
+
+### 3. CAS 的三大缺点及解决方案
+
+#### 1. ABA 问题
 
 **问题描述**：
 线程 1 读取到变量的值为 A。在线程 1 准备进行 CAS 更新之前，线程 2 将变量的值改为了 B，随后又改回了 A。当线程 1 进行 CAS 时，发现值依然是 A，于是更新成功。但实际上，这个变量已经被修改过了。
@@ -142,7 +148,7 @@ private static class Pair<T> {
 
 通过比较引用和版本戳双重维度，确保 CAS 的绝对安全。
 
-### 2. 循环时间长、CPU 开销大
+#### 2. 循环时间长、CPU 开销大
 
 **问题描述**：
 如果高并发下竞争极其激烈，CAS 会一直失败并处于自旋状态（死循环），这会给 CPU 带来极大的计算开销。
@@ -162,7 +168,7 @@ graph TD
     E --> F[最终求和: base + sum(Cells)]
 ```
 
-### 3. 只能保证一个共享变量 of 原子操作
+#### 3. 只能保证一个共享变量的原子操作
 
 **问题描述**：
 CAS 只能对单个内存地址进行原子操作，无法同时保证多个变量的联合原子性。

@@ -78,14 +78,11 @@ AQS 支持两种资源共享方式
 ```java
 static final class NonfairSync extends Sync {
     final void lock() {
-        //
-
-       if (compareAndSetState(0, 1))
+        if (compareAndSetState(0, 1))
             setExclusiveOwnerThread(Thread.currentThread());
         else
-            acquire(1); //
-
-   }
+            acquire(1);
+    }
 
     protected final boolean tryAcquire(int acquires) {
         return nonfairTryAcquire(acquires);
@@ -182,9 +179,8 @@ public final boolean release(int arg) {
 
 // ReentrantLock 实现的 tryRelease
 protected final boolean tryRelease(int releases) {
-    int c = getState()
-
-   if (Thread.currentThread() != getExclusiveOwnerThread())
+    int c = getState() - releases;
+    if (Thread.currentThread() != getExclusiveOwnerThread())
         throw new IllegalMonitorStateException();
     boolean free = false;
     if (c == 0) {

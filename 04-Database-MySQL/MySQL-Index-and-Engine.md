@@ -69,7 +69,9 @@ SELECT name, id FROM user WHERE name = 'Jack';
 SELECT name, age, address FROM user WHERE name = 'Jack';
 ```
 
----\n\n## 三、 B+树的高度与数据量估算（硬核计算）
+---
+
+## 三、 B+树的高度与数据量估算（硬核计算）
 
 在面试中，面试官常问：“**一个 3 层的 B+树，大概能存放多少行数据？**”
 

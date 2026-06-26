@@ -65,7 +65,9 @@ graph TD
 - **`DiscardOldestPolicy`**：丢弃队列中等待最久的任务，然后重新尝试提交当前任务。
 - **`DiscardPolicy`**：直接丢弃任务，不予任何处理也不抛出异常。
 
----\n\n## 三、 线程池大小如何合理配置？
+---
+
+## 三、 线程池大小如何合理配置？
 
 线程池大小配置不当，要么导致 CPU 频繁切换上下文（线程数过多），要么导致系统资源无法充分利用（线程数过少）。
 
@@ -82,7 +84,7 @@ graph TD
 **IO 密集型**：
 
 - **特点**：任务在执行过程中，大部分时间都在等待 IO 操作完成，CPU 处于空闲状态。
-- **配置公式**：$$\text{线程数} = \text{CPU 核心数} \times \left(1 + \frac{\text{线程等待时间}}{\\text{线程 CPU 计算时间}}\right)$$
+- **配置公式**：$$\text{线程数} = \text{CPU 核心数} \times \left(1 + \frac{\text{线程等待时间}}{\text{线程 CPU 计算时间}}\right)$$
 - **简化公式**：$$\text{线程数} = 2 \times \text{CPU 核心数}$$
 
 ### 2. 经典公式的局限性与现代解决方案
@@ -98,7 +100,9 @@ graph TD
   - `setKeepAliveTime(long, TimeUnit)`
 - **注意**：`LinkedBlockingQueue` 的 `capacity` 字段是 `final` 修饰的，无法直接修改。如果需要动态修改队列大小，需要自定义一个可修改容量的队列（如重写 `LinkedBlockingQueue`）。
 
----\n\n## 四、 线程池源码级细节与常见坑
+---
+
+## 四、 线程池源码级细节与常见坑
 
 ### 1. 线程池状态控制：`ctl` 的妙用
 

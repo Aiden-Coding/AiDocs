@@ -61,7 +61,9 @@ graph TD
 1. **安全性**：防止核心 API 被篡改。例如，用户自定义了一个 `java.lang.String` 类，双亲委派机制会保证最终加载的是 JDK 自带的 String 类，而不是用户自定义的，从而避免了安全隐患。
 2. **避免重复加载**：保证同一个类在 JVM 中只被加载一次。
 
----\n\n### 2. 破坏双亲委派模型的三种场景
+---
+
+### 2. 破坏双亲委派模型的三种场景
 
 虽然双亲委派模型是推荐的，但在某些特定场景下，为了实现特定的功能，必须破坏它。
 
@@ -107,8 +109,54 @@ Java 字节码技术允许我们在编译期或运行期动态修改、生成 Cl
 
 字节码插桩是指在不修改 Java 源代码的情况下，直接在编译后的 `.class` 字节码文件中插入特定的字节码指令，从而改变程序的行为。
 
-- **ASM**：一个轻量级、高性能的字节码操作框架。它直接以二进制形式操作字节码，采用访问者模式（Visitor Pattern），学习曲线陡峭，但性能极高。Spring、CGLIB、Fastjson 等底层都依赖 ASM
+- **ASM**：一个轻量级、高性能的字节码操作框架。它直接以二进制形式操作字节码，采用访问者模式（Visitor Pattern），学习曲线陡峭，但性能极高。Spring、CGLIB、Fastjson 等底层都依赖 ASM。
+- **Javassist**：一个开源的分析和编辑 Java 字节码的类库。它最大的特点是**可以直接使用 Java 代码字符串来修改字节码**，无需理解底层的 JVM 指令，使用非常简单。
 
-**Javassist**：一个开源的分析和编辑 Java 字节码的类库。它最大的特点是**可以直接使用 Java 代码字符串来修改字节码**，无需理解底层的 JVM 指令，使用非常简单
+### 3. Java Agent（探针）技术
 
-**Java Agent（探针）**：
+Java Agent 是一种在 JVM 启动后或运行期间，动态修改已加载字节码的技术。它是 APM（应用性能监控，如 SkyWalking、Pinpoint）和热部署工具（如 JRebel）的底层核心。
+
+#### (1) Java Agent 的两种加载方式
+
+| 维度 | 静态加载 (Premain) | 动态加载 (Agentmain) |
+| :--- | :--- | :--- |
+| **启动时机** | JVM 启动时，在 `main` 方法执行前。 | JVM 运行期间，动态 Attach 到目标进程。 |
+| **核心入口方法** | `public static void premain(String agentArgs, Instrumentation inst)` | `public static void agentmain(String agentArgs, Instrumentation inst)` |
+| **JVM 参数** | `-javaagent:/path/to/agent.jar` | 无需 JVM 启动参数，通过 VirtualMachine API 动态加载。 |
+| **类重定义限制** | 可以自由转换（Transform）任何尚未加载的类。 | 只能重定义（Redefine）或重转换（Retransform）已加载的类，且**不能修改类结构**（如增减字段、方法）。 |
+
+#### (2) 核心原理：`Instrumentation` 与 JVMTI
+
+Java Agent 的底层依赖于 JVM 的 **JVMTI（JVM Tool Interface）** 接口。JVMTI 是一套由 JVM 暴露出来的 C++ 接口，允许外部程序监控和控制 JVM 的运行。
+
+Java Agent 通过 `java.lang.instrument.Instrumentation` 接口将 JVMTI 的能力包装并暴露给 Java 层：
+
+```java
+public interface Instrumentation {
+    // 添加类转换器，用于在类加载时拦截并修改字节码
+    void addTransformer(ClassFileTransformer transformer, boolean canRetransform);
+    
+    // 强制对已加载的类进行重新转换（触发 ClassFileTransformer）
+    void retransformClasses(Class<?>... classes) throws UnmodifiableClassException;
+}
+```
+
+#### (3) 动态 Attach 流程（以 Agentmain 为例）
+
+```mermaid
+sequenceDiagram
+    autonumber
+    participant App as 监控/诊断进程 (如 Arthas)
+    participant JVM as 目标 JVM 进程
+    participant Agent as Agent.jar
+
+    App->>JVM: 1. 通过 VirtualMachine.attach(pid) 建立 IPC 连接
+    App->>JVM: 2. 调用 vm.loadAgent(agentJarPath)
+    JVM->>Agent: 3. JVM 加载 Agent.jar 并执行 agentmain()
+    Agent->>JVM: 4. 调用 inst.addTransformer() 注册转换器
+    Agent->>JVM: 5. 调用 inst.retransformClasses(Target.class) 强制重加载
+    JVM->>Agent: 6. 触发 ClassFileTransformer.transform() 修改字节码
+    JVM->>JVM: 7. 目标类被替换为修改后的字节码并继续运行
+```
+
+通过这种机制，Java Agent 可以在不侵入业务代码、不重启服务的情况下，实现线上无感知的链路追踪、性能监控和动态诊断。
