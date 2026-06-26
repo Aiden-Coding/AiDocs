@@ -1,4 +1,4 @@
-name: Deploy mdBook to GitHub Pages
+name: Deploy Docusaurus to GitHub Pages
 
 on:
   push:
@@ -8,28 +8,26 @@ on:
 jobs:
   deploy:
     runs-on: ubuntu-latest
+
     # 只有当提交信息（commit message）中包含 "release" 关键字时才触发自动发布
     if: contains(github.event.head_commit.message, 'release')
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
-      - name: Install mdBook
-        run: |
-          mkdir bin
-          curl -sSL https://github.com/rust-lang/mdBook/releases/download/v0.4.36/mdbook-v0.4.36-x86_64-unknown-linux-gnu.tar.gz | tar -xz -C bin
-          echo "$GITHUB_WORKSPACE/bin" >> $GITHUB_PATH
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
 
-      - name: Install mdbook-mermaid
-        run: |
-          curl -sSL https://github.com/badboy/mdbook-mermaid/releases/download/v0.13.0/mdbook-mermaid-v0.13.0-x86_64-unknown-linux-gnu.tar.gz | tar -xz -C bin
+      - name: Install dependencies
+        run: npm install
 
-      - name: Build Book
-        run: |
-          mdbook-mermaid install .
-          mdbook build
+      - name: Build website
+        run: npm run build
 
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v3
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: ./book
+          publish_dir: ./build

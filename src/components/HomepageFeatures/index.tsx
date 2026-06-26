@@ -11,32 +11,29 @@ type FeatureItem = {
 
 const FeatureList: FeatureItem[] = [
   {
-    title: 'Easy to Use',
+    title: '系统化知识体系',
     Svg: require('@site/static/img/undraw_docusaurus_mountain.svg').default,
     description: (
       <>
-        Docusaurus was designed from the ground up to be easily installed and
-        used to get your website up and running quickly.
+        涵盖 Java 核心、并发编程、JVM 调优、数据库原理、分布式架构等核心技术栈，构建完整的知识体系。
       </>
     ),
   },
   {
-    title: 'Focus on What Matters',
+    title: '深度原理解析',
     Svg: require('@site/static/img/undraw_docusaurus_tree.svg').default,
     description: (
       <>
-        Docusaurus lets you focus on your docs, and we&apos;ll do the chores. Go
-        ahead and move your docs into the <code>docs</code> directory.
+        拒绝浮于表面，深入源码与底层原理，剖析 AQS、MVCC、分布式共识等硬核技术细节。
       </>
     ),
   },
   {
-    title: 'Powered by React',
+    title: '实战经验总结',
     Svg: require('@site/static/img/undraw_docusaurus_react.svg').default,
     description: (
       <>
-        Extend or customize your website layout by reusing React. Docusaurus can
-        be extended while reusing the same header and footer.
+        结合实际业务场景，分享高可用架构设计、性能优化、线上问题排查等宝贵实战经验。
       </>
     ),
   },
