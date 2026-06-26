@@ -2,6 +2,8 @@
 
 - [前言](README.md)
 
+# Java 后端进阶体系
+
 - [一、 Java 并发编程]()
     - [AQS 机制与锁实现](01-Java-Concurrent/AQS-and-Locks.md)
     - [ThreadLocal 与 CAS 原理](01-Java-Concurrent/ThreadLocal-and-CAS.md)
@@ -35,3 +37,9 @@
     - [分布式事务原理与 Seata](06-Distributed-System/Distributed-Transactions.md)
     - [消息队列高可用与防丢失](06-Distributed-System/Message-Queue.md)
     - [ZooKeeper 分布式锁](06-Distributed-System/Distributed-Lock-ZooKeeper.md)
+
+# Rust 编程指南
+
+- [七、 Rust 基础与进阶]()
+    - [所有权与生命周期](07-Rust/Ownership-and-Lifetimes.md)
+    - [并发编程](07-Rust/Concurrency.md)
