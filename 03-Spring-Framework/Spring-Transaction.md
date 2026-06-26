@@ -24,8 +24,6 @@ Spring 声明式事务（`@Transactional`）是开发中最常用的功能之一
 
 **`NESTED`**：启动一个**嵌套事务**（基于数据库的 **Savepoint（保存点）*
 
-
-
 - 如果外部事务回滚，内部事务**必须**一起回滚（因为它们共享同一个物理连接和事务）。
 
 ---
@@ -40,6 +38,7 @@ Spring 声明式事务（`@Transactional`）是开发中最常用的功能之一
    - **解决办法**：
      - 将方法 B 拆分到另一个 Service 类中。
      - 在类中注入自身代理对象（使用 `@Autowired` 注入自己，或使用 `AopContext.currentProxy()`）。
+
        ```java
        ((MyService) AopContext.currentProxy()).B(); // 需配置 @EnableAspectJAutoProxy(exposeProxy = true)
        ```
@@ -56,6 +55,7 @@ Spring 声明式事务（`@Transactional`）是开发中最常用的功能之一
    - **现象**：方法抛出 `IOException` 或 `SQLException`，事务不回滚。
    - **原理**：Spring 默认只在遇到 `RuntimeException`（运行时异常）和 `Error` 时才会回滚。对于受检异常（Checked Exception），默认不回滚。
    - **解决办法**：显式指定回滚异常类型：
+
      ```java
      @Transactional(rollbackFor = Exception.class)
      ```

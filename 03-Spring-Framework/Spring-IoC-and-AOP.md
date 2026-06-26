@@ -17,31 +17,15 @@ graph TD
 
 ### 1. 详细生命周期链路
 
-
-
 - 对应方法：`createBeanInstance()`
 
 **属性赋值（Populate）**：
-
 
 - 对应方法：`populateBean()`
 
 **初始化（Initialization）**：
 
-
-
-
-
-
-
-
-
-
 - **BeanPostProcessor 后置处理**：执行所有已注册的 `BeanPostProcessor` 的 `postProcessAfterInitialization()` 方法。**AOP 动态代理通常就是在此阶段生成的。**
-
-
-
-
 
 - 如果配置了自定义的 `destroy-method`，执行该方法。
 
@@ -94,7 +78,6 @@ sequenceDiagram
 ```
 
 ### 3. 为什么必须是三级缓存？二级缓存不行吗？
-
 
 - 如果**没有 AOP**，确实只需要二级缓存。在实例化 A 之后，直接把 A（半成品）放入二级缓存，B 注入 A 时直接从二级缓存拿即可
 
@@ -149,7 +132,7 @@ Spring AOP 将切面（Aspect）中的通知（Advice，如 `@Before`、`@After`
 
 当目标方法被调用时，Spring 会将所有适用于该方法的拦截器组成一个**拦截器链（Interceptor Chain）**，并通过**责任链模式**进行链式调用。
 
-``java
+```java
 public class ReflectiveMethodInvocation implements MethodInvocation, Cloneable {
     protected final Object proxy;
     protected final Object target;
@@ -175,5 +158,7 @@ public class ReflectiveMethodInvocation implements MethodInvocation, Cloneable {
         return ((MethodInterceptor) interceptorOrInterceptionAdvice).invoke(this);
     }
 }
+
 ```
+
 这种基于递归的责任链模式，优雅地实现了前置通知、后置通知、环绕通知以及异常通知的嵌套执行。

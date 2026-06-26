@@ -40,21 +40,26 @@ graph TD
 ### 1. 简易分布式锁的缺陷（`SETNX`）
 
 最简单的分布式锁实现是使用 `SETNX`（Set if Not Exists）：
+
 ```sql
 SETNX lock_key unique_value
 EXPIRE lock_key 30
 ```
 
 **缺陷分析**：
+
 - **非原子性**：`SETNX` 和 `EXPIRE` 是两条命令。如果执行完 `SETNX` 后 Redis 突然宕机，导致过期时间未设置，该锁将变成**死锁**。
   - **解决方案**：使用 Redis 2.6.12+ 提供的原子性 `SET` 命令：
+
     ```bash
     SET lock_key unique_value NX PX 30000
     ```
+
 - **锁被他人误释放**：
   - **场景**：客户端 A 加锁成功，设置过期时间 30 秒。但 A 的业务执行了 40 秒。在第 30 秒时，锁自动过期释放。此时客户端 B 成功加锁。在第 40 秒时，客户端 A 业务执行完毕，执行 `DEL lock_key` 释放锁，结果把客户端 B 刚刚加的锁给释放了。
   - **解决方案**：加锁时存入一个唯一的 `unique_value`（如 UUID）。释放锁时，先判断锁的值是否等于自己的 `unique_value`，如果相等才释放。
   - **原子性释放**：由于“判断”和“删除”是两步操作，必须使用 **Lua 脚本** 保证原子性：
+
     ```lua
     if redis.call("get", KEYS[1]) == ARGV[1] then
         return redis.call("del", KEYS[1])
@@ -90,6 +95,7 @@ sequenceDiagram
 ```
 
 **看门狗工作流程**：
+
 1. 客户端 A 加锁成功，默认锁的有效期是 30 秒（可以通过 `lockWatchdogTimeout` 配置）。
 2. 一旦加锁成功，Redisson 内部会启动一个后台线程（看门狗）。
 3. 看门狗是一个定时任务，**每隔 10 秒**（即 `lockWatchdogTimeout / 3`）就会向 Redis 发送续期命令，将锁的过期时间重新设置为 30 秒。

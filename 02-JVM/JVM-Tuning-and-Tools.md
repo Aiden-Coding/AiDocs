@@ -11,6 +11,7 @@
 当线上服务器 CPU 突然飙高时，通常是因为某个线程在执行死循环、频繁 GC 或者有高并发的密集计算。
 
   使用 `top` 命令，找出消耗 CPU 最高的 Java 进程 PID。
+
    ```bash
    top
    ``
@@ -107,12 +108,15 @@ graph TD
 `thread -n 3`：找出最忙的 3 个线程，并打印堆栈（相当于 Linux 下排查 CPU 飙高的前四步）。
 
 上运行的代码和本地不一致？怀疑打包错了？
+
 ```bash
 jad com.example.demo.controller.UserController
 ```
+
 直接将 JVM 中加载的类反编译为源码，确认线上运行的代码版本。
 
 需加日志，动态查看方法的输入输出：
+
 ```bash
 watch com.example.demo.service.UserService getUser "{params, returnObj, throwExp}" -x 2
 ``
@@ -123,6 +127,7 @@ watch com.example.demo.service.UserService getUser "{params, returnObj, throwExp
 ```bash
 trace com.example.demo.controller.UserController getUser
 ```
+
 Arthas 会打印出 `getUser` 方法内部调用的每一个子方法的耗时，并用红色高亮标出最耗时的步骤。
 
 ---

@@ -17,15 +17,19 @@ graph TD
 ```
 
 ### 1. 第一步：开启慢查询日志并定位慢 SQL
+
 - 在配置文件 `my.cnf` 中配置慢查询日志：
+
   ```ini
   slow_query_log = 1                  # 开启慢查询日志
   long_query_time = 1                 # 超过 1 秒的 SQL 记录为慢 SQL
   slow_query_log_file = /var/log/mysql/slow.log # 日志路径
   ```
+
 - 使用 **`mysqldumpslow`** 工具对慢日志进行分类汇总，找出执行次数最多、耗时最长的 Top SQL。
 
 ### 2. 第二步：使用 EXPLAIN 分析执行计划
+
 - 慢 SQL 前面加上 `EXPLAIN` 关键字，查看 MySQL 是如何执行该 SQL 的。
 - **核心关注字段**：
   - **`type`（访问类型）**：
@@ -44,6 +48,7 @@ graph TD
 ### 3. 第三步：常见慢 SQL 优化套路
 
 **索引失效口诀（模型数空运最快）**：
+
 - **模**：模糊查询以 `%` 开头（如 `LIKE '%abc'`），索引失效。
 - **型**：类型转换。如字段是 `varchar`，查询时没加单引号 `WHERE phone = 13800000000`，导致隐式类型转换，索引失效。
 - **数**：对索引列进行函数操作或数学运算（如 `WHERE YEAR(create_time) = 2026` 或 `WHERE age + 1 = 18`），索引失效。
@@ -53,9 +58,11 @@ graph TD
 - **快**：范围查询右边的列索引失效。在联合索引 `(a, b, c)` 中，如果 `WHERE a = 1 AND b > 2 AND c = 3`，则 `c` 无法用到索引。
 
 **超大分页（Deep Paging）优化**：
+
 - **问题**：`LIMIT 1000000, 10` 会导致 MySQL 扫描 1000010 行数据，然后丢弃前 1000000 行，只返回 10 行，I/O 开销极大。
 - **优化方案（延迟关联）**：
   先通过覆盖索引只查询主键 ID，再通过主键关联查询整行数据，避免大范围的回表：
+
   ```sql
   -- 优化前
   SELECT * FROM user ORDER BY create_time LIMIT 1000000, 10;
