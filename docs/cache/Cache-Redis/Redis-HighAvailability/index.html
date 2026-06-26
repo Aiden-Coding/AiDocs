@@ -1,0 +1,106 @@
+<!doctype html><html lang=zh-Hans dir=ltr class="docs-wrapper plugin-docs plugin-id-default docs-version-current docs-doc-page docs-doc-id-cache/Cache-Redis/Redis-HighAvailability" data-has-hydrated=false><head><meta charset=UTF-8><meta name=generator content="Docusaurus v3.10.1"><title data-rh=true>Redis 高可用：持久化、哨兵与集群 | Ai文档</title><meta data-rh=true name=viewport content="width=device-width, initial-scale=1.0"/><meta data-rh=true name=twitter:card content=summary_large_image /><meta data-rh=true property=og:image content=https://github.com/AiDocs/img/docusaurus-social-card.jpg /><meta data-rh=true name=twitter:image content=https://github.com/AiDocs/img/docusaurus-social-card.jpg /><meta data-rh=true property=og:url content=https://github.com/AiDocs/docs/cache/Cache-Redis/Redis-HighAvailability /><meta data-rh=true property=og:locale content=zh_Hans /><meta data-rh=true name=docusaurus_locale content=zh-Hans /><meta data-rh=true name=docsearch:language content=zh-Hans /><meta data-rh=true name=docusaurus_version content=current /><meta data-rh=true name=docusaurus_tag content=docs-default-current /><meta data-rh=true name=docsearch:version content=current /><meta data-rh=true name=docsearch:docusaurus_tag content=docs-default-current /><meta data-rh=true property=og:title content="Redis 高可用：持久化、哨兵与集群 | Ai文档"/><meta data-rh=true name=description content="在生产环境中，单机 Redis 无法保证高可用和高并发。为了防止数据丢失和单点故障，Redis 提供了 RDB/AOF 持久化、Sentinel（哨兵） 以及 Redis Cluster（集群） 方案。"/><meta data-rh=true property=og:description content="在生产环境中，单机 Redis 无法保证高可用和高并发。为了防止数据丢失和单点故障，Redis 提供了 RDB/AOF 持久化、Sentinel（哨兵） 以及 Redis Cluster（集群） 方案。"/><link data-rh=true rel=icon href=/AiDocs/img/favicon.ico /><link data-rh=true rel=canonical href=https://github.com/AiDocs/docs/cache/Cache-Redis/Redis-HighAvailability /><link data-rh=true rel=alternate href=https://github.com/AiDocs/docs/cache/Cache-Redis/Redis-HighAvailability hreflang=zh-Hans /><link data-rh=true rel=alternate href=https://github.com/AiDocs/docs/cache/Cache-Redis/Redis-HighAvailability hreflang=x-default /><script data-rh=true type=application/ld+json>{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","item":"https://github.com/AiDocs/docs/cache/Cache-Redis/Redis-HighAvailability","name":"Redis 高可用：持久化、哨兵与集群","position":1}]}</script><link rel=stylesheet href=/AiDocs/assets/css/styles.9ad71d63.css /><script src=/AiDocs/assets/js/runtime~main.00c9986d.js defer></script><script src=/AiDocs/assets/js/main.db86e06d.js defer></script></head><body><svg style="display: none;"><defs>
+<symbol id=theme-svg-external-link viewBox="0 0 24 24"><path fill=currentColor d="M21 13v10h-21v-19h12v2h-10v15h17v-8h2zm3-12h-10.988l4.035 4-6.977 7.07 2.828 2.828 6.977-7.07 4.125 4.172v-11z"/></symbol>
+</defs></svg>
+<script>!function(){var t=function(){try{return new URLSearchParams(window.location.search).get("docusaurus-theme")}catch(t){}}()||function(){try{return window.localStorage.getItem("theme-92a")}catch(t){}}();document.documentElement.setAttribute("data-theme",t||(window.matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light")),document.documentElement.setAttribute("data-theme-choice",t||"system")}(),function(){try{for(var[t,e]of new URLSearchParams(window.location.search).entries())if(t.startsWith("docusaurus-data-")){var a=t.replace("docusaurus-data-","data-");document.documentElement.setAttribute(a,e)}}catch(t){}}()</script><div id=__docusaurus><link rel=preload as=image href=/AiDocs/img/logo.svg /><div role=region aria-label=跳到主要内容><a class=skipToContent_fXgn href=#__docusaurus_skipToContent_fallback>跳到主要内容</a></div><nav aria-label=主导航 class="theme-layout-navbar navbar navbar--fixed-top"><div class=navbar__inner><div class="theme-layout-navbar-left navbar__items"><button aria-label=切换导航栏 aria-expanded=false class="navbar__toggle clean-btn" type=button><svg width=30 height=30 viewBox="0 0 30 30" aria-hidden=true><path stroke=currentColor stroke-linecap=round stroke-miterlimit=10 stroke-width=2 d="M4 7h22M4 15h22M4 23h22"/></svg></button><a class=navbar__brand href=/AiDocs/><div class=navbar__logo><img src=/AiDocs/img/logo.svg alt="Ai文档 Logo" class="themedComponent_mlkZ themedComponent--light_NVdE"/><img src=/AiDocs/img/logo.svg alt="Ai文档 Logo" class="themedComponent_mlkZ themedComponent--dark_xIcU"/></div><b class="navbar__title text--truncate">Ai文档</b></a><a class="navbar__item navbar__link" href=/AiDocs/docs/java/Java-Concurrent/AQS-and-Locks>Java</a><a class="navbar__item navbar__link" href=/AiDocs/docs/database/Database-MySQL/MySQL-Index-and-Engine>数据库</a><a aria-current=page class="navbar__item navbar__link navbar__link--active" href=/AiDocs/docs/cache/Cache-Redis/Redis-Consistency-and-Eviction>缓存</a><a class="navbar__item navbar__link" href=/AiDocs/docs/distributed/Distributed-System/Distributed-Consensus>分布式</a><a class="navbar__item navbar__link" href=/AiDocs/docs/rust/Rust/Concurrency>Rust</a></div><div class="theme-layout-navbar-right navbar__items navbar__items--right"><a href=https://github.com/Aiden-Coding/AiDocs target=_blank rel="noopener noreferrer" class="navbar__item navbar__link">GitHub<svg width=13.5 height=13.5 aria-label="(opens in new tab)" class=iconExternalLink_nPIU><use href=#theme-svg-external-link /></svg></a><div class="toggle_vylO colorModeToggle_DEke"><button class="clean-btn toggleButton_gllP toggleButtonDisabled_aARS" type=button disabled title="system mode" aria-label="切换浅色/暗黑模式（当前为system mode）"><svg viewBox="0 0 24 24" width=24 height=24 aria-hidden=true class="toggleIcon_g3eP lightToggleIcon_pyhR"><path fill=currentColor d="M12,9c1.65,0,3,1.35,3,3s-1.35,3-3,3s-3-1.35-3-3S10.35,9,12,9 M12,7c-2.76,0-5,2.24-5,5s2.24,5,5,5s5-2.24,5-5 S14.76,7,12,7L12,7z M2,13l2,0c0.55,0,1-0.45,1-1s-0.45-1-1-1l-2,0c-0.55,0-1,0.45-1,1S1.45,13,2,13z M20,13l2,0c0.55,0,1-0.45,1-1 s-0.45-1-1-1l-2,0c-0.55,0-1,0.45-1,1S19.45,13,20,13z M11,2v2c0,0.55,0.45,1,1,1s1-0.45,1-1V2c0-0.55-0.45-1-1-1S11,1.45,11,2z M11,20v2c0,0.55,0.45,1,1,1s1-0.45,1-1v-2c0-0.55-0.45-1-1-1C11.45,19,11,19.45,11,20z M5.99,4.58c-0.39-0.39-1.03-0.39-1.41,0 c-0.39,0.39-0.39,1.03,0,1.41l1.06,1.06c0.39,0.39,1.03,0.39,1.41,0s0.39-1.03,0-1.41L5.99,4.58z M18.36,16.95 c-0.39-0.39-1.03-0.39-1.41,0c-0.39,0.39-0.39,1.03,0,1.41l1.06,1.06c0.39,0.39,1.03,0.39,1.41,0c0.39-0.39,0.39-1.03,0-1.41 L18.36,16.95z M19.42,5.99c0.39-0.39,0.39-1.03,0-1.41c-0.39-0.39-1.03-0.39-1.41,0l-1.06,1.06c-0.39,0.39-0.39,1.03,0,1.41 s1.03,0.39,1.41,0L19.42,5.99z M7.05,18.36c0.39-0.39,0.39-1.03,0-1.41c-0.39-0.39-1.03-0.39-1.41,0l-1.06,1.06 c-0.39,0.39-0.39,1.03,0,1.41s1.03,0.39,1.41,0L7.05,18.36z"/></svg><svg viewBox="0 0 24 24" width=24 height=24 aria-hidden=true class="toggleIcon_g3eP darkToggleIcon_wfgR"><path fill=currentColor d="M9.37,5.51C9.19,6.15,9.1,6.82,9.1,7.5c0,4.08,3.32,7.4,7.4,7.4c0.68,0,1.35-0.09,1.99-0.27C17.45,17.19,14.93,19,12,19 c-3.86,0-7-3.14-7-7C5,9.07,6.81,6.55,9.37,5.51z M12,3c-4.97,0-9,4.03-9,9s4.03,9,9,9s9-4.03,9-9c0-0.46-0.04-0.92-0.1-1.36 c-0.98,1.37-2.58,2.26-4.4,2.26c-2.98,0-5.4-2.42-5.4-5.4c0-1.81,0.89-3.42,2.26-4.4C12.92,3.04,12.46,3,12,3L12,3z"/></svg><svg viewBox="0 0 24 24" width=24 height=24 aria-hidden=true class="toggleIcon_g3eP systemToggleIcon_QzmC"><path fill=currentColor d="m12 21c4.971 0 9-4.029 9-9s-4.029-9-9-9-9 4.029-9 9 4.029 9 9 9zm4.95-13.95c1.313 1.313 2.05 3.093 2.05 4.95s-0.738 3.637-2.05 4.95c-1.313 1.313-3.093 2.05-4.95 2.05v-14c1.857 0 3.637 0.737 4.95 2.05z"/></svg></button></div><div class=navbarSearchContainer_Bca1></div></div></div><div role=presentation class=navbar-sidebar__backdrop></div></nav><div id=__docusaurus_skipToContent_fallback class="theme-layout-main main-wrapper mainWrapper_z2l0"><div class=docsWrapper_hBAB><button aria-label=回到顶部 class="clean-btn theme-back-to-top-button backToTopButton_sjWU" type=button></button><div class=docRoot_UBD9><aside class="theme-doc-sidebar-container docSidebarContainer_YfHR"><div class=sidebarViewport_aRkj><div class=sidebar_njMd><nav aria-label=文档侧边栏 class="menu thin-scrollbar menu_SIkG"><ul class="theme-doc-sidebar-menu menu__list"><li class="theme-doc-sidebar-item-category theme-doc-sidebar-item-category-level-1 menu__list-item"><div class=menu__list-item-collapsible><a class="categoryLink_byQd menu__link menu__link--sublist menu__link--sublist-caret menu__link--active" role=button aria-expanded=true href=/AiDocs/docs/cache/Cache-Redis/Redis-Consistency-and-Eviction><span title=Cache-Redis class=categoryLinkLabel_W154>Cache-Redis</span></a></div><ul class=menu__list><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class=menu__link tabindex=0 href=/AiDocs/docs/cache/Cache-Redis/Redis-Consistency-and-Eviction><span title="Redis 双写一致性与内存淘汰策略" class=linkLabel_WmDU>Redis 双写一致性与内存淘汰策略</span></a><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class=menu__link tabindex=0 href=/AiDocs/docs/cache/Cache-Redis/Redis-DataStructures-and-IO><span title="Redis 核心数据结构与单线程模型" class=linkLabel_WmDU>Redis 核心数据结构与单线程模型</span></a><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class="menu__link menu__link--active" aria-current=page tabindex=0 href=/AiDocs/docs/cache/Cache-Redis/Redis-HighAvailability><span title="Redis 高可用：持久化、哨兵与集群" class=linkLabel_WmDU>Redis 高可用：持久化、哨兵与集群</span></a><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class=menu__link tabindex=0 href=/AiDocs/docs/cache/Cache-Redis/Redis-Scenarios><span title="Redis 缓存实战：三剑客与分布式锁" class=linkLabel_WmDU>Redis 缓存实战：三剑客与分布式锁</span></a></ul></ul></nav></div></div></aside><main class=docMainContainer_TBSr><div class="container padding-top--md padding-bottom--lg"><div class=row><div class="col docItemCol_VOVn"><div class=docItemContainer_Djhp><article><nav class="theme-doc-breadcrumbs breadcrumbsContainer_Z_bl" aria-label=页面路径><ul class=breadcrumbs><li class=breadcrumbs__item><a aria-label=主页面 class=breadcrumbs__link href=/AiDocs/><svg viewBox="0 0 24 24" class=breadcrumbHomeIcon_YNFT><path d="M10 19v-5h4v5c0 .55.45 1 1 1h3c.55 0 1-.45 1-1v-7h1.7c.46 0 .68-.57.33-.87L12.67 3.6c-.38-.34-.96-.34-1.34 0l-8.36 7.53c-.34.3-.13.87.33.87H5v7c0 .55.45 1 1 1h3c.55 0 1-.45 1-1z" fill=currentColor /></svg></a><li class=breadcrumbs__item><span class=breadcrumbs__link>Cache-Redis</span><li class="breadcrumbs__item breadcrumbs__item--active"><span class=breadcrumbs__link>Redis 高可用：持久化、哨兵与集群</span></ul></nav><div class="tocCollapsible_ETCw theme-doc-toc-mobile tocMobile_ITEo"><button type=button class="clean-btn tocCollapsibleButton_TO0P">本页总览</button></div><div class="theme-doc-markdown markdown"><header><h1>Redis 高可用：持久化、哨兵与集群</h1></header>
+<p>在生产环境中，单机 Redis 无法保证高可用和高并发。为了防止数据丢失和单点故障，Redis 提供了 <strong>RDB/AOF 持久化</strong>、<strong>Sentinel（哨兵）</strong> 以及 <strong>Redis Cluster（集群）</strong> 方案。</p>
+<hr/>
+<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id=一-redis-持久化机制rdb-与-aof>一、 Redis 持久化机制：RDB 与 AOF<a href=#一-redis-持久化机制rdb-与-aof class=hash-link aria-label="一、 Redis 持久化机制：RDB 与 AOF的直接链接" title="一、 Redis 持久化机制：RDB 与 AOF的直接链接" translate=no>​</a></h2>
+<p>Redis 是内存数据库，一旦宕机数据就会丢失。为了解决这个问题，Redis 提供了两种持久化方式。</p>
+<h3 class="anchor anchorTargetStickyNavbar_Vzrq" id=1-rdb-redis-database-快照持久化>1. RDB (Redis Database) 快照持久化<a href=#1-rdb-redis-database-快照持久化 class=hash-link aria-label="1. RDB (Redis Database) 快照持久化的直接链接" title="1. RDB (Redis Database) 快照持久化的直接链接" translate=no>​</a></h3>
+<ul>
+<li class=""><strong>原理</strong>：在指定的时间间隔内，将内存中的数据集快照写入磁盘（保存为 <code>dump.rdb</code> 文件）。</li>
+<li class=""><strong>触发方式</strong>：<!-- -->
+<ul>
+<li class="">手动触发：执行 <code>save</code>（阻塞主进程，不推荐）或 <code>bgsave</code>（后台异步执行，推荐）。</li>
+<li class="">自动触发：在配置文件中配置 <code>save 900 1</code>（900秒内有1次修改则触发）。</li>
+</ul>
+</li>
+<li class=""><strong><code>bgsave</code> 的底层原理：Copy-On-Write（写时复制）</strong>：<!-- -->
+<ul>
+<li class="">Redis 主进程通过 <code>fork</code> 创建子进程，子进程共享主进程的物理内存数据。</li>
+<li class="">子进程开始将内存数据写入临时的 RDB 文件。</li>
+<li class="">如果主进程在此时需要修改某个键值对，操作系统会将被修改的内存页复制一份（Copy-On-Write），主进程在复制出的内存页上进行修改，而子进程继续读取原来的物理内存页进行持久化。</li>
+<li class=""><strong>优点</strong>：保存的是某个时间点的完整快照，恢复速度极快。</li>
+<li class=""><strong>缺点</strong>：容易丢失最后一次快照之后的所有修改。</li>
+</ul>
+</li>
+</ul>
+<!-- -->
+<hr/>
+<h3 class="anchor anchorTargetStickyNavbar_Vzrq" id=2-aof-append-only-file-日志持久化>2. AOF (Append Only File) 日志持久化<a href=#2-aof-append-only-file-日志持久化 class=hash-link aria-label="2. AOF (Append Only File) 日志持久化的直接链接" title="2. AOF (Append Only File) 日志持久化的直接链接" translate=no>​</a></h3>
+<ul>
+<li class=""><strong>原理</strong>：以独立日志的方式记录每次写命令（类似于 MySQL 的 Binlog），重启时重新执行 AOF 文件中的命令来恢复数据。</li>
+<li class=""><strong>写回策略（<code>appendfsync</code>）</strong>：<!-- -->
+<ul>
+<li class=""><code>always</code>：每次写命令都立即同步到磁盘，最安全，性能最差。</li>
+<li class=""><code>everysec</code>（默认）：每秒同步一次，折中方案，最多丢失 1 秒数据。</li>
+<li class=""><code>no</code>：由操作系统决定何时落盘，性能最好，最不安全。</li>
+</ul>
+</li>
+<li class=""><strong>AOF 重写（Rewrite）机制</strong>：<!-- -->
+<ul>
+<li class=""><strong>原因</strong>：随着运行时间增长，AOF 文件会越来越大。</li>
+<li class=""><strong>原理</strong>：创建一个新的 AOF 文件，直接读取当前内存中的键值对，用一条命令代替历史的多条命令（例如，对同一个 key 执行了 100 次 <code>INCR</code>，重写时直接记录一条 <code>SET key 100</code>）。</li>
+</ul>
+</li>
+</ul>
+<h3 class="anchor anchorTargetStickyNavbar_Vzrq" id=3-混合持久化redis-40>3. 混合持久化（Redis 4.0+）<a href=#3-混合持久化redis-40 class=hash-link aria-label="3. 混合持久化（Redis 4.0+）的直接链接" title="3. 混合持久化（Redis 4.0+）的直接链接" translate=no>​</a></h3>
+<ul>
+<li class=""><strong>配置</strong>：<code>aof-use-rdb-preamble yes</code></li>
+<li class=""><strong>原理</strong>：在 AOF 重写时，先将当前内存数据以 RDB 的格式写入 AOF 文件的开头，然后再将重写期间产生的增量写命令以 AOF 的格式追加到文件末尾。</li>
+<li class=""><strong>优点</strong>：结合了 RDB 恢复速度快和 AOF 丢失数据少的优点。</li>
+</ul>
+<hr/>
+<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id=二-redis-sentinel-哨兵模式>二、 Redis Sentinel (哨兵模式)<a href=#二-redis-sentinel-哨兵模式 class=hash-link aria-label="二、 Redis Sentinel (哨兵模式)的直接链接" title="二、 Redis Sentinel (哨兵模式)的直接链接" translate=no>​</a></h2>
+<p>哨兵模式是为了解决主从复制（Master-Slave）模式下，主节点宕机后需要人工干预切换的问题。</p>
+<!-- -->
+<p><strong>哨兵的核心职责</strong>：</p>
+<ol>
+<li class=""><strong>监控（Monitoring）</strong>：持续检查主节点和从节点是否正常运行。</li>
+<li class=""><strong>自动故障转移（Automatic Failover）</strong>：当主节点出现故障时，自动将某个从节点升级为新的主节点，并通知其他从节点和客户端。</li>
+<li class=""><strong>配置提供者（Configuration Provider）</strong>：客户端连接哨兵集群，由哨兵告知当前可用的主节点地址。</li>
+</ol>
+<h3 class="anchor anchorTargetStickyNavbar_Vzrq" id=2-故障判定与选举领头哨兵>2. 故障判定与选举领头哨兵<a href=#2-故障判定与选举领头哨兵 class=hash-link aria-label="2. 故障判定与选举领头哨兵的直接链接" title="2. 故障判定与选举领头哨兵的直接链接" translate=no>​</a></h3>
+<ul>
+<li class=""><strong>主观下线（Subjective Down, SDOWN）</strong>：单个哨兵节点在指定时间内未收到主节点的心跳响应，认为主节点已下线。</li>
+<li class=""><strong>客观下线（Objective Down, ODOWN）</strong>：当判定主观下线的哨兵数量达到配置的法定人数（Quorum，通常设为哨兵总数的一半以上）时，主节点被判定为客观下线。</li>
+<li class=""><strong>选举领头哨兵（Raft 协议简化版）</strong>：<!-- -->
+<ul>
+<li class="">选举规则：先到先得，获得半数以上选票的哨兵成为 Leader。</li>
+</ul>
+</li>
+</ul>
+<hr/>
+<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id=三-redis-cluster-集群模式>三、 Redis Cluster (集群模式)<a href=#三-redis-cluster-集群模式 class=hash-link aria-label="三、 Redis Cluster (集群模式)的直接链接" title="三、 Redis Cluster (集群模式)的直接链接" translate=no>​</a></h2>
+<p>Redis Cluster 是 Redis 官方提供的分布式解决方案，实现了数据的<strong>自动分片（Sharding）<strong>和</strong>横向扩展</strong>。</p>
+<h3 class="anchor anchorTargetStickyNavbar_Vzrq" id=1-哈希槽hash-slot机制>1. 哈希槽（Hash Slot）机制<a href=#1-哈希槽hash-slot机制 class=hash-link aria-label="1. 哈希槽（Hash Slot）机制的直接链接" title="1. 哈希槽（Hash Slot）机制的直接链接" translate=no>​</a></h3>
+<p>Redis Cluster 没有使用一致性 Hash，而是引入了 <strong>哈希槽（Hash Slot）</strong> 的概念。</p>
+<ul>
+<li class=""><strong>槽位总数</strong>：Redis Cluster 固定的槽位总数为 <strong>16384</strong> 个（$2^<!-- -->14<!-- -->$）。</li>
+<li class=""><strong>路由规则</strong>：当客户端向集群发送一个 key 时，集群会先对 key 进行 CRC16 校验，然后对 16384 取模，决定该 key 落在哪一个槽位：
+<code>Slot = CRC16(key) % 16384</code></li>
+<li class=""><strong>节点分配</strong>：集群中的每个物理 Master 节点负责管理一部分槽位。例如，有 3 个 Master 节点：<!-- -->
+<ul>
+<li class="">节点 A 负责：0 ~ 5460 槽。</li>
+<li class="">节点 B 负责：5461 ~ 10922 槽。</li>
+<li class="">节点 C 负责：10923 ~ 16383 槽。</li>
+</ul>
+</li>
+</ul>
+<h3 class="anchor anchorTargetStickyNavbar_Vzrq" id=2-为什么哈希槽的数量是-16384>2. 为什么哈希槽的数量是 16384？<a href=#2-为什么哈希槽的数量是-16384 class=hash-link aria-label="2. 为什么哈希槽的数量是 16384？的直接链接" title="2. 为什么哈希槽的数量是 16384？的直接链接" translate=no>​</a></h3>
+<p>这是面试中非常经典的细节追问：</p>
+<ul>
+<li class=""><strong>网络抖动与心跳包大小</strong>：<!-- -->
+<ul>
+<li class="">Redis Cluster 节点之间需要频繁发送 Ping/Pong 心跳包，心跳包中会携带节点的槽位位图（Bitmap）。</li>
+<li class="">如果槽位是 16384，位图大小为 <code>16384 / 8 = 2KB</code>。</li>
+<li class="">如果槽位增加到 65536（64KB），心跳包中的位图大小将达到 8KB。在节点数量较多时，这会占用大量的网络带宽，造成网络拥堵。</li>
+</ul>
+</li>
+<li class=""><strong>集群规模限制</strong>：<!-- -->
+<ul>
+<li class="">Redis 官方推荐的集群节点数量上限是 1000 个左右。</li>
+<li class="">对于 1000 个以内的节点，16384 个槽位已经足够让每个节点分配到适量的槽位，分片粒度足够细，没必要使用更大的 65536。</li>
+</ul>
+</li>
+</ul></div><footer class="theme-doc-footer docusaurus-mt-lg"><div class="row margin-top--sm theme-doc-footer-edit-meta-row"><div class="col noPrint_WFHX"><a href=https://github.com/Aiden-Coding/AiDocs/tree/main/docs/cache/05-Cache-Redis/Redis-HighAvailability.md target=_blank rel="noopener noreferrer" class=theme-edit-this-page><svg fill=currentColor height=20 width=20 viewBox="0 0 40 40" class=iconEdit_Z9Sw aria-hidden=true><g><path d="m34.5 11.7l-3 3.1-6.3-6.3 3.1-3q0.5-0.5 1.2-0.5t1.1 0.5l3.9 3.9q0.5 0.4 0.5 1.1t-0.5 1.2z m-29.5 17.1l18.4-18.5 6.3 6.3-18.4 18.4h-6.3v-6.2z"/></g></svg>编辑此页</a></div><div class="col lastUpdated_JAkA"></div></div></footer></article><nav class="docusaurus-mt-lg pagination-nav" aria-label=文件选项卡><a class="pagination-nav__link pagination-nav__link--prev" href=/AiDocs/docs/cache/Cache-Redis/Redis-DataStructures-and-IO><div class=pagination-nav__sublabel>上一页</div><div class=pagination-nav__label>Redis 核心数据结构与单线程模型</div></a><a class="pagination-nav__link pagination-nav__link--next" href=/AiDocs/docs/cache/Cache-Redis/Redis-Scenarios><div class=pagination-nav__sublabel>下一页</div><div class=pagination-nav__label>Redis 缓存实战：三剑客与分布式锁</div></a></nav></div></div><div class="col col--3"><div class="tableOfContents_bqdL thin-scrollbar theme-doc-toc-desktop"><ul class="table-of-contents table-of-contents__left-border"><li><a href=#一-redis-持久化机制rdb-与-aof class="table-of-contents__link toc-highlight">一、 Redis 持久化机制：RDB 与 AOF</a><ul><li><a href=#1-rdb-redis-database-快照持久化 class="table-of-contents__link toc-highlight">1. RDB (Redis Database) 快照持久化</a><li><a href=#2-aof-append-only-file-日志持久化 class="table-of-contents__link toc-highlight">2. AOF (Append Only File) 日志持久化</a><li><a href=#3-混合持久化redis-40 class="table-of-contents__link toc-highlight">3. 混合持久化（Redis 4.0+）</a></ul><li><a href=#二-redis-sentinel-哨兵模式 class="table-of-contents__link toc-highlight">二、 Redis Sentinel (哨兵模式)</a><ul><li><a href=#2-故障判定与选举领头哨兵 class="table-of-contents__link toc-highlight">2. 故障判定与选举领头哨兵</a></ul><li><a href=#三-redis-cluster-集群模式 class="table-of-contents__link toc-highlight">三、 Redis Cluster (集群模式)</a><ul><li><a href=#1-哈希槽hash-slot机制 class="table-of-contents__link toc-highlight">1. 哈希槽（Hash Slot）机制</a><li><a href=#2-为什么哈希槽的数量是-16384 class="table-of-contents__link toc-highlight">2. 为什么哈希槽的数量是 16384？</a></ul></ul></div></div></div></div></main></div></div></div><footer class="theme-layout-footer footer footer--dark"><div class="container container-fluid"><div class="row footer__links"><div class="theme-layout-footer-column col footer__col"><div class=footer__title>文档</div><ul class="footer__items clean-list"><li class=footer__item><a class=footer__link-item href=/AiDocs/docs/intro>开始阅读</a></ul></div><div class="theme-layout-footer-column col footer__col"><div class=footer__title>更多</div><ul class="footer__items clean-list"><li class=footer__item><a href=https://github.com/Aiden-Coding/AiDocs target=_blank rel="noopener noreferrer" class=footer__link-item>GitHub<svg width=13.5 height=13.5 aria-label="(opens in new tab)" class=iconExternalLink_nPIU><use href=#theme-svg-external-link /></svg></a></ul></div></div><div class="footer__bottom text--center"><div class=footer__copyright>Copyright © 2026 AiDocs. Built with Docusaurus.</div></div></div></footer></div></body>

@@ -1,0 +1,125 @@
+<!doctype html><html lang=zh-Hans dir=ltr class="docs-wrapper plugin-docs plugin-id-default docs-version-current docs-doc-page docs-doc-id-java/Spring-Framework/Spring-Transaction" data-has-hydrated=false><head><meta charset=UTF-8><meta name=generator content="Docusaurus v3.10.1"><title data-rh=true>Spring 事务传播与失效场景 | Ai文档</title><meta data-rh=true name=viewport content="width=device-width, initial-scale=1.0"/><meta data-rh=true name=twitter:card content=summary_large_image /><meta data-rh=true property=og:image content=https://github.com/AiDocs/img/docusaurus-social-card.jpg /><meta data-rh=true name=twitter:image content=https://github.com/AiDocs/img/docusaurus-social-card.jpg /><meta data-rh=true property=og:url content=https://github.com/AiDocs/docs/java/Spring-Framework/Spring-Transaction /><meta data-rh=true property=og:locale content=zh_Hans /><meta data-rh=true name=docusaurus_locale content=zh-Hans /><meta data-rh=true name=docsearch:language content=zh-Hans /><meta data-rh=true name=docusaurus_version content=current /><meta data-rh=true name=docusaurus_tag content=docs-default-current /><meta data-rh=true name=docsearch:version content=current /><meta data-rh=true name=docsearch:docusaurus_tag content=docs-default-current /><meta data-rh=true property=og:title content="Spring 事务传播与失效场景 | Ai文档"/><meta data-rh=true name=description content="Spring 声明式事务（@Transactional）是开发中最常用的功能之一。然而，由于其底层基于 AOP 动态代理实现，如果使用不当，极易导致事务失效或传播行为不符合预期，从而引发严重的数据一致性问题。"/><meta data-rh=true property=og:description content="Spring 声明式事务（@Transactional）是开发中最常用的功能之一。然而，由于其底层基于 AOP 动态代理实现，如果使用不当，极易导致事务失效或传播行为不符合预期，从而引发严重的数据一致性问题。"/><link data-rh=true rel=icon href=/AiDocs/img/favicon.ico /><link data-rh=true rel=canonical href=https://github.com/AiDocs/docs/java/Spring-Framework/Spring-Transaction /><link data-rh=true rel=alternate href=https://github.com/AiDocs/docs/java/Spring-Framework/Spring-Transaction hreflang=zh-Hans /><link data-rh=true rel=alternate href=https://github.com/AiDocs/docs/java/Spring-Framework/Spring-Transaction hreflang=x-default /><script data-rh=true type=application/ld+json>{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","item":"https://github.com/AiDocs/docs/java/Spring-Framework/Spring-Transaction","name":"Spring 事务传播与失效场景","position":1}]}</script><link rel=stylesheet href=/AiDocs/assets/css/styles.9ad71d63.css /><script src=/AiDocs/assets/js/runtime~main.00c9986d.js defer></script><script src=/AiDocs/assets/js/main.db86e06d.js defer></script></head><body><svg style="display: none;"><defs>
+<symbol id=theme-svg-external-link viewBox="0 0 24 24"><path fill=currentColor d="M21 13v10h-21v-19h12v2h-10v15h17v-8h2zm3-12h-10.988l4.035 4-6.977 7.07 2.828 2.828 6.977-7.07 4.125 4.172v-11z"/></symbol>
+</defs></svg>
+<script>!function(){var t=function(){try{return new URLSearchParams(window.location.search).get("docusaurus-theme")}catch(t){}}()||function(){try{return window.localStorage.getItem("theme-92a")}catch(t){}}();document.documentElement.setAttribute("data-theme",t||(window.matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light")),document.documentElement.setAttribute("data-theme-choice",t||"system")}(),function(){try{for(var[t,e]of new URLSearchParams(window.location.search).entries())if(t.startsWith("docusaurus-data-")){var a=t.replace("docusaurus-data-","data-");document.documentElement.setAttribute(a,e)}}catch(t){}}()</script><div id=__docusaurus><link rel=preload as=image href=/AiDocs/img/logo.svg /><div role=region aria-label=跳到主要内容><a class=skipToContent_fXgn href=#__docusaurus_skipToContent_fallback>跳到主要内容</a></div><nav aria-label=主导航 class="theme-layout-navbar navbar navbar--fixed-top"><div class=navbar__inner><div class="theme-layout-navbar-left navbar__items"><button aria-label=切换导航栏 aria-expanded=false class="navbar__toggle clean-btn" type=button><svg width=30 height=30 viewBox="0 0 30 30" aria-hidden=true><path stroke=currentColor stroke-linecap=round stroke-miterlimit=10 stroke-width=2 d="M4 7h22M4 15h22M4 23h22"/></svg></button><a class=navbar__brand href=/AiDocs/><div class=navbar__logo><img src=/AiDocs/img/logo.svg alt="Ai文档 Logo" class="themedComponent_mlkZ themedComponent--light_NVdE"/><img src=/AiDocs/img/logo.svg alt="Ai文档 Logo" class="themedComponent_mlkZ themedComponent--dark_xIcU"/></div><b class="navbar__title text--truncate">Ai文档</b></a><a aria-current=page class="navbar__item navbar__link navbar__link--active" href=/AiDocs/docs/java/Java-Concurrent/AQS-and-Locks>Java</a><a class="navbar__item navbar__link" href=/AiDocs/docs/database/Database-MySQL/MySQL-Index-and-Engine>数据库</a><a class="navbar__item navbar__link" href=/AiDocs/docs/cache/Cache-Redis/Redis-Consistency-and-Eviction>缓存</a><a class="navbar__item navbar__link" href=/AiDocs/docs/distributed/Distributed-System/Distributed-Consensus>分布式</a><a class="navbar__item navbar__link" href=/AiDocs/docs/rust/Rust/Concurrency>Rust</a></div><div class="theme-layout-navbar-right navbar__items navbar__items--right"><a href=https://github.com/Aiden-Coding/AiDocs target=_blank rel="noopener noreferrer" class="navbar__item navbar__link">GitHub<svg width=13.5 height=13.5 aria-label="(opens in new tab)" class=iconExternalLink_nPIU><use href=#theme-svg-external-link /></svg></a><div class="toggle_vylO colorModeToggle_DEke"><button class="clean-btn toggleButton_gllP toggleButtonDisabled_aARS" type=button disabled title="system mode" aria-label="切换浅色/暗黑模式（当前为system mode）"><svg viewBox="0 0 24 24" width=24 height=24 aria-hidden=true class="toggleIcon_g3eP lightToggleIcon_pyhR"><path fill=currentColor d="M12,9c1.65,0,3,1.35,3,3s-1.35,3-3,3s-3-1.35-3-3S10.35,9,12,9 M12,7c-2.76,0-5,2.24-5,5s2.24,5,5,5s5-2.24,5-5 S14.76,7,12,7L12,7z M2,13l2,0c0.55,0,1-0.45,1-1s-0.45-1-1-1l-2,0c-0.55,0-1,0.45-1,1S1.45,13,2,13z M20,13l2,0c0.55,0,1-0.45,1-1 s-0.45-1-1-1l-2,0c-0.55,0-1,0.45-1,1S19.45,13,20,13z M11,2v2c0,0.55,0.45,1,1,1s1-0.45,1-1V2c0-0.55-0.45-1-1-1S11,1.45,11,2z M11,20v2c0,0.55,0.45,1,1,1s1-0.45,1-1v-2c0-0.55-0.45-1-1-1C11.45,19,11,19.45,11,20z M5.99,4.58c-0.39-0.39-1.03-0.39-1.41,0 c-0.39,0.39-0.39,1.03,0,1.41l1.06,1.06c0.39,0.39,1.03,0.39,1.41,0s0.39-1.03,0-1.41L5.99,4.58z M18.36,16.95 c-0.39-0.39-1.03-0.39-1.41,0c-0.39,0.39-0.39,1.03,0,1.41l1.06,1.06c0.39,0.39,1.03,0.39,1.41,0c0.39-0.39,0.39-1.03,0-1.41 L18.36,16.95z M19.42,5.99c0.39-0.39,0.39-1.03,0-1.41c-0.39-0.39-1.03-0.39-1.41,0l-1.06,1.06c-0.39,0.39-0.39,1.03,0,1.41 s1.03,0.39,1.41,0L19.42,5.99z M7.05,18.36c0.39-0.39,0.39-1.03,0-1.41c-0.39-0.39-1.03-0.39-1.41,0l-1.06,1.06 c-0.39,0.39-0.39,1.03,0,1.41s1.03,0.39,1.41,0L7.05,18.36z"/></svg><svg viewBox="0 0 24 24" width=24 height=24 aria-hidden=true class="toggleIcon_g3eP darkToggleIcon_wfgR"><path fill=currentColor d="M9.37,5.51C9.19,6.15,9.1,6.82,9.1,7.5c0,4.08,3.32,7.4,7.4,7.4c0.68,0,1.35-0.09,1.99-0.27C17.45,17.19,14.93,19,12,19 c-3.86,0-7-3.14-7-7C5,9.07,6.81,6.55,9.37,5.51z M12,3c-4.97,0-9,4.03-9,9s4.03,9,9,9s9-4.03,9-9c0-0.46-0.04-0.92-0.1-1.36 c-0.98,1.37-2.58,2.26-4.4,2.26c-2.98,0-5.4-2.42-5.4-5.4c0-1.81,0.89-3.42,2.26-4.4C12.92,3.04,12.46,3,12,3L12,3z"/></svg><svg viewBox="0 0 24 24" width=24 height=24 aria-hidden=true class="toggleIcon_g3eP systemToggleIcon_QzmC"><path fill=currentColor d="m12 21c4.971 0 9-4.029 9-9s-4.029-9-9-9-9 4.029-9 9 4.029 9 9 9zm4.95-13.95c1.313 1.313 2.05 3.093 2.05 4.95s-0.738 3.637-2.05 4.95c-1.313 1.313-3.093 2.05-4.95 2.05v-14c1.857 0 3.637 0.737 4.95 2.05z"/></svg></button></div><div class=navbarSearchContainer_Bca1></div></div></div><div role=presentation class=navbar-sidebar__backdrop></div></nav><div id=__docusaurus_skipToContent_fallback class="theme-layout-main main-wrapper mainWrapper_z2l0"><div class=docsWrapper_hBAB><button aria-label=回到顶部 class="clean-btn theme-back-to-top-button backToTopButton_sjWU" type=button></button><div class=docRoot_UBD9><aside class="theme-doc-sidebar-container docSidebarContainer_YfHR"><div class=sidebarViewport_aRkj><div class=sidebar_njMd><nav aria-label=文档侧边栏 class="menu thin-scrollbar menu_SIkG"><ul class="theme-doc-sidebar-menu menu__list"><li class="theme-doc-sidebar-item-category theme-doc-sidebar-item-category-level-1 menu__list-item menu__list-item--collapsed"><div class=menu__list-item-collapsible><a class="categoryLink_byQd menu__link menu__link--sublist menu__link--sublist-caret" role=button aria-expanded=false href=/AiDocs/docs/java/Java-Concurrent/AQS-and-Locks><span title=Java-Concurrent class=categoryLinkLabel_W154>Java-Concurrent</span></a></div><li class="theme-doc-sidebar-item-category theme-doc-sidebar-item-category-level-1 menu__list-item menu__list-item--collapsed"><div class=menu__list-item-collapsible><a class="categoryLink_byQd menu__link menu__link--sublist menu__link--sublist-caret" role=button aria-expanded=false href=/AiDocs/docs/java/JVM/ClassLoader-and-Bytecode><span title=JVM class=categoryLinkLabel_W154>JVM</span></a></div><li class="theme-doc-sidebar-item-category theme-doc-sidebar-item-category-level-1 menu__list-item"><div class=menu__list-item-collapsible><a class="categoryLink_byQd menu__link menu__link--sublist menu__link--sublist-caret menu__link--active" role=button aria-expanded=true href=/AiDocs/docs/java/Spring-Framework/Spring-IoC-and-AOP><span title=Spring-Framework class=categoryLinkLabel_W154>Spring-Framework</span></a></div><ul class=menu__list><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class=menu__link tabindex=0 href=/AiDocs/docs/java/Spring-Framework/Spring-IoC-and-AOP><span title="Spring IoC 与 AOP 源码级解析" class=linkLabel_WmDU>Spring IoC 与 AOP 源码级解析</span></a><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class="menu__link menu__link--active" aria-current=page tabindex=0 href=/AiDocs/docs/java/Spring-Framework/Spring-Transaction><span title="Spring 事务传播与失效场景" class=linkLabel_WmDU>Spring 事务传播与失效场景</span></a><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class=menu__link tabindex=0 href=/AiDocs/docs/java/Spring-Framework/SpringBoot-and-SpringCloud><span title="Spring Boot 自动装配与微服务组件原理" class=linkLabel_WmDU>Spring Boot 自动装配与微服务组件原理</span></a></ul></ul></nav></div></div></aside><main class=docMainContainer_TBSr><div class="container padding-top--md padding-bottom--lg"><div class=row><div class="col docItemCol_VOVn"><div class=docItemContainer_Djhp><article><nav class="theme-doc-breadcrumbs breadcrumbsContainer_Z_bl" aria-label=页面路径><ul class=breadcrumbs><li class=breadcrumbs__item><a aria-label=主页面 class=breadcrumbs__link href=/AiDocs/><svg viewBox="0 0 24 24" class=breadcrumbHomeIcon_YNFT><path d="M10 19v-5h4v5c0 .55.45 1 1 1h3c.55 0 1-.45 1-1v-7h1.7c.46 0 .68-.57.33-.87L12.67 3.6c-.38-.34-.96-.34-1.34 0l-8.36 7.53c-.34.3-.13.87.33.87H5v7c0 .55.45 1 1 1h3c.55 0 1-.45 1-1z" fill=currentColor /></svg></a><li class=breadcrumbs__item><span class=breadcrumbs__link>Spring-Framework</span><li class="breadcrumbs__item breadcrumbs__item--active"><span class=breadcrumbs__link>Spring 事务传播与失效场景</span></ul></nav><div class="tocCollapsible_ETCw theme-doc-toc-mobile tocMobile_ITEo"><button type=button class="clean-btn tocCollapsibleButton_TO0P">本页总览</button></div><div class="theme-doc-markdown markdown"><header><h1>Spring 事务传播与失效场景</h1></header>
+<p>Spring 声明式事务（<code>@Transactional</code>）是开发中最常用的功能之一。然而，由于其底层基于 AOP 动态代理实现，如果使用不当，极易导致事务失效或传播行为不符合预期，从而引发严重的数据一致性问题。</p>
+<hr/>
+<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id=一-spring-事务传播行为propagation>一、 Spring 事务传播行为（Propagation）<a href=#一-spring-事务传播行为propagation class=hash-link aria-label="一、 Spring 事务传播行为（Propagation）的直接链接" title="一、 Spring 事务传播行为（Propagation）的直接链接" translate=no>​</a></h2>
+<p>事务传播行为定义了当一个事务方法被另一个事务方法调用时，该如何运行。Spring 在 <code>TransactionDefinition</code> 中定义了 7 种传播行为：</p>
+<table><thead><tr><th style=text-align:left>传播行为名称<th style=text-align:left>含义说明<th style=text-align:left>常用场景<tbody><tr><td style=text-align:left><strong><code>REQUIRED</code>（默认）</strong><td style=text-align:left>如果当前存在事务，则加入该事务；如果当前没有事务，则创建一个新的事务。<td style=text-align:left>绝大多数业务场景，如订单创建、支付等。<tr><td style=text-align:left><strong><code>REQUIRES_NEW</code></strong><td style=text-align:left>创建一个新的事务，如果当前存在事务，则将当前事务挂起。新事务与外部事务相互独立。<td style=text-align:left>独立记录日志、发送短信通知等不影响主业务流程的场景。<tr><td style=text-align:left><strong><code>NESTED</code></strong><td style=text-align:left>如果当前存在事务，则在嵌套事务内执行；如果当前没有事务，则执行与 <code>REQUIRED</code> 类似的操作。<td style=text-align:left>外部事务失败需要回滚全部，但内部子事务失败可以单独回滚，不影响外部事务。<tr><td style=text-align:left><strong><code>SUPPORTS</code></strong><td style=text-align:left>如果当前存在事务，则加入该事务；如果当前没有事务，则以非事务方式执行。<td style=text-align:left>查询操作，既可以单独运行，也可以在事务中运行。<tr><td style=text-align:left><strong><code>NOT_SUPPORTED</code></strong><td style=text-align:left>以非事务方式执行，如果当前存在事务，则将当前事务挂起。<td style=text-align:left>耗时较长的非数据库操作，如调用第三方接口，避免长时间占用数据库连接。<tr><td style=text-align:left><strong><code>MANDATORY</code></strong><td style=text-align:left>如果当前存在事务，则加入该事务；如果当前没有事务，则抛出异常。<td style=text-align:left>必须在已有事务中运行的子方法。<tr><td style=text-align:left><strong><code>NEVER</code></strong><td style=text-align:left>以非事务方式执行，如果当前存在事务，则抛出异常。<td style=text-align:left>严格禁止事务的场景。</table>
+<h3 class="anchor anchorTargetStickyNavbar_Vzrq" id=requires_new-与-nested-的核心区别><code>REQUIRES_NEW</code> 与 <code>NESTED</code> 的核心区别<a href=#requires_new-与-nested-的核心区别 class=hash-link aria-label=requires_new-与-nested-的核心区别的直接链接 title=requires_new-与-nested-的核心区别的直接链接 translate=no>​</a></h3>
+<ul>
+<li class=""><strong><code>REQUIRES_NEW</code></strong>：启动一个<strong>完全独立</strong>的新事务。新事务拥有自己的锁和连接，其提交和回滚与外部事务完全无关</li>
+</ul>
+<p><strong><code>NESTED</code></strong>：启动一个<strong>嵌套事务</strong>（基于数据库的 *<em>Savepoint（保存点）</em></p>
+<ul>
+<li class="">如果外部事务回滚，内部事务<strong>必须</strong>一起回滚（因为它们共享同一个物理连接和事务）。</li>
+</ul>
+<hr/>
+<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id=二-声明式事务-transactional-失效的-12-种场景>二、 声明式事务 <code>@Transactional</code> 失效的 12 种场景<a href=#二-声明式事务-transactional-失效的-12-种场景 class=hash-link aria-label=二-声明式事务-transactional-失效的-12-种场景的直接链接 title=二-声明式事务-transactional-失效的-12-种场景的直接链接 translate=no>​</a></h2>
+<p>在高级面试中，要求列举并解释 <code>@Transactional</code> 失效的场景是高频考点。以下是经过系统整理的 12 种失效场景及底层原理：</p>
+<ol>
+<li class="">
+<p><strong>自身调用（Self-Invocation）</strong>：</p>
+<ul>
+<li class=""><strong>现象</strong>：同一个类中，非事务方法 A 调用事务方法 B，B 的事务失效。</li>
+<li class=""><strong>原理</strong>：Spring 事务是基于 AOP 代理实现的。当我们在外部调用 <code>service.B()</code> 时，调用的是代理对象，代理对象会开启事务。而方法 A 调用方法 B 是通过 <code>this.B()</code> 调用的，绕过了代理对象，因此事务不会生效。</li>
+<li class=""><strong>解决办法</strong>：<!-- -->
+<ul>
+<li class="">
+<p>将方法 B 拆分到另一个 Service 类中。</p>
+</li>
+<li class="">
+<p>在类中注入自身代理对象（使用 <code>@Autowired</code> 注入自己，或使用 <code>AopContext.currentProxy()</code>）。</p>
+<div class="language-java codeBlockContainer_Ckt0 theme-code-block" style=--prism-color:#393A34;--prism-background-color:#f6f8fa><div class=codeBlockContent_QJqH><pre tabindex=0 class="prism-code language-java codeBlock_bY9V thin-scrollbar" style=color:#393A34;background-color:#f6f8fa><code class=codeBlockLines_e6Vv><div class=token-line style=color:#393A34><span class="token plain">((MyService) AopContext.currentProxy()).B(); // 需配置 @EnableAspectJAutoProxy(exposeProxy = true)</span><br/></div></code></pre></div></div>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="">
+<p><strong>方法修饰符不是 <code>public</code></strong>：</p>
+<ul>
+<li class=""><strong>现象</strong>：在 <code>private</code>、<code>protected</code> 或 <code>default</code> 方法上加 <code>@Transactional</code>，事务失效。</li>
+<li class=""><strong>原理</strong>：Spring 事务拦截器 <code>TransactionInterceptor</code> 在解析方法时，默认会检查方法的修饰符。如果不是 <code>public</code>，则直接忽略，不进行事务增强。</li>
+</ul>
+</li>
+<li class="">
+<p><strong>异常被吞掉（<code>try-catch</code> 消化）</strong>：</p>
+<ul>
+<li class=""><strong>现象</strong>：方法内部抛出异常，但被 <code>try-catch</code> 捕获且没有重新抛出，事务不回滚。</li>
+<li class=""><strong>原理</strong>：Spring 只有在捕获到未处理的异常时，才会触发回滚逻辑。如果异常在方法内部被捕获并消化了，Spring 认为方法执行成功，照常提交事务。</li>
+</ul>
+</li>
+<li class="">
+<p><strong>抛出受检异常（Checked Exception）</strong>：</p>
+<ul>
+<li class="">
+<p><strong>现象</strong>：方法抛出 <code>IOException</code> 或 <code>SQLException</code>，事务不回滚。</p>
+</li>
+<li class="">
+<p><strong>原理</strong>：Spring 默认只在遇到 <code>RuntimeException</code>（运行时异常）和 <code>Error</code> 时才会回滚。对于受检异常（Checked Exception），默认不回滚。</p>
+</li>
+<li class="">
+<p><strong>解决办法</strong>：显式指定回滚异常类型：</p>
+<div class="language-java codeBlockContainer_Ckt0 theme-code-block" style=--prism-color:#393A34;--prism-background-color:#f6f8fa><div class=codeBlockContent_QJqH><pre tabindex=0 class="prism-code language-java codeBlock_bY9V thin-scrollbar" style=color:#393A34;background-color:#f6f8fa><code class=codeBlockLines_e6Vv><div class=token-line style=color:#393A34><span class="token plain">@Transactional(rollbackFor = Exception.class)</span><br/></div></code></pre></div></div>
+</li>
+</ul>
+</li>
+<li class="">
+<p><strong>数据库引擎不支持事务</strong>：</p>
+<ul>
+<li class=""><strong>现象</strong>：MySQL 数据库表使用的是 <strong>MyISAM</strong> 引擎，事务失效。</li>
+<li class=""><strong>原理</strong>：Spring 事务最终是依赖数据库本身的事务支持。MyISAM 引擎本身不支持事务，Spring 即使发送了 <code>commit</code> 或 <code>rollback</code> 指令，数据库也无法执行。</li>
+<li class=""><strong>解决办法</strong>：将表引擎修改为 <strong>InnoDB</strong>。</li>
+</ul>
+</li>
+<li class="">
+<p><strong>错误的事务传播行为</strong>：</p>
+<ul>
+<li class=""><strong>现象</strong>：配置了 <code>NOT_SUPPORTED</code> 或 <code>NEVER</code> 等不支持事务的传播行为，导致事务未按预期运行。</li>
+</ul>
+</li>
+<li class="">
+<p><strong>Bean 没有被 Spring 容器管理</strong>：</p>
+<ul>
+<li class=""><strong>现象</strong>：类上没有加 <code>@Service</code>、<code>@Component</code> 等注解，或者没有注入到 Spring 容器中。</li>
+<li class=""><strong>原理</strong>：Spring 无法为非 Spring Bean 生成 AOP 代理，自然无法进行事务管理。</li>
+</ul>
+</li>
+<li class="">
+<p><strong>方法被 <code>final</code> 或 <code>static</code> 修饰</strong>：</p>
+<ul>
+<li class=""><strong>现象</strong>：方法加了 <code>final</code> 或 <code>static</code>，事务失效。</li>
+<li class=""><strong>原理</strong>：CGLIB 动态代理是通过生成子类并重写父类方法来实现的。被 <code>final</code> 修饰的方法无法被子类重写，被 <code>static</code> 修饰的方法属于类本身，无法被代理，因此事务失效。</li>
+</ul>
+</li>
+<li class="">
+<p><strong>多线程调用</strong>：</p>
+<ul>
+<li class=""><strong>现象</strong>：在事务方法 A 内部，启动了一个新线程去执行数据库操作，新线程中的操作不受 A 的事务控制。</li>
+<li class=""><strong>原理</strong>：Spring 的事务管理器（如 <code>DataSourceTransactionManager</code>）是通过 <code>ThreadLocal</code> 将数据库连接（Connection）与当前线程绑定的。多线程下，新线程获取到的是不同的数据库连接，因此无法共享同一个事务。</li>
+</ul>
+</li>
+<li class="">
+<p><strong>父子方法异常处理不当（<code>UnexpectedRollbackException</code>）</strong>：</p>
+<ul>
+<li class=""><strong>现象</strong>：在使用 <code>REQUIRED</code> 传播行为时，子方法抛出异常，父方法 <code>try-catch</code> 了该异常，期望父方法不回滚，但最终整个事务依然回滚，并抛出 <code>UnexpectedRollbackException</code>。</li>
+<li class=""><strong>原理</strong>：由于传播行为是 <code>REQUIRED</code>，父子方法共享同一个事务。子方法抛出异常时，已将当前事务标记为 <code>rollback-only</code>。即使父方法捕获了异常，在提交事务时，Spring 发现事务已被标记为回滚，因此强制回滚整个事务。</li>
+</ul>
+</li>
+<li class="">
+<p><strong>异步调用（<code>@Async</code>）</strong>：</p>
+<ul>
+<li class=""><strong>现象</strong>：在同一个类中，事务方法调用了异步方法，或者异步方法上加了 <code>@Transactional</code>。</li>
+<li class=""><strong>原理</strong>：与多线程调用类似，<code>@Async</code> 会启动新线程执行，导致 <code>ThreadLocal</code> 中的事务上下文丢失。</li>
+</ul>
+</li>
+<li class="">
+<p><strong>未配置事务管理器</strong>：</p>
+<ul>
+<li class=""><strong>现象</strong>：项目中没有配置 <code>PlatformTransactionManager</code>（在 Spring Boot 中通常会自动装配，但在传统 Spring 项目中需要手动配置）。</li>
+</ul>
+</li>
+</ol>
+<p>这些场景的总结是：Spring 事务的失效往往源于对 AOP 代理机制、方法修饰符、异常处理、数据库引擎和事务传播行为的误解或误用。理解这些场景的原理，有助于我们更好地设计和实现事务管理策略。</div><footer class="theme-doc-footer docusaurus-mt-lg"><div class="row margin-top--sm theme-doc-footer-edit-meta-row"><div class="col noPrint_WFHX"><a href=https://github.com/Aiden-Coding/AiDocs/tree/main/docs/java/03-Spring-Framework/Spring-Transaction.md target=_blank rel="noopener noreferrer" class=theme-edit-this-page><svg fill=currentColor height=20 width=20 viewBox="0 0 40 40" class=iconEdit_Z9Sw aria-hidden=true><g><path d="m34.5 11.7l-3 3.1-6.3-6.3 3.1-3q0.5-0.5 1.2-0.5t1.1 0.5l3.9 3.9q0.5 0.4 0.5 1.1t-0.5 1.2z m-29.5 17.1l18.4-18.5 6.3 6.3-18.4 18.4h-6.3v-6.2z"/></g></svg>编辑此页</a></div><div class="col lastUpdated_JAkA"></div></div></footer></article><nav class="docusaurus-mt-lg pagination-nav" aria-label=文件选项卡><a class="pagination-nav__link pagination-nav__link--prev" href=/AiDocs/docs/java/Spring-Framework/Spring-IoC-and-AOP><div class=pagination-nav__sublabel>上一页</div><div class=pagination-nav__label>Spring IoC 与 AOP 源码级解析</div></a><a class="pagination-nav__link pagination-nav__link--next" href=/AiDocs/docs/java/Spring-Framework/SpringBoot-and-SpringCloud><div class=pagination-nav__sublabel>下一页</div><div class=pagination-nav__label>Spring Boot 自动装配与微服务组件原理</div></a></nav></div></div><div class="col col--3"><div class="tableOfContents_bqdL thin-scrollbar theme-doc-toc-desktop"><ul class="table-of-contents table-of-contents__left-border"><li><a href=#一-spring-事务传播行为propagation class="table-of-contents__link toc-highlight">一、 Spring 事务传播行为（Propagation）</a><ul><li><a href=#requires_new-与-nested-的核心区别 class="table-of-contents__link toc-highlight"><code>REQUIRES_NEW</code> 与 <code>NESTED</code> 的核心区别</a></ul><li><a href=#二-声明式事务-transactional-失效的-12-种场景 class="table-of-contents__link toc-highlight">二、 声明式事务 <code>@Transactional</code> 失效的 12 种场景</a></ul></div></div></div></div></main></div></div></div><footer class="theme-layout-footer footer footer--dark"><div class="container container-fluid"><div class="row footer__links"><div class="theme-layout-footer-column col footer__col"><div class=footer__title>文档</div><ul class="footer__items clean-list"><li class=footer__item><a class=footer__link-item href=/AiDocs/docs/intro>开始阅读</a></ul></div><div class="theme-layout-footer-column col footer__col"><div class=footer__title>更多</div><ul class="footer__items clean-list"><li class=footer__item><a href=https://github.com/Aiden-Coding/AiDocs target=_blank rel="noopener noreferrer" class=footer__link-item>GitHub<svg width=13.5 height=13.5 aria-label="(opens in new tab)" class=iconExternalLink_nPIU><use href=#theme-svg-external-link /></svg></a></ul></div></div><div class="footer__bottom text--center"><div class=footer__copyright>Copyright © 2026 AiDocs. Built with Docusaurus.</div></div></div></footer></div></body>

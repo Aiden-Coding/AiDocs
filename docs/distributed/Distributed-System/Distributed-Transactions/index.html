@@ -1,0 +1,155 @@
+<!doctype html><html lang=zh-Hans dir=ltr class="docs-wrapper plugin-docs plugin-id-default docs-version-current docs-doc-page docs-doc-id-distributed/Distributed-System/Distributed-Transactions" data-has-hydrated=false><head><meta charset=UTF-8><meta name=generator content="Docusaurus v3.10.1"><title data-rh=true>分布式事务原理与 Seata 实战 | Ai文档</title><meta data-rh=true name=viewport content="width=device-width, initial-scale=1.0"/><meta data-rh=true name=twitter:card content=summary_large_image /><meta data-rh=true property=og:image content=https://github.com/AiDocs/img/docusaurus-social-card.jpg /><meta data-rh=true name=twitter:image content=https://github.com/AiDocs/img/docusaurus-social-card.jpg /><meta data-rh=true property=og:url content=https://github.com/AiDocs/docs/distributed/Distributed-System/Distributed-Transactions /><meta data-rh=true property=og:locale content=zh_Hans /><meta data-rh=true name=docusaurus_locale content=zh-Hans /><meta data-rh=true name=docsearch:language content=zh-Hans /><meta data-rh=true name=docusaurus_version content=current /><meta data-rh=true name=docusaurus_tag content=docs-default-current /><meta data-rh=true name=docsearch:version content=current /><meta data-rh=true name=docsearch:docusaurus_tag content=docs-default-current /><meta data-rh=true property=og:title content="分布式事务原理与 Seata 实战 | Ai文档"/><meta data-rh=true name=description content=在微服务架构中，一个复杂的业务流程往往需要调用多个微服务，每个微服务都拥有自己独立的数据库。传统的本地事务（ACID）无法保证跨服务、跨数据库的数据一致性，必须引入分布式事务。 /><meta data-rh=true property=og:description content=在微服务架构中，一个复杂的业务流程往往需要调用多个微服务，每个微服务都拥有自己独立的数据库。传统的本地事务（ACID）无法保证跨服务、跨数据库的数据一致性，必须引入分布式事务。 /><link data-rh=true rel=icon href=/AiDocs/img/favicon.ico /><link data-rh=true rel=canonical href=https://github.com/AiDocs/docs/distributed/Distributed-System/Distributed-Transactions /><link data-rh=true rel=alternate href=https://github.com/AiDocs/docs/distributed/Distributed-System/Distributed-Transactions hreflang=zh-Hans /><link data-rh=true rel=alternate href=https://github.com/AiDocs/docs/distributed/Distributed-System/Distributed-Transactions hreflang=x-default /><script data-rh=true type=application/ld+json>{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","item":"https://github.com/AiDocs/docs/distributed/Distributed-System/Distributed-Transactions","name":"分布式事务原理与 Seata 实战","position":1}]}</script><link rel=stylesheet href=/AiDocs/assets/css/styles.9ad71d63.css /><script src=/AiDocs/assets/js/runtime~main.00c9986d.js defer></script><script src=/AiDocs/assets/js/main.db86e06d.js defer></script></head><body><svg style="display: none;"><defs>
+<symbol id=theme-svg-external-link viewBox="0 0 24 24"><path fill=currentColor d="M21 13v10h-21v-19h12v2h-10v15h17v-8h2zm3-12h-10.988l4.035 4-6.977 7.07 2.828 2.828 6.977-7.07 4.125 4.172v-11z"/></symbol>
+</defs></svg>
+<script>!function(){var t=function(){try{return new URLSearchParams(window.location.search).get("docusaurus-theme")}catch(t){}}()||function(){try{return window.localStorage.getItem("theme-92a")}catch(t){}}();document.documentElement.setAttribute("data-theme",t||(window.matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light")),document.documentElement.setAttribute("data-theme-choice",t||"system")}(),function(){try{for(var[t,e]of new URLSearchParams(window.location.search).entries())if(t.startsWith("docusaurus-data-")){var a=t.replace("docusaurus-data-","data-");document.documentElement.setAttribute(a,e)}}catch(t){}}()</script><div id=__docusaurus><link rel=preload as=image href=/AiDocs/img/logo.svg /><div role=region aria-label=跳到主要内容><a class=skipToContent_fXgn href=#__docusaurus_skipToContent_fallback>跳到主要内容</a></div><nav aria-label=主导航 class="theme-layout-navbar navbar navbar--fixed-top"><div class=navbar__inner><div class="theme-layout-navbar-left navbar__items"><button aria-label=切换导航栏 aria-expanded=false class="navbar__toggle clean-btn" type=button><svg width=30 height=30 viewBox="0 0 30 30" aria-hidden=true><path stroke=currentColor stroke-linecap=round stroke-miterlimit=10 stroke-width=2 d="M4 7h22M4 15h22M4 23h22"/></svg></button><a class=navbar__brand href=/AiDocs/><div class=navbar__logo><img src=/AiDocs/img/logo.svg alt="Ai文档 Logo" class="themedComponent_mlkZ themedComponent--light_NVdE"/><img src=/AiDocs/img/logo.svg alt="Ai文档 Logo" class="themedComponent_mlkZ themedComponent--dark_xIcU"/></div><b class="navbar__title text--truncate">Ai文档</b></a><a class="navbar__item navbar__link" href=/AiDocs/docs/java/Java-Concurrent/AQS-and-Locks>Java</a><a class="navbar__item navbar__link" href=/AiDocs/docs/database/Database-MySQL/MySQL-Index-and-Engine>数据库</a><a class="navbar__item navbar__link" href=/AiDocs/docs/cache/Cache-Redis/Redis-Consistency-and-Eviction>缓存</a><a aria-current=page class="navbar__item navbar__link navbar__link--active" href=/AiDocs/docs/distributed/Distributed-System/Distributed-Consensus>分布式</a><a class="navbar__item navbar__link" href=/AiDocs/docs/rust/Rust/Concurrency>Rust</a></div><div class="theme-layout-navbar-right navbar__items navbar__items--right"><a href=https://github.com/Aiden-Coding/AiDocs target=_blank rel="noopener noreferrer" class="navbar__item navbar__link">GitHub<svg width=13.5 height=13.5 aria-label="(opens in new tab)" class=iconExternalLink_nPIU><use href=#theme-svg-external-link /></svg></a><div class="toggle_vylO colorModeToggle_DEke"><button class="clean-btn toggleButton_gllP toggleButtonDisabled_aARS" type=button disabled title="system mode" aria-label="切换浅色/暗黑模式（当前为system mode）"><svg viewBox="0 0 24 24" width=24 height=24 aria-hidden=true class="toggleIcon_g3eP lightToggleIcon_pyhR"><path fill=currentColor d="M12,9c1.65,0,3,1.35,3,3s-1.35,3-3,3s-3-1.35-3-3S10.35,9,12,9 M12,7c-2.76,0-5,2.24-5,5s2.24,5,5,5s5-2.24,5-5 S14.76,7,12,7L12,7z M2,13l2,0c0.55,0,1-0.45,1-1s-0.45-1-1-1l-2,0c-0.55,0-1,0.45-1,1S1.45,13,2,13z M20,13l2,0c0.55,0,1-0.45,1-1 s-0.45-1-1-1l-2,0c-0.55,0-1,0.45-1,1S19.45,13,20,13z M11,2v2c0,0.55,0.45,1,1,1s1-0.45,1-1V2c0-0.55-0.45-1-1-1S11,1.45,11,2z M11,20v2c0,0.55,0.45,1,1,1s1-0.45,1-1v-2c0-0.55-0.45-1-1-1C11.45,19,11,19.45,11,20z M5.99,4.58c-0.39-0.39-1.03-0.39-1.41,0 c-0.39,0.39-0.39,1.03,0,1.41l1.06,1.06c0.39,0.39,1.03,0.39,1.41,0s0.39-1.03,0-1.41L5.99,4.58z M18.36,16.95 c-0.39-0.39-1.03-0.39-1.41,0c-0.39,0.39-0.39,1.03,0,1.41l1.06,1.06c0.39,0.39,1.03,0.39,1.41,0c0.39-0.39,0.39-1.03,0-1.41 L18.36,16.95z M19.42,5.99c0.39-0.39,0.39-1.03,0-1.41c-0.39-0.39-1.03-0.39-1.41,0l-1.06,1.06c-0.39,0.39-0.39,1.03,0,1.41 s1.03,0.39,1.41,0L19.42,5.99z M7.05,18.36c0.39-0.39,0.39-1.03,0-1.41c-0.39-0.39-1.03-0.39-1.41,0l-1.06,1.06 c-0.39,0.39-0.39,1.03,0,1.41s1.03,0.39,1.41,0L7.05,18.36z"/></svg><svg viewBox="0 0 24 24" width=24 height=24 aria-hidden=true class="toggleIcon_g3eP darkToggleIcon_wfgR"><path fill=currentColor d="M9.37,5.51C9.19,6.15,9.1,6.82,9.1,7.5c0,4.08,3.32,7.4,7.4,7.4c0.68,0,1.35-0.09,1.99-0.27C17.45,17.19,14.93,19,12,19 c-3.86,0-7-3.14-7-7C5,9.07,6.81,6.55,9.37,5.51z M12,3c-4.97,0-9,4.03-9,9s4.03,9,9,9s9-4.03,9-9c0-0.46-0.04-0.92-0.1-1.36 c-0.98,1.37-2.58,2.26-4.4,2.26c-2.98,0-5.4-2.42-5.4-5.4c0-1.81,0.89-3.42,2.26-4.4C12.92,3.04,12.46,3,12,3L12,3z"/></svg><svg viewBox="0 0 24 24" width=24 height=24 aria-hidden=true class="toggleIcon_g3eP systemToggleIcon_QzmC"><path fill=currentColor d="m12 21c4.971 0 9-4.029 9-9s-4.029-9-9-9-9 4.029-9 9 4.029 9 9 9zm4.95-13.95c1.313 1.313 2.05 3.093 2.05 4.95s-0.738 3.637-2.05 4.95c-1.313 1.313-3.093 2.05-4.95 2.05v-14c1.857 0 3.637 0.737 4.95 2.05z"/></svg></button></div><div class=navbarSearchContainer_Bca1></div></div></div><div role=presentation class=navbar-sidebar__backdrop></div></nav><div id=__docusaurus_skipToContent_fallback class="theme-layout-main main-wrapper mainWrapper_z2l0"><div class=docsWrapper_hBAB><button aria-label=回到顶部 class="clean-btn theme-back-to-top-button backToTopButton_sjWU" type=button></button><div class=docRoot_UBD9><aside class="theme-doc-sidebar-container docSidebarContainer_YfHR"><div class=sidebarViewport_aRkj><div class=sidebar_njMd><nav aria-label=文档侧边栏 class="menu thin-scrollbar menu_SIkG"><ul class="theme-doc-sidebar-menu menu__list"><li class="theme-doc-sidebar-item-category theme-doc-sidebar-item-category-level-1 menu__list-item"><div class=menu__list-item-collapsible><a class="categoryLink_byQd menu__link menu__link--sublist menu__link--sublist-caret menu__link--active" role=button aria-expanded=true href=/AiDocs/docs/distributed/Distributed-System/Distributed-Consensus><span title=Distributed-System class=categoryLinkLabel_W154>Distributed-System</span></a></div><ul class=menu__list><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class=menu__link tabindex=0 href=/AiDocs/docs/distributed/Distributed-System/Distributed-Consensus><span title="分布式共识协议：Raft 与 Paxos" class=linkLabel_WmDU>分布式共识协议：Raft 与 Paxos</span></a><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class=menu__link tabindex=0 href=/AiDocs/docs/distributed/Distributed-System/Distributed-Lock-ZooKeeper><span title="ZooKeeper 分布式锁与高可用原理" class=linkLabel_WmDU>ZooKeeper 分布式锁与高可用原理</span></a><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class="menu__link menu__link--active" aria-current=page tabindex=0 href=/AiDocs/docs/distributed/Distributed-System/Distributed-Transactions><span title="分布式事务原理与 Seata 实战" class=linkLabel_WmDU>分布式事务原理与 Seata 实战</span></a><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class=menu__link tabindex=0 href=/AiDocs/docs/distributed/Distributed-System/Message-Queue><span title=消息队列高可用与消息丢失解决方案 class=linkLabel_WmDU>消息队列高可用与消息丢失解决方案</span></a></ul></ul></nav></div></div></aside><main class=docMainContainer_TBSr><div class="container padding-top--md padding-bottom--lg"><div class=row><div class="col docItemCol_VOVn"><div class=docItemContainer_Djhp><article><nav class="theme-doc-breadcrumbs breadcrumbsContainer_Z_bl" aria-label=页面路径><ul class=breadcrumbs><li class=breadcrumbs__item><a aria-label=主页面 class=breadcrumbs__link href=/AiDocs/><svg viewBox="0 0 24 24" class=breadcrumbHomeIcon_YNFT><path d="M10 19v-5h4v5c0 .55.45 1 1 1h3c.55 0 1-.45 1-1v-7h1.7c.46 0 .68-.57.33-.87L12.67 3.6c-.38-.34-.96-.34-1.34 0l-8.36 7.53c-.34.3-.13.87.33.87H5v7c0 .55.45 1 1 1h3c.55 0 1-.45 1-1z" fill=currentColor /></svg></a><li class=breadcrumbs__item><span class=breadcrumbs__link>Distributed-System</span><li class="breadcrumbs__item breadcrumbs__item--active"><span class=breadcrumbs__link>分布式事务原理与 Seata 实战</span></ul></nav><div class="tocCollapsible_ETCw theme-doc-toc-mobile tocMobile_ITEo"><button type=button class="clean-btn tocCollapsibleButton_TO0P">本页总览</button></div><div class="theme-doc-markdown markdown"><header><h1>分布式事务原理与 Seata 实战</h1></header>
+<p>在微服务架构中，一个复杂的业务流程往往需要调用多个微服务，每个微服务都拥有自己独立的数据库。传统的本地事务（ACID）无法保证跨服务、跨数据库的数据一致性，必须引入<strong>分布式事务</strong>。</p>
+<hr/>
+<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id=一-分布式事务理论基石cap-与-base>一、 分布式事务理论基石：CAP 与 BASE<a href=#一-分布式事务理论基石cap-与-base class=hash-link aria-label="一、 分布式事务理论基石：CAP 与 BASE的直接链接" title="一、 分布式事务理论基石：CAP 与 BASE的直接链接" translate=no>​</a></h2>
+<p>在设计分布式事务方案之前，必须理解分布式系统的基本理论。</p>
+<h3 class="anchor anchorTargetStickyNavbar_Vzrq" id=1-cap-定理>1. CAP 定理<a href=#1-cap-定理 class=hash-link aria-label="1. CAP 定理的直接链接" title="1. CAP 定理的直接链接" translate=no>​</a></h3>
+<p>CAP 定理指出，在一个分布式系统中，以下三个特性<strong>无法同时满足</strong>，最多只能同时满足两个：</p>
+<ul>
+<li class=""><strong>Consistency（一致性）</strong>：所有节点在同一时刻看到的数据完全一致。</li>
+<li class=""><strong>Availability（可用性）</strong>：系统提供的服务必须一直处于可用状态，每个请求都能收到非错响应（但不保证数据最新）。</li>
+<li class=""><strong>Partition Tolerance（分区容错性）</strong>：分布式系统在遇到任何网络分区故障时，仍然能够对外提供服务。</li>
+</ul>
+<blockquote>
+<p><strong>核心结论</strong>：在分布式系统中，网络分区（P）是客观存在的，无法避免。因此，架构师只能在 <strong>CP（强一致性）</strong> 和 <strong>AP（高可用性）</strong> 之间进行权衡：</p>
+</blockquote>
+<ul>
+<li class=""><strong>CP 架构</strong>：为了保证强一致性，在网络分区发生时，必须拒绝部分请求或让其等待，牺牲可用性（如 ZooKeeper）。</li>
+<li class=""><strong>AP 架构</strong>：为了保证高可用，允许不同节点的数据在短时间内不一致，牺牲强一致性，追求<strong>最终一致性</strong>（如 Eureka、Nacos AP 模式、Seata AT 模式）。</li>
+</ul>
+<h3 class="anchor anchorTargetStickyNavbar_Vzrq" id=2-base-理论>2. BASE 理论<a href=#2-base-理论 class=hash-link aria-label="2. BASE 理论的直接链接" title="2. BASE 理论的直接链接" translate=no>​</a></h3>
+<p>BASE 理论是对 CAP 中 AP 方案的延伸，是现代分布式系统设计的核心指导思想：</p>
+<ul>
+<li class=""><strong>Basically Available（基本可用）</strong>：分布式系统在出现故障时，允许损失部分可用性（如响应时间延长、非核心功能降级），但保证核心功能可用。</li>
+<li class=""><strong>Soft State（软状态）</strong>：允许系统中的数据存在中间状态（如“支付中”、“处理中”），并认为该中间状态不影响系统的整体可用性。</li>
+<li class=""><strong>Eventually Consistent（最终一致性）</strong>：系统中的所有数据副本，在经过一段时间的同步后，最终能够达到一致的状态，而不需要实时强一致。</li>
+</ul>
+<hr/>
+<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id=二-常见分布式事务解决方案>二、 常见分布式事务解决方案<a href=#二-常见分布式事务解决方案 class=hash-link aria-label="二、 常见分布式事务解决方案的直接链接" title="二、 常见分布式事务解决方案的直接链接" translate=no>​</a></h2>
+<!-- -->
+<h3 class="anchor anchorTargetStickyNavbar_Vzrq" id=1-2pc-two-phase-commit-二阶段提交>1. 2PC (Two-Phase Commit) 二阶段提交<a href=#1-2pc-two-phase-commit-二阶段提交 class=hash-link aria-label="1. 2PC (Two-Phase Commit) 二阶段提交的直接链接" title="1. 2PC (Two-Phase Commit) 二阶段提交的直接链接" translate=no>​</a></h3>
+<ul>
+<li class=""><strong>角色</strong>：协调者（Coordinator）和参与者（Participants）。</li>
+<li class=""><strong>流程</strong>：<!-- -->
+<ol>
+<li class=""><strong>准备阶段（Prepare Phase）</strong>：协调者向所有参与者发送 <code>prepare</code> 请求，参与者执行本地事务但不提交，并锁定资源，向协调者反馈是否就绪。</li>
+<li class=""><strong>提交阶段（Commit Phase）</strong>：如果所有参与者都反馈就绪，协调者发送 <code>commit</code> 指令，参与者提交事务并释放锁；如果有任意一个参与者反馈失败或超时，协调者发送 <code>rollback</code> 指令，参与者回滚本地事务。</li>
+</ol>
+</li>
+<li class=""><strong>致命缺点</strong>：<!-- -->
+<ul>
+<li class=""><strong>同步阻塞</strong>：所有参与者在等待协调者指令时都处于阻塞状态，占用数据库连接和锁资源，并发性能极差。</li>
+<li class=""><strong>单点故障</strong>：如果协调者在第二阶段宕机，参与者将一直处于悬挂状态，无法释放资源。</li>
+<li class=""><strong>数据不一致</strong>：如果在第二阶段，协调者发送的 <code>commit</code> 指令因为网络原因只被部分参与者收到，会导致部分提交、部分未提交的数据不一致问题。</li>
+</ul>
+</li>
+</ul>
+<hr/>
+<h3 class="anchor anchorTargetStickyNavbar_Vzrq" id=2-tcc-try-confirm-cancel-补偿型事务>2. TCC (Try-Confirm-Cancel) 补偿型事务<a href=#2-tcc-try-confirm-cancel-补偿型事务 class=hash-link aria-label="2. TCC (Try-Confirm-Cancel) 补偿型事务的直接链接" title="2. TCC (Try-Confirm-Cancel) 补偿型事务的直接链接" translate=no>​</a></h3>
+<p>TCC 是一种应用层面的柔性事务方案，将业务逻辑拆分为三个方法：</p>
+<ul>
+<li class=""><strong>Try（尝试）</strong>：完成所有业务检查，<strong>预留/冻结</strong>业务资源。</li>
+<li class=""><strong>Confirm（确认）</strong>：真正执行业务，只使用 Try 阶段预留的资源。Confirm 阶段默认不会出错，如果出错需要重试。</li>
+<li class=""><strong>Cancel（取消）</strong>：释放 Try 阶段预留的资源。</li>
+</ul>
+<p><strong>TCC 的三大核心痛点及解决方案</strong>：</p>
+<ul>
+<li class=""><strong>空回滚（Null-Cancel）</strong>：<!-- -->
+<ul>
+<li class=""><strong>场景</strong>：Try 阶段因为网络超时未执行，但协调者已决定回滚，发送了 Cancel 请求。</li>
+<li class=""><strong>解决办法</strong>：在分支事务记录表中增加状态字段。Cancel 执行时，先判断 Try 是否执行过，若未执行，则进行空回滚。</li>
+</ul>
+</li>
+<li class=""><strong>幂等性（Idempotence）</strong>：<!-- -->
+<ul>
+<li class=""><strong>场景</strong>：由于网络抖动，Confirm 或 Cancel 请求被重复发送。</li>
+<li class=""><strong>解决办法</strong>：通过全局唯一的事务 ID（XID）和分支 ID 进行幂等校验，确保多次执行结果一致。</li>
+</ul>
+</li>
+<li class=""><strong>悬挂（Hanging）</strong>：<!-- -->
+<ul>
+<li class=""><strong>场景</strong>：Cancel 请求因为网络拥堵先于 Try 请求到达参与者。此时执行了空回滚，随后 Try 请求到达，导致预留的资源被永久悬挂。</li>
+<li class=""><strong>解决办法</strong>：在执行 Try 时，先检查当前分支的 Cancel 是否已经执行过。如果 Cancel 已经执行过，则直接拒绝 Try 的执行。</li>
+</ul>
+</li>
+</ul>
+<hr/>
+<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id=三-seata-分布式事务框架>三、 Seata 分布式事务框架<a href=#三-seata-分布式事务框架 class=hash-link aria-label="三、 Seata 分布式事务框架的直接链接" title="三、 Seata 分布式事务框架的直接链接" translate=no>​</a></h2>
+<p>Seata（Simple Extensible Autonomous Transaction Architecture）是阿里开源的工业级分布式事务解决方案。它提供了 <strong>AT</strong>、<strong>TCC</strong>、<strong>SAGA</strong> 和 <strong>XA</strong> 四种事务模式。</p>
+<h3 class="anchor anchorTargetStickyNavbar_Vzrq" id=1-seata-at-模式无侵入最常用>1. Seata AT 模式（无侵入、最常用）<a href=#1-seata-at-模式无侵入最常用 class=hash-link aria-label="1. Seata AT 模式（无侵入、最常用）的直接链接" title="1. Seata AT 模式（无侵入、最常用）的直接链接" translate=no>​</a></h3>
+<p>AT 模式是 Seata 的王牌模式，对业务代码<strong>零侵入</strong>。其底层基于<strong>拦截 JDBC 驱动</strong>，自动生成回滚日志（Undo Log）来实现。</p>
+<!-- -->
+<p><strong>AT 模式的读写隔离机制</strong>：</p>
+<ul>
+<li class=""><strong>写隔离</strong>：<!-- -->
+<ul>
+<li class="">在一阶段本地事务提交前，Seata 会向 TC（Transaction Coordinator）申请<strong>全局锁</strong>。</li>
+<li class="">如果另一个非 Seata 管理的事务尝试修改同一行数据，由于无法获取全局锁，该修改会被阻塞或拒绝，从而在全局层面避免了脏写。</li>
+</ul>
+</li>
+<li class=""><strong>读隔离</strong>：<!-- -->
+<ul>
+<li class="">默认隔离级别是读未提交（Read Uncommitted）。</li>
+<li class="">如果需要达到读已提交（Read Committed），需要使用 <code>SELECT ... FOR UPDATE</code>，Seata 会拦截该语句并申请全局锁，确保读取到的是已提交的全局事务数据。</li>
+</ul>
+</li>
+</ul>
+<hr/>
+<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id=四-seata-生产实战与高频追问>四、 Seata 生产实战与高频追问<a href=#四-seata-生产实战与高频追问 class=hash-link aria-label="四、 Seata 生产实战与高频追问的直接链接" title="四、 Seata 生产实战与高频追问的直接链接" translate=no>​</a></h2>
+<h3 class="anchor anchorTargetStickyNavbar_Vzrq" id=1-seata-at-模式的脏写与脏读问题及解决方案>1. Seata AT 模式的脏写与脏读问题及解决方案<a href=#1-seata-at-模式的脏写与脏读问题及解决方案 class=hash-link aria-label="1. Seata AT 模式的脏写与脏读问题及解决方案的直接链接" title="1. Seata AT 模式的脏写与脏读问题及解决方案的直接链接" translate=no>​</a></h3>
+<ul>
+<li class=""><strong>脏写（Dirty Write）</strong>：<!-- -->
+<ul>
+<li class=""><strong>场景</strong>：事务 A（Seata 管理）在一阶段修改了数据并提交，但尚未释放全局锁。此时，非 Seata 管理的本地事务 B 绕过 Seata 直接修改了同一行数据并提交。随后事务 A 发生异常需要回滚，回滚时 Seata 校验【后镜像】与当前数据库数据，发现不一致（已被 B 修改），导致<strong>回滚失败</strong>，必须人工介入。</li>
+<li class=""><strong>解决方案</strong>：<!-- -->
+<ol>
+<li class=""><strong>全员接入 Seata</strong>：所有对该表进行写操作的业务方法都必须加上 <code>@GlobalTransactional</code>，确保全部受全局锁控制。</li>
+<li class=""><strong>引入 <code>@GlobalLock</code></strong>：对于不需要开启全局事务但会修改相关数据的本地方法，加上 <code>@GlobalLock</code> 注解。它不会开启全局事务，但在本地事务提交前会去申请全局锁，从而避免脏写。</li>
+</ol>
+</li>
+</ul>
+</li>
+<li class=""><strong>脏读（Dirty Read）</strong>：<!-- -->
+<ul>
+<li class=""><strong>场景</strong>：事务 A（Seata 管理）在一阶段修改了数据并提交了本地事务，但全局事务尚未提交。此时，事务 B（普通查询）读取了该行数据。如果事务 A 随后回滚，事务 B 读取到的就是脏数据。</li>
+<li class=""><strong>解决方案</strong>：<!-- -->
+<ul>
+<li class="">如果业务对读隔离有极高要求，查询语句必须使用 <code>SELECT ... FOR UPDATE</code>。Seata 会拦截该语句，在本地事务提交前去 TC 申请全局锁。如果全局锁被其他未提交的全局事务持有，则查询会被阻塞，直到锁释放，从而实现<strong>读已提交（RC）</strong>。</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<h3 class="anchor anchorTargetStickyNavbar_Vzrq" id=2-seata-与本地事务-transactional-混用的坑>2. Seata 与本地事务 <code>@Transactional</code> 混用的坑<a href=#2-seata-与本地事务-transactional-混用的坑 class=hash-link aria-label=2-seata-与本地事务-transactional-混用的坑的直接链接 title=2-seata-与本地事务-transactional-混用的坑的直接链接 translate=no>​</a></h3>
+<ul>
+<li class=""><strong>问题描述</strong>：<!-- -->
+<ul>
+<li class="">在 Spring 中，我们经常将 <code>@GlobalTransactional</code> 和 <code>@Transactional</code> 混用。</li>
+<li class="">如果 <code>@GlobalTransactional</code> 标注在最外层方法，而内层方法标注了 <code>@Transactional</code>，当内层本地事务提交后，一阶段数据已经落库并生成了 <code>undo_log</code>。</li>
+<li class="">如果外层方法在后续步骤中抛出异常，<code>@GlobalTransactional</code> 会触发全局回滚，通过 <code>undo_log</code> 还原数据。</li>
+<li class=""><strong>致命陷阱</strong>：如果内层本地事务因为某些原因（如数据库连接超时）回滚了，但外层方法捕获了异常并继续执行，TC 无法感知到内层本地事务已经回滚，在全局提交时可能会因为找不到对应的 <code>undo_log</code> 或数据不一致而报错。</li>
+</ul>
+</li>
+<li class=""><strong>最佳实践</strong>：<!-- -->
+<ul>
+<li class="">尽量避免在同一个方法链中无节制地混用。</li>
+<li class="">确保外层 <code>@GlobalTransactional</code> 包裹的方法内部，所有本地事务的异常都能正确向上抛出，让 Seata 协调器（TC）能够精准感知分支事务的状态。</li>
+</ul>
+</li>
+</ul>
+<h3 class="anchor anchorTargetStickyNavbar_Vzrq" id=3-seata-tc事务协调器的高可用部署>3. Seata TC（事务协调器）的高可用部署<a href=#3-seata-tc事务协调器的高可用部署 class=hash-link aria-label="3. Seata TC（事务协调器）的高可用部署的直接链接" title="3. Seata TC（事务协调器）的高可用部署的直接链接" translate=no>​</a></h3>
+<p>在生产环境中，TC 是整个分布式事务的核心枢纽，必须保证其高可用：</p>
+<ul>
+<li class=""><strong>注册中心与配置中心</strong>：TC 支持接入 Nacos、Consul、Eureka 等注册中心，实现服务发现与动态扩容。</li>
+<li class=""><strong>存储模式（Store Mode）</strong>：<!-- -->
+<ul>
+<li class=""><strong>file 模式</strong>：单机运行，事务日志存在本地文件中，性能高但不具备高可用性。</li>
+<li class=""><strong>db 模式（推荐）</strong>：多实例共享同一个数据库，事务日志存在数据库中，通过数据库保证一致性，支持水平扩展。</li>
+<li class=""><strong>redis 模式</strong>：高并发场景下推荐。将事务日志存在 Redis 中，兼顾了高可用与极高的读写性能。</li>
+</ul>
+</li>
+</ul>
+<hr/></div><footer class="theme-doc-footer docusaurus-mt-lg"><div class="row margin-top--sm theme-doc-footer-edit-meta-row"><div class="col noPrint_WFHX"><a href=https://github.com/Aiden-Coding/AiDocs/tree/main/docs/distributed/06-Distributed-System/Distributed-Transactions.md target=_blank rel="noopener noreferrer" class=theme-edit-this-page><svg fill=currentColor height=20 width=20 viewBox="0 0 40 40" class=iconEdit_Z9Sw aria-hidden=true><g><path d="m34.5 11.7l-3 3.1-6.3-6.3 3.1-3q0.5-0.5 1.2-0.5t1.1 0.5l3.9 3.9q0.5 0.4 0.5 1.1t-0.5 1.2z m-29.5 17.1l18.4-18.5 6.3 6.3-18.4 18.4h-6.3v-6.2z"/></g></svg>编辑此页</a></div><div class="col lastUpdated_JAkA"></div></div></footer></article><nav class="docusaurus-mt-lg pagination-nav" aria-label=文件选项卡><a class="pagination-nav__link pagination-nav__link--prev" href=/AiDocs/docs/distributed/Distributed-System/Distributed-Lock-ZooKeeper><div class=pagination-nav__sublabel>上一页</div><div class=pagination-nav__label>ZooKeeper 分布式锁与高可用原理</div></a><a class="pagination-nav__link pagination-nav__link--next" href=/AiDocs/docs/distributed/Distributed-System/Message-Queue><div class=pagination-nav__sublabel>下一页</div><div class=pagination-nav__label>消息队列高可用与消息丢失解决方案</div></a></nav></div></div><div class="col col--3"><div class="tableOfContents_bqdL thin-scrollbar theme-doc-toc-desktop"><ul class="table-of-contents table-of-contents__left-border"><li><a href=#一-分布式事务理论基石cap-与-base class="table-of-contents__link toc-highlight">一、 分布式事务理论基石：CAP 与 BASE</a><ul><li><a href=#1-cap-定理 class="table-of-contents__link toc-highlight">1. CAP 定理</a><li><a href=#2-base-理论 class="table-of-contents__link toc-highlight">2. BASE 理论</a></ul><li><a href=#二-常见分布式事务解决方案 class="table-of-contents__link toc-highlight">二、 常见分布式事务解决方案</a><ul><li><a href=#1-2pc-two-phase-commit-二阶段提交 class="table-of-contents__link toc-highlight">1. 2PC (Two-Phase Commit) 二阶段提交</a><li><a href=#2-tcc-try-confirm-cancel-补偿型事务 class="table-of-contents__link toc-highlight">2. TCC (Try-Confirm-Cancel) 补偿型事务</a></ul><li><a href=#三-seata-分布式事务框架 class="table-of-contents__link toc-highlight">三、 Seata 分布式事务框架</a><ul><li><a href=#1-seata-at-模式无侵入最常用 class="table-of-contents__link toc-highlight">1. Seata AT 模式（无侵入、最常用）</a></ul><li><a href=#四-seata-生产实战与高频追问 class="table-of-contents__link toc-highlight">四、 Seata 生产实战与高频追问</a><ul><li><a href=#1-seata-at-模式的脏写与脏读问题及解决方案 class="table-of-contents__link toc-highlight">1. Seata AT 模式的脏写与脏读问题及解决方案</a><li><a href=#2-seata-与本地事务-transactional-混用的坑 class="table-of-contents__link toc-highlight">2. Seata 与本地事务 <code>@Transactional</code> 混用的坑</a><li><a href=#3-seata-tc事务协调器的高可用部署 class="table-of-contents__link toc-highlight">3. Seata TC（事务协调器）的高可用部署</a></ul></ul></div></div></div></div></main></div></div></div><footer class="theme-layout-footer footer footer--dark"><div class="container container-fluid"><div class="row footer__links"><div class="theme-layout-footer-column col footer__col"><div class=footer__title>文档</div><ul class="footer__items clean-list"><li class=footer__item><a class=footer__link-item href=/AiDocs/docs/intro>开始阅读</a></ul></div><div class="theme-layout-footer-column col footer__col"><div class=footer__title>更多</div><ul class="footer__items clean-list"><li class=footer__item><a href=https://github.com/Aiden-Coding/AiDocs target=_blank rel="noopener noreferrer" class=footer__link-item>GitHub<svg width=13.5 height=13.5 aria-label="(opens in new tab)" class=iconExternalLink_nPIU><use href=#theme-svg-external-link /></svg></a></ul></div></div><div class="footer__bottom text--center"><div class=footer__copyright>Copyright © 2026 AiDocs. Built with Docusaurus.</div></div></div></footer></div></body>
