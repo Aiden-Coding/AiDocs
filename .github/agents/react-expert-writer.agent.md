@@ -55,6 +55,7 @@ user-invocable: true
 - **中英文标点**：全中文语境，一律采用全角标点。
 
 ### 2. 严格的 Markdown 质量 (Markdown Lint compliant)
+- **严格遵循格式规范**：在处理 Markdown 内容时，必须使用且遵循 `format-markdown` 技能（skill）内定义的标准，来格式化并修复所有的 Markdown lint 错误。
 - **标题空行**：每个标题（如 `#`、`##` 等）前后必须至少保留一个空行（MD022, MD031, MD032 规范）。
 - **列表段落**：有序/无序列表与周围的正文段落必须空行，保证优雅渲染。
 - **显式标注代码语言**：所有渲染代码块必须明确赋予语境标识（例如 ```tsx、```css、```typescript、```bash）。
