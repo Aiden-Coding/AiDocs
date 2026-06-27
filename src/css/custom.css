@@ -358,6 +358,7 @@ code:not([class*='codeBlock']) {
 .footer {
   background: linear-gradient(to bottom, var(--ifm-color-emphasis-100), var(--ifm-color-emphasis-200)) !important;
   border-top: 1px solid var(--ifm-color-emphasis-200);
+  padding: 1rem 0 !important;
 }
 
 [data-theme='dark'] .footer {
@@ -424,9 +425,9 @@ code:not([class*='codeBlock']) {
 .footer__copyright {
   color: var(--ifm-color-emphasis-500);
   font-size: 0.85rem;
-  margin-top: 2rem;
-  border-top: 1px solid var(--ifm-color-emphasis-200);
-  padding-top: 1.5rem;
+  margin-top: 0 !important;
+  border-top: none !important;
+  padding-top: 0 !important;
   text-align: center;
 }
 
