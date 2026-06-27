@@ -35,6 +35,7 @@ mindmap
 
 ### 1.1 Java 基础与容器 (Basic & Collections)
 - [Java 基础与集合核心面试真题](basic/interview-basic.md)：深入底层剖析 String 不可变性、HashMap 与 ConcurrentHashMap 扩容演进机制。
+- [Java 集合框架底层源码深剖](basic/collection-framework.md)：探究 ArrayList、LinkedList 物理结构，深度解析 LinkedHashMap 构筑 LRU 及 TreeMap 红黑树旋转平衡。
 
 ### 1.2 JUC 高并发深度实践 (Concurrency)
 - [AQS 机制与显式锁实现](concurrent/aqs-locks.md)：深入 AQS `state` 变量与双向 CLH 队列，对比公平与非公平锁。
@@ -67,6 +68,7 @@ mindmap
 ### 2.3 Spring Boot 与微服务底座
 - [Spring Boot 启动原理与自动装配](spring/springboot-core.md)：解构 `@EnableAutoConfiguration` 与 `spring.factories`。
 - [Spring Boot 核心内部机制](spring/springboot-internals.md)：Environment 环境抽象与监听器模式。
+- [Spring Boot 扩展机制与 SPI 原理](spring/springboot-extension.md)：解析 Spring SPI 工厂加载器、自定义 Starter 流程及生命周期扩展点。
 - [Spring Boot FatJar 运行机制](spring/springboot-fatjar.md)：解密如何通过 `JarLauncher` 加载嵌套 Jar。
 - [Spring Boot 高级扩展与调优](spring/springboot-advanced.md)：自定义 Starter 与 Endpoint 监控。
 - [Spring 生态演进与 Spring Cloud 结合](spring/springboot-springcloud.md)：从 Boot 到分布式微服务架构。

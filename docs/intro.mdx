@@ -1,47 +1,92 @@
 ---
 sidebar_position: 1
+slug: /
 ---
 
-# Tutorial Intro
+# 🚀 AiDocs 硬核技术知识库
 
-Let's discover **Docusaurus in less than 5 minutes**.
+欢迎来到 **AiDocs**。本知识库是一套专门为中高级软件工程师打造的**系统化、源码级、直击底层原理**的硬核技术知识图谱。
 
-## Getting Started
+这里不仅有开发框架的常规使用，更涵盖了 JVM 虚拟机内核、高性能网络引擎、分布式一致性协议、关系型数据库底层、无 GC 内存安全以及大厂高并发应急排障实战。
 
-Get started by **creating a new site**.
+---
 
-Or **try Docusaurus immediately** with **[docusaurus.new](https://docusaurus.new)**.
+## 🗺️ 全景技术图谱
 
-### What you'll need
-
-- [Node.js](https://nodejs.org/en/download/) version 20.0 or above:
-  - When installing Node.js, you are recommended to check all checkboxes related to dependencies.
-
-## Generate a new site
-
-Generate a new Docusaurus site using the **classic template**.
-
-The classic template will automatically be added to your project after you run the command:
-
-```bash
-npm init docusaurus@latest my-website classic
+```mermaid
+graph TD
+    AiDocs((AiDocs 技术大图谱))
+    
+    AiDocs --> Java[Java 深度探索]
+    AiDocs --> Database[存储与缓存极境]
+    AiDocs --> Distributed[分布式系统底盘]
+    AiDocs --> Rust[Rust 内存安全]
+    
+    Java --> Basic[1. Java 基础与容器]
+    Java --> Concurrency[2. JUC 并发编程]
+    Java --> JVM[3. JVM 虚拟机内核]
+    Java --> Spring[4. Spring 核心与生态]
+    Java --> Persistence[5. 持久层与连接池]
+    Java --> Network[6. 高性能网络通信]
+    
+    Database --> MySQL[MySQL 关系数据库]
+    Database --> Redis[Redis 高性能缓存]
+    
+    Distributed --> System[一致性协议/锁/事务/消息]
+    
+    Rust --> Memory[所有权/生命周期/无畏并发]
+    
+    style AiDocs fill:#f9f,stroke:#333,stroke-width:4px
+    style Java fill:#bbf,stroke:#333,stroke-width:2px
+    style Database fill:#dfd,stroke:#333,stroke-width:2px
+    style Distributed fill:#fdd,stroke:#333,stroke-width:2px
+    style Rust fill:#ffd,stroke:#333,stroke-width:2px
 ```
 
-You can type this command into Command Prompt, Powershell, Terminal, or any other integrated terminal of your code editor.
+---
 
-The command also installs all necessary dependencies you need to run Docusaurus.
+## 📂 核心技术专栏导航
 
-## Start your site
+### ☕ [Java Core 深度探索](java/readme.md)
+从基础容器到 Linux 底层网络，全面打通 Java 专家的技术栈。
+- **第一阶段 (基础与并发)**：[Java 集合框架底层源码](java/basic/collection-framework.md) | [AQS 机制与显式锁](java/concurrent/aqs-locks.md) | [线程池 ThreadPoolExecutor 全解](java/concurrent/threadpool.md)
+- **第二阶段 (JVM 与调优)**：[内存模型与垃圾回收 (GC)](java/jvm/memory-gc.md) | [类加载体系与字节码强化](java/jvm/classloader-bytecode.md) | [JIT 之逃逸分析](java/jvm/escape-analysis.md)
+- **第三阶段 (框架生态)**：[Spring Bean 生命周期与三级缓存](java/spring/bean-lifecycle.md) | [Spring Boot 扩展机制与 SPI](java/spring/springboot-extension.md) | [MyBatis 持久层原理与 SQL 调优](java/persistence/mybatis-hikaricp.md)
+- **第四阶段 (高性能与实战)**：[Netty 高性能网络编程](java/network/netty-io.md) | [Arthas 实战与 FGC 救火排查](java/jvm/tuning-tools.md) | [Java 核心面试真题专题](java/readme.md#%EF%B8%8F-%E7%AC%AC%E5%9B%9B%E9%98%B6%E6%AE%B5%E7%94%9F%E4%BA%A7%E7%BA%A7%E5%AE%9E%E6%88%98%E4%B8%8E%E9%9D%A2%E8%AF%95%E5%A4%8D%E7%9B%98-workshop)
 
-Run the development server:
+---
 
-```bash
-cd my-website
-npm run start
-```
+### 💾 关系型数据库与高性能缓存
+在海量高吞吐系统中，数据存储与一致性是系统最脆弱也是最核心的地方。
+- **MySQL 关系型数据库**：
+  - [InnoDB 索引物理结构与 B+ 树路由](database/mysql/index-engine.md)
+  - [InnoDB MVCC 多版本链与 Read View 隔离算法](database/mysql/mvcc-locks.md)
+  - [物理回滚日志 (Undo) 与主从复制机制](database/mysql/logs-replication.md)
+  - [MySQL 慢查询调优与高性能开发规约](database/mysql/optimization.md)
+- **Redis 高性能缓存**：
+  - [自研多路复用 I/O 线程模型与核心数据结构](cache/redis/datastructures-io.md)
+  - [Redis 哨兵与 Cluster 集群高可用构筑](cache/redis/highavailability.md)
+  - [缓存与 MySQL 数据双写强一致性方案](cache/redis/consistency-eviction.md)
+  - [击穿、穿透、雪崩工业级防御 (Redisson DCL / 布隆过滤器)](cache/redis/interview-redis.md)
 
-The `cd` command changes the directory you're working with. In order to work with your newly created Docusaurus site, you'll need to navigate the terminal there.
+---
 
-The `npm run start` command builds your website locally and serves it through a development server, ready for you to view at http://localhost:3000/.
+### 🌐 [分布式系统核心底盘](distributed/system/lock-zookeeper.md)
+探究跨物理机器如何保持协同、数据一致及网络容错。
+- **一致性协议**：[Paxos 与 Raft 强一致性共识算法](distributed/system/consensus.md)
+- **分布式锁**：[基于 ZooKeeper / Curator 临时顺序节点的排他锁实现](distributed/system/lock-zookeeper.md)
+- **分布式事务**：[2PC, 3PC 及 TCC 补偿事务模型底层设计](distributed/system/transactions.md)
+- **消息队列**：[高吞吐 RocketMQ / Kafka 零拷贝与 ACK 可靠性模型](distributed/system/message-queue.md)
 
-Open `docs/intro.md` (this page) and edit some lines: the site **reloads automatically** and displays your changes.
+---
+
+### 🦀 [Rust 极速探索](rust/ownership-lifetimes.md)
+进入无 GC、具备编译期内存安全的现代化系统级编程语言领域。
+- **所有权与生命周期**：[所有权借用检查器与编译期生命周期约束](rust/ownership-lifetimes.md)
+- **内存模型**：[RAII、裸指针、RefCell 与智能指针底层物理内存](rust/memory-management.md)
+- **无畏并发**：[Send 与 Sync 约束下的多线程无显示锁高并发安全](rust/concurrency.md)
+
+---
+
+## 🛠️ 开始学习
+您可以使用侧边栏菜单进行按模块系统学习，也可以直接点击上述链接跳转到指定章节。如果是在准备面试，每个专题的文章底部都附带了该模块的**核心面试真题与底层源码分析**，祝您斩获心仪的 Offer！
