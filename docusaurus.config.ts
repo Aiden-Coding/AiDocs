@@ -174,11 +174,11 @@ const config: Config = {
           items: [
             {
               label: 'GitHub 仓库',
-              href: 'https://github.com/dwx/AiDocs',
+              href: 'https://github.com/Aiden-Coding/AiDocs',
             },
             {
               label: '提交 Issue',
-              href: 'https://github.com/dwx/AiDocs/issues',
+              href: 'https://github.com/Aiden-Coding/AiDocs/issues',
             },
           ],
         },
