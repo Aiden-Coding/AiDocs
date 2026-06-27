@@ -576,7 +576,7 @@ Bean 的生命周期可以分为四个核心阶段：
 |-----|-------------------|-------------------------|
 | **作用对象** | Bean 实例 | BeanDefinition（Bean 定义） |
 | **执行时机** | Bean 实例化之后 | Bean 实例化之前 |
-| **核心方法** | `postProcessBeforeInitialization()`<br>`postProcessAfterInitialization()` | `postProcessBeanFactory()` |
+| **核心方法** | `postProcessBeforeInitialization()` <br /> `postProcessAfterInitialization()` | `postProcessBeanFactory()` |
 | **应用场景** | AOP 代理、属性填充、初始化增强 | 修改 Bean 定义、占位符解析（`${}`） |
 
 **代码示例**：
