@@ -57,6 +57,8 @@ mindmap
 - **[classloader-bytecode.md](jvm/classloader-bytecode.md)**：解析类加载从验证、准备到初始化的完整的 7 个生命周期；解构双清委派模型机制、SPI 及 Tomcat 的打破实践；掌握 CGLIB 与 JDK 代理的选择机制，解构 Java Agent (premain / agentmain) 动态字节码拦截插桩原理。
 - **[memory-gc.md](jvm/memory-gc.md)**：辨析堆外零拷贝 Direct Memory 与基于本地内存的 Metaspace 优缺点；深度解构并发标记下的三色标记漏标细节，对比 G1 的 SATB 原始快照与 CMS 的增量更新解决方案；剖析 ZGC 染色指针、读屏障与自 healed。
 - **[tuning-tools.md](jvm/tuning-tools.md)**：实战演练线上 CPU 飙高 100% 极速排查，使用 MAT 分析 `Shallow/Retained Heap`、Dominator Tree 追踪 GC Roots；熟练运用 Arthas `dashboard`、`thread -b` 查死锁、`jad` 反编译、`watch`/`trace` 链路时延诊断。
+- **[prod-practice.md](jvm/prod-practice.md)**：提供生产级 JVM 启动参数黄金配置模板（JDK 8/17/21）；拆解 JDK 9+ 统一日志框架 `-Xlog` 与 G1/ZGC 日志行；剖析由“可数循环”引发的线上安全点（Safepoint）时延异常排查。
+- **[prod-troubleshooting-cases.md](jvm/prod-troubleshooting-cases.md)**：四大经典生产故障深度复盘：Groovy 脚本未缓存导致 Metaspace OOM、Netty `DirectByteBuffer` 未释放引发 OS OOM Killer、并发 `HashMap` 环形链表造成 CPU 100% 死循环、线程池 `ThreadLocal` 未 `remove()` 引发老年代 Full GC 风暴。每个案例完整还原排查命令、根因分析与解决方案。
 
 - **[interview.md](interview.md)**：Java 核心高频面试题与底层原理解析。精选 Java 基础与集合框架、高并发与多线程（AQS/volatile/线程池）、JVM 虚拟机深度原理、Spring 底层与微服务生态、数据持久化与缓存高并发（MySQL/Redis）的核心八股题库与大厂实战排障方案。
 
