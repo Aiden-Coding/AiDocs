@@ -9,7 +9,7 @@ import rehypeKatex from 'rehype-katex';
 const config: Config = {
   title: 'Ai文档',
   tagline: '系统化、结构化的技术知识库',
-  favicon: 'img/favicon.png',
+  favicon: 'img/favicon.ico',
 
   // Future flags, see https://docusaurus.io/docs/api/docusaurus-config#future
   future: {
@@ -74,7 +74,7 @@ const config: Config = {
 
   themeConfig: {
     // Replace with your project's social card
-    image: 'img/social-card.png',
+    image: 'img/social-card.webp',
     colorMode: {
       respectPrefersColorScheme: true,
     },
@@ -82,7 +82,7 @@ const config: Config = {
       title: 'Ai文档',
       logo: {
         alt: 'Ai文档 Logo',
-        src: 'img/logo.png',
+        src: 'img/logo.webp',
       },
       items: [
         {
