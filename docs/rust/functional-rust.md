@@ -4,13 +4,56 @@ hide_title: true
 sidebar_label: 闭包与迭代器
 ---
 
-## Rust 函数式编程：闭包与迭代器
+## 🟢 闭包 (Closures) 的物理实现
 
-Rust 并非纯函数式语言，但它深度吸收了函数式编程的精髓。通过**惰性求值（Lazy Evaluation）**与**高效闭包**，开发者可以用声明式（Declarative）的代码风格写出命令式（Imperative）的执行效率。
+Rust 闭包不仅仅是匿名函数，它是自动生成的结构体。
+
+> 🟢 **基础**：掌握基本语法即可阅读 ｜ 🟡 **进阶**：需要有一定 Rust 开发经验 ｜ 🔴 **高级**：面向系统级开发者与性能工程师
+
+### 1. 自动捕获机制
+
+编译器会根据闭包体对外部变量的使用方式，自动实现以下一个或多个 Trait：
+
+- **`Fn`**：不可变借用外部变量（可以多次调用）。
+- **`FnMut`**：可变借用外部变量（可以多次调用，但需要闭包自身可变）。
+- **`FnOnce`**：转移外部变量所有权（只能调用一次）。
+
+### 2. 捕获与内存布局
+
+```rust
+let base = String::from("prefix_");
+let closure = |name: &str| format!("{}{}", base, name); // 借用 base
+```
+
+在底层，上述闭包会被编译为类似：
+
+```rust
+struct AnonymousClosure<'a> {
+    base: &'a String,
+}
+```
+
+### 3. `move` 关键字与逃逸闭包
+
+当闭包需要逃逸出其定义的作用域（如传入新线程或作为返回值），其捕获的引用必然比原始变量的生命周期更长，此时编译器会强制要求使用 `move` 关键字。
+
+```rust
+fn make_greeting(prefix: String) -> impl Fn(&str) -> String {
+    // 如果不加 move，prefix 在函数返回后即被销毁，闭包将持有悬垂引用
+    // 加上 move 后，prefix 的所有权被转移入闭包内部，生命周期随闭包延续
+    move |name| format!("{}, {}!", prefix, name)
+}
+
+fn main() {
+    let greet = make_greeting("Hello".to_string());
+    println!("{}", greet("Alice")); // Hello, Alice!
+    println!("{}", greet("Bob"));   // Hello, Bob!
+}
+```
 
 ---
 
-## 迭代器原理：零成本抽象的典范
+## 🟢 迭代器原理：零成本抽象的典范
 
 Rust 的 `Iterator` 是高度优化的。在大多数情况下，使用迭代器方法（如 `map`, `filter`）生成的机器码，与手动编写的 `for` 循环完全一致，甚至更优（得益于 Bounds Check Elimination）。
 
@@ -33,7 +76,7 @@ let sum: i32 = v.iter()          // 产生借用迭代器 &i32
 
 ---
 
-## 高级迭代器组合链
+## 🟡 高级迭代器组合链
 
 掌握迭代器链的高级技巧，是写出简洁高性能 Rust 代码的关键。
 
@@ -83,7 +126,7 @@ fn by_ref_demo() {
 
 ---
 
-## 闭包 (Closures) 的物理实现
+## 🟡 闭包 (Closures) 的物理实现
 
 Rust 闭包不仅仅是匿名函数，它是自动生成的结构体。
 
@@ -130,7 +173,7 @@ fn main() {
 
 ---
 
-## 高阶生命周期限定 (HRTB)
+## 🔴 高阶生命周期限定 (HRTB)
 
 当你需要定义一个接受闭包且该闭包涉及引用的函数时，可能会遇到 `for<'a>` 语法。这保证了闭包能处理**任意**生命周期的参数，而不仅仅是某个特定生命周期。
 
@@ -145,7 +188,7 @@ where
 
 ---
 
-## 模式匹配的函数式应用
+## 🟡 模式匹配的函数式应用
 
 现代 Rust 将函数式编程的精髓进一步融入模式匹配语法中，使代码更加简洁直观。
 
