@@ -585,9 +585,9 @@ Spring Boot 3.0+ 支持 GraalVM Native Image,可将应用编译为原生可执�
        org.springframework.boot.autoconfigure: DEBUG
    ```
 
-   启动日志会输出类似:
+   启动日志会输出类似：
 
-   ```
+```text
    Positive matches:
    -----------------
    RedisAutoConfiguration matched:
@@ -600,7 +600,7 @@ Spring Boot 3.0+ 支持 GraalVM Native Image,可将应用编译为原生可执�
 
       - @ConditionalOnClass did not find required class 'javax.sql.DataSource'
 
-   ```
+```
 
 ### 2. 配置属性注入失败
 

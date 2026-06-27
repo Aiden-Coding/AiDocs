@@ -333,7 +333,7 @@ public interface BeanPostProcessor {
 }
 ```
 
-**核心应用：AOP 代理生成**
+#### 核心应用：AOP 代理生成
 
 ```java
 public class AbstractAutoProxyCreator extends ProxyProcessorSupport
@@ -479,8 +479,7 @@ public class BeanConfig {
 
 **输出结果**：
 
-```
-
+```text
 1. 构造器执行
 2. BeanNameAware.setBeanName: lifecycleBean
 3. BeanFactoryAware.setBeanFactory
@@ -491,7 +490,6 @@ public class BeanConfig {
 8. @PreDestroy
 9. DisposableBean.destroy
 10. 自定义 destroy-method
-
 ```
 
 ---
@@ -592,7 +590,7 @@ Bean 的生命周期可以分为四个核心阶段：
 | ----- | ------------------- | ------------------------- |
 | **作用对象** | Bean 实例 | BeanDefinition（Bean 定义） |
 | **执行时机** | Bean 实例化之后 | Bean 实例化之前 |
-| **核心方法** | `postProcessBeforeInitialization()` <br /> `postProcessAfterInitialization()` | `postProcessBeanFactory()` |
+| **核心方法** | `postProcessBeforeInitialization()` `postProcessAfterInitialization()` | `postProcessBeanFactory()` |
 | **应用场景** | AOP 代理、属性填充、初始化增强 | 修改 Bean 定义、占位符解析（`${}`） |
 
 **代码示例**：
@@ -659,7 +657,7 @@ public class LogAspect {
 
 **输出**：
 
-```
+```text
 构造器：com.example.UserService
 初始化：com.example.UserService
 // 初始化后返回的是代理对象：com.example.UserService$$EnhancerBySpringCGLIB$$12345678

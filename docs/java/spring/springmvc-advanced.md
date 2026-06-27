@@ -33,11 +33,11 @@ public interface HandlerMethodArgumentResolver {
 
 ---
 
-## 二、 返回值处理机制：HandlerMethodReturnValueHandler
+## 二、 返回值解析机制：HandlerMethodReturnValueHandler
 
 方法执行完成后，Spring MVC 需要决定如何处理返回的对象（是跳转页面，还是直接写回 JSON）。
 
-### 1. 核心接口
+### 1. 返回值核心接口
 
 ```java
 public interface HandlerMethodReturnValueHandler {
