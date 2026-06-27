@@ -26,8 +26,8 @@ sidebar_label: 特征与泛型
 我们可以为所有实现了某个特征的类型，自动实现另一个特征，这被称为 Blanket Implementation。
 
 ```rust
-// 如果 T 实现了 Display，那么它自动获得 ToString (标准库示例)
-impl<T: Display> ToString for T {
+// 如果 T 实现了 Display，那么它自动获得 ToString（标准库示例）
+impl<T: std::fmt::Display> ToString for T {
     // ...
 }
 ```
@@ -41,6 +41,7 @@ impl<T: Display> ToString for T {
 ### 1. 指针的二元性 (Fat Pointer)
 
 Trait 对象在内存中是一个**胖指针（Fat Pointer）**，由两个部分组成：
+
 1. **数据指针**：指向堆或栈上的具体对象实例。
 2. **虚表指针 (vpointer)**：指向该类型的虚函数表（VTable）。
 
@@ -55,8 +56,147 @@ graph LR
 ### 2. 对象安全性 (Object Safety)
 
 并非所有特征都能转化为 Trait 对象。必须满足对象安全性约束，例如：
+
 - 返回类型不能是 `Self`。
 - 方法不能带有泛型参数。
+
+---
+
+## 关联类型 vs 泛型参数
+
+这是 Rust Trait 设计中最常见的决策点之一。两者在表达能力上有本质的区别。
+
+### 1. 关联类型 (Associated Types)
+
+关联类型将类型参数作为特征自身的"输出"，使得实现该特征时每个具体类型只有**唯一一种**输出类型关联。这极大地简化了调用时的类型推导，是"一对一"的关系。
+
+```rust
+// Iterator 特征使用关联类型 Item，而不是泛型参数
+pub trait Iterator {
+    type Item; // 关联类型：每个实现者只对应一种 Item 类型
+    fn next(&mut self) -> Option<Self::Item>;
+}
+
+struct Counter;
+
+impl Iterator for Counter {
+    type Item = u32;
+    fn next(&mut self) -> Option<Self::Item> {
+        Some(0)
+    }
+}
+
+// 调用时无需指定类型参数，编译器自动推断 Item
+fn sum_counter(c: &mut Counter) -> u32 {
+    c.next().unwrap_or(0)
+}
+```
+
+### 2. 泛型参数 (Generic Type Parameters)
+
+泛型参数允许一个类型**对同一特征有多种实现**（"一对多"的关系），但在调用时通常需要显式标注或通过 Turbofish 语法 `::<>` 指定目标实现。`Add` 特征就是典型案例：
+
+```rust
+use std::ops::Add;
+
+#[derive(Debug, Clone, Copy)]
+struct Vector2D {
+    x: f64,
+    y: f64,
+}
+
+// 为 Vector2D 实现 Add<Vector2D>，即向量加向量
+impl Add<Vector2D> for Vector2D {
+    type Output = Vector2D;
+    fn add(self, rhs: Vector2D) -> Vector2D {
+        Vector2D { x: self.x + rhs.x, y: self.y + rhs.y }
+    }
+}
+
+// 为 Vector2D 实现 Add<f64>，即向量加标量（不同的 Rhs 类型参数）
+impl Add<f64> for Vector2D {
+    type Output = Vector2D;
+    fn add(self, scalar: f64) -> Vector2D {
+        Vector2D { x: self.x + scalar, y: self.y + scalar }
+    }
+}
+```
+
+| 特性 | 关联类型 | 泛型参数 |
+| :--- | :--- | :--- |
+| 实现数量 | 每个类型唯一 | 每个类型可多实现 |
+| 调用时推导 | 自动推导，无歧义 | 通常需要标注 |
+| 典型代表 | `Iterator::Item` | `Add<Rhs>` |
+
+---
+
+## 高级限界：超类特征与扩展特征
+
+### 1. 超类特征约束 (Supertraits)
+
+Supertrait 表达了一种"继承"依赖关系：实现特征 `B` 必须同时实现特征 `A`，`A` 是 `B` 的超类特征。
+
+```rust
+use std::fmt;
+
+// 若要实现 Printable，必须同时实现 fmt::Display
+trait Printable: fmt::Display {
+    fn print_self(&self) {
+        println!("Value: {}", self); // 因为有 Display 约束，可以直接使用 {}
+    }
+}
+```
+
+### 2. 扩展特征模式 (Extension Traits)
+
+这是 Rust 生态中广泛使用的设计模式，用于为外部类型（无法修改其源码的类型）的公开接口增加更便捷的辅助方法，同时遵守孤儿规则。
+
+```rust
+// 为标准库的 &str 类型扩展一个 is_valid_email 方法
+trait StrExt {
+    fn is_valid_email(&self) -> bool;
+}
+
+impl StrExt for str {
+    fn is_valid_email(&self) -> bool {
+        self.contains('@') && self.contains('.')
+    }
+}
+
+fn main() {
+    println!("{}", "user@example.com".is_valid_email()); // true
+}
+```
+
+---
+
+## `impl Trait` 语法的静态分发本质
+
+`impl Trait` 是泛型约束的语法糖，但其在入参和返回值位置上有不同的语义。
+
+### 1. 作为参数（输入位置）
+
+`fn foo(x: impl Display)` 等价于 `fn foo<T: Display>(x: T)`。两者都是静态分发，没有任何运行时开销。
+
+### 2. 作为返回值（输出位置）
+
+此时 `impl Trait` 的意义不同：它允许函数返回一个**编译器在内部知晓但对外不透明**的具体类型，实现了类型擦除而不引入堆分配的 vtable 开销，是零成本的"类型隐藏"。
+
+```rust
+// 返回类型是某个实现了 Iterator<Item = i32> 的具体类型
+// 调用者不知道具体类型，但编译器在编译期已确定，零运行时开销
+fn make_adder(n: i32) -> impl Fn(i32) -> i32 {
+    move |x| x + n
+}
+
+fn main() {
+    let add5 = make_adder(5);
+    println!("{}", add5(3)); // 8
+}
+```
+
+> [!TIP]
+> `impl Trait`（静态零成本）vs `Box<dyn Trait>`（动态分发+堆分配）：当返回多种可能的不同类型时才需要 `Box<dyn Trait>`；若返回类型始终唯一，优先使用 `impl Trait`。
 
 ---
 
@@ -77,4 +217,5 @@ impl std::fmt::Display for MyVec {
 }
 ```
 
+> [!NOTE]
 > **架构建议**：优先使用静态派发以获得极致性能；仅在需要多态集合或缩减编译时间时，考虑使用 `Box<dyn Trait>`。
