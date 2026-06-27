@@ -1,23 +1,37 @@
-# Java & Rust 高级开发工程师技术解析文档
+---
+title: AiDocs: 工程师硬核技术知识手册
+hide_title: true
+---
 
-欢迎阅读 **Java & Rust 高级开发工程师技术解析文档**！
+## AiDocs: 工程师硬核技术知识手册
 
-本套文档致力于为 Java 和 Rust 开发者提供系统化、源码级、实战导向的硬核技术解析，涵盖高并发、JVM、Spring 框架、MySQL 数据库、Redis 缓存、分布式系统以及 Rust 系统编程等核心领域。无论是日常开发中的性能调优、线上故障排查，还是资深工程师的技术进阶，本套文档都将是您的硬核武器。
+欢迎阅读 **AiDocs**！本手册致力于为中高级工程师提供系统化、源码级、实战导向的硬核技术解析。
+
+涵盖了从 Java 并发内核、JVM 调优到 Rust 内存安全、分布式协议以及大厂高并发应急排障的完整闭环。无论您是在进行性能压测、线上救火，还是在冲击资深技术专家岗，这里都将为您提供最硬核的逻辑支撑。
 
 ---
 
-## 📚 目录导航
+## 🗺️ 全站技术图谱导航
 
-### 1. Java 并发编程 (Java Concurrent)
+### 1. Java 核心体系 (Java Ecosystem)
 
-- [AQS 机制与锁实现深度解析](docs/java/concurrent/aqs-locks.md)
-- [ThreadLocal 与 CAS 原理](docs/java/concurrent/threadlocal-cas.md)
-- [线程池深度解析与调优](docs/java/concurrent/threadpool.md)
-- [HashMap 与 ConcurrentHashMap 源码级深度解析](docs/java/concurrent/hashmap-concurrenthashmap.md)
+- [JUC 并发编程深度解析](docs/java/concurrent/aqs-locks.md)
+- [JVM 虚拟机内核与调优](docs/java/jvm/memory-gc.md)
+- [Spring 源码与启动加载原理](docs/java/spring/springboot-core.md)
+- [高性能网络引擎 Netty](docs/java/network/netty-io.md)
 
-### 2. JVM 虚拟机 (JVM)
+### 2. 存储与中间件 (Middleware)
 
-- [类加载机制与字节码技术](docs/java/jvm/classloader-bytecode.md)
+- [MySQL 索引、锁与 MVCC](docs/database/mysql/readme.md)
+- [Redis 高性能结构与高可用](docs/cache/redis/readme.md)
+- [消息队列高可用与事务](docs/distributed/system/message-queue.md)
+
+### 3. 系统编程与架构 (Systems & Architecture)
+
+- [Rust 内存安全与无畏并发](docs/rust/readme.md)
+- [分布式共识协议 Raft/Paxos](docs/distributed/system/consensus.md)
+- [分布式锁与事务一致性](docs/distributed/system/transactions.md)
+
 - [JVM 内存模型与垃圾回收机制](docs/java/jvm/memory-gc.md)
 - [JVM 调优实战与 Arthas 工具使用](docs/java/jvm/tuning-tools.md)
 
