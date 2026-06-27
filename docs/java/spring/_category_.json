@@ -1,0 +1,8 @@
+{
+  "label": "4. Spring 核心与生态",
+  "position": 4,
+  "link": {
+    "type": "generated-index",
+    "description": "解析 Spring 容器刷新、Bean 生命周期、AOP 循环依赖、Spring Boot 自动装配及微服务底座。"
+  }
+}

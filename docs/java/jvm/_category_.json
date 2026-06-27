@@ -1,0 +1,8 @@
+{
+  "label": "3. JVM 虚拟机内核",
+  "position": 3,
+  "link": {
+    "type": "generated-index",
+    "description": "深入类加载体系、内存模型、垃圾回收器（G1/ZGC）以及线上性能调优与故障排查。"
+  }
+}

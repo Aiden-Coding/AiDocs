@@ -1,0 +1,8 @@
+{
+  "label": "5. 持久层与连接池",
+  "position": 5,
+  "link": {
+    "type": "generated-index",
+    "description": "探究数据库连接池 HikariCP 无锁化设计与 ORM 框架 MyBatis 代理及插件原理。"
+  }
+}
