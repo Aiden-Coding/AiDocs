@@ -1,5 +1,6 @@
 ---
 title: Spring 核心与生态面试真题
+hide_title: true
 sidebar_label: Spring 面试真题
 sidebar_position: 100
 ---
