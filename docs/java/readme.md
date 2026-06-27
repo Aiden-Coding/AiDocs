@@ -1,4 +1,12 @@
-# Java 核心技术知识体系
+---
+title: Java 核心技术知识体系
+hide_title: true
+sidebar_label: 介绍 & 路线图
+sidebar_position: 0
+slug: /java/
+---
+
+## Java 核心技术知识体系
 
 欢迎来到 Java 深度探索之旅。本体系旨在为追求极致性能、渴望洞察底层原理的工程师提供一套 **系统化、源码级** 的知识图谱。
 
