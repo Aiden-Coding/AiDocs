@@ -50,15 +50,21 @@
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
   background-color: rgba(255, 255, 255, 0.9);
-  z-index: 100; /* 确保导航栏始终在最上层，不被 hero 等背景穿透 */
+  /* 对齐 Infima 默认值 200，确保导航栏在页面内容之上 */
+  z-index: 200;
 }
 
-/* 修复手机端导航栏遮挡或背景模糊层级问题 */
+/* 手机端侧边栏遮罩层 */
+.navbar-sidebar__backdrop {
+  z-index: 399 !important;
+}
+
+/* 手机端侧边栏抽屉 - 对齐 Infima 默认值 400，避免过高的 z-index 异常 */
 .navbar-sidebar {
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
-  background-color: rgba(255, 255, 255, 0.95) !important;
-  z-index: 9999 !important;
+  background-color: rgba(255, 255, 255, 0.97) !important;
+  z-index: 400 !important;
 }
 
 [data-theme='dark'] .navbar {
@@ -67,13 +73,13 @@
 }
 
 [data-theme='dark'] .navbar-sidebar {
-  background-color: rgba(15, 23, 42, 0.95) !important;
+  background-color: rgba(15, 23, 42, 0.97) !important;
 }
 
-/* 移动端汉堡包菜单按钮 (Toggle Button) 点击热区与层级修复 */
+/* 手机端汉堡包菜单按钮 - 确保点击热区可被正常操作 */
 .navbar__toggle {
-  z-index: 101 !important;
   position: relative;
+  z-index: 201;
 }
 
 .button {
