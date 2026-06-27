@@ -49,7 +49,7 @@
   box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
-  background-color: rgba(255, 255, 255, 0.9);
+  background-color: rgba(255, 255, 255, 0.95);
   /* 对齐 Infima 默认值 200，确保导航栏在页面内容之上 */
   z-index: 200;
 }
@@ -59,21 +59,25 @@
   z-index: 399 !important;
 }
 
-/* 手机端侧边栏抽屉 - 对齐 Infima 默认值 400，避免过高的 z-index 异常 */
+/* 手机端侧边栏抽屉
+ * 注意：不用 backdrop-filter，部分安卓浏览器不支持，fallback 时会完全透明
+ * 改用实色背景确保侧边栏在所有设备上都可见 */
 .navbar-sidebar {
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  background-color: rgba(255, 255, 255, 0.97) !important;
+  background-color: #ffffff !important;
+  box-shadow: 4px 0 24px rgba(0, 0, 0, 0.12);
   z-index: 400 !important;
 }
 
 [data-theme='dark'] .navbar {
-  background-color: rgba(15, 23, 42, 0.9);
+  background-color: rgba(15, 23, 42, 0.95);
   box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.2), 0 2px 4px -1px rgba(0, 0, 0, 0.1);
 }
 
+/* 深色模式侧边栏：使用 surface 色（#1e293b），
+ * 比页面背景（#0f172a）更亮，形成可见的对比 */
 [data-theme='dark'] .navbar-sidebar {
-  background-color: rgba(15, 23, 42, 0.97) !important;
+  background-color: #1e293b !important;
+  box-shadow: 4px 0 24px rgba(0, 0, 0, 0.4);
 }
 
 /* 手机端汉堡包菜单按钮 - 确保点击热区可被正常操作 */
