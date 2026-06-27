@@ -76,6 +76,9 @@ user-invocable: true
 - *错误示例*：请参考 `docs/intro.mdx` 中的说明。
 - *正确示例*：请参考 [../../docs/intro.mdx](../../docs/intro.mdx) 中的说明。
 
+### 5. 禁用 Emoji 装饰 (NO Emojis in Headings)
+严禁在标题（Header）或模块说明中添加诸如 📂、🚀、🏗️、🔍、💡 等 Emoji 表情符号，保持技术文档的严肃、专业与极简风格。
+
 ---
 
 ## 思考与执行步骤 (Approach)

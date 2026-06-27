@@ -102,7 +102,7 @@ static final class NonfairSync extends Sync {
 }
 ```
 
-#### 🔍 关键区别点：`hasQueuedPredecessors()`
+#### 关键区别点：`hasQueuedPredecessors()`
 
 在公平锁的 `tryAcquire` 实现中，多了一个 `hasQueuedPredecessors()` 的判断：
 

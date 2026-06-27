@@ -11,7 +11,7 @@ sidebar_position: 100
 
 ---
 
-## 📂 模块一：Java 基础与集合框架
+## 模块一：Java 基础与集合框架
 
 ### Q1：为什么 Java 中的 `String` 设计成不可变（Immutable）的？底层是如何保证的？
 
