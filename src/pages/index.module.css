@@ -9,6 +9,7 @@
   text-align: center;
   overflow: hidden;
   background: transparent;
+  z-index: 1; /* 避免高层级背景溢出，阻碍导航栏和侧边栏的点击事件拦截 */
 }
 
 .heroBackground {

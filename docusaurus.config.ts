@@ -1,6 +1,8 @@
 import {themes as prismThemes} from 'prism-react-renderer';
 import type {Config} from '@docusaurus/types';
 import type * as Preset from '@docusaurus/preset-classic';
+import remarkMath from 'remark-math';
+import rehypeKatex from 'rehype-katex';
 
 // This runs in Node.js - Don't use client-side code here (browser APIs, JSX...)
 
@@ -50,6 +52,8 @@ const config: Config = {
           // Remove this to remove the "edit this page" links.
           editUrl:
             'https://github.com/Aiden-Coding/AiDocs/tree/main/',
+          remarkPlugins: [remarkMath],
+          rehypePlugins: [rehypeKatex],
         },
         blog: false,
         theme: {
@@ -57,6 +61,15 @@ const config: Config = {
         },
       } satisfies Preset.Options,
     ],
+  ],
+  
+  stylesheets: [
+    {
+      href: 'https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css',
+      type: 'text/css',
+      integrity: 'sha384-n8MVd4RsNIBMW3Zksd/cgGfpkkcg23OqxEnQl9o23PppNwe/eB84kLtyzzN3lft9',
+      crossorigin: 'anonymous',
+    },
   ],
 
   themeConfig: {
@@ -103,6 +116,12 @@ const config: Config = {
           label: 'Rust',
         },
         {
+          type: 'docSidebar',
+          sidebarId: 'reactSidebar',
+          position: 'left',
+          label: 'React',
+        },
+        {
           href: 'https://github.com/Aiden-Coding/AiDocs',
           label: 'GitHub',
           position: 'right',
@@ -130,6 +149,10 @@ const config: Config = {
             {
               label: 'Rust 探索',
               to: '/docs/rust/concurrency',
+            },
+            {
+              label: 'React 架构',
+              to: '/docs/react/advanced/fiber-architecture',
             },
           ],
         },

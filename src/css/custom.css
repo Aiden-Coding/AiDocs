@@ -50,11 +50,30 @@
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
   background-color: rgba(255, 255, 255, 0.9);
+  z-index: 100; /* 确保导航栏始终在最上层，不被 hero 等背景穿透 */
+}
+
+/* 修复手机端导航栏遮挡或背景模糊层级问题 */
+.navbar-sidebar {
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  background-color: rgba(255, 255, 255, 0.95) !important;
+  z-index: 9999 !important;
 }
 
 [data-theme='dark'] .navbar {
   background-color: rgba(15, 23, 42, 0.9);
   box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.2), 0 2px 4px -1px rgba(0, 0, 0, 0.1);
+}
+
+[data-theme='dark'] .navbar-sidebar {
+  background-color: rgba(15, 23, 42, 0.95) !important;
+}
+
+/* 移动端汉堡包菜单按钮 (Toggle Button) 点击热区与层级修复 */
+.navbar__toggle {
+  z-index: 101 !important;
+  position: relative;
 }
 
 .button {
