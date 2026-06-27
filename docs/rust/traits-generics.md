@@ -49,6 +49,56 @@ fn main() {
 
 ---
 
+## 🟢 常用特征的派生 (Derive) 与手动实现
+
+在实际开发中，有几个标准库特征（Traits）几乎无处不在。Rust 编译器提供了一种极度便利的机制——**属性宏 `#[derive(...)]`**，可以为我们的结构体或枚举自动生成这些常用特征的默认实现。
+
+### 1. 核心派生特征 (Derivable Traits)
+- **`Debug`**：允许使用 `{:?}` 或 `{:#?}` 格式化输出该类型以供调试。
+- **`Clone` 与 `Copy`**：控制类型的复制行为。`Clone` 表示显式深拷贝；`Copy` 表示隐式的按字节浅拷贝（`memcpy`，必须在所有字段都实现 `Copy` 时才可用）。
+- **`PartialEq` 与 `Eq`**：控制等值比较。`PartialEq` 允许进行 `==` 比较，`Eq` 代表自反的等价关系（如 `x == x` 恒成立，浮点数 `f32`/`f64` 因含有 `NaN` 而只实现了 `PartialEq`，未实现 `Eq`）。
+- **`Default`**：提供一个“零值”或默认构造状态。
+
+```rust
+// 编译器将自动为我们的类型实现上述所有行为！
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
+struct Point {
+    x: i32,
+    y: i32,
+}
+
+fn main() {
+    let p1 = Point::default(); // 自动初始化为 x: 0, y: 0
+    let p2 = Point { x: 10, y: 20 };
+    println!("Point 1: {:?}", p1); // Point 1: Point { x: 0, y: 0 }
+    
+    // 如果没有使用 #[derive(Copy)]，p2 在赋值给 p3 后将无法再使用
+    let p3 = p2; 
+    assert_ne!(p1, p3); // 自动生成 PartialEq 比较
+}
+```
+
+### 2. 何时必须手动实现特征？
+
+派生宏生成的逻辑非常死板。在有些场景下，我们需要手动编写 `impl`：
+- **自定义默认状态**：如果你的结构体的 `Default` 不想是数值零。比如，我们希望端口 `port` 默认是 `8080`，而不是 `0`。
+- **排除特定字段**：进行等值比较时忽略某些缓存字段或时间戳。
+
+```rust
+struct Connection {
+    id: u64,
+    last_ping: std::time::Instant, // 比较时忽略该字段
+}
+
+impl PartialEq for Connection {
+    fn eq(&self, other: &Self) -> bool {
+        self.id == other.id // 仅通过 id 判定是否是同一个连接
+    }
+}
+```
+
+---
+
 ## 🟢 孤儿规则与 Newtype 模式
 
 为了保证 crate 生态的相容性，Rust 强制执行**孤儿规则（Orphan Rules）**：只有当特征或类型中至少有一个是在当前 crate 内定义时，才能为类型实现特征。
