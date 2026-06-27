@@ -2,7 +2,7 @@
   "label": "Rust 极速探索",
   "position": 1,
   "link": {
-    "type": "generated-index",
-    "description": "深入 Rust 语言所有权模型、生命周期约束、特征系统以及多线程无畏并发底层原理。"
+    "type": "doc",
+    "id": "rust/readme"
   }
 }

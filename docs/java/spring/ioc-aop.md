@@ -1,4 +1,10 @@
-# Spring IoC 与 AOP 源码级解析
+---
+title: Spring IoC 与 AOP 源码级解析
+hide_title: true
+sidebar_label: IoC 与 AOP 深度解析
+---
+
+## Spring IoC 与 AOP 源码级解析
 
 Spring 框架是 Java 企业级开发的事实标准。在高级面试中，Spring 的底层源码（如 Bean 的生命周期、三级缓存解决循环依赖、AOP 动态代理）是必考的硬核内容。
 

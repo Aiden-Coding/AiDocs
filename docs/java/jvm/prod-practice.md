@@ -1,4 +1,10 @@
-# JVM 生产参数配置与 GC 日志诊断实践
+---
+title: JVM 生产参数配置与 GC 日志诊断实践
+hide_title: true
+sidebar_label: 生产参数与 GC 诊断
+---
+
+## JVM 生产参数配置与 GC 日志诊断实践
 
 在将 Java 应用部署至生产环境时，合理的 JVM 参数配置、实时的垃圾回收（GC）监控以及安全点（Safepoint）停顿排查，是保证线上服务高可用、低时延的关键。
 

@@ -1,4 +1,10 @@
-# Rust 并发编程与 Tokio 异步运行时
+---
+title: Rust 并发编程与 Tokio 异步运行时
+hide_title: true
+sidebar_label: 并发编程与 Tokio
+---
+
+## Rust 并发编程与 Tokio 异步运行时
 
 在面对高并发、多线程系统或海量网络连接的 I/O 密集型系统（例如高并发 API 网关、分布式键值存储）时，如何构建安全且极速的并发机制是核心痛点。Rust 提供了“无畏并发”（Fearless Concurrency）的能力，既可以通过标准的系统级多线程与消息传递通道，也可以基于最底层的 `Future` 无栈协程状态机及 Tokio 工业级异步生态，实现逼近硬件极限的并发吞吐。
 

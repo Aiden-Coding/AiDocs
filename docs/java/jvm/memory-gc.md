@@ -1,4 +1,10 @@
-# JVM 内存模型与垃圾回收机制
+---
+title: JVM 内存模型与垃圾回收机制
+hide_title: true
+sidebar_label: 内存模型与 GC
+---
+
+## JVM 内存模型与垃圾回收机制
 
 JVM（Java Virtual Machine）是 Java 程序的运行基石。深入理解 JVM 的运行时数据区划分、虚拟机栈的栈帧交互、堆中对象的内存布局与晋升机制、以及现代垃圾收集器的底层原理，是迈向高级与资深 Java 开发的必经之路。
 

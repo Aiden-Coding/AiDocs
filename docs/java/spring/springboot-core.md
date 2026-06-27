@@ -1,4 +1,10 @@
-# Spring Boot 核心运行原理与启动加载机制
+---
+title: Spring Boot 核心运行原理与启动加载机制
+hide_title: true
+sidebar_label: 核心原理与启动加载
+---
+
+## Spring Boot 核心运行原理与启动加载机制
 
 Spring Boot 的诞生极大地简化了新 Spring 应用的初始搭建以及开发过程。它通过**约定优于配置（Configuration Over Convention）**的理念，实现了应用的快速启动（Out of the Box）。本文将深度剖析 Spring Boot 的核心运行原理，包含**自动装配扩展机制**、**启动生命周期与事件监听器**、**内置 Web 容器的启动原理**，以及 **Loader 双亲委派双重机制**。
 

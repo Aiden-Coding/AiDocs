@@ -1,4 +1,10 @@
-# MySQL B+树索引与 InnoDB 引擎
+---
+title: MySQL B+树索引与 InnoDB 引擎
+hide_title: true
+sidebar_label: 索引与存储引擎
+---
+
+## MySQL B+树索引与 InnoDB 引擎
 
 在关系型数据库中，MySQL 的 InnoDB 存储引擎是绝对的主流。深入理解 InnoDB 的索引结构（B+树）、聚簇索引与非聚簇索引的区别，以及 B+树的数学估算，是高级 Java/DBA 面试的必考点。
 

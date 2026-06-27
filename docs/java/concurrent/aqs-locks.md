@@ -1,4 +1,10 @@
-# AQS 机制与锁实现深度解析
+---
+title: AQS 机制与锁实现深度解析
+hide_title: true
+sidebar_label: AQS 与锁实现
+---
+
+## AQS 机制与锁实现深度解析
 
 在 Java 高级与资深工程师的面试中，并发编程的底层原理是必考项。其中，`AbstractQueuedSynchronizer`（AQS）和 `synchronized` 的锁升级机制是重中之重。本篇将从源码与底层原理出发，深度剖析这两个核心知识点。
 

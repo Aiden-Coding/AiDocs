@@ -1,4 +1,10 @@
-# 分布式共识协议：Raft 与 Paxos
+---
+title: 分布式共识协议：Raft 与 Paxos
+hide_title: true
+sidebar_label: 共识协议 Raft/Paxos
+---
+
+## 分布式共识协议：Raft 与 Paxos
 
 在分布式系统中，为了保证多副本数据的一致性，必须使用共识协议。**Paxos** 是共识协议的开山鼻祖，而 **Raft** 则是目前工业界应用最广泛、最易于理解的共识协议（如 Consul、Etcd、Nacos CP 模式等底层都基于 Raft）。
 
