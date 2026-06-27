@@ -57,9 +57,11 @@ Disruptor 的核心数据结构是 `RingBuffer`。它在物理上是一个普通
 * **极速位运算定位**：
 
   Disruptor 要求 `RingBuffer` 的大小必须是 **2 的幂次方**（如 1024, 2048 等）。这样，通过递增序号定位数组插槽时，可以直接使用位运算代替传统的模运算：
+
   ```text
   index = Sequence & (bufferSize - 1)
   ```
+
   位运算在 CPU 执行周期上比 `%` 取模运算快几十倍。
 
 ---

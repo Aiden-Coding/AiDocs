@@ -186,7 +186,7 @@ protected void populateBean(String beanName, RootBeanDefinition mbd, BeanWrapper
 **核心注解处理器**：
 
 | 注解 | 处理器 | 说明 |
-|-----|--------|------|
+| ----- | -------- | ------ |
 | `@Autowired` | `AutowiredAnnotationBeanPostProcessor` | 按类型注入 |
 | `@Resource` | `CommonAnnotationBeanPostProcessor` | 按名称注入 |
 | `@Value` | `AutowiredAnnotationBeanPostProcessor` | 注入配置值 |
@@ -227,7 +227,7 @@ private void invokeAwareInterfaces(Object bean) {
 **常用 Aware 接口**：
 
 | Aware 接口 | 回调方法 | 作用 |
-|-----------|---------|------|
+| ----------- | --------- | ------ |
 | `BeanNameAware` | `setBeanName(String name)` | 获取 Bean 在容器中的名称 |
 | `BeanFactoryAware` | `setBeanFactory(BeanFactory factory)` | 获取 BeanFactory 对象 |
 | `ApplicationContextAware` | `setApplicationContext(ApplicationContext ctx)` | 获取 ApplicationContext 对象 |
@@ -589,7 +589,7 @@ Bean 的生命周期可以分为四个核心阶段：
 ### 2. BeanPostProcessor 和 BeanFactoryPostProcessor 的区别？
 
 | 特性 | BeanPostProcessor | BeanFactoryPostProcessor |
-|-----|-------------------|-------------------------|
+| ----- | ------------------- | ------------------------- |
 | **作用对象** | Bean 实例 | BeanDefinition（Bean 定义） |
 | **执行时机** | Bean 实例化之后 | Bean 实例化之前 |
 | **核心方法** | `postProcessBeforeInitialization()` <br /> `postProcessAfterInitialization()` | `postProcessBeanFactory()` |

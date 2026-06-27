@@ -584,7 +584,9 @@ Spring Boot 3.0+ 支持 GraalVM Native Image,可将应用编译为原生可执�
      level:
        org.springframework.boot.autoconfigure: DEBUG
    ```
+
    启动日志会输出类似:
+
    ```
    Positive matches:
    -----------------

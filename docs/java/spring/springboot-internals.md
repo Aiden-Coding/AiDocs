@@ -770,7 +770,6 @@ public class DefaultSingletonBeanRegistry extends SimpleAliasRegistry implements
 }
 ```
 
-
 ### 2. 循环依赖解决流程
 
 **场景**: A 依赖 B,B 依赖 A

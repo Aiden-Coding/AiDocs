@@ -9,6 +9,7 @@
 当 `DispatcherServlet` 接收到请求并匹配到目标方法后，它会使用 `HandlerAdapter` 来执行该方法。在执行之前，必须将 HTTP 请求中的数据转换为方法参数。
 
 ### 1. 核心接口
+
 ```java
 public interface HandlerMethodArgumentResolver {
     // 1. 判断是否支持解析该参数
@@ -21,6 +22,7 @@ public interface HandlerMethodArgumentResolver {
 ```
 
 ### 2. 常见内置解析器
+
 | 解析器名称 | 对应注解/参数类型 | 说明 |
 | :--- | :--- | :--- |
 | `RequestParamMethodArgumentResolver` | `@RequestParam` | 处理查询参数或文件上传 |
@@ -36,6 +38,7 @@ public interface HandlerMethodArgumentResolver {
 方法执行完成后，Spring MVC 需要决定如何处理返回的对象（是跳转页面，还是直接写回 JSON）。
 
 ### 1. 核心接口
+
 ```java
 public interface HandlerMethodReturnValueHandler {
     // 1. 判断是否支持处理该返回值类型
@@ -48,6 +51,7 @@ public interface HandlerMethodReturnValueHandler {
 ```
 
 ### 2. 常见内置处理器
+
 - **`ViewNameMethodReturnValueHandler`**：返回 String 类型且不带属性注解时，解析为视图名。
 - **`RequestResponseBodyMethodProcessor`**：当方法标注了 **`@ResponseBody`** 时触发。它同样使用 `HttpMessageConverter` 将对象转化为响应流（如 JSON）。
 
@@ -71,6 +75,7 @@ graph LR
 ```
 
 ### 1. 策略模式的应用
+
 Spring MVC 会根据请求头的 `Content-Type`（输入）和 `Accept`（输出）自动选择合适的转换器：
 
 - `MappingJackson2HttpMessageConverter`：处理 `application/json`。
