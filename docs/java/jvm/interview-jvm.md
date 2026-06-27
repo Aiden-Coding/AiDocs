@@ -1,5 +1,6 @@
 ---
 title: JVM 虚拟机核心面试真题
+hide_title: true
 sidebar_label: JVM 虚拟机真题
 sidebar_position: 10
 ---

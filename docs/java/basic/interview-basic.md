@@ -1,5 +1,6 @@
 ---
 title: Java 基础与集合核心面试真题
+hide_title: true
 sidebar_label: 基础与集合真题
 sidebar_position: 1
 ---

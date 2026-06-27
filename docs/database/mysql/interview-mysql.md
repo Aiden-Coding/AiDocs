@@ -1,5 +1,6 @@
 ---
 title: MySQL 核心与 MVCC 面试真题
+hide_title: true
 sidebar_label: MySQL 面试真题
 sidebar_position: 100
 ---

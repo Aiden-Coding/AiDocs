@@ -1,5 +1,6 @@
 ---
 title: Redis 缓存高并发与击穿/穿透/雪崩面试真题
+hide_title: true
 sidebar_label: Redis 面试真题
 sidebar_position: 100
 ---

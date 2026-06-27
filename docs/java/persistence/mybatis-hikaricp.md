@@ -1,5 +1,6 @@
 ---
 title: MyBatis 持久层原理与 HikariCP 连接池
+hide_title: true
 sidebar_label: MyBatis & HikariCP
 sidebar_position: 10
 ---

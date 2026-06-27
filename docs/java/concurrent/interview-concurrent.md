@@ -1,7 +1,8 @@
 ---
 title: JUC 并发编程核心面试真题
-sidebar_label: 并发编程真题
-sidebar_position: 10
+hide_title: true
+sidebar_label: JUC 面试真题
+sidebar_position: 100
 ---
 
 # JUC 并发编程核心面试真题
