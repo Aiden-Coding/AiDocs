@@ -12,29 +12,60 @@ function HomepageHeader() {
   const {siteConfig} = useDocusaurusContext();
   return (
     <header className={clsx('hero', styles.heroBanner)}>
-      <div className={styles.heroBackground}>
-        <div className={styles.heroGradient}></div>
-        <div className={styles.heroPattern}></div>
+      {/* Decorative layered background */}
+      <div className={styles.heroBackground} aria-hidden="true">
+        <div className={styles.heroGrid}></div>
+        <div className={styles.glowOrb1}></div>
+        <div className={styles.glowOrb2}></div>
+        <div className={styles.glowOrb3}></div>
       </div>
+
       <div className="container" style={{ position: 'relative', zIndex: 1 }}>
         <div className={styles.heroContent}>
+          {/* Badge chip */}
+          <div className={styles.heroBadge}>
+            <span className={styles.heroBadgeDot}></span>
+            系统化架构知识库
+          </div>
+
           <Heading as="h1" className={styles.heroTitle}>
-            AiDocs
+            <span className={styles.heroTitleLine1}>Ai</span>
+            <span className={styles.heroTitleLine2}>Docs</span>
           </Heading>
+
           <p className={styles.heroSubtitle}>
-            构建现代化的<span className={styles.highlightText}> 软件开发 </span>知识库
+            构建现代化的<span className={styles.highlightText}> 软件开发 </span>知识体系
+            <br />
+            <span className={styles.heroSubtitleSub}>深度原理 · 源码解析 · 实战沉淀</span>
           </p>
+
           <div className={styles.buttons}>
             <Link
-              className={clsx('button button--primary button--lg', styles.heroButton)}
+              id="hero-cta-explore"
+              className={clsx('button button--lg', styles.heroButtonPrimary)}
               to="/docs/">
-              开始探索
+              开始探索 →
             </Link>
             <Link
-              className={clsx('button button--outline button--secondary button--lg', styles.heroButton, styles.heroButtonOutline)}
-              href="https://github.com/dwx/AiDocs">
-              GitHub
+              id="hero-cta-github"
+              className={clsx('button button--lg', styles.heroButtonGlass)}
+              href="https://github.com/Aiden-Coding/AiDocs">
+              <span className={styles.githubIcon}>⭐</span> GitHub
             </Link>
+          </div>
+
+          {/* Stats row */}
+          <div className={styles.heroStats}>
+            {[
+              { value: '6+', label: '技术领域' },
+              { value: '100+', label: '深度文章' },
+              { value: '持续', label: '更新迭代' },
+            ].map((stat) => (
+              <div key={stat.label} className={styles.heroStat}>
+                <span className={styles.heroStatValue}>{stat.value}</span>
+                <span className={styles.heroStatLabel}>{stat.label}</span>
+              </div>
+            ))}
           </div>
         </div>
       </div>
@@ -47,7 +78,7 @@ export default function Home(): ReactNode {
   return (
     <Layout
       title={`首页 - ${siteConfig.title}`}
-      description="AiDocs: 专注软件开发的系统化知识归纳与实战分享">
+      description="AiDocs: 专注软件开发的系统化知识归纳与实战分享，涵盖 Java、数据库、分布式、Rust、React 等核心技术栈">
       <HomepageHeader />
       <main>
         <HomepageFeatures />

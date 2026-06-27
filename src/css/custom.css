@@ -1,140 +1,489 @@
 /**
- * Any CSS included here will be global. The classic template
- * bundles Infima by default. Infima is a CSS framework designed to
- * work well for content-centric websites.
+ * AiDocs — Global Styles & Design System
+ * Modern tech-doc aesthetic: glassmorphism, premium typography, code polish.
  */
 
-/* You can override the default Infima variables here. */
+/* ──────────────────────────────────────────────
+   1. Google Fonts Import
+   ────────────────────────────────────────────── */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Plus+Jakarta+Sans:wght@600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap');
+
+/* ──────────────────────────────────────────────
+   2. Design Token — Light Mode
+   ────────────────────────────────────────────── */
 :root {
-  /* Modern Indigo Primary Color Palette */
-  --ifm-color-primary: #4f46e5;
-  --ifm-color-primary-dark: #473fd0;
-  --ifm-color-primary-darker: #433bc4;
-  --ifm-color-primary-darkest: #3731a2;
-  --ifm-color-primary-light: #6158e8;
-  --ifm-color-primary-lighter: #6a61e9;
-  --ifm-color-primary-lightest: #857eec;
-  
-  /* Typography enhancements */
-  --ifm-font-family-base: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
-  --ifm-code-font-size: 90%;
-  --ifm-code-border-radius: 6px;
-  
-  /* Custom Variables */
-  --docusaurus-highlighted-code-line-bg: rgba(79, 70, 229, 0.1);
-  --ai-hero-bg: radial-gradient(circle at center, var(--ifm-color-primary-lightest) 0%, transparent 100%);
+  /* Primary: vibrant Indigo → Violet */
+  --ifm-color-primary: #6366f1;
+  --ifm-color-primary-dark: #4f52e8;
+  --ifm-color-primary-darker: #4346e4;
+  --ifm-color-primary-darkest: #2d30d6;
+  --ifm-color-primary-light: #7779f3;
+  --ifm-color-primary-lighter: #8082f4;
+  --ifm-color-primary-lightest: #a5a7f7;
+
+  /* Typography */
+  --ifm-font-family-base: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --ifm-heading-font-family: 'Plus Jakarta Sans', 'Inter', sans-serif;
+  --ifm-font-family-monospace: 'JetBrains Mono', 'Fira Code', 'Cascadia Code', Consolas, monospace;
+  --ifm-font-weight-semibold: 600;
+
+  /* Spacing & radius */
+  --ifm-code-font-size: 88%;
+  --ifm-code-border-radius: 8px;
+  --ifm-global-radius: 12px;
+
+  /* Code highlight */
+  --docusaurus-highlighted-code-line-bg: rgba(99, 102, 241, 0.12);
+
+  /* Custom gradient tokens */
+  --ai-gradient-primary: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+  --ai-gradient-text: linear-gradient(135deg, #4f46e5 0%, #7c3aed 60%, #a855f7 100%);
+  --ai-hero-glow-1: rgba(99, 102, 241, 0.25);
+  --ai-hero-glow-2: rgba(139, 92, 246, 0.2);
+  --ai-card-bg: rgba(255, 255, 255, 0.7);
+  --ai-card-border: rgba(99, 102, 241, 0.12);
+  --ai-code-header-bg: #e8eaf0;
+  --ai-code-border: rgba(0, 0, 0, 0.08);
 }
 
-/* For readability concerns, you should choose a lighter palette in dark mode. */
+/* ──────────────────────────────────────────────
+   3. Design Token — Dark Mode
+   ────────────────────────────────────────────── */
 [data-theme='dark'] {
-  /* Vibrant Indigo for Dark Mode */
+  /* Brighter indigo for dark bg legibility */
   --ifm-color-primary: #818cf8;
-  --ifm-color-primary-dark: #6a77f7;
-  --ifm-color-primary-darker: #5f6df6;
-  --ifm-color-primary-darkest: #3d4df4;
-  --ifm-color-primary-light: #98a1f9;
-  --ifm-color-primary-lighter: #a3abf9;
+  --ifm-color-primary-dark: #6a76f6;
+  --ifm-color-primary-darker: #5f6cf5;
+  --ifm-color-primary-darkest: #3d4df2;
+  --ifm-color-primary-light: #95a0f9;
+  --ifm-color-primary-lighter: #a0aafa;
   --ifm-color-primary-lightest: #c4cafb;
-  
-  --docusaurus-highlighted-code-line-bg: rgba(129, 140, 248, 0.2);
-  --ai-hero-bg: radial-gradient(circle at center, rgba(129, 140, 248, 0.15) 0%, transparent 100%);
-  
-  /* Deeper background for dark mode */
-  --ifm-background-color: #0f172a;
-  --ifm-background-surface-color: #1e293b;
+
+  /* Deeper backgrounds */
+  --ifm-background-color: #090d16;
+  --ifm-background-surface-color: #111827;
+  --ifm-navbar-background-color: rgba(9, 13, 22, 0.97);
+
+  /* Code highlight */
+  --docusaurus-highlighted-code-line-bg: rgba(129, 140, 248, 0.18);
+
+  /* Custom tokens override */
+  --ai-gradient-text: linear-gradient(135deg, #a5b4fc 0%, #c084fc 60%, #f0abfc 100%);
+  --ai-hero-glow-1: rgba(99, 102, 241, 0.3);
+  --ai-hero-glow-2: rgba(139, 92, 246, 0.25);
+  --ai-card-bg: rgba(17, 24, 39, 0.6);
+  --ai-card-border: rgba(129, 140, 248, 0.15);
+  --ai-code-header-bg: #1a2035;
+  --ai-code-border: rgba(255, 255, 255, 0.07);
 }
 
-/* Base UI Enhancements */
+/* ──────────────────────────────────────────────
+   4. Base Typography
+   ────────────────────────────────────────────── */
+body {
+  font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11';
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--ifm-heading-font-family);
+  letter-spacing: -0.03em;
+}
+
+/* ──────────────────────────────────────────────
+   5. Navbar
+   ────────────────────────────────────────────── */
 .navbar {
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
-  /* 重要：不能用 backdrop-filter！
-     iOS Safari 已知 bug：backdrop-filter 会将元素设为其内部 position:fixed 子元素的 containing block。
-     由于 .navbar-sidebar 是 <nav.navbar> 的 DOM 子元素，
-     这会导致侧边栏的 top:0/bottom:0 相对于 navbar 高度（~60px）计算，
-     而非视口全高，导致导航项全部溢出不可见。 */
-  background-color: rgba(255, 255, 255, 0.98);
-  /* 对齐 Infima 默认值 200，确保导航栏在页面内容之上 */
+  /* No backdrop-filter: iOS Safari bug would break .navbar-sidebar positioning */
+  background-color: rgba(255, 255, 255, 0.97);
+  box-shadow: 0 1px 0 rgba(0, 0, 0, 0.06), 0 4px 16px rgba(0, 0, 0, 0.04);
   z-index: 200;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.05);
 }
 
-/* 手机端侧边栏遮罩层 */
+[data-theme='dark'] .navbar {
+  background-color: rgba(9, 13, 22, 0.97);
+  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.05), 0 4px 24px rgba(0, 0, 0, 0.4);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+/* Mobile sidebar backdrop */
 .navbar-sidebar__backdrop {
   z-index: 399 !important;
 }
 
-/* 手机端侧边栏抽屉
- * 注意：不用 backdrop-filter，部分安卓浏览器不支持，fallback 时会完全透明
- * 改用实色背景确保侧边栏在所有设备上都可见 */
+/* Mobile sidebar drawer — solid BG instead of backdrop-filter (Android compat) */
 .navbar-sidebar {
   background-color: #ffffff !important;
-  box-shadow: 4px 0 24px rgba(0, 0, 0, 0.12);
+  box-shadow: 4px 0 32px rgba(0, 0, 0, 0.12);
   z-index: 400 !important;
 }
 
-[data-theme='dark'] .navbar {
-  background-color: rgba(15, 23, 42, 0.98);
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.2), 0 2px 4px -1px rgba(0, 0, 0, 0.1);
-}
-
-/* 深色模式侧边栏：使用 surface 色（#1e293b），
- * 比页面背景（#0f172a）更亮，形成可见的对比 */
 [data-theme='dark'] .navbar-sidebar {
-  background-color: #1e293b !important;
-  box-shadow: 4px 0 24px rgba(0, 0, 0, 0.4);
+  background-color: #111827 !important;
+  box-shadow: 4px 0 32px rgba(0, 0, 0, 0.5);
 }
 
-/* 手机端汉堡包菜单按钮 - 确保点击热区可被正常操作 */
 .navbar__toggle {
   position: relative;
   z-index: 201;
 }
 
-.button {
-  border-radius: 8px;
+.navbar__item a.navbar__link:hover {
+  color: var(--ifm-color-primary);
+}
+
+.navbar__item a.navbar__link--active {
+  color: var(--ifm-color-primary);
   font-weight: 600;
-  transition: all 0.2s ease-in-out;
+}
+
+/* ──────────────────────────────────────────────
+   6. Buttons
+   ────────────────────────────────────────────── */
+.button {
+  border-radius: 10px;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  transition: all 0.22s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
 .button:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(79, 70, 229, 0.25);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(99, 102, 241, 0.3);
 }
 
 [data-theme='dark'] .button:hover {
-  box-shadow: 0 4px 12px rgba(129, 140, 248, 0.25);
+  box-shadow: 0 6px 20px rgba(129, 140, 248, 0.35);
 }
 
-/* Footer Customization */
+/* ──────────────────────────────────────────────
+   7. Code Blocks — macOS polish
+   ────────────────────────────────────────────── */
+
+/* Container with macOS-style traffic lights */
+.theme-code-block {
+  border-radius: 12px !important;
+  overflow: hidden;
+  border: 1px solid var(--ai-code-border) !important;
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.06), 0 1px 4px rgba(0, 0, 0, 0.04) !important;
+}
+
+[data-theme='dark'] .theme-code-block {
+  box-shadow: 0 4px 32px rgba(0, 0, 0, 0.4), 0 1px 4px rgba(0, 0, 0, 0.3) !important;
+}
+
+/* The header bar containing the title/copy button */
+.theme-code-block-title {
+  background-color: var(--ai-code-header-bg) !important;
+  border-bottom: 1px solid var(--ai-code-border) !important;
+  padding: 0.55rem 1rem 0.55rem 3.8rem !important;
+  font-family: var(--ifm-font-family-monospace);
+  font-size: 0.82rem;
+  font-weight: 500;
+  position: relative;
+}
+
+/* macOS traffic lights via ::before pseudo-element */
+.theme-code-block-title::before {
+  content: '';
+  position: absolute;
+  left: 0.9rem;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: #ff5f57;
+  box-shadow:
+    0 0 0 0.5px rgba(0,0,0,0.1),
+    18px 0 0 #febc2e,
+    18px 0 0 0.5px rgba(0,0,0,0.1),
+    36px 0 0 #28c840,
+    36px 0 0 0.5px rgba(0,0,0,0.1);
+}
+
+/* Code blocks without a title also get a subtle top bar */
+div[class*="codeBlockContainer"]:not(:has(.theme-code-block-title)) {
+  position: relative;
+}
+
+div[class*="codeBlockContainer"]:not(:has(.theme-code-block-title))::before {
+  content: '';
+  display: block;
+  height: 36px;
+  background: var(--ai-code-header-bg);
+  border-bottom: 1px solid var(--ai-code-border);
+  position: relative;
+}
+
+div[class*="codeBlockContainer"]:not(:has(.theme-code-block-title))::after {
+  content: '';
+  position: absolute;
+  left: 0.9rem;
+  top: 12px;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: #ff5f57;
+  box-shadow:
+    0 0 0 0.5px rgba(0,0,0,0.1),
+    18px 0 0 #febc2e,
+    18px 0 0 0.5px rgba(0,0,0,0.1),
+    36px 0 0 #28c840,
+    36px 0 0 0.5px rgba(0,0,0,0.1);
+  z-index: 1;
+}
+
+/* Inline code */
+code:not([class*='codeBlock']) {
+  background: rgba(99, 102, 241, 0.08);
+  border: 1px solid rgba(99, 102, 241, 0.15);
+  color: #4f46e5;
+  padding: 0.1em 0.45em;
+  border-radius: 5px;
+  font-size: 0.88em;
+  font-weight: 500;
+}
+
+[data-theme='dark'] code:not([class*='codeBlock']) {
+  background: rgba(129, 140, 248, 0.12);
+  border-color: rgba(129, 140, 248, 0.2);
+  color: #a5b4fc;
+}
+
+/* ──────────────────────────────────────────────
+   8. Admonitions (提示框)
+   ────────────────────────────────────────────── */
+.alert {
+  border-radius: 12px;
+  border-left-width: 4px;
+  border-top-width: 0;
+  border-right-width: 0;
+  border-bottom-width: 0;
+  border-style: solid;
+  padding: 1rem 1.25rem;
+}
+
+.alert--secondary { /* note */
+  background: rgba(99, 102, 241, 0.06);
+  border-color: #6366f1;
+}
+
+.alert--info { /* info */
+  background: rgba(14, 165, 233, 0.07);
+  border-color: #0ea5e9;
+}
+
+.alert--success { /* tip */
+  background: rgba(16, 185, 129, 0.07);
+  border-color: #10b981;
+}
+
+.alert--warning { /* caution/warning */
+  background: rgba(245, 158, 11, 0.08);
+  border-color: #f59e0b;
+}
+
+.alert--danger { /* danger */
+  background: rgba(239, 68, 68, 0.07);
+  border-color: #ef4444;
+}
+
+[data-theme='dark'] .alert--secondary { background: rgba(99, 102, 241, 0.1); }
+[data-theme='dark'] .alert--info      { background: rgba(14, 165, 233, 0.1); }
+[data-theme='dark'] .alert--success   { background: rgba(16, 185, 129, 0.1); }
+[data-theme='dark'] .alert--warning   { background: rgba(245, 158, 11, 0.1); }
+[data-theme='dark'] .alert--danger    { background: rgba(239, 68, 68, 0.1);  }
+
+.admonitionHeading {
+  font-family: var(--ifm-heading-font-family);
+  font-size: 0.95rem;
+  letter-spacing: 0.01em;
+}
+
+/* ──────────────────────────────────────────────
+   9. Table of Contents (右侧目录)
+   ────────────────────────────────────────────── */
+.table-of-contents {
+  border-left: 2px solid var(--ifm-color-emphasis-200);
+  padding-left: 0.75rem;
+}
+
+.table-of-contents__link {
+  color: var(--ifm-color-emphasis-600);
+  font-size: 0.88rem;
+  transition: all 0.2s ease;
+  border-radius: 4px;
+  padding: 2px 6px;
+  margin-left: -6px;
+}
+
+.table-of-contents__link:hover {
+  color: var(--ifm-color-primary);
+  background: rgba(99, 102, 241, 0.06);
+}
+
+.table-of-contents__link--active {
+  color: var(--ifm-color-primary) !important;
+  font-weight: 600;
+  background: rgba(99, 102, 241, 0.1);
+}
+
+/* ──────────────────────────────────────────────
+   10. Sidebar (docs)
+   ────────────────────────────────────────────── */
+.menu__link {
+  border-radius: 8px;
+  transition: all 0.18s ease;
+  font-size: 0.93rem;
+}
+
+.menu__link:hover {
+  background: rgba(99, 102, 241, 0.08);
+  color: var(--ifm-color-primary);
+}
+
+.menu__link--active {
+  background: rgba(99, 102, 241, 0.12) !important;
+  color: var(--ifm-color-primary) !important;
+  font-weight: 600;
+}
+
+/* ──────────────────────────────────────────────
+   11. Footer
+   ────────────────────────────────────────────── */
 .footer {
-  background-color: var(--ifm-color-emphasis-100) !important;
+  background: linear-gradient(to bottom, var(--ifm-color-emphasis-100), var(--ifm-color-emphasis-200)) !important;
   border-top: 1px solid var(--ifm-color-emphasis-200);
-  color: var(--ifm-color-content) !important;
 }
 
 [data-theme='dark'] .footer {
-  background-color: var(--ifm-background-surface-color) !important;
+  background: linear-gradient(to bottom, #111827, #0d1424) !important;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
 }
 
+/* 三栏等宽 grid，列间距均匀 */
+.footer__links {
+  display: grid !important;
+  grid-template-columns: repeat(3, 1fr) !important;
+  gap: 2rem 3rem !important;
+  align-items: start !important;
+}
+
+/* 每一列顶部对齐 */
+.footer__col {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+/* 列标题：统一 margin-bottom 确保内容起始行一致 */
 .footer__title {
+  font-family: var(--ifm-heading-font-family);
+  font-size: 0.85rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
   color: var(--ifm-color-emphasis-800);
-  font-weight: 600;
+  margin-bottom: 1rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 2px solid var(--ifm-color-primary);
+  width: fit-content;
+}
+
+[data-theme='dark'] .footer__title {
+  color: var(--ifm-color-emphasis-700);
+}
+
+/* 链接列表 */
+.footer__items {
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+}
+
+.footer__item {
+  line-height: 1;
 }
 
 .footer__link-item {
   color: var(--ifm-color-emphasis-600) !important;
   transition: all 0.2s ease;
+  font-size: 0.9rem;
+  display: inline-block;
 }
 
 .footer__link-item:hover {
   color: var(--ifm-color-primary) !important;
   transform: translateX(4px);
-  display: inline-block;
 }
 
 .footer__copyright {
   color: var(--ifm-color-emphasis-500);
-  font-size: 0.9rem;
+  font-size: 0.85rem;
   margin-top: 2rem;
   border-top: 1px solid var(--ifm-color-emphasis-200);
   padding-top: 1.5rem;
+  text-align: center;
+}
+
+/* 响应式：中屏 2 列，小屏 1 列 */
+@media (max-width: 768px) {
+  .footer__links {
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 1.5rem 2rem !important;
+  }
+}
+
+@media (max-width: 480px) {
+  .footer__links {
+    grid-template-columns: 1fr !important;
+    gap: 1.5rem !important;
+  }
+}
+
+/* ──────────────────────────────────────────────
+   12. Pagination & Breadcrumb
+   ────────────────────────────────────────────── */
+.pagination-nav__link {
+  border: 1px solid var(--ifm-color-emphasis-200);
+  border-radius: 12px;
+  transition: all 0.22s ease;
+}
+
+.pagination-nav__link:hover {
+  border-color: var(--ifm-color-primary);
+  box-shadow: 0 4px 16px rgba(99, 102, 241, 0.15);
+  transform: translateY(-1px);
+}
+
+/* ──────────────────────────────────────────────
+   13. Doc article markdown refinements
+   ────────────────────────────────────────────── */
+.markdown h1, .markdown h2, .markdown h3 {
+  font-family: var(--ifm-heading-font-family);
+}
+
+.markdown h2 {
+  border-bottom: 1px solid var(--ifm-color-emphasis-200);
+  padding-bottom: 0.4em;
+}
+
+/* Scrollbar (webkit) */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--ifm-color-emphasis-300);
+  border-radius: 999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--ifm-color-primary);
 }

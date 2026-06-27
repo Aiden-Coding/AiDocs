@@ -1,87 +1,291 @@
+/**
+ * HomepageFeatures — scoped CSS Modules
+ * Glassmorphic cards with hover glow, tag chips, and section header.
+ */
+
+/* ──────────────────────────────────────────────
+   Section Layout
+   ────────────────────────────────────────────── */
 .features {
-  display: flex;
-  align-items: center;
-  padding: 4rem 0;
+  padding: 5rem 0 6rem;
   width: 100%;
+  position: relative;
+  overflow: hidden;
 }
 
+/* Subtle section background gradient */
+.features::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(ellipse 80% 60% at 50% 0%, rgba(99, 102, 241, 0.05) 0%, transparent 70%);
+  pointer-events: none;
+}
+
+[data-theme='dark'] .features::before {
+  background: radial-gradient(ellipse 80% 60% at 50% 0%, rgba(99, 102, 241, 0.08) 0%, transparent 70%);
+}
+
+/* ──────────────────────────────────────────────
+   Section Header
+   ────────────────────────────────────────────── */
+.sectionHeader {
+  text-align: center;
+  margin-bottom: 3.5rem;
+  position: relative;
+}
+
+.sectionTitle {
+  font-family: 'Plus Jakarta Sans', 'Inter', sans-serif;
+  font-size: 2.2rem;
+  font-weight: 800;
+  letter-spacing: -0.04em;
+  color: var(--ifm-color-emphasis-900);
+  margin-bottom: 0.6rem;
+  position: relative;
+  display: inline-block;
+}
+
+/* Gradient underline accent */
+.sectionTitle::after {
+  content: '';
+  position: absolute;
+  bottom: -8px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 60px;
+  height: 4px;
+  border-radius: 999px;
+  background: linear-gradient(135deg, #6366f1, #8b5cf6);
+}
+
+.sectionSubtitle {
+  font-size: 1.05rem;
+  color: var(--ifm-color-emphasis-600);
+  margin: 0;
+  margin-top: 1.2rem;
+}
+
+/* ──────────────────────────────────────────────
+   Feature Card Grid
+   ────────────────────────────────────────────── */
 .featureCol {
-  margin-bottom: 2rem;
+  margin-bottom: 1.5rem;
+  /* Stagger entrance animation */
 }
 
+.featureCol:nth-child(1) .featureCard { animation-delay: 0s; }
+.featureCol:nth-child(2) .featureCard { animation-delay: 0.1s; }
+.featureCol:nth-child(3) .featureCard { animation-delay: 0.2s; }
+
+/* ──────────────────────────────────────────────
+   Glassmorphic Card
+   ────────────────────────────────────────────── */
 .featureCard {
-  background: var(--ifm-background-surface-color);
-  border-radius: 16px;
-  padding: 2.5rem 1.5rem;
+  position: relative;
+  background: rgba(255, 255, 255, 0.72);
+  border: 1px solid rgba(99, 102, 241, 0.12);
+  border-radius: 20px;
+  padding: 2.5rem 2rem 2rem;
   height: 100%;
-  transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
-  border: 1px solid var(--ifm-color-emphasis-200);
   display: flex;
   flex-direction: column;
-  justify-content: flex-start;
-  align-items: center;
-}
-
-.featureCard:hover {
-  transform: translateY(-5px);
-  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.08);
-  border-color: var(--ifm-color-primary-light);
+  align-items: flex-start;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  transition: transform 0.32s cubic-bezier(0.34, 1.56, 0.64, 1),
+              box-shadow 0.32s ease,
+              border-color 0.25s ease;
+  overflow: hidden;
+  animation: cardFadeUp 0.5s ease both;
+  box-shadow: 0 2px 16px rgba(0, 0, 0, 0.04), 0 1px 4px rgba(0, 0, 0, 0.03);
 }
 
 [data-theme='dark'] .featureCard {
-  background: var(--ifm-color-emphasis-100);
-  border-color: var(--ifm-color-emphasis-200);
+  background: rgba(17, 24, 39, 0.6);
+  border-color: rgba(129, 140, 248, 0.14);
+  box-shadow: 0 2px 20px rgba(0, 0, 0, 0.3), 0 1px 4px rgba(0, 0, 0, 0.2);
+}
+
+.featureCard:hover {
+  transform: translateY(-8px);
+  border-color: rgba(99, 102, 241, 0.4);
+  box-shadow: 0 20px 48px rgba(99, 102, 241, 0.14), 0 4px 12px rgba(99, 102, 241, 0.08);
 }
 
 [data-theme='dark'] .featureCard:hover {
-  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.2);
-  border-color: var(--ifm-color-primary);
+  border-color: rgba(129, 140, 248, 0.4);
+  box-shadow: 0 20px 48px rgba(99, 102, 241, 0.18), 0 4px 12px rgba(0, 0, 0, 0.4);
 }
 
-.featureIconWrapper {
-  width: 80px;
-  height: 80px;
+@keyframes cardFadeUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ──────────────────────────────────────────────
+   Card Hover Glow (radial light spot)
+   ────────────────────────────────────────────── */
+.featureCardGlow {
+  position: absolute;
+  top: -60px;
+  right: -60px;
+  width: 200px;
+  height: 200px;
   border-radius: 50%;
-  background: var(--ifm-color-primary-lightest);
+  background: radial-gradient(circle, rgba(99, 102, 241, 0.18) 0%, transparent 70%);
+  opacity: 0;
+  transition: opacity 0.4s ease;
+  pointer-events: none;
+}
+
+.featureCard:hover .featureCardGlow {
+  opacity: 1;
+}
+
+[data-theme='dark'] .featureCard:hover .featureCardGlow {
+  background: radial-gradient(circle, rgba(129, 140, 248, 0.22) 0%, transparent 70%);
+}
+
+/* ──────────────────────────────────────────────
+   Icon Wrapper
+   ────────────────────────────────────────────── */
+.featureIconWrapper {
+  position: relative;
+  width: 72px;
+  height: 72px;
+  border-radius: 18px;
+  background: linear-gradient(135deg, rgba(99, 102, 241, 0.1), rgba(139, 92, 246, 0.08));
+  border: 1px solid rgba(99, 102, 241, 0.15);
   display: flex;
   align-items: center;
   justify-content: center;
   margin-bottom: 1.5rem;
-  opacity: 0.9;
+  transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1),
+              box-shadow 0.3s ease;
 }
 
 [data-theme='dark'] .featureIconWrapper {
-  background: rgba(37, 194, 160, 0.15); /* Primary color with transparency */
+  background: linear-gradient(135deg, rgba(99, 102, 241, 0.15), rgba(139, 92, 246, 0.12));
+  border-color: rgba(129, 140, 248, 0.2);
+}
+
+.featureCard:hover .featureIconWrapper {
+  transform: rotate(-6deg) scale(1.08);
+  box-shadow: 0 8px 24px rgba(99, 102, 241, 0.25);
+}
+
+/* Subtle rotating ring */
+.featureIconRing {
+  position: absolute;
+  inset: -4px;
+  border-radius: 22px;
+  border: 2px dashed rgba(99, 102, 241, 0.2);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  animation: ringRotate 8s linear infinite;
+  animation-play-state: paused;
+}
+
+.featureCard:hover .featureIconRing {
+  opacity: 1;
+  animation-play-state: running;
+}
+
+@keyframes ringRotate {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
 }
 
 .featureIcon {
-  font-size: 2.5rem;
+  font-size: 2.2rem;
   line-height: 1;
+  position: relative;
+  z-index: 1;
+}
+
+/* ──────────────────────────────────────────────
+   Card Body
+   ────────────────────────────────────────────── */
+.featureBody {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
 }
 
 .featureTitle {
-  font-size: 1.5rem;
-  margin-bottom: 1rem;
+  font-family: 'Plus Jakarta Sans', 'Inter', sans-serif;
+  font-size: 1.25rem;
   font-weight: 700;
+  letter-spacing: -0.02em;
+  margin-bottom: 0.75rem;
+  color: var(--ifm-color-emphasis-900);
 }
 
 .featureDesc {
-  color: var(--ifm-color-emphasis-700);
-  line-height: 1.6;
-  margin: 0;
+  color: var(--ifm-color-emphasis-600);
+  line-height: 1.7;
+  font-size: 0.93rem;
+  margin: 0 0 1.25rem;
+  flex: 1;
+}
+
+/* ──────────────────────────────────────────────
+   Tech Tags
+   ────────────────────────────────────────────── */
+.featureTags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+
+.featureTag {
+  display: inline-block;
+  padding: 0.2rem 0.65rem;
+  border-radius: 999px;
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  background: rgba(99, 102, 241, 0.08);
+  border: 1px solid rgba(99, 102, 241, 0.15);
+  color: var(--ifm-color-primary);
+  transition: all 0.2s ease;
+}
+
+[data-theme='dark'] .featureTag {
+  background: rgba(129, 140, 248, 0.1);
+  border-color: rgba(129, 140, 248, 0.2);
+}
+
+.featureCard:hover .featureTag {
+  background: rgba(99, 102, 241, 0.14);
+  border-color: rgba(99, 102, 241, 0.3);
+}
+
+/* ──────────────────────────────────────────────
+   Responsive
+   ────────────────────────────────────────────── */
+@media (max-width: 996px) {
+  .features {
+    padding: 3.5rem 0 4rem;
+  }
+
+  .sectionTitle {
+    font-size: 1.8rem;
+  }
 }
 
 @media (max-width: 768px) {
   .features {
-    padding: 2rem 0;
+    padding: 2.5rem 0 3rem;
   }
 
   .featureCard {
-    padding: 1.5rem;
+    padding: 2rem 1.5rem 1.5rem;
+    margin-bottom: 1rem;
   }
 
-  .featureIcon {
-    font-size: 2.5rem !important;
-    margin-bottom: 1rem !important;
+  .sectionTitle {
+    font-size: 1.5rem;
   }
 }
