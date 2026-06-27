@@ -47,9 +47,12 @@
 /* Base UI Enhancements */
 .navbar {
   box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
-  background-color: rgba(255, 255, 255, 0.95);
+  /* 重要：不能用 backdrop-filter！
+     iOS Safari 已知 bug：backdrop-filter 会将元素设为其内部 position:fixed 子元素的 containing block。
+     由于 .navbar-sidebar 是 <nav.navbar> 的 DOM 子元素，
+     这会导致侧边栏的 top:0/bottom:0 相对于 navbar 高度（~60px）计算，
+     而非视口全高，导致导航项全部溢出不可见。 */
+  background-color: rgba(255, 255, 255, 0.98);
   /* 对齐 Infima 默认值 200，确保导航栏在页面内容之上 */
   z-index: 200;
 }
@@ -69,7 +72,7 @@
 }
 
 [data-theme='dark'] .navbar {
-  background-color: rgba(15, 23, 42, 0.95);
+  background-color: rgba(15, 23, 42, 0.98);
   box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.2), 0 2px 4px -1px rgba(0, 0, 0, 0.1);
 }
 
