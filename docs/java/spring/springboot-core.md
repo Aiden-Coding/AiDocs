@@ -55,15 +55,19 @@ sequenceDiagram
 在进入 `run` 方法之前，会首先实例化 `SpringApplication` 节点，在其构造函数中进行以下几件事：
 
 - **推断 Web 应用类型**：
+
   通过类路径中是否存在特定的类来推断应用类型：
+
   - 存在 `org.springframework.web.reactive.DispatcherHandler` 且不存在 `Servlet` 相关的类，则为 `REACTIVE` (WebFlux)。
   - 不存在 `javax.servlet.Servlet` 或 `jakarta.servlet.Servlet`，则为 `NONE` (纯后台/定时任务)。
   - 否则，为 `SERVLET` (标准 Spring MVC)。
 
 - **加载 Initializer 与 Listener**：
+
   从类路径下的 `META-INF/spring.factories` 或者 Spring 3.x 指定的配置文件中，读取所有的 `ApplicationContextInitializer` 和 `ApplicationListener`，利用反射进行实例化并保存。
 
 - **确定 `main` 方法所在的类**：
+
   通过遍历当前调用栈的堆栈跟踪信息（StackTrace），寻找方法名为 `main` 的类，将其作为 `mainApplicationClass`。
 
 ---
@@ -106,8 +110,11 @@ public interface DeferredImportSelector extends ImportSelector {
 ```
 
 - **为什么不直接使用普通的 `ImportSelector`**？
+
   如果是普通的 `ImportSelector`，它会在解析普通 `@Configuration` 类时被立即处理。而 `DeferredImportSelector` 会在**所有其他常规 `@Configuration` 类都被解析、注册完毕之后**，才开始执行其 `selectImports` 方法。
+
 - **这样设计的核心目的**：
+
   确保用户的自定义配置（例如用户显式声明的 `RedisTemplate` Bean）优先于自动配类导入。当自动配置类执行 `@ConditionalOnMissingBean` 检查时，能够准确发现用户已经声明的 Bean，从而实现**用户自定义配置覆盖自动配置**。
 
 ---
@@ -155,6 +162,7 @@ public interface WebServer {
    - 从容器中获取 `ServletWebServerFactory`（默认是 `TomcatServletWebServerFactory`）。
    - 通过工厂类方法 `getWebServer()` 获取 `WebServer` 实例。这期间会初始化 Tomcat 相关的组件：`Engine`、`Host`、`Context` 以及 `Connector`，并且将其绑定至对应的端口。
 3. **`finishRefresh()` 最终暴利激活**：
+
    在 `refresh` 流程的最后一步 `finishRefresh()`，会调用 `WebServer.start()` 方法，此时 Tomcat 的工作线程池正式启动，开始接受外部的 HTTP 请求。
 
 ---
@@ -204,10 +212,13 @@ JVM 默认的加载器在其类路径（Classpath）中找不到 `BOOT-INF/lib/`
 #### 双亲委派双重机制
 
 1. **Java 原生双亲委派**：
+
    当一个类加载器收到类加载请求时，它首先不会自己去尝试加载这个类，而是把这个请求委派给父类加载器去完成，所有加载请求最终都应该传送到最顶层的启动类加载器中。
 
 2. **`LaunchedURLClassLoader` 的自定义寻址**：
+
    `LaunchedURLClassLoader` 继承自 `URLClassLoader`。它的核心变动在于重写了寻找资源的路径。
+
    - `JarLauncher` 启动时，会扫描 `BOOT-INF/classes/` 和 `BOOT-INF/lib/` 目录。
    - 将这些目录下的所有文件和嵌套 Jar 包，转化为自定义的 `URL` 协议支持（利用 `Handler` 扩展支持 `jar:file:xx.jar!/BOOT-INF/lib/yy.jar!/` 的感叹号级联定位）。
    - 创建 `LaunchedURLClassLoader` 并把这些特殊的 URL 注入其中。、

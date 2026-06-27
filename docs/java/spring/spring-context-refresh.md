@@ -29,11 +29,13 @@ graph TD
 
 ### 1. obtainFreshBeanFactory (获取新的 BeanFactory)
 这是容器的心脏。
+
 - **职责**：如果已存在工厂则销毁之；创建新的 `DefaultListableBeanFactory`。
 - **解析**：触发 `loadBeanDefinitions`。如果是 XML 配置，则通过 `XmlBeanDefinitionReader` 读取并解析；如果是注解配置（如 Spring Boot），则在该阶段准备好基础结构。
 
 ### 2. invokeBeanFactoryPostProcessors (解析配置的关键)
 这是 Spring 能够处理 `@Configuration`、`@ComponentScan` 等注解的秘密所在。
+
 - **职责**：调用所有的 `BeanFactoryPostProcessor`。
 - **最重要实现类**：`ConfigurationClassPostProcessor`。它负责扫描类路径、解析 `@Import`、`@Bean`，并将它们转化为 `BeanDefinition`。
 - **要点**：此阶段后，容器内已拥有所有 Bean 的“名册”，但尚未实例化具体的 Bean。
@@ -44,6 +46,7 @@ graph TD
 
 ### 4. finishBeanFactoryInitialization (冻结与实例化)
 这是 `refresh()` 中最耗时、最重要的部分。
+
 - **职责**：实例化所有剩余的（非懒加载）单例 Bean。
 - **核心链路**：
   1. 冻结 Bean 定义（不再允许修改）。

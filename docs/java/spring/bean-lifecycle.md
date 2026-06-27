@@ -91,9 +91,11 @@ sequenceDiagram
 public interface InstantiationAwareBeanPostProcessor extends BeanPostProcessor {
     
     /**
+
      * 在 Bean 实例化之前调用
      * 如果返回非 null 对象，则直接使用该对象，跳过后续的实例化和初始化流程
      * AOP 的某些场景会在这里返回代理对象
+
      */
     @Nullable
     default Object postProcessBeforeInstantiation(Class<?> beanClass, String beanName) {
@@ -103,6 +105,7 @@ public interface InstantiationAwareBeanPostProcessor extends BeanPostProcessor {
 ```
 
 **应用场景**：
+
 - 创建代理对象（如某些 AOP 场景）
 - 替换原有的 Bean 实例
 
@@ -137,6 +140,7 @@ protected Object instantiateBean(String beanName, RootBeanDefinition mbd) {
 ```
 
 **核心要点**：
+
 - Spring 优先使用**工厂方法**或**有参构造器**创建实例
 - 如果没有特殊配置，使用**默认无参构造器**通过反射创建
 
@@ -148,8 +152,10 @@ protected Object instantiateBean(String beanName, RootBeanDefinition mbd) {
 public interface InstantiationAwareBeanPostProcessor extends BeanPostProcessor {
     
     /**
+
      * 在 Bean 实例化之后、属性赋值之前调用
      * 如果返回 false，则跳过后续的属性赋值流程
+
      */
     default boolean postProcessAfterInstantiation(Object bean, String beanName) {
         return true;
@@ -236,8 +242,10 @@ private void invokeAwareInterfaces(Object bean) {
 public interface BeanPostProcessor {
     
     /**
+
      * 在 Bean 初始化方法（如 afterPropertiesSet、init-method）调用之前执行
      * 可以对 Bean 进行包装或修改
+
      */
     @Nullable
     default Object postProcessBeforeInitialization(Object bean, String beanName) {
@@ -247,6 +255,7 @@ public interface BeanPostProcessor {
 ```
 
 **重要应用**：
+
 - `@PostConstruct` 注解由 `CommonAnnotationBeanPostProcessor` 在这里处理
 - `@ConfigurationProperties` 绑定也在这里完成
 
@@ -299,6 +308,7 @@ public class UserService implements InitializingBean {
 ```
 
 **执行顺序**：
+
 1. `@PostConstruct` 注解方法
 2. `InitializingBean.afterPropertiesSet()`
 3. 自定义 `init-method`
@@ -311,8 +321,10 @@ public class UserService implements InitializingBean {
 public interface BeanPostProcessor {
     
     /**
+
      * 在 Bean 初始化方法调用之后执行
      * AOP 动态代理通常在这里生成
+
      */
     @Nullable
     default Object postProcessAfterInitialization(Object bean, String beanName) {
@@ -384,6 +396,7 @@ public class UserService implements DisposableBean {
 ```
 
 **销毁顺序**：
+
 1. `@PreDestroy` 注解方法
 2. `DisposableBean.destroy()`
 3. 自定义 `destroy-method`
@@ -467,6 +480,7 @@ public class BeanConfig {
 **输出结果**：
 
 ```
+
 1. 构造器执行
 2. BeanNameAware.setBeanName: lifecycleBean
 3. BeanFactoryAware.setBeanFactory
@@ -477,6 +491,7 @@ public class BeanConfig {
 8. @PreDestroy
 9. DisposableBean.destroy
 10. 自定义 destroy-method
+
 ```
 
 ---
@@ -561,6 +576,7 @@ public class User {
 **标准回答**：
 
 Bean 的生命周期可以分为四个核心阶段：
+
 1. **实例化（Instantiation）**：通过反射或工厂方法创建 Bean 实例
 2. **属性赋值（Populate）**：进行依赖注入，填充 `@Autowired` 等属性
 3. **初始化（Initialization）**：
@@ -601,6 +617,7 @@ public class CustomBeanFactoryPostProcessor implements BeanFactoryPostProcessor 
 ### 3. 初始化方法的执行顺序是什么？
 
 **执行顺序**：
+
 1. `@PostConstruct` 注解方法（由 `CommonAnnotationBeanPostProcessor` 处理）
 2. `InitializingBean.afterPropertiesSet()`
 3. 自定义 `init-method`（通过 `@Bean(initMethod = "xxx")` 或 XML 配置）

@@ -86,9 +86,11 @@ import java.sql.Connection;
 import java.util.Properties;
 
 /**
+
  * MyBatis 高性能拦截器拦截器核心模板
  * 拦截 StatementHandler 底层的 prepare(Connection connection, Integer transactionTimeout) 阶段
  * 用于自动进行多租户逻辑鉴权注入与 SQL 动态装配
+
  */
 @Intercepts({
     @Signature(
@@ -102,7 +104,9 @@ public class MyBatisTenantAndSecureInterceptor implements Interceptor {
     private String databaseType;
 
     /**
+
      * 核心拦截逻辑：利用责任链切面方法将自定义控制无缝织入 MyBatis
+
      */
     @Override
     public Object intercept(Invocation invocation) throws Throwable {
@@ -125,7 +129,9 @@ public class MyBatisTenantAndSecureInterceptor implements Interceptor {
     }
 
     /**
+
      * 将拦截器逻辑通过 JDK 内部动态代理重新包裹包装目标组件
+
      */
     @Override
     public Object plugin(Object target) {
@@ -136,7 +142,9 @@ public class MyBatisTenantAndSecureInterceptor implements Interceptor {
     }
 
     /**
+
      * 获取依赖注入属性完成高内聚配置
+
      */
     @Override
     public void setProperties(Properties properties) {

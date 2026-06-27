@@ -122,6 +122,7 @@ public String concat(String s1, String s2) {
 ```
 
 在上面的方法中：
+
 1. `sb` 实例是一个局部变量，其生命周期完全局限在 `concat` 方法内部。
 2. 没有任何引用泄露到外部，因此其他线程绝不可能并发访问 `sb`。
 3. `StringBuffer.append` 内部的 `synchronized` 锁在运行时是无意义的抢占。

@@ -531,6 +531,7 @@ public class ContentNegotiationManager implements ContentNegotiationStrategy {
 ### 1. DispatcherServlet 的初始化流程是什么？
 
 **回答要点**：
+
 1. DispatcherServlet 继承自 `HttpServlet`，在 `init()` 方法中初始化。
 2. 创建 WebApplicationContext 容器（子容器）。
 3. 初始化九大核心组件：
@@ -547,6 +548,7 @@ public class ContentNegotiationManager implements ContentNegotiationStrategy {
 ### 2. Spring MVC 如何解决中文乱码问题？
 
 **回答要点**：
+
 1. 使用 Spring 提供的 `CharacterEncodingFilter`：
 
 ```java

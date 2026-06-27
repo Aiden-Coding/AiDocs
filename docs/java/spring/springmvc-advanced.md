@@ -72,6 +72,7 @@ graph LR
 
 ### 1. 策略模式的应用
 Spring MVC 会根据请求头的 `Content-Type`（输入）和 `Accept`（输出）自动选择合适的转换器：
+
 - `MappingJackson2HttpMessageConverter`：处理 `application/json`。
 - `StringHttpMessageConverter`：处理 `text/plain`。
 - `Jaxb2RootElementHttpMessageConverter`：处理 `application/xml`。
@@ -84,6 +85,7 @@ Spring MVC 会根据请求头的 `Content-Type`（输入）和 `Accept`（输出
 
 1. **定义注解**：`@CurrentUser`。
 2. **实现解析器**：
+
    ```java
    public class CurrentUserResolver implements HandlerMethodArgumentResolver {
        @Override
@@ -98,7 +100,9 @@ Spring MVC 会根据请求头的 `Content-Type`（输入）和 `Accept`（输出
        }
    }
    ```
+
 3. **注册解析器**：
+
    ```java
    @Configuration
    public class WebConfig implements WebMvcConfigurer {

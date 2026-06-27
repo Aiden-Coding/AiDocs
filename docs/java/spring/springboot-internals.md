@@ -635,6 +635,7 @@ protected void invokeInitMethods(String beanName, Object bean, @Nullable RootBea
 
 ```java
 /**
+
  * Bean 完整生命周期(按执行顺序):
  * 
  * 1. 实例化: Constructor
@@ -653,6 +654,7 @@ protected void invokeInitMethods(String beanName, Object bean, @Nullable RootBea
  * 12. @PreDestroy 注解的方法
  * 13. DisposableBean.destroy()
  * 14. destroy-method 自定义销毁方法
+
  */
 ```
 

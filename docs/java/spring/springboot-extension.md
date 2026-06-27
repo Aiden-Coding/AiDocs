@@ -629,9 +629,11 @@ Web 服务器启动失败,端口 8080 已被占用。
 Action:
 
 请尝试以下解决方案:
+
 1. 在 application.yml 中修改端口: server.port=8081
 2. 杀死占用端口的进程: lsof -i :8080 | grep LISTEN
 3. 使用随机端口: server.port=0
+
 ```
 
 ---

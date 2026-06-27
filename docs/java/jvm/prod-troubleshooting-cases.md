@@ -167,6 +167,7 @@ jcmd {PID} VM.native_memory summary
 # 输出示例（重点观察 Internal / Other 区域的内存增长）
 Native Memory Tracking:
 Total: reserved=5632MB, committed=3456MB
+
 -         Java Heap (reserved=4096MB, committed=4096MB)
 -             Class (reserved=256MB, committed=98MB)
 -            Thread (reserved=512MB, committed=64MB)
@@ -174,6 +175,7 @@ Total: reserved=5632MB, committed=3456MB
 -           GC (reserved=128MB, committed=64MB)
 -          Internal (reserved=128MB, committed=128MB)  <-- Direct Memory 通常归于此区域
 -             Other (reserved=2048MB, committed=1280MB) <-- 异常! 其他本机内存不断增长
+
 ```
 
 **第 3 步：使用 `-D` 参数辅助限制直接内存上限并验证**
