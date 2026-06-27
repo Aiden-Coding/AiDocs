@@ -15,11 +15,11 @@ graph LR
     SubGraph1[Java 应用层] --> JT1[Java Thread A] & JT2[Java Thread B]
     JT1 --> KT1[OS Kernel Thread A]
     JT2 --> KT2[OS Kernel Thread B]
-    subgraph 用户空间 (User Space)
+    subgraph "用户空间 (User Space)"
     JT1
     JT2
     end
-    subgraph 内核空间 (Kernel Space)
+    subgraph "内核空间 (Kernel Space)"
     KT1
     KT2
     end

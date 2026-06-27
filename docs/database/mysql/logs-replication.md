@@ -10,10 +10,10 @@ MySQL 架构分为两层：**Server 层**（负责 SQL 解析、优化、执行�
 
 ```mermaid
 graph TD
-    subgraph Server 层
+    subgraph "Server 层"
         Binlog[Binlog: 归档日志 / 逻辑日志]
     end
-    subgraph InnoDB 存储引擎层
+    subgraph "InnoDB 存储引擎层"
         Redo[Redo Log: 重做日志 / 物理日志]
         Undo[Undo Log: 回滚日志 / 逻辑日志]
     end
@@ -117,11 +117,11 @@ sequenceDiagram
 
 ```mermaid
 graph LR
-    subgraph Master 节点
+    subgraph "Master 节点"
         M_DB[(Master DB)] -->|写操作| M_Bin[Binlog]
         M_Bin -->|Dump 线程| Dump[Binlog Dump 线程]
     end
-    subgraph Slave 节点
+    subgraph "Slave 节点"
         Dump -->|网络传输| IO[I/O 线程]
         IO -->|写入| Relay[Relay Log 中继日志]
         Relay -->|SQL 线程| SQL[SQL 线程]

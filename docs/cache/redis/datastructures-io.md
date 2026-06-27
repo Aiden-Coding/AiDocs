@@ -10,14 +10,14 @@ Redis 的外在表现有 5 种基础数据类型：`String`、`List`、`Hash`、
 
 ```mermaid
 graph TD
-    subgraph 外部数据类型
+    subgraph "外部数据类型"
         A[String]
         B[List]
         C[Hash]
         D[Set]
         E[Zset]
     end
-    subgraph 底层数据结构
+    subgraph "底层数据结构"
         F[SDS 简单动态字符串]
         G[Quicklist 双向链表]
         H[Dict 字典 / Hashtable]
@@ -68,13 +68,13 @@ struct __attribute__ ((__packed__)) sdshdr8 {
 
 ```mermaid
 graph LR
-    subgraph Level 2 (Index)
+    subgraph "Level 2 (Index)"
         L2_1[1] --> L2_2[15] --> L2_3[30]
     end
-    subgraph Level 1 (Index)
+    subgraph "Level 1 (Index)"
         L1_1[1] --> L1_2[8] --> L1_3[15] --> L1_4[22] --> L1_5[30]
     end
-    subgraph Level 0 (Data List)
+    subgraph "Level 0 (Data List)"
         D1[1] --> D2[4] --> D3[8] --> D4[12] --> D5[15] --> D6[19] --> D7[22] --> D8[26] --> D9[30]
     end
 ```

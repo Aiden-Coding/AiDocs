@@ -25,12 +25,12 @@ MySQL 的索引是在**存储引擎层**实现的。InnoDB 引擎采用 **B+树*
 
 ```mermaid
 graph TD
-    subgraph 非叶子节点 (只存Key和指针)
+    subgraph "非叶子节点 (只存Key和指针)"
         Root[Key: 10, 20, 30] --> P1[Pointer 1]
         Root --> P2[Pointer 2]
         Root --> P3[Pointer 3]
     end
-    subgraph 叶子节点 (存Key和完整Data，双向链表相连)
+    subgraph "叶子节点 (存Key和完整Data，双向链表相连)"
         Leaf1[Key 1-9 + Data] <--> Leaf2[Key 10-19 + Data]
         Leaf2 <--> Leaf3[Key 20-29 + Data]
         Leaf3 <--> Leaf4[Key 30+ + Data]

@@ -84,11 +84,11 @@ sequenceDiagram
 
 ```mermaid
 graph LR
-    subgraph Volatile 写入操作
+    subgraph "Volatile 写入操作"
         StoreStore[StoreStore Barrier<br/>防范上方普通写与 volatile 写重排] --> VolatileStore[volatile Store]
         VolatileStore --> StoreLoad[StoreLoad Barrier<br/>防范此处 volatile 写与下方任何读写重排]
     end
-    subgraph Volatile 读取操作
+    subgraph "Volatile 读取操作"
         VolatileLoad[volatile Load] --> LoadLoad[LoadLoad Barrier<br/>防范此处 volatile 读与下方任何读重排]
         LoadLoad --> LoadStore[LoadStore Barrier<br/>防范此处 volatile 读与下方任何普通写重排]
     end

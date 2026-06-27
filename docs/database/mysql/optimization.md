@@ -92,11 +92,11 @@ graph TD
 
 ```mermaid
 graph TD
-    subgraph 垂直拆分 (按业务/字段)
+    subgraph "垂直拆分 (按业务/字段)"
         A[User Table] --> B[User Base Table]
         A --> C[User Detail Table]
     end
-    subgraph 水平拆分 (按数据量)
+    subgraph "水平拆分 (按数据量)"
         D[Order Table] --> E[Order Table 0]
         D --> F[Order Table 1]
         D --> G[Order Table 2]

@@ -100,13 +100,13 @@ Kafka 是公认的吞吐量之王，单机可支持数十万 QPS 的写入。其
 
 ```mermaid
 graph TD
-    subgraph 传统 I/O (4次拷贝)
+    subgraph "传统 I/O (4次拷贝)"
         A[磁盘] -->|DMA| B[内核 Page Cache]
         B -->|CPU| C[用户 Buffer]
         C -->|CPU| D[Socket Buffer]
         D -->|DMA| E[网卡]
     end
-    subgraph 零拷贝 sendfile (2次拷贝)
+    subgraph "零拷贝 sendfile (2次拷贝)"
         F[磁盘] -->|DMA| G[内核 Page Cache]
         G -->|DMA| H[网卡]
     end

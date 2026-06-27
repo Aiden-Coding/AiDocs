@@ -57,7 +57,7 @@ graph TD
 
 ```mermaid
 graph TD
-    subgraph 哨兵集群
+    subgraph "哨兵集群"
         S1[Sentinel 1] <--> S2[Sentinel 2]
         S2 <--> S3[Sentinel 3]
     end

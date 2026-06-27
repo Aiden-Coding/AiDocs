@@ -18,7 +18,7 @@ sidebar_position: 100
 
 ```mermaid
 graph LR
-    subgraph 三级缓存体系 (DefaultSingletonBeanRegistry)
+    subgraph "三级缓存体系 (DefaultSingletonBeanRegistry)"
         Cache1[一级缓存: singletonObjects<br/>存放完全初始化完毕的单例 Bean]
         Cache2[二级缓存: earlySingletonObjects<br/>存放提前曝光的半成品 Bean]
         Cache3[三级缓存: singletonFactories<br/>存放 Bean 对应的 ObjectFactory 动态代理创建工厂]
