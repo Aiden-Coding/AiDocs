@@ -1,6 +1,6 @@
 # Java 核心技术知识体系
 
-欢迎来到 Java 深度探索之旅。本体系旨在为追求极致性能、渴望洞察底层原理的工程师提供一套**系统化、源码级**的知识图谱。
+欢迎来到 Java 深度探索之旅。本体系旨在为追求极致性能、渴望洞察底层原理的工程师提供一套 **系统化、源码级** 的知识图谱。
 
 ---
 
@@ -35,8 +35,8 @@ mindmap
 
 ### 1.1 Java 基础与容器 (Basic & Collections)
 
-- [Java 基础与集合核心面试真题](basic/interview-basic.md)：深入底层剖析 String 不可变性、HashMap 与 ConcurrentHashMap 扩容演进机制。
-- [Java 集合框架底层源码深剖](basic/collection-framework.md)：探究 ArrayList、LinkedList 物理结构，深度解析 LinkedHashMap 构筑 LRU 及 TreeMap 红黑树旋转平衡。
+- [Java 基础与集合核心面试真题](basic/interview-basic.md)：深入底层剖析 `String` 不可变性、`HashMap` 与 `ConcurrentHashMap` 扩容演进机制。
+- [Java 集合框架底层源码深剖](basic/collection-framework.md)：探究 `ArrayList`、`LinkedList` 物理结构，深度解析 `LinkedHashMap` 构筑 LRU 及 `TreeMap` 红黑树旋转平衡。
 
 ### 1.2 JUC 高并发深度实践 (Concurrency)
 
@@ -59,21 +59,21 @@ mindmap
 
 ### 2.1 Spring 核心全景
 
-- [IoC 容器与 Bean 生命周期](spring/bean-lifecycle.md)：从实例化到销毁的 4 阶段全流程。
+- [IoC 容器与 Bean 生命周期](spring/bean-lifecycle.md)：从实例化到销毁的 $4$ 阶段全流程。
 - [AOP 动态代理与链式调用](spring/ioc-aop.md)：解密为什么只有三级缓存能解决 AOP 循环依赖。
 - [BeanDefinition 与容器初始化](spring/beandefinition-internals.md)：探索 Spring 如何感知开发者定义的 Bean。
-- [Context Refresh 刷新流程](spring/spring-context-refresh.md)：深度拆解 Spring 容器启动的 12 个核心步骤。
+- [Context Refresh 刷新流程](spring/spring-context-refresh.md)：深度拆解 Spring 容器启动的 $12$ 个核心步骤。
 - [声明式事务机制与失效场景](spring/transaction.md)：还原物理连接与 `ThreadLocal` 状态丢失。
 
 ### 2.2 Spring MVC 请求处理模型
 
-- [Spring MVC 工作流设计](spring/springmvc-principles.md)：理解 DispatcherServlet 与 HandlerMapping 的协作。
+- [Spring MVC 工作流设计](spring/springmvc-principles.md)：理解 `DispatcherServlet` 与 `HandlerMapping` 的协作。
 - [Spring MVC 高级强化特性](spring/springmvc-advanced.md)：拦截器、过滤器与参数解析器深度定制。
 
 ### 2.3 Spring Boot 与微服务底座
 
 - [Spring Boot 启动原理与自动装配](spring/springboot-core.md)：解构 `@EnableAutoConfiguration` 与 `spring.factories`。
-- [Spring Boot 核心内部机制](spring/springboot-internals.md)：Environment 环境抽象与监听器模式。
+- [Spring Boot 核心内部机制](spring/springboot-internals.md)：`Environment` 环境抽象与监听器模式。
 - [Spring Boot 扩展机制与 SPI 原理](spring/springboot-extension.md)：解析 Spring SPI 工厂加载器、自定义 Starter 流程及生命周期扩展点。
 - [Spring Boot FatJar 运行机制](spring/springboot-fatjar.md)：解密如何通过 `JarLauncher` 加载嵌套 Jar。
 - [Spring Boot 高级扩展与调优](spring/springboot-advanced.md)：自定义 Starter 与 Endpoint 监控。
@@ -99,7 +99,7 @@ mindmap
 ## 🛠️ 第四阶段：生产级实战与面试复盘 (Workshop)
 
 - [性能诊断与在线排障艺术](jvm/tuning-tools.md)：Arthas 实战与 MAT 内存泄露追踪。
-- [线上故障深度复盘记录](jvm/prod-troubleshooting-cases.md)：四大经典 OOM 与 CPU 100% 根因分析。
+- [线上故障深度复盘记录](jvm/prod-troubleshooting-cases.md)：四大经典 OOM 与 CPU $100\%$ 根因分析。
 - [JVM 启动参数黄金配置模板](jvm/prod-practice.md)：在生产环境配置 G1/ZGC。
 
 - **核心面试真题与底层原理专题**
