@@ -1,4 +1,10 @@
-# Redis 核心数据结构与单线程模型
+---
+title: Redis 核心数据结构与单线程模型
+hide_title: true
+sidebar_label: 数据结构与单线程
+---
+
+## Redis 核心数据结构与单线程模型
 
 Redis 作为高性能的内存 NoSQL 数据库，在现代互联网架构中扮演着举足轻重的角色。深入理解 Redis 的底层数据结构（如 SDS、跳表）以及其单线程高性能的本质，是高级 Java 工程师面试的必考内容。
 

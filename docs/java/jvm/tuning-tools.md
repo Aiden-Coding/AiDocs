@@ -1,4 +1,10 @@
-# JVM 调优实战与 Arthas 工具使用
+---
+title: JVM 调优实战与 Arthas 工具使用
+hide_title: true
+sidebar_label: 调优实战与工具
+---
+
+## JVM 调优实战与 Arthas 工具使用
 
 在实际生产环境中，JVM 性能调优和线上故障排查（如 CPU 飙高、内存泄漏、OOM、频繁 Full GC）是高级 Java 工程师的核心竞争力。本篇将结合实战场景，详细介绍排查思路、常用命令以及阿里开源的神器 **Arthas** 的使用。
 

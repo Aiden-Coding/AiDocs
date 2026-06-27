@@ -1,4 +1,10 @@
-# MySQL 日志系统与主从复制原理
+---
+title: MySQL 日志系统与主从复制原理
+hide_title: true
+sidebar_label: 日志系统与主从复制
+---
+
+## MySQL 日志系统与主从复制原理
 
 在生产环境中，数据库的**高可用性**、**数据持久性（Crash-Safe）**以及**主从一致性**是企业级架构的底线。MySQL InnoDB 引擎通过一套精妙的日志系统（Redo Log、Undo Log、Binlog）和主从复制机制，完美地支撑了这些非功能性需求。
 

@@ -1,4 +1,10 @@
-# SpringBoot 扩展机制与企业级实践
+---
+title: Spring Boot 扩展机制与企业级实践
+hide_title: true
+sidebar_label: Boot 扩展机制与 SPI
+---
+
+## Spring Boot 扩展机制与企业级实践
 
 SpringBoot 提供了丰富的扩展点,允许开发者在应用生命周期的不同阶段插入自定义逻辑。本文深入剖析 SpringBoot 的核心扩展机制,包括**SPI 机制**、**各类初始化器与监听器**、**Starter 自定义开发**、**FailureAnalyzer 异常分析**以及**企业级最佳实践**。
 

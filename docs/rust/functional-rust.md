@@ -1,4 +1,10 @@
-# Rust 函数式编程：闭包与迭代器
+---
+title: Rust 函数式编程：闭包与迭代器
+hide_title: true
+sidebar_label: 闭包与迭代器
+---
+
+## Rust 函数式编程：闭包与迭代器
 
 Rust 并非纯函数式语言，但它深度吸收了函数式编程的精髓。通过**惰性求值（Lazy Evaluation）**与**高效闭包**，开发者可以用声明式（Declarative）的代码风格写出命令式（Imperative）的执行效率。
 

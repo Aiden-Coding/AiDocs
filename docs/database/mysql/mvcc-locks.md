@@ -1,4 +1,10 @@
-# MySQL MVCC 机制与锁机制
+---
+title: MySQL MVCC 机制与锁机制
+hide_title: true
+sidebar_label: MVCC 与锁机制
+---
+
+## MySQL MVCC 机制与锁机制
 
 在数据库并发控制中，如何保证多个事务同时读写时的数据一致性与隔离性，是数据库设计的核心难题。MySQL InnoDB 引擎通过 **MVCC（多版本并发控制）** 和 **锁机制** 完美地解决了这一问题。
 

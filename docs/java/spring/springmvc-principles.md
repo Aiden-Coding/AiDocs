@@ -1,4 +1,10 @@
-# Spring MVC 核心原理与请求处理流程
+---
+title: Spring MVC 核心原理与请求处理流程
+hide_title: true
+sidebar_label: MVC 核心原理流程
+---
+
+## Spring MVC 核心原理与请求处理流程
 
 Spring MVC 是 Spring 框架中用于构建 Web 应用程序的模块，它基于 Servlet API 构建，采用 MVC（Model-View-Controller）设计模式。理解 Spring MVC 的核心原理对于掌握 Web 开发至关重要。
 

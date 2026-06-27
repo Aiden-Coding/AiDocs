@@ -1,4 +1,10 @@
-# Spring Boot Fat Jar 启动原理深度解析
+---
+title: Spring Boot Fat Jar 启动原理深度解析
+hide_title: true
+sidebar_label: Fat Jar 启动原理
+---
+
+## Spring Boot Fat Jar 启动原理深度解析
 
 Spring Boot 打包生成的 "Fat Jar"（或称 Executable Jar）可以直接通过 `java -jar` 启动。这种机制的神奇之处在于，它解决了 Java 原生类加载器无法加载嵌套 Jar 包（Jar in Jar）中类的问题。
 

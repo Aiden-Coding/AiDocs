@@ -1,4 +1,10 @@
-# Rust 所有权与生命周期
+---
+title: Rust 所有权与生命周期
+hide_title: true
+sidebar_label: 所有权与生命周期
+---
+
+## Rust 所有权与生命周期
 
 学习 Rust 的第一步，同时也是贯穿其整个生态系统设计的最硬核屏障，便是由编译器（Borrow Checker）强制执行的**所有权（Ownership）与生命周期（Lifetimes）系统**。本篇将从最基础的黄金法则出发，逐步深入到静态编译分析、控制流图（CFG）以及底层内存模型的视角，深入解构这套保障系统。
 

@@ -1,4 +1,10 @@
-# ThreadLocal 与 CAS 原理
+---
+title: ThreadLocal 与 CAS 原理
+hide_title: true
+sidebar_label: ThreadLocal 与 CAS 解析
+---
+
+## ThreadLocal 与 CAS 原理
 
 在 Java 并发编程中，除了使用锁（如 `synchronized`、`ReentrantLock`）来保证线程安全外，还有两种非常重要的无锁化/弱锁化技术：**`ThreadLocal`（线程本地变量）** 和 **`CAS`（Compare And Swap，比较并交换）**。本篇将深入剖析它们的底层实现、内存模型以及高频面试痛点。
 

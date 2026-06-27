@@ -1,7 +1,12 @@
+---
+title: Spring Boot 启动流程与内部机制深度剖析
+hide_title: true
+sidebar_label: Boot 内部运行机制
+---
 
-# SpringBoot 启动流程与内部机制深度剖析
+## Spring Boot 启动流程与内部机制深度剖析
 
-SpringBoot 的启动过程看似简单,一行 `SpringApplication.run()` 就能启动整个应用。但其背后隐藏着复杂而精妙的初始化流程。本文将深入剖析 **SpringApplication.run() 的完整执行链路**、**ApplicationContext 刷新机制**、**Spring 事件发布机制**、**Bean 生命周期管理**以及**类加载与资源扫描原理**。
+SpringBoot 的启动过程看似简单,一行为 `SpringApplication.run()` 就能启动整个应用。但其背后隐藏着复杂而精妙的初始化流程。本文将深入剖析 **SpringApplication.run() 的完整执行链路**、**ApplicationContext 刷新机制**、**Spring 事件发布机制**、**Bean 生命周期管理**以及**类加载与资源扫描原理**。
 
 ---
 

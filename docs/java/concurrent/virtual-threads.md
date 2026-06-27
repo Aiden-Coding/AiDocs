@@ -1,4 +1,10 @@
-# JDK 21+ 虚拟线程与协程深度解构
+---
+title: JDK 21+ 虚拟线程与协程深度解构
+hide_title: true
+sidebar_label: JDK 21 虚拟线程
+---
+
+## JDK 21+ 虚拟线程与协程深度解构
 
 在高并发企业级应用中，传统的“一请求一线程（Thread-Per-Request）”模型一直受限于系统物理线程的瓶颈。随着 JDK 21 正式发布，**Project Loom（项目织机）** 带来了期待已久的 **虚拟线程（Virtual Threads）**，这是一场针对 JVM 并发模型的彻底革命。
 

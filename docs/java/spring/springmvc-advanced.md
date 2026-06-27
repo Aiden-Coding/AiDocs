@@ -1,4 +1,10 @@
-# Spring MVC 参数解析与返回值处理原理
+---
+title: Spring MVC 参数解析与返回值处理原理
+hide_title: true
+sidebar_label: MVC 参数解析与处理
+---
+
+## Spring MVC 参数解析与返回值处理原理
 
 在 Spring MVC 中，我们可以很自然地在 Controller 方法参数上加 `@RequestBody`、`@PathVariable` 或直接写 `HttpServletRequest`。这背后的核心机制是 **参数解析器（ArgumentResolver）** 和 **返回值处理器（ReturnValueHandler）**。
 

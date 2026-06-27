@@ -1,6 +1,12 @@
-# Redis 高可用：持久化、哨兵与集群
+---
+title: Redis 高可用：持久化、哨兵与集群
+hide_title: true
+sidebar_label: 持久化、哨兵与集群
+---
 
-在生产环境中，单机 Redis 无法保证高可用和高并发。为了防止数据丢失和单点故障，Redis 提供了 **RDB/AOF 持久化**、**Sentinel（哨兵）** 以及 **Redis Cluster（集群）** 方案。
+## Redis 高可用：持久化、哨兵与集群
+
+在生产环境中，单机 Redis 无法保证高可用和高并发。为了防止数据丢失 and 单点故障，Redis 提供了 **RDB/AOF 持久化**、**Sentinel（哨兵）** 以及 **Redis Cluster（集群）** 方案。
 
 ---
 

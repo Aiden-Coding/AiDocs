@@ -1,4 +1,10 @@
-# Spring 事务传播与失效场景
+---
+title: Spring 事务传播与失效场景
+hide_title: true
+sidebar_label: 事务传播与失效深度解析
+---
+
+## Spring 事务传播与失效场景
 
 Spring 声明式事务（`@Transactional`）是开发中最常用的功能之一。然而，由于其底层基于 AOP 动态代理实现，如果使用不当，极易导致事务失效或传播行为不符合预期，从而引发严重的数据一致性问题。
 

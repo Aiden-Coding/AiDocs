@@ -1,4 +1,10 @@
-# ZooKeeper 分布式锁与高可用原理
+---
+title: ZooKeeper 分布式锁与高可用原理
+hide_title: true
+sidebar_label: ZK 分布式锁原理
+---
+
+## ZooKeeper 分布式锁与高可用原理
 
 在分布式微服务架构中，除了使用 Redis 实现分布式锁外，**ZooKeeper（简称 ZK）** 是另一种极为重要的工业级分布式锁解决方案。基于其强一致性（CP 架构）的特点，ZK 分布式锁在安全性、可靠性上有着天然的优势。
 

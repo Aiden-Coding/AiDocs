@@ -1,4 +1,10 @@
-# Spring Bean 生命周期完整解析
+---
+title: Spring Bean 生命周期完整解析
+hide_title: true
+sidebar_label: Bean 生命周期解析
+---
+
+## Spring Bean 生命周期完整解析
 
 Spring Bean 的生命周期是 Spring 框架中最核心的知识点之一，也是高频面试题。理解 Bean 的完整生命周期，有助于我们掌握 Spring 的初始化机制、AOP 代理生成时机、以及如何优雅地扩展 Spring 容器。
 

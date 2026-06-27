@@ -1,4 +1,10 @@
-# Spring 配置类与 BeanDefinition 加载原理
+---
+title: Spring 配置类与 BeanDefinition 加载原理
+hide_title: true
+sidebar_label: BeanDefinition 加载原理
+---
+
+## Spring 配置类与 BeanDefinition 加载原理
 
 Spring 容器之所以强大，是因为它将所有的配置（XML、JavaConfig、注解）统一抽象为了 **`BeanDefinition`**（Bean 定义）。理解 BeanDefinition 的生成过程，是看懂 Spring 源码的关键。
 

@@ -1,4 +1,10 @@
-# Spring Context 刷新流程深度解析
+---
+title: Spring Context 刷新流程深度解析
+hide_title: true
+sidebar_label: Context 刷新流程解析
+---
+
+## Spring Context 刷新流程深度解析
 
 `AbstractApplicationContext.refresh()` 是 Spring 框架中最核心的方法。它标志着 IoC 容器的启动，完成了从配置解析、Bean 定义注册到所有非懒加载单例 Bean 初始化的完整生命周期。
 

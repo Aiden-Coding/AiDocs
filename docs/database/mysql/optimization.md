@@ -1,4 +1,10 @@
-# MySQL 慢 SQL 优化与分库分表
+---
+title: MySQL 慢 SQL 优化与分库分表
+hide_title: true
+sidebar_label: 慢 SQL 优化与分库分表
+---
+
+## MySQL 慢 SQL 优化与分库分表
 
 在实际生产环境中，随着业务数据量的爆发式增长，单机数据库往往会遇到性能瓶颈。掌握慢 SQL 的排查与优化步骤，以及分库分表的架构设计，是高级 Java 工程师和架构师的必修课。
 

@@ -1,4 +1,10 @@
-# Rust 特征系统与零成本抽象
+---
+title: Rust 特征系统与零成本抽象
+hide_title: true
+sidebar_label: 特征与泛型
+---
+
+## Rust 特征系统与零成本抽象
 
 在 Rust 中，特征（Trait）是定义共享行为的唯一保障。它不仅仅是接口（Interface），更是 Rust 实现零成本抽象（Zero-cost Abstractions）的核心，支撑着泛型（Generics）、算符重载以及动态派发等高级特性。
 

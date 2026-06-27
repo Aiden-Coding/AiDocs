@@ -1,4 +1,10 @@
-# 高性能 Java I/O 与 Netty 核心原理
+---
+title: 高性能 Java I/O 与 Netty 核心原理
+hide_title: true
+sidebar_label: Netty 核心原理
+---
+
+## 高性能 Java I/O 与 Netty 核心原理
 
 作为构建高性能、高吞吐量分布式微服务（如 Dubbo、Spring Cloud Gateway、Nacos 心跳协议）的核心底座，基于事件驱动的网络通信引擎 Netty 在高并发领域占据了绝对主导地位。本篇将从 Linux 底层 I/O 模型的演进、核心 Reactor 模型剖析以及 Netty 底层的设计精髓和调优实践展开深度拆解。
 

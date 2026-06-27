@@ -1,4 +1,10 @@
-# SpringBoot 高级原理深度解析
+---
+title: Spring Boot 高级原理深度解析
+hide_title: true
+sidebar_label: Boot 高级特性原理
+---
+
+## Spring Boot 高级原理深度解析
 
 SpringBoot 作为 Spring 生态的集大成者,不仅简化了应用开发,还在底层实现了众多精巧的设计。本文深入剖析 SpringBoot 的高级原理,包括**条件装配机制**、**配置绑定与元数据**、**Actuator 监控原理**、**外部化配置加载**以及**嵌入式容器定制**等核心技术。
 

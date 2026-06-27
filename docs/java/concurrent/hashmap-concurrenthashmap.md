@@ -1,4 +1,10 @@
-# HashMap 与 ConcurrentHashMap 源码级深度解析
+---
+title: HashMap 与 ConcurrentHashMap 源码级深度解析
+hide_title: true
+sidebar_label: HashMap/CHM 源码解析
+---
+
+## HashMap 与 ConcurrentHashMap 源码级深度解析
 
 在 Java 资深工程师的面试中，集合框架的底层原理是必考的硬核内容。其中，`HashMap` 的扩容机制、JDK 7 与 JDK 8 的重大变革，以及 `ConcurrentHashMap` 的并发安全设计与锁粒度演进，更是重中之重。
 

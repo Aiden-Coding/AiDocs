@@ -1,4 +1,10 @@
-# LMAX Disruptor 极致无锁环形队列架构
+---
+title: LMAX Disruptor 极致无锁环形队列架构
+hide_title: true
+sidebar_label: Disruptor 无锁队列
+---
+
+## LMAX Disruptor 极致无锁环形队列架构
 
 在极高并发的系统设计中，诸如微秒级极端交易系统、大型消息中转站或高性能日志收集器，线程的任何阻塞和锁竞争都是对系统性能的致命摧残。
 

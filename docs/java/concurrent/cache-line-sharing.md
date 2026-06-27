@@ -1,4 +1,10 @@
-# 缓存行伪共享与 @Contended 极致优化
+---
+title: 缓存行伪共享与 @Contended 极致优化
+hide_title: true
+sidebar_label: 缓存行伪共享优化
+---
+
+## 缓存行伪共享与 @Contended 极致优化
 
 在高并发的多线程编程中，许多开发者都将精力集中在**锁优化**、**无锁算法（CAS）**和**线程隔离（ThreadLocal）**上。然而，在硬件级别，还隐藏着一个对并发吞吐量有毁灭性打击的性能隐形杀手——**缓存行伪共享（False Sharing）**。
 
