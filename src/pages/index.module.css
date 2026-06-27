@@ -4,15 +4,11 @@
  */
 
 .heroBanner {
-  padding: 6rem 0;
-  text-align: center;
   position: relative;
+  padding: 8rem 0;
+  text-align: center;
   overflow: hidden;
-  background-color: transparent !important;
-  min-height: 70vh;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
+  background: transparent;
 }
 
 .heroBackground {
@@ -26,115 +22,96 @@
 
 .heroGradient {
   position: absolute;
-  top: -50%;
-  left: -50%;
-  width: 200%;
-  height: 200%;
-  background: radial-gradient(
-    circle at center,
-    var(--ifm-color-primary-lightest) 0%,
-    transparent 50%
-  );
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: var(--ai-hero-bg);
   opacity: 0.15;
-  animation: rotate 60s linear infinite;
-}
-
-[data-theme='dark'] .heroGradient {
-  opacity: 0.15;
-  background: radial-gradient(
-    circle at center,
-    var(--ifm-color-primary) 0%,
-    transparent 50%
-  );
 }
 
 .heroPattern {
   position: absolute;
-  inset: 0;
-  background-image: radial-gradient(
-    var(--ifm-color-emphasis-300) 1px,
-    transparent 1px
-  );
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-image: radial-gradient(var(--ifm-color-emphasis-300) 1px, transparent 1px);
   background-size: 24px 24px;
-  opacity: 0.2;
+  opacity: 0.3;
 }
 
 .heroContent {
-  animation: fadeUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.5rem;
 }
 
 .heroTitle {
-  font-size: 4.5rem;
+  font-size: 4rem;
   font-weight: 800;
-  letter-spacing: -0.04em;
+  letter-spacing: -0.05em;
   line-height: 1.1;
-  margin-bottom: 1rem;
-  background: linear-gradient(
-    135deg,
-    var(--ifm-color-black) 0%,
-    var(--ifm-color-emphasis-700) 100%
-  );
+  background: linear-gradient(135deg, var(--ifm-color-emphasis-900), var(--ifm-color-primary));
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
+  margin-bottom: 0;
 }
 
 [data-theme='dark'] .heroTitle {
-  background: linear-gradient(
-    135deg,
-    #ffffff 0%,
-    var(--ifm-color-emphasis-300) 100%
-  );
+  background: linear-gradient(135deg, #ffffff, var(--ifm-color-primary));
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
 }
 
 .heroSubtitle {
-  font-size: 2rem;
-  font-weight: 500;
-  color: var(--ifm-color-emphasis-600);
-  max-width: 800px;
-  margin: 0 auto 2.5rem;
-  line-height: 1.5;
+  font-size: 1.5rem;
+  color: var(--ifm-color-emphasis-700);
+  max-width: 600px;
+  margin: 0 auto;
 }
 
 .highlightText {
   color: var(--ifm-color-primary);
+  font-weight: 700;
   position: relative;
-  display: inline-block;
-  padding: 0 0.2em;
+}
+
+.highlightText::after {
+  content: '';
+  position: absolute;
+  bottom: -4px;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: var(--ifm-color-primary-lightest);
+  border-radius: 2px;
+  opacity: 0.4;
 }
 
 .buttons {
   display: flex;
-  align-items: center;
+  gap: 1rem;
   justify-content: center;
-  gap: 1.5rem;
+  margin-top: 1rem;
 }
 
 .heroButton {
-  border-radius: 8px;
   padding: 0.8rem 2rem;
-  font-weight: 600;
-  transition: all 0.2s ease-in-out;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.heroButton:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+  font-size: 1.1rem;
+  border-radius: 9999px !important;
 }
 
 .heroButtonOutline {
   background-color: var(--ifm-background-surface-color);
-  color: var(--ifm-color-content);
-  border: 1px solid var(--ifm-color-emphasis-300);
+  border: 1px solid var(--ifm-color-emphasis-300) !important;
+  color: var(--ifm-color-emphasis-800) !important;
 }
 
 .heroButtonOutline:hover {
-  border-color: var(--ifm-color-primary);
-  color: var(--ifm-color-primary);
+  border-color: var(--ifm-color-primary) !important;
+  color: var(--ifm-color-primary) !important;
   background-color: transparent;
 }
 

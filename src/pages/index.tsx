@@ -22,7 +22,7 @@ function HomepageHeader() {
             AiDocs
           </Heading>
           <p className={styles.heroSubtitle}>
-            构建现代化的<span className={styles.highlightText}>软件开发</span>知识库
+            构建现代化的<span className={styles.highlightText}> 软件开发 </span>知识库
           </p>
           <div className={styles.buttons}>
             <Link
