@@ -213,7 +213,7 @@ graph LR
 
 ### 1. G1 (Garbage-First) 收集器
 
-G1 彻底放弃了物理上的连续分代，将堆划分为多个大小相同的独立区域（**Region**，从 $1\text{MB}$ 到 $32\text{MB}$，且必须为 $2$ 的幂）。
+G1 彻底放弃了物理上的连续分代，将堆划分为多个大小相同的独立区域（**Region**，从 1 MB 到 32 MB，且必须为 2 的幂）。
 
 ```mermaid
 graph TD
@@ -229,9 +229,9 @@ graph TD
 
 ### 2. ZGC (Z Garbage Collector) 收集器
 
-ZGC 是一款在 JDK 15 正式转正的低延迟垃圾收集器，致力于将 **STW 停顿控制在 $10\text{ms}$（甚至 $1\text{ms}$）以内**，且停顿时间不随堆大小增长而增加。
+ZGC 是一款在 JDK 15 正式转正的低延迟垃圾收集器，致力于将 **STW 停顿控制在 10 ms（甚至 1 ms）以内**，且停顿时间不随堆大小增长而增加。
 
-* **染色指针（Colored Pointers）**：ZGC 仅使用 $64$ 位指针中的 $42$ 位来寻址（最大支持 $16\text{TB}$ 堆），高 $4$ 位用于存储 GC 元数据（Marked0, Marked1, Remapped, Finalizable），实现了指针本身携带 GC 标记信息。
+* **染色指针（Colored Pointers）**：ZGC 仅使用 64 位指针中的 42 位来寻址（最大支持 16 TB 堆），高 4 位用于存储 GC 元数据（Marked0, Marked1, Remapped, Finalizable），实现了指针本身携带 GC 标记信息。
 * **读屏障与自愈（Read Barrier & Self-Healing）**：当用户线程读取一个已被垃圾收集器移动但未更新指针的对象时，读屏障会拦截该操作，根据转发表（Forwarding Table）更新该引用为新地址，实现自愈，从而支持了 **并发整理（Concurrent Compact）**。
 
 ---
