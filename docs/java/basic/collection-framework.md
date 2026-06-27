@@ -5,7 +5,7 @@ sidebar_label: 集合框架底层机制
 sidebar_position: 10
 ---
 
-# 深入 Java 集合框架源码与物理结构
+## 深入 Java 集合框架源码与物理结构
 
 在 Java 面试与高并发生产实战中，集合框架（Java Collections Framework）是承载数据的底层容器基石。理解它们不仅要停留在“如何使用”，更要深入到 JDK 底层源码，透解其数据结构设计、扩容物理代价以及排序和顺序控制机制。
 

@@ -5,7 +5,7 @@ sidebar_label: MyBatis & HikariCP
 sidebar_position: 10
 ---
 
-# MyBatis 持久层核心原理与 SQL 优化落地
+## MyBatis 持久层核心原理与 SQL 优化落地
 
 在企业级 Java 高性能微服务应用底层，数据的持久化质量是决定全局处理能力的最大胜负手。在保证高性能并发连接的 HikariCP 连接池加持下，MyBatis 框架以其非凡的灵活性和 SQL 直调机制成为绝对的核心主宰。本篇将深度透解 HikariCP 与 MyBatis 的核心底层原理并给出实践方案。
 
