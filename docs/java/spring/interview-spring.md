@@ -96,7 +96,18 @@ sequenceDiagram
   这严重打破了 Spring 的生命周期规范设计哲理和职责分离原则！
   在正常情况下，Spring 必须经历原始对象的属性填充 -> Aware 接口拉取 -> 全部生命流程之后，在最后一步通过 `BeanPostProcessor` 实现 AOP 代理。
   **第三级缓存（`ObjectFactory`）本质属于一种“延迟触发提前代理”的懒加载安全机制**：
-  只有当且仅当“发生了实质性的循环依赖”（即 B 此时立刻需要拉取提前的 A）时，它才由第三级缓存里的 ObjectFactory 被动触发 AOP 代理生成并移入二级缓存。如果不存在循环依赖，AOP 永远是在最后一步、以最正常的生命周期标准执行代理。
+  只有当且仅当“发生了实质性的循环依赖”（即 B 此时立刻需要拉取提前 of A）时，它才由第三级缓存里的 ObjectFactory 被动触发 AOP 代理生成并移入二级缓存。如果不存在循环依赖，AOP 永远是在最后一步、以最正常的生命周期标准执行代理。
+
+#### 4. 追问：Spring 有哪些循环依赖是三级缓存也解决不了的？在项目开发中如何规避？
+
+虽然三级缓存解决了单例属性注入的循环依赖，但以下场景它依然**无能为力**：
+* **构造器注入循环依赖**：由于 A 实例化时构造器依赖 B，但 A 尚未实例化，无法将 `ObjectFactory` 提前暴露到三级缓存中。当去实例化 B 时，B 又需要 A 同样无法获取，最终抛出 `BeanCurrentlyInCreationException`。
+  * *避坑方案*：在其中一个构造器参数前添加 **`@Lazy`** 注解，或更改为属性注入。
+* **Prototype（原型/多例）作用域循环依赖**：对于 prototype 的 Bean，Spring 不会将其存入任何一、二、三级缓存。每次请求都会生成新对象，从而导致死循环。
+  * *避坑方案*：将多例 Bean 重构为单例，或使用 Setter 注入并打破依赖关系。
+* **`@Async` 异步 Bean 引发的循环依赖**：`@Async` 代理是在 Bean 初始化（`BeanPostProcessor`）后期的 `AsyncAnnotationBeanPostProcessor` 中生成的。它并不支持通过三级缓存的 `getEarlyBeanReference` 提前获取代理（它只返回裸对象）。
+  当 B 注入 A 时，拿到的是 A 的原始裸对象；而 A 最终在容器中是 `@Async` 代理对象。在最后的依赖关系检查中，Spring 发现注入给 B 的 A 的地址与容器持有的 A（代理对象）地址不一致，于是报错。
+  * *避坑方案*：在注入点上加上 `@Lazy`；或者将 `@Async` 方法抽取到一个独立的异步辅助类（Task/Helper）中，从根本上杜绝该类与其他 Service 的循环引用。
 
 ---
 
@@ -257,3 +268,63 @@ graph TD
 ```
 
 关于 Spring Boot 的 SPI 加载机制和自定义 Starter 实践，可以参考 [Boot 扩展机制与 SPI](file:///Users/dwx/Documents/GitHub/AiDocs/docs/java/spring/springboot-extension.md#一-springboot-spi-机制详解)。
+
+---
+
+### Q7：Spring 的事件机制是同步还是异步的？在事务环境（Transaction）下使用有什么坑？
+
+Spring 事件（Spring Events）是典型的**观察者模式**实现。在实际生产和面试中，事务与事件的交织是重点和难点。
+
+#### 1. 默认执行模式：同步（Synchronous）
+
+* 默认情况下，Spring 事件的发布是**同步**的。即主线程在调用 `publisher.publishEvent()` 时，会立即阻塞并依次调用所有匹配的监听器方法。
+* **优点**：天然处于同一个线程内，因此可以**共享数据库事务连接**，支持事务的正常回滚。如果任一监听器抛出异常，整个主事务都会回滚。
+* **缺点**：如果监听器执行耗时逻辑（如发送邮件、调用第三方），会拖慢主流程的接口响应时间。
+* *异步化方案*：使用 `@Async` 注解标记监听器方法，配合 `@EnableAsync` 线程池异步执行（此时将失去事务一致性保证）。
+
+#### 2. 事务环境下的经典巨坑：数据不一致
+
+如果在主事务中直接发布事件，且监听器（同步或异步）去执行了不可逆的外部操作（如发送短信），而随后主事务由于最后一步报错发生**回滚**。此时会产生**数据回滚了，但短信已发出去**的脏数据现象。
+
+#### 3. 终极解决方案：@TransactionalEventListener
+
+Spring 提供了 `@TransactionalEventListener` 注解，用来将事件监听器绑定到发布者事务的生命周期上。核心属性是 `phase`（事务阶段）：
+* **`AFTER_COMMIT`（默认）**：只有当主事务**成功提交后**，才触发监听器执行。完美解决上述“回滚后依然发短信”的问题。
+* **`AFTER_ROLLBACK`**：主事务**回滚后**才执行，常用于做补偿处理。
+
+> [!WARNING]
+> **`AFTER_COMMIT` 阶段的致命陷阱：无法写入数据库**
+> 在 `AFTER_COMMIT` 监听器中，底层的物理数据库连接事务已经提交并关闭。如果在此阶段直接执行 SQL 写入或修改操作，数据**不会被保存**或直接报错。
+> **解决方法**：如果必须在提交后写库，需要在监听器方法上标注 `@Transactional(propagation = Propagation.REQUIRES_NEW)`，强制开启一个新的独立物理事务来执行写入。
+
+详细原理与代码案例，请参考 [事件驱动与业务解耦](file:///Users/dwx/Documents/GitHub/AiDocs/docs/java/spring/spring-events.md)。
+
+---
+
+### Q8：Spring Cache 声明式缓存的实现原理是什么？同类方法自调用导致缓存失效，如何解决？
+
+Spring Cache 提供了一种对缓存操作的抽象（Cache Abstraction），允许我们用几个注解就能享受到本地（Caffeine）或分布式（Redis）缓存。
+
+#### 1. 底层实现原理：AOP 拦截
+
+Spring 缓存基于 **AOP 动态代理** 和 **拦截器链** 机制：
+1. 启动时，Spring 扫描 Bean 上的 `@Cacheable`、`@CachePut`、`@CacheEvict` 等注解，为其生成代理对象。
+2. 客户端调用代理对象方法时，`CacheInterceptor` 会拦截该请求。
+3. 拦截器解析 SpEL 计算 `key`，并根据名称调用 `CacheManager` 对应的 `Cache` 实例去执行 `cache.get(key)`。
+4. 若命中缓存，则直接返回，**不再执行实际方法**；若未命中，则反射执行目标方法，将返回值通过 `cache.put()` 写入缓存，然后返回。
+
+#### 2. 自调用导致缓存失效的原理与解决方案
+
+* **失效原因**：在同一个类 `UserService` 中，非缓存方法 A 内部直接通过 `this.B()` 调用了带有 `@Cacheable` 注解的方法 B。由于 `this` 指向的是当前裸对象本身而非 Spring 生成的 AOP 代理对象，因此 `CacheInterceptor` 无法生效，缓存直接失效。
+* **解决方案**：
+  1. **类拆分（推荐）**：将带有缓存功能的方法 B 拆分到另一个独立的 Service 类中，由 A 通过 `@Autowired` 注入代理类调用。这是最符合单一职责原则的解法。
+  2. **注入自身代理**：在 `UserService` 中使用 `@Autowired` 或 `@Resource` 延迟注入自身，通过注入的代理对象调用。
+  3. **AopContext 获取**：使用 `((UserService) AopContext.currentProxy()).B()` 强制通过代理对象调用（需在启动类配置 `@EnableAspectJAutoProxy(exposeProxy = true)`）。
+
+#### 3. 生产环境的“三防”解决方案（穿透、击穿、雪崩）
+
+* **缓存穿透（查不存在的值）**：开启空值缓存（`cacheNullValues = true`）。
+* **缓存击穿（热点 Key 失效）**：配置 `@Cacheable(sync = true)`。底层会启用同步锁，使得并发请求中只有一个线程能去数据库查数据并写回缓存，其他请求排队等待，避免数据库被压垮。
+* **缓存雪崩（大面积过期）**：在 Redis 缓存配置类中自定义 `RedisCacheManager`，为不同的 cacheName 或者是通过序列化器在 TTL 上加上随机扰动值。
+
+详细原理与生产实战，请参考 [缓存抽象与原理](file:///Users/dwx/Documents/GitHub/AiDocs/docs/java/spring/spring-cache.md)。

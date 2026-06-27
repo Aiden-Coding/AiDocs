@@ -11,7 +11,7 @@ sidebar_position: 100
 
 ---
 
-## 📂 模块二：高并发与多线程（JUC）
+## 模块二：高并发与多线程（JUC）
 
 ### Q1：深入剖析 AQS（AbstractQueuedSynchronizer）的底层多线程同步工作模型？
 

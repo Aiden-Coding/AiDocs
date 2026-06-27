@@ -45,6 +45,7 @@ mindmap
 
 - [Java 基础与集合核心面试真题](basic/interview-basic.md)：深入底层剖析 `String` 不可变性、`HashMap` 与 `ConcurrentHashMap` 扩容演进机制。
 - [Java 集合框架底层源码深剖](basic/collection-framework.md)：探究 `ArrayList`、`LinkedList` 物理结构，深度解析 `LinkedHashMap` 构筑 LRU 及 `TreeMap` 红黑树旋转平衡。
+- [Java 新特性演进与核心底层原理](basic/java8-21-features.md)：剖析 Lambda `invokedynamic`、Stream 惰性求值与 JDK 21 虚拟线程 Carrier 调度机制。
 
 ### 1.2 JUC 高并发深度实践 (Concurrency)
 
@@ -69,9 +70,12 @@ mindmap
 
 - [IoC 容器与 Bean 生命周期](spring/bean-lifecycle.md)：从实例化到销毁的 $4$ 阶段全流程。
 - [AOP 动态代理与链式调用](spring/ioc-aop.md)：解密为什么只有三级缓存能解决 AOP 循环依赖。
-- [BeanDefinition 与容器初始化](spring/beandefinition-internals.md)：探索 Spring 如何感知开发者定义的 Bean。
-- [Context Refresh 刷新流程](spring/spring-context-refresh.md)：深度拆解 Spring 容器启动的 $12$ 个核心步骤。
+- [BeanDefinition 与容器初始化](spring/beandefinition-internals.md)：探索 Spring 如何感知开发者定义的 Bean 与配置类 CGLIB 增强原理。
+- [Context Refresh 刷新流程](spring/spring-context-refresh.md)：深度拆解 Spring 容器启动的 $12$ 个核心步骤与后置处理器执行顺序。
 - [声明式事务机制与失效场景](spring/transaction.md)：还原物理连接与 `ThreadLocal` 状态丢失。
+- [Spring 常用注解及其底层原理解析](spring/annotations.md)：剖析 `@Autowired`、`@Resource` 与 `@Configuration` 的装配注入链路。
+- [Spring 常用设计模式源码级深度解析](spring/design-patterns.md)：探究工厂、单例、代理、模板方法与观察者模式等在 Spring 源码中的落地。
+- [Spring 事件驱动机制与业务解耦](spring/spring-events.md)：解密事件发布广播器原理与事务同步器 `@TransactionalEventListener` 的 Phase 阶段。
 
 ### 2.2 Spring MVC 请求处理模型
 
@@ -87,9 +91,10 @@ mindmap
 - [Spring Boot 高级扩展与调优](spring/springboot-advanced.md)：自定义 Starter 与 Endpoint 监控。
 - [Spring 生态演进与 Spring Cloud 结合](spring/springboot-springcloud.md)：从 Boot 到分布式微服务架构。
 
-### 2.4 持久层与连接池 (Persistence)
+### 2.4 持久层、连接池与缓存 (Persistence & Cache)
 
 - [MyBatis 持久层原理与 HikariCP 连接池](persistence/mybatis-hikaricp.md)：HikariCP 无锁化 `LocalBag` 容器与 MyBatis 插件责任链。
+- [Spring Cache 缓存抽象与声明式缓存原理](spring/spring-cache.md)：剖析 AOP 缓存拦截器、SpEL 键生成以及击穿/穿透/雪崩的生产级防护。
 
 ---
 
@@ -98,6 +103,7 @@ mindmap
 在微秒级竞争中，探索 Linux 底层与硬件缓存的极限。
 
 - [Netty 高性能网络编程底座](network/netty-io.md)：Epoll 空轮询 Bug 规避与堆外内存零拷贝。
+- [Netty 零拷贝与 ByteBuf 内存管理](network/netty-zero-copy-buf.md)：深度拆解直接内存、CompositeByteBuf、基于 Jemalloc 思想的 PoolArena 内存分配体系及虚引用泄漏检测。
 - [JDK 21 虚拟线程详解](concurrent/virtual-threads.md)：解密运行在用户态的轻量协程模型。
 - [Disruptor 无锁环形队列](concurrent/disruptor.md)：LMAX 架构下的预分配与零 GC 机制。
 - [CPU Cache Line 伪共享调优](concurrent/cache-line-sharing.md)：使用 `@Contended` 消除 MESI 协议竞争。

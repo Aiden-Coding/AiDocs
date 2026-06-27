@@ -99,6 +99,38 @@ sequenceDiagram
 
   因为 `ObjectFactory.getObject()` 每次调用都会生成一个新的代理对象（或者执行一次判断逻辑）。为了保证单例，必须将生成的早期代理对象放入二级缓存中缓存起来，确保后续其他地方注入 A 时拿到的是同一个代理对象。
 
+### 4. 三级缓存解决循环依赖的局限性
+
+虽然 Spring 的三级缓存能够优雅地解决单例属性注入下的循环依赖，但在以下三种经典场景下，三级缓存依然无能为力：
+
+#### (1) 构造器注入循环依赖
+* **场景**：
+  ```java
+  @Component
+  public class A {
+      public A(B b) {}
+  }
+  @Component
+  public class B {
+      public B(A a) {}
+  }
+  ```
+* **原理**：Spring 在创建 A 时需要调用构造函数进行实例化，此时需要传入 B。由于 A 还没有实例化完成，因此**无法将其 ObjectFactory 提前放入三级缓存**。此时去获取 B，B 实例化也需要 A，从而陷入死锁，抛出 `BeanCurrentlyInCreationException`。
+* **解决办法**：在其中一个构造器参数上加上 **`@Lazy`** 注解。Spring 会为其注入一个懒加载代理对象，直到真正调用方法时才触发实际实例化。
+
+#### (2) prototype（原型/多例）作用域循环依赖
+* **场景**：A 和 B 的 Scope 均为 `prototype`，且互相依赖。
+* **原理**：Spring 容器只对 `singleton`（单例）作用域的 Bean 进行缓存。对于 prototype 的 Bean，Spring 不会将其放入任何缓存中。每次请求 getBean 都会创建一个全新实例，导致无限循环，直到内存溢出。
+* **解决办法**：修改设计以消除循环依赖，或将其中一方改为单例作用域。
+
+#### (3) `@Async` 异步 Bean 引发的循环依赖
+* **场景**：A 和 B 互为单例依赖，且 A 的类中包含 `@Async` 标注的异步方法。
+* **原理**：`@Async` 代理对象不是由通用的 AOP 处理器 `AbstractAutoProxyCreator` 生成的，而是由 `AsyncAnnotationBeanPostProcessor` 处理。它没有实现 `SmartInstantiationAwareBeanPostProcessor`，意味着它**不支持在三级缓存提前获取代理**（在 `getEarlyBeanReference` 阶段它只返回原始裸对象）。
+  当 B 注入 A 时，从三级缓存拿到的是 A 的**原始裸对象**。而在 A 自身初始化后期，`AsyncAnnotationBeanPostProcessor` 强行将其包装为 **`@Async` 代理对象** 并放入容器。在容器检查阶段，发现注入给 B 的 A（裸对象）与容器最终保存的 A（代理对象）地址不一致，直接抛出异常。
+* **解决办法**：
+  1. 在 A 的注入点上加上 `@Lazy` 延迟加载。
+  2. **最佳实践**：将异步 `@Async` 方法剥离到专门的 Task/Helper 类中，避免与核心业务 Service 混合在一起，从根本上避开循环依赖。
+
 ---
 
 ## 三、 Spring AOP 底层原理
@@ -130,7 +162,27 @@ public class DefaultAopProxyFactory implements AopProxyFactory, Serializable {
 }
 ```
 
-### 2. AOP 链式调用与责任链模式
+### 2. JDK 动态代理与 CGLIB 代理深度对比
+
+在底层，Spring 会在运行时决定使用 JDK 动态代理还是 CGLIB。它们的对比是面试和架构设计中的核心考察点：
+
+| 对比维度 | JDK 动态代理 | CGLIB 动态代理 |
+| :--- | :--- | :--- |
+| **底层实现机制** | 利用 Java 反射机制（`Proxy.newProxyInstance`）在内存中动态生成代理类，代理类必须继承 `java.lang.reflect.Proxy`。 | 基于 **ASM** 字节码操纵框架，直接在内存中构建目标类的**子类**（Subclass）。 |
+| **对目标类的限制** | 目标类**必须实现至少一个接口**。 | 目标类**不能被 `final` 修饰**，且目标方法**不能被 `final` 或 `static` 修饰**（因为无法被子类重写）。 |
+| **拦截与执行速度** | 早期版本反射速度慢。在 **JDK 8+** 优化后，反射调用速度大幅提升，在对象创建和运行性能上已不亚于 CGLIB。 | 运行时基于 **FastClass** 机制（为代理类和目标类生成索引映射，避免反射直接调用），执行速度极快；但代理对象的创建开销比 JDK 大。 |
+| **使用便利度** | 原生 JDK 支持，不需要引入额外的三方依赖。 | 需要引入 CGLIB 包（Spring 已内置将其 repackage 包含在核心包内）。 |
+
+#### Spring 框架中代理默认选择的演进
+
+* **Spring 5.x 之前（以及传统 XML 配置）**：
+  默认遵循“有接口用 JDK，无接口用 CGLIB”的策略。
+* **Spring Boot 2.x + / Spring Boot 3.x**：
+  Spring Boot 默认将配置项 `spring.aop.proxy-target-class` 设为 `true`。也就是说，**即便目标类实现了接口，默认也全部强制使用 CGLIB 动态代理**。
+  * **为什么要做这个改变？**
+    如果使用 JDK 动态代理，生成的代理类只能强转为接口类型。如果开发人员在依赖注入时习惯使用具体实现类接收（例如 `@Autowired private UserServiceImpl userService;`），程序启动时就会直接抛出 `BeanNotOfRequiredTypeException`。为了从根本上消除此类型转换隐患，Spring Boot 默认采用 CGLIB（代理对象也是子类，能成功注入到实现类变量中）。
+
+### 3. AOP 链式调用与责任链模式
 
 Spring AOP 将切面（Aspect）中的通知（Advice，如 `@Before`、`@After`、`@Around`）统一封装为 **`MethodInterceptor`（方法拦截器）**。
 
