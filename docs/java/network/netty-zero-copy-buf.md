@@ -25,17 +25,21 @@ graph TD
 ```
 
 ### 1. 堆外直接内存零拷贝（DirectByteBuf）
+
 - **传统 Java NIO**：向网卡发送堆内数据时，JVM 必须先把堆内 `byte[]` 拷贝到操作系统的堆外直接内存（Direct Memory）缓冲区中，再由内核发起 DMA 发送。因为 JVM 垃圾回收会移动堆对象地址，若直接将堆地址传给 OS，可能因 GC 发生而导致传输损坏数据。
 - **Netty 直接内存**：Netty 推荐使用 `DirectByteBuf`，直接利用 JDK 底层 `Unsafe` 或 JNI 在 OS 内存中开辟空间。写入直接内存的数据可以直接通过物理总线借助 DMA 发送到网卡驱动，**完全省去了 JVM 堆内到堆外缓冲区的那次拷贝**，同时也极大地减轻了 JVM GC 的压力。
 
 ### 2. 逻辑复合零拷贝（CompositeByteBuf）
+
 - **业务痛点**：网络协议传输时，通常包含“协议头（Header）”和“协议体（Body）”。如果需要拼接它们发送，传统的做法是声明一个大数组，将 Header 和 Body 的字节流依次 `System.arraycopy` 拷贝进去。
 - **Netty 方案**：使用 `CompositeByteBuf`。它是一个虚拟的逻辑缓冲区，内部持有一个 `ByteBuf` 数组。当拼接数据时，它仅仅在数组中**追加了原有 Header 和 Body 的地址引用**。客户端在对其进行读取时，`CompositeByteBuf` 在内部进行逻辑地址计算并以统一的视图暴露，在物理上未发生任何内存搬移与拷贝。
 
 ### 3. 字节包装零拷贝（Unpooled.wrappedBuffer）
+
 - **机制**：如果已存在现成的 `byte[]` 数组或标准的 NIO `ByteBuffer`，通过 `Unpooled.wrappedBuffer(bytes)` 方法，可以迅速将其包装成一个 Netty 的 `ByteBuf` 容器。底层直接引用传入的数组地址，不做任何复制动作。
 
 ### 4. 物理文件级零拷贝（FileRegion）
+
 - **机制**：当进行静态大文件发送时（如静态资源服务器），Netty 使用了 `DefaultFileRegion`，其底层调用了 Java NIO `FileChannel.transferTo()`。在 Linux 环境下，直接映射为 **`sendfile`** 系统调用，使得文件数据直接在内核空间（磁盘缓存区 -> 网络发送缓冲区）流转，完全不经过 JVM 用户态内存，达到极致的物理发送效率。
 
 ---
@@ -45,6 +49,7 @@ graph TD
 JDK 原生的 `java.nio.ByteBuffer` 采用单一的 `position` 和 `limit` 指针，导致在读写模式切换时必须调用 `flip()` 方法，极其反人类且容易出错。
 
 ### 1. 读写双指针设计
+
 Netty 的 `ByteBuf` 在设计上彻底摒弃了这一痛点，引入了独立的 **`readerIndex`** 和 **`writerIndex`**：
 
 ```text
@@ -62,6 +67,7 @@ Netty 的 `ByteBuf` 在设计上彻底摒弃了这一痛点，引入了独立的
 - **无感模式切换**：读和写完全解耦，用户随时可以并发进行读写，无需调用任何模式切换 API。
 
 ### 2. 动态扩容机制
+
 当写入的数据包大于当前 `ByteBuf` 剩余的可写容量时，Netty 会自动触发扩容：
 1. **寻找扩容阈值**：设定扩容增量，在满足“大于目标容量”的前提下，以 $64$ 字节为起点，按双倍（$2^n$）的形式进行递增，直至找到满足要求的最小 2 的幂次方容量值（例如 256、512、1024）。
 2. **最大容量限制**：扩容不能突破创建时设定的最大容量 `maxCapacity`，若突破则抛出 `IndexOutOfBoundsException`。
@@ -108,6 +114,7 @@ Netty 将内存池划分为四级层级结构，分工协作分配内存：
 ## 四、 引用计数与内存泄漏检测机制
 
 ### 1. 引用计数器（ReferenceCounted）
+
 由于内存池分配的内存不受 JVM GC 的直接控制，Netty 必须手动控制内存的释放。
 - 所有的 `ByteBuf` 都实现了 `ReferenceCounted` 接口。
 - **初始化**：ByteBuf 刚被创建时，其引用计数（RefCnt）默认为 `1`。
@@ -116,6 +123,7 @@ Netty 将内存池划分为四级层级结构，分工协作分配内存：
 - 当计数回落为 `0` 时，底层对应的直接内存会被**安全归还回内存池**。
 
 ### 2. 内存泄漏检测器（ResourceLeakDetector）
+
 为了防止开发者在使用完 ByteBuf 后忘记调用 `release()` 导致系统级的内存泄露（OOM），Netty 内置了基于 **虚引用（PhantomReference）** 与 **引用队列（ReferenceQueue）** 的泄漏检测机制：
 
 - **基本原理**：当 ByteBuf 实例被创建时，若开启了检测，检测器会为其包装一个虚引用，并将当前方法的调用栈轨迹（StackTrace）记录在内。当 ByteBuf 被 JVM GC 回收时，虚引用会被自动加入到注册好的引用队列中。检测器会定期轮询该队列，如果发现某个被回收的虚引用在销毁前其 RefCnt 不为 `0`，说明代码未调用 `release()` 就丢失了引用，随即会在后台日志中打印出该 ByteBuf 对象的**泄露轨迹警告**。

@@ -37,6 +37,7 @@ graph TD
 ## 二、 12 大步骤源码级深度解析
 
 ### 1. `prepareRefresh()`：环境准备
+
 - **核心操作**：
   - 记录容器启动时间与激活状态。
   - 初始化属性源（`initPropertySources()`，留给子类实现，如 Servlet 环境下初始化 ServletContext 相关的属性配置）。
@@ -44,12 +45,14 @@ graph TD
   - 创建早期事件存蓄集 `earlyApplicationEvents`，用以存放容器未准备好前发布的事件，以便在步骤 10 广播。
 
 ### 2. `obtainFreshBeanFactory()`：创建/刷新内部工厂
+
 - **核心操作**：
   - 调用 `refreshBeanFactory()`：如果是 XML 类型的 ApplicationContext，此阶段会销毁旧有的 BeanFactory，并创建一只全新的 `DefaultListableBeanFactory`。
   - 调用 `loadBeanDefinitions(beanFactory)`：通过 XML 读取器将 XML 配置文件解析为 `BeanDefinition` 注册入容器。
   - 返回包装好的工厂。
 
 ### 3. `prepareBeanFactory(beanFactory)`：工厂标准特征配置
+
 配置 BeanFactory 的基础特征，使其具备 Spring 框架的标准运行能力：
 - 设置类加载器（ClassLoader）和表达式解析器（SpEL）。
 - 注册特定的属性编辑器 `ResourceEditorRegistrar`。
@@ -59,11 +62,13 @@ graph TD
 - 注册默认的环境变量单例 Bean（如 `systemProperties`、`systemEnvironment`）。
 
 ### 4. `postProcessBeanFactory(beanFactory)`：子类定制钩子
+
 - **核心操作**：
   - 模板钩子方法，允许具体子类在所有的 BeanDefinition 加载完毕、但未实例化前，对工厂进行客制化修改。
   - 例如，Web 环境下的 `GenericWebApplicationContext` 会在此处注册 Web 相关的 Scope（`request`、`session`）以及绑定 ServletContext 相关的特殊环境单例。
 
 ### 5. `invokeBeanFactoryPostProcessors(beanFactory)`：执行工厂后置处理器
+
 这是 Spring 能够解析 `@Configuration` 配置类、处理包扫描及导入元数据的**最关键一步**。
 - **核心执行类**：`PostProcessorRegistrationDelegate`。
 - **执行规则**：后置处理器分为两类：`BeanDefinitionRegistryPostProcessor`（允许动态增删 Bean 定义）和 `BeanFactoryPostProcessor`（修改现有 Bean 定义的属性）。
@@ -83,31 +88,37 @@ graph TD
 - **关键实现**：`ConfigurationClassPostProcessor` 属于 `PriorityOrdered` 的 RegistryPostProcessor，它在第一步就会被激活，从而完成对 `@ComponentScan` 和 `@Import` 的全面解析并产生新定义的 Bean。
 
 ### 6. `registerBeanPostProcessors(beanFactory)`：注册 Bean 拦截后置处理器
+
 - **核心操作**：
   - 将所有实现了 `BeanPostProcessor` 接口的 Bean 从容器中寻找出来，并按照 `PriorityOrdered`、`Ordered` 和常规的级别进行严格排序，最后注册进 BeanFactory 的 `beanPostProcessors` 列表中。
   - **重要类**：AOP 的核心入口 `AnnotationAwareAspectJAutoProxyCreator`（自动代理创建器）就是在此处被注册的。
 
 ### 7. `initMessageSource()`：初始化国际化资源
+
 - **核心操作**：
   - 查找容器中是否存在名称为 `messageSource` 的 Bean。若有则直接采用，若没有则在容器内新建一个 `DelegatingMessageSource` 占位，用以支持多语言翻译和资源提取。
 
 ### 8. `initApplicationEventMulticaster()`：初始化事件广播器
+
 - **核心操作**：
   - 寻找自定义名称为 `applicationEventMulticaster` 的广播器。
   - 若无，则默认新建一个同步/单线程分发的 `SimpleApplicationEventMulticaster` 归属到容器中（参见 [spring-events.md](spring-events.md)）。
 
 ### 9. `onRefresh()`：子类特异刷新钩子
+
 - **核心操作**：
   - 这是一个非常关键的生命周期模板方法，留给子类在特定阶段执行特定的初始化动作。
   - **Spring Boot 自动配置的桥梁**：
     在 Spring Boot 中，子类 `ServletWebServerApplicationContext` 会在此处拦截，执行 `createWebServer()` 源码。它会基于条件装配，动态从容器内找出已配置的 Tomcat、Jetty 或 Undertow 工厂类，并**启动嵌入式 Web 服务器**，实现了容器启动与 Web 服务器拉起的闭环。
 
 ### 10. `registerListeners()`：注册监听器
+
 - **核心操作**：
   - 查找所有的 `ApplicationListener`，将其添加并注册到步骤 8 创建的广播器中。
   - **早期事件广播**：将在步骤 1 中暂存的 `earlyApplicationEvents` 列表取出，通过广播器正式向所有监听器进行广播分发。
 
 ### 11. `finishBeanFactoryInitialization(beanFactory)`：初始化所有非懒加载单例
+
 这是整个 `refresh()` 流程中**最耗时、最复杂、最核心**的阶段。
 - **核心操作**：
   - 初始化类型转换服务 `ConversionService`（用于将 HTTP 传参中的 String 自动转换为 Date 或自定义 Object）。
@@ -119,6 +130,7 @@ graph TD
     4. 依次触发 Bean 生命周期：`实例化 -> 属性注入 -> 执行 Aware 回调 -> BeanPostProcessor 前置处理 -> 激活 @PostConstruct -> InitializingBean 接口 -> 自定义 init-method -> BeanPostProcessor 后置代理生成`。
 
 ### 12. `finishRefresh()`：刷新完成收尾
+
 - **核心操作**：
   - 清理资源缓存（如 ASM 元数据缓存）。
   - 初始化生命周期处理器 `LifecycleProcessor`（激活实现了 `SmartLifecycle` 接口的 Bean）。
@@ -146,4 +158,3 @@ graph TD
 - **潜在危险**：
   1. 如果 B 尚未被创建，会进入 B 的生命周期。若 B 又反向依赖 A，极易因 A 未完全初始化（未放入一级缓存，只在二级/三级缓存中）导致未完全暴露的对象被引入。
   2. 若 B 被成功加载，A 继续执行。但在大型微服务体系中，应尽量避免在生命周期回调中加入过于繁重的外部依赖索取，防止容器刷新产生隐性死锁。
-

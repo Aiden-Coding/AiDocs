@@ -14,7 +14,7 @@ sidebar_label: MVC 参数解析与处理
 
 当 `DispatcherServlet` 接收到 HTTP 请求并定位到对应的 HandlerMethod（Controller 方法）后，它会委派 `HandlerAdapter`（具体为 `RequestMappingHandlerAdapter`）来执行该方法。在执行反射调用前，必须将 HTTP 原始请求（请求头、Query参数、JSON Body）转化为方法对应的入参对象。
 
-### 1. 核心接口
+### 1. 1 参数解析器核心接口
 
 参数解析器采用标准的策略模式设计：
 
@@ -62,10 +62,12 @@ graph TD
 ```
 
 ### 1. 类型转换：PropertyEditor 与 ConversionService
+
 - **`PropertyEditor`（JDK 原生）**：基于字符串的属性编辑器，主要用于将 String 转换为特定类型。因为它是**非线程安全**的，每次请求都需要重新创建。
 - **`ConversionService`（Spring 3.0+）**：线程安全且高效的类型转换服务。其内部注册了大量的 `Converter`，支持任意类型之间的双向转换（如 `String` 转 `Date`、`String` 转 `CustomEnum`）。
 
 ### 2. JSR-303 / Hibernate Validator 校验联动
+
 当参数被解析并完成赋值后，若参数上标注了 `@Validated`（Spring 提供）或 `@Valid`（JSR 标准）：
 1. `WebDataBinder` 会调用注册的 `SmartValidator`（通常是 `LocalValidatorFactoryBean`，底层为 Hibernate Validator）。
 2. 依次校验 Target 对象中属性上的校验注解（如 `@NotNull`、`@Size`、`@Email`）。
@@ -78,7 +80,7 @@ graph TD
 
 方法执行完成后，Spring MVC 需要决定如何处理方法返回的对象（例如：跳转页面、直接写回 JSON，或者是处理异步响应）。
 
-### 1. 核心接口
+### 1. 2 返回值解析器核心接口
 
 ```java
 public interface HandlerMethodReturnValueHandler {
@@ -172,4 +174,3 @@ public class GlobalExceptionHandler {
     }
 }
 ```
-

@@ -209,4 +209,3 @@ public class MyRegistry implements BeanDefinitionRegistryPostProcessor {
     public void postProcessBeanFactory(ConfigurableListableBeanFactory beanFactory) throws BeansException {}
 }
 ```
-

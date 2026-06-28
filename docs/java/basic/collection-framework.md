@@ -78,6 +78,7 @@ private static class Node<E> {
 ```
 
 ### 1. 插入与查询特征
+
 - **高频插入/删除**：如果仅仅是头尾插入（通过 `addFirst`/`addLast`），时间复杂度为 $O(1)$，不需要像 `ArrayList` 一样搬移内存，只需修改前后节点的 `prev`/`next` 指针即可。
 - **随机访问**：如果需要获取第 $i$ 个元素，必须沿着链表指针进行线性轮询扫描，最坏时间复杂度为 $O(N)$。
 
@@ -103,6 +104,7 @@ Node<E> node(int index) {
     }
 }
 ```
+
 通过该优化，虽然无法改变其 $O(N)$ 的本质，但可以将平均定位查找的指针移动次数直接减半。
 
 ---
@@ -226,7 +228,8 @@ public class LocalLRUCache<K, V> extends LinkedHashMap<K, V> {
 
 当向 `TreeMap` 插入新节点时，新节点默认被标记为**红色**（为了不打破性质五）。但如果其父节点也是红色，就会破坏性质四，此时红黑树需要通过**左旋（Left Rotate）**、**右旋（Right Rotate）**及**变色（Coloring）**来恢复平衡。
 
-#### 旋转操作源码解析：
+#### 旋转操作源码解析
+
 ```java
 // TreeMap 底层左旋源码
 private void rotateLeft(Entry<K,V> p) {

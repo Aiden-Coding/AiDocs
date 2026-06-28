@@ -64,7 +64,9 @@ sequenceDiagram
 ```
 
 ### 1. MANIFEST.MF 入口定义
+
 JVM 调取并解析 `MANIFEST.MF` 文件：
+
 ```properties
 Manifest-Version: 1.0
 Spring-Boot-Version: 2.7.0
@@ -73,10 +75,12 @@ Start-Class: com.example.MyApplication
 Spring-Boot-Classes: BOOT-INF/classes/
 Spring-Boot-Lib: BOOT-INF/lib/
 ```
+
 - **`Main-Class`**：这是 JVM 规范的物理入口类，它会被 JVM 默认类加载器加载并首先执行其 `main` 方法。
 - **`Start-Class`**：这是开发者编写的包含 `@SpringBootApplication` 标注的实际业务引导类。
 
 ### 2. Archive 归档模型抽象
+
 为了统一处理“已打包成 Fat Jar 运行”与“在开发环境下解压后运行”两种场景，Spring Boot Loader 设计了 **`Archive`**（归档）模型：
 - **`JarFileArchive`**：当以单 Jar 包文件运行时，将整个 Jar 抽象为此对象。
 - **`ExplodedArchive`**：当解压目录后运行时，将其目录结构抽象为此对象。
@@ -89,6 +93,7 @@ Spring-Boot-Lib: BOOT-INF/lib/
 `LaunchedURLClassLoader` 是 Spring Boot 自定义的类加载器，它继承自 Java 官方的 `URLClassLoader`。
 
 ### 1. 自定义 Jar 协议处理器
+
 Java 原生的 `URLClassLoader` 只支持标准的 `file:` 协议，或指向某个物理 Jar 包的 `jar:file:/path/to/app.jar!/` 协议。它无法识别并解析**双重惊叹号**的嵌套路径，例如：
 `jar:file:/app.jar!/BOOT-INF/lib/commons-lang3.jar!/`
 
@@ -98,9 +103,11 @@ Java 原生的 `URLClassLoader` 只支持标准的 `file:` 协议，或指向某
 3. **重写连接**：该自定义 `Handler` 会返回一个特殊的 `JarURLConnection`，其底层调用了自定义的 `org.springframework.boot.loader.jar.JarFile`。这个类能够精确计算出嵌套在母 Jar 内部的子 Jar 包的物理偏移量（Offset）与数据长度（Length），并在内存中通过文件流直接定位，**无需在磁盘上进行临时解压**，极大地节省了 I/O 资源。
 
 ### 2. 线程上下文类加载器切换
+
 在类加载器构造完毕后，`JarLauncher` 并不能直接执行反射调用。因为如果直接调用，后续由 Spring Framework 动态加载的第三方库（如 Spring 的 AOP 增强类）会因为使用 `Thread.currentThread().getContextClassLoader()` 而获取到系统类加载器（AppClassLoader），从而抛出 `ClassNotFoundException`。
 
 因此，在反射调用 `Start-Class.main` 前，必须进行上下文线程加载器的切换：
+
 ```java
 // 切换当前执行线程的类加载器为 LaunchedURLClassLoader
 Thread.currentThread().setContextClassLoader(launchedUrlClassLoader);

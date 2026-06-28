@@ -45,6 +45,7 @@ sequenceDiagram
 ```
 
 ### 2. Stream 惰性求值与 ForkJoinPool 并行流原理
+
 - **惰性求值（Lazy Evaluation）**：
   Stream 的链式操作分为**中间操作**（`filter`、`map`）和**终端操作**（`collect`、`forEach`）。
   中间操作不会执行任何过滤或转换，而是以双向链表形式将所有操作步骤封装并挂载在 `Pipeline`（管道节点）对象上。只有当调用终端操作时，整个链表才会从头至尾遍历数据源，这种单次循环遍历（Loop Fusion）避免了产生中间临时集合，极大地提升了 CPU 缓存友好度。
@@ -59,11 +60,13 @@ sequenceDiagram
 ## 二、 JDK 9 - 17 生产特性演进
 
 ### 1. Project Jigsaw 模块化系统（JDK 9）
+
 - **核心目的**：解决类路径乱象（Classpath Hell）和 JVM 强行打包全部 RT.jar 导致体积过大的痛点。
 - **实现手段**：通过 `module-info.java` 明确定义模块的边界，显式指明对外暴露的包（`exports`）和依赖的外部模块（`requires`）。
 - **强封装性**：即使是反射，也无法强行访问未导出模块中的非 public 元素，提升了平台自身的安全性。
 
 ### 2. Record 记录类（JDK 16）
+
 - **职责**：作为纯粹的只读数据载体（DTO/VO），彻底消除 Lombok 的依赖。
 - **底层原理**：
   - `record` 类在编译后会自动继承 `java.lang.Record` 基类。
@@ -71,6 +74,7 @@ sequenceDiagram
   - 编译器会在字节码中自动生成全参构造器、所有属性的 getter 方法（无 `get` 前缀）、以及健全的 `equals()`、`hashCode()` 和 `toString()` 方法。
 
 ### 3. Sealed Classes 密封类（JDK 17）
+
 - **职责**：控制继承树的深度与广度，提供更安全的代数数据类型。
 - **声明方式**：使用 `sealed` 修饰类，并通过 `permits` 显式指定哪些子类能够继承该类。
 - **子类约束**：被允许的子类必须声明为 `final`（不可再继承）、`sealed`（继续密封）或 `non-sealed`（放开限制）。
@@ -133,6 +137,7 @@ graph TD
 ```
 
 #### 1.3 锁钉死问题（Pinning）
+>
 > [!WARNING]
 > 虚拟线程目前存在一个非常关键的限制：**锁钉死（Pinning）**。
 > - **原因**：当虚拟线程在 `synchronized` 块或 `synchronized` 方法内部执行阻塞操作时，JVM 无法将其与载体线程进行解绑。这是因为 JVM 底层 C++ 部分的限制，导致此时的载体线程会被强行锁定挂起。
@@ -154,6 +159,7 @@ graph TD
 模式匹配通过将“类型判断”与“强制类型转换”合并，显著精简了代码逻辑：
 
 - **JDK 17（instanceof 模式匹配）**：
+
   ```java
   // 传统做法：判断后强转
   if (obj instanceof String) {
@@ -165,8 +171,10 @@ graph TD
       System.out.println(s.length());
   }
   ```
+
 - **JDK 21（switch 模式匹配与模式保护）**：
   `switch` 表达式开始支持匹配类型、解构 Record，并且可以结合 `when` 子句执行更细致的过滤（模式保护）：
+
   ```java
   // Switch 模式匹配
   static String formatterPatternSwitch(Object r) {

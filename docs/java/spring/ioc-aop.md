@@ -104,7 +104,9 @@ sequenceDiagram
 虽然 Spring 的三级缓存能够优雅地解决单例属性注入下的循环依赖，但在以下三种经典场景下，三级缓存依然无能为力：
 
 #### (1) 构造器注入循环依赖
-* **场景**：
+
+- **场景**：
+
   ```java
   @Component
   public class A {
@@ -115,19 +117,22 @@ sequenceDiagram
       public B(A a) {}
   }
   ```
-* **原理**：Spring 在创建 A 时需要调用构造函数进行实例化，此时需要传入 B。由于 A 还没有实例化完成，因此**无法将其 ObjectFactory 提前放入三级缓存**。此时去获取 B，B 实例化也需要 A，从而陷入死锁，抛出 `BeanCurrentlyInCreationException`。
-* **解决办法**：在其中一个构造器参数上加上 **`@Lazy`** 注解。Spring 会为其注入一个懒加载代理对象，直到真正调用方法时才触发实际实例化。
+
+- **原理**：Spring 在创建 A 时需要调用构造函数进行实例化，此时需要传入 B。由于 A 还没有实例化完成，因此**无法将其 ObjectFactory 提前放入三级缓存**。此时去获取 B，B 实例化也需要 A，从而陷入死锁，抛出 `BeanCurrentlyInCreationException`。
+- **解决办法**：在其中一个构造器参数上加上 **`@Lazy`** 注解。Spring 会为其注入一个懒加载代理对象，直到真正调用方法时才触发实际实例化。
 
 #### (2) prototype（原型/多例）作用域循环依赖
-* **场景**：A 和 B 的 Scope 均为 `prototype`，且互相依赖。
-* **原理**：Spring 容器只对 `singleton`（单例）作用域的 Bean 进行缓存。对于 prototype 的 Bean，Spring 不会将其放入任何缓存中。每次请求 getBean 都会创建一个全新实例，导致无限循环，直到内存溢出。
-* **解决办法**：修改设计以消除循环依赖，或将其中一方改为单例作用域。
+
+- **场景**：A 和 B 的 Scope 均为 `prototype`，且互相依赖。
+- **原理**：Spring 容器只对 `singleton`（单例）作用域的 Bean 进行缓存。对于 prototype 的 Bean，Spring 不会将其放入任何缓存中。每次请求 getBean 都会创建一个全新实例，导致无限循环，直到内存溢出。
+- **解决办法**：修改设计以消除循环依赖，或将其中一方改为单例作用域。
 
 #### (3) `@Async` 异步 Bean 引发的循环依赖
-* **场景**：A 和 B 互为单例依赖，且 A 的类中包含 `@Async` 标注的异步方法。
-* **原理**：`@Async` 代理对象不是由通用的 AOP 处理器 `AbstractAutoProxyCreator` 生成的，而是由 `AsyncAnnotationBeanPostProcessor` 处理。它没有实现 `SmartInstantiationAwareBeanPostProcessor`，意味着它**不支持在三级缓存提前获取代理**（在 `getEarlyBeanReference` 阶段它只返回原始裸对象）。
+
+- **场景**：A 和 B 互为单例依赖，且 A 的类中包含 `@Async` 标注的异步方法。
+- **原理**：`@Async` 代理对象不是由通用的 AOP 处理器 `AbstractAutoProxyCreator` 生成的，而是由 `AsyncAnnotationBeanPostProcessor` 处理。它没有实现 `SmartInstantiationAwareBeanPostProcessor`，意味着它**不支持在三级缓存提前获取代理**（在 `getEarlyBeanReference` 阶段它只返回原始裸对象）。
   当 B 注入 A 时，从三级缓存拿到的是 A 的**原始裸对象**。而在 A 自身初始化后期，`AsyncAnnotationBeanPostProcessor` 强行将其包装为 **`@Async` 代理对象** 并放入容器。在容器检查阶段，发现注入给 B 的 A（裸对象）与容器最终保存的 A（代理对象）地址不一致，直接抛出异常。
-* **解决办法**：
+- **解决办法**：
   1. 在 A 的注入点上加上 `@Lazy` 延迟加载。
   2. **最佳实践**：将异步 `@Async` 方法剥离到专门的 Task/Helper 类中，避免与核心业务 Service 混合在一起，从根本上避开循环依赖。
 
@@ -175,11 +180,11 @@ public class DefaultAopProxyFactory implements AopProxyFactory, Serializable {
 
 #### Spring 框架中代理默认选择的演进
 
-* **Spring 5.x 之前（以及传统 XML 配置）**：
+- **Spring 5.x 之前（以及传统 XML 配置）**：
   默认遵循“有接口用 JDK，无接口用 CGLIB”的策略。
-* **Spring Boot 2.x + / Spring Boot 3.x**：
+- **Spring Boot 2.x + / Spring Boot 3.x**：
   Spring Boot 默认将配置项 `spring.aop.proxy-target-class` 设为 `true`。也就是说，**即便目标类实现了接口，默认也全部强制使用 CGLIB 动态代理**。
-  * **为什么要做这个改变？**
+  - **为什么要做这个改变？**
     如果使用 JDK 动态代理，生成的代理类只能强转为接口类型。如果开发人员在依赖注入时习惯使用具体实现类接收（例如 `@Autowired private UserServiceImpl userService;`），程序启动时就会直接抛出 `BeanNotOfRequiredTypeException`。为了从根本上消除此类型转换隐患，Spring Boot 默认采用 CGLIB（代理对象也是子类，能成功注入到实现类变量中）。
 
 ### 3. AOP 链式调用与责任链模式
