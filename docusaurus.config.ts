@@ -87,6 +87,12 @@ const config: Config = {
       items: [
         {
           type: 'docSidebar',
+          sidebarId: 'homeSidebar',
+          position: 'left',
+          label: '体系介绍',
+        },
+        {
+          type: 'docSidebar',
           sidebarId: 'javaSidebar',
           position: 'left',
           label: 'Java',

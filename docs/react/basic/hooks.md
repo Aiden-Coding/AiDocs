@@ -194,15 +194,6 @@ function UserCard({ userPromise }: { userPromise: Promise<{ name: string }> }) {
 ```
 
 通过对底层并发切片机制与新时代 API 的结合，React 19 将彻底颠覆我们数据流转的设计思路。
-      {() => {
-        // 凡是在 BrowserOnly 回调内部的代码，在 SSG（Node 编译）时绝不执行
-        const width = window.innerWidth;
-        return <div>当前视口宽度: {width}px</div>;
-      }}
-    </BrowserOnly>
-  );
-}
-```
 
 ### 2. useActionState —— 颠覆传统的异步 Action
 
