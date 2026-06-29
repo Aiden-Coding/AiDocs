@@ -127,3 +127,44 @@ sequenceDiagram
 2. **广播复制**：Leader 向所有 Follower 广播 `AppendEntries` 请求。
 3. **半数确认**：当 Leader 收到半数以上 Follower 的成功响应后，将该 Entry 标记为**已提交（Committed）**，并应用到本地状态机，向客户端返回成功。
 4. **异步提交**：Leader 在后续的心跳包中通知 Follower，Follower 收到通知后也将该日志提交并应用到自己的状态机。
+
+---
+
+## 三、 ZooKeeper 核心 ZAB 协议剖析
+
+除了 Paxos 与 Raft，Apache ZooKeeper 底层使用的是专门为其量身定制的 **ZAB (ZooKeeper Atomic Broadcast，意为原子广播协议)**。它是一种支持**崩溃恢复**的原子广播协议，专门用来保障主备模型下系统数据状态的一致性。
+
+### 1. ZAB 的两种核心工作模式
+
+ZAB 协议在其整个生命周期中，会在这两种基础模式之间往复交替运行：
+
+```mermaid
+graph LR
+    A[系统启动 / 拓扑崩溃] --> B((崩溃恢复模式))
+    B -->|选出新 Leader 且副本数据对齐| C((消息广播模式))
+    C -->|Leader 挂了 / 断网分区| B
+```
+
+#### 崩溃恢复模式 (Crash Recovery)
+
+当系统刚刚启动、或者作为核心的 Leader 突然宕机、网络断分区隔断时，ZAB 协议就会无缝切入崩溃恢复状态。该阶段包含两大核心子任务：
+1. **Leader 选举**：选出一个全新且绝对合法的 Leader 节点。
+   - **唯一事务 ID 标识：ZXID**。`ZXID` 是一个 64 位的无符号长整型，高 32 位为 `epoch`（代表纪元/任期），低 32 位为 `counter`（单调递增的事务计数器）。
+   - **选举规则（ZXID 最大化原则）**：在选举时，节点之间会相互发送 `Vote` 报文。规则为：**优先选举 epoch 更高、或者 epoch 相同但事务 counter 序号最大（即数据最新）的节点作为 Leader**；如果上述两者皆相同，则选举 `myid`（节点物理编号）最大的实例，从而避免了“由于 Leader 数据落后导致数据丢失”的问题。
+2. **数据同步（Synchronization）**：
+   - 当新 Leader 产生后，第一件事就是要求所有 Follower 向它发送自己的最大事务。
+   - **对齐补全**：Leader 会比对自己的事务列表与 Follower 的差异。如果发现 Follower 缺失了某些提议，Leader 会直接发送 `DIFF` 报文将其补齐。
+   - **清退未提交事务**：如果发现某个 Follower 上存在旧 Leader 崩溃前提出、但未能在半数以上节点达成共识（即全局未提交）的历史脏事务，新 Leader 会要求 Follower 强制丢弃这些日志，退回到一致的高水位节点，从而确保全局事务的严格一致。
+
+#### 消息广播模式 (Message Broadcast)
+
+当 Leader 确立且集群内超过半数的 Follower 与 Leader 完成了数据同步对齐，ZAB 协议便宣告恢复结束，进入广播主流程：
+- 消息广播本质上是一个 **两阶段提交的简化版**。
+- 为保证绝对的顺序性，Leader 为每个 Follower 节点都单独维护了一个 **FIFO（先进先出）的 TCP 发送队列**。
+- **广播步骤**：
+  1. Leader 收到客户端写请求，将其包装为 Proposal，生成带最新 `epoch` 的 `ZXID`。
+  2. 将 Proposal 塞入每个 Follower 对应的 TCP 队列，进行单向广播。
+  3. Follower 收到消息，首先将其顺序写入本地磁盘日志，并向 Leader 反馈一个 ACK 物理响应。
+  4. Leader 只要收到**半数以上**节点的 ACK 响应，就会向所有 Follower 广播发送一条 `COMMIT` 报文。Follower 收到 Commit 报文后，正式把数据提交应用到内存 ZooKeeper 树中。
+
+---

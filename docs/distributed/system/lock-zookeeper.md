@@ -113,3 +113,37 @@ sequenceDiagram
   - 适用于**高并发、高吞吐量**，且对**极少数情况下的锁丢失有一定容忍度**的业务场景（如商品秒杀、防重复提交、短信发送限制等）。
 - **优先选择 ZooKeeper 分布式锁**：
   - 适用于**并发量中等**，但对**数据一致性、安全性要求极高，绝对不允许锁丢失**的金融级业务场景（如资金转账、订单对账、分布式任务调度等）。
+
+---
+
+## 四、 工业级利器：Curator 客户端分布式锁实现
+
+在 Java 生态中，一般不会直接调用 ZooKeeper 原生客户端来手写自研锁逻辑（因为面临着复杂的连接重连 Session 丢失、Watcher 重新注册、节点状态轮询判断等细节坑）。我们统一接入原汁原味的、由 Apache 维护的 **Curator** 开源客户端框架。
+
+### 1. Curator 核心重试策略：防网络瞬断抖动
+
+Curator 提供了完备的分布式自愈设计。实例化 `CuratorFramework` 时，必须要指定底层重试策略（Retry Policy）：
+
+- **`ExponentialBackoffRetry` (指数退避重试)**：
+  - 规定基础等待时间（Base Sleep Time）和最大重试次数。
+  - **策略机理**：重试等待跨度计算公式如下：
+    $$T_{\text{sleep}} = \min(T_{\text{max\_sleep}}, T_{\text{base}} \times 2^{\text{retry\_count}})$$
+  - 随着重试次数累加，休眠退避时间呈指数级陡峭上扬，能有效避免物理断网故障发生时大量线程因无缝、高频重连引发的集群雪崩灾难。
+- **`RetryNTimes`**：允许直接设置固定的最大重试次数和每次重载的硬性休眠间隔。
+
+### 2. `InterProcessMutex` (可重入排他锁) 底层实现原理解析
+
+Curator 最具代表性、最常用的是基于可重入特性的 `InterProcessMutex`：
+
+1. **可重入的实现：Thread 线程映射 Map**：
+   - 原生的 ZooKeeper 节点是不存在“线程概念”的。
+   - Curator 内部通过维护一个并发的容器 `ConcurrentMap<Thread, LockData>` 来做本地代理。
+   - `LockData` 中记录了当前线程所拥有的**加锁临时顺序节点路径**（`lockPath`）和**重入计数器**（`lockCount`）。
+   - 当同一个线程再次发起 `acquire()` 时：
+     - Curator 首先判定当前线程在本地 `LockData` Map 中是否存在记录。
+     - 若存在，直接将 `lockCount` 自增 $+1$，**完全不需要再去 ZooKeeper 服务器做任何网络创建节点写入**，从而实现超轻量级本地重入晋升，极大地保护了并发带宽。
+2. **释放重入锁 (Release)**：
+   - 每次执行 `release()`，本地 `lockCount` 自减 $-1$。
+   - 只有当 `lockCount` 归 $0$ 时，才会发起远程 ZooKeeper 调用删除该临时顺序节点，彻底交出分布式锁的所有权。
+
+---

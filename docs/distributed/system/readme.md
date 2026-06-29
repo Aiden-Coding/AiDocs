@@ -18,34 +18,37 @@ slug: /distributed/system/
 mindmap
   root((分布式架构核心))
     一致性协议
-      Paxos 算法
-      Raft (强一致性)
-      ZAB 协议
+      Paxos 协议
+      Raft 极速强选举
+      ZAB 崩溃恢复与消息广播
     分布式事务
-      2PC / 3PC
-      TCC 补偿模式
-      Saga 柔性事务
-    核心组件
-      Zookeeper 协调中心
-      分布式锁实现
-      消息队列 (MQ)
+      2PC / 3PC 痛点
+      Seata AT 与 XA 模式
+      Saga 与 TCC 柔性重塑
+    核心协调组件
+      ZooKeeper 树模型
+      分布式锁惊群消除
+      Curator 客户端指数退避
+    性能吞吐利器
+      Kafka Mmap 与 Sendfile 零拷贝
+      顺序消息分布式锁定与单线程重放
 ```
 
 ---
 
 ## 🚀 第一阶段：一致性理论基础 (Consensus)
 
-- [共识算法：从 Paxos 到 Raft](consensus.md)：深入解析分布式系统如何达成共识。
+- [共识算法：从 Paxos 到 ZAB](consensus.md)：深入解析 Paxos 二阶段过程、Raft 的 Safety 机制以及 ZooKeeper 的 ZAB 原子组播内幕。
 
 ---
 
 ## 🏗️ 第二阶段：分布式事务与锁 (Consistency)
 
-- [分布式事务全解方案](transactions.md)：对比 2PC 与 TCC，解决 CAP 权衡痛点。
-- [基于 ZooKeeper 的分布式锁](lock-zookeeper.md)：从临时顺序节点到监听机制。
+- [分布式事务全解方案](transactions.md)：剖析 2PC 顽疾、TCC 三重异常（空回滚/幂等/悬挂）对抗，以及 Saga 架构隔离性自愈修复。
+- [基于 ZooKeeper 的分布式锁](lock-zookeeper.md)：探索临时顺序节点极致防惊群监听，以及 Curator 可重入 `InterProcessMutex` 的 Thread 映射实现。
 
 ---
 
-## ⚡ 第三阶段：核心中间件 (Middleware)
+## ⚡ 第三阶段：核心中间件机制 (Middleware)
 
-- [消息队列原理与实践](message-queue.md)：解耦合、异步化与削峰填谷。
+- [高并发零拷贝与顺序消费](message-queue.md)：“端到端”防消息丢失保障方案、高吞吐零拷贝（Mmap vs Sendfile）以及顺序消费的多级分布式锁定实现。
