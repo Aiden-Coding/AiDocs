@@ -103,7 +103,20 @@ sequenceDiagram
     InnoDB->>Disk: 6. 刷盘 (Redo Commit)
 ```
 
-### 3. 崩溃恢复（Crash Recovery）逻辑
+### 2. MTR (Mini-Transaction) 与 LSN (Log Sequence Number) 的关系
+
+在 InnoDB 存储引擎中，对底层页面的一次原子性物理修改操作（如插入一条数据、分裂一个平衡节点）被称为一个 **MTR (Mini-Transaction)**。 MTR 产生的所有的 Redo Log 都是一个不容拆分、不可分割的整体。
+
+- **LSN（日志序列号）**：是一个单调递增的 8 字节无符号整数，用来记录写入的 Redo Log 日志量。
+- **协同机制**：
+  - 每个 MTR 结束时，会将自己产生的 Redo Log 拷贝到系统的公共 **Redo Log Buffer**。
+  - 拷贝的同时，系统的全局 LSN 会随之单调递增。
+  - 数据页的头部会记录一个 `FIL_PAGE_LSN`（最后一次修改该页时的 LSN）。
+  - **崩溃自愈的追溯**：在系统崩溃重新拉起后，MySQL 会对比磁盘数据页的 `FIL_PAGE_LSN` 与 Redo Log 的 LSN。只有当 `Redo LSN > FIL_PAGE_LSN` 时，才执行该日志中的页物理重做；凡是已经落盘的物理进度（`Redo LSN <= FIL_PAGE_LSN`）直接略过，**极大加速了崩溃恢复速度**。
+
+---
+
+### 3. 未提交事务回滚与崩溃恢复逻辑
 
 当数据库在两阶段提交的任意时刻宕机，重启后会按照以下规则恢复：
 
@@ -112,6 +125,38 @@ sequenceDiagram
    - 拿着该事务的 XID（全局事务ID）去 **Binlog** 中寻找对应的记录。
    - **如果 Binlog 中存在该 XID**：说明 Binlog 已经写成功，事务是安全的，**继续提交**。
    - **如果 Binlog 中不存在该 XID**：说明在写 Binlog 前就宕机了，为了防止主从不一致，**回滚事务**（利用 Undo Log）。
+
+---
+
+### 4. 组提交（Group Commit）机制与 I/O 吞吐演进
+
+每次事务提交都要写磁盘（即调用 `fsync` 刷物理 IO），当面对万级 QPS 时，大量的磁盘 I/O 串行等待会导致物理吞吐直接见顶。为了破局，MySQL 引入了 **组提交（Group Commit）** 机制。
+
+- **核心思想**：将多个并发请求的事务，组合成一个物理批次，只执行**一次**磁盘 `fsync` 刷物理设备。
+
+#### 两阶段组提交的串行协调器
+
+为了让 Redo Log 和 Binlog 在组提交时其数据块物理刷盘顺序绝对对齐，MySQL 在 5.6 之后设计了 Binlog 的三阶段队列（Pipeline）结构：
+
+```mermaid
+graph TD
+    subgraph "三阶段队列 (Pipeline 协调)"
+        A[Flush Stage: 写入 Binlog 内存缓冲] -->|合并提交| B[Sync Stage: 多个事务统一 fsync 刷磁盘]
+        B -->|串行接手| C[Commit Stage: 统一在存储引擎侧提交]
+    end
+```
+
+- **Flush Stage (刷入内存段)**：
+  - 队列中的第一个事务为主导者（Leader），其余事务为追随者（Follower）。
+  - Leader 统一接收并把所有汇聚的并发事务的 Binlog 拷贝写入到系统的 OS Cache 中。
+- **Sync Stage (刷入磁盘段)**：
+  - 多个排队积攒的事务在这一步统一调用一次 `fsync` 逻辑，一次性把上面所有的 Binlog 物理落盘。可以通过以下参数进行积攒行为调优：
+    - `binlog_group_commit_sync_delay`：规定在 `fsync` 之前，Leader 强制等待（Delay）的微秒数。
+    - `binlog_group_commit_sync_no_delay_count`：即使等待时间未到，只要排队队列里的事务个数达到了此数值，自动触发刷盘。
+- **Commit Stage (提交段)**：
+  - 按队列里的既定顺序串行、安全地去 InnoDB 引擎内部执行最后的事务 Commit。
+
+通过这套协调调度，MySQL 极大程度减少了最沉重的 $O(1)$ 磁盘 `fsync` 触发频率，将其转变为了批量高性能的组落盘，提升了万级吞吐表现。
 
 ---
 

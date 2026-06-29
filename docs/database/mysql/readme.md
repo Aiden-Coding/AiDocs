@@ -39,18 +39,18 @@ mindmap
 
 ## 🚀 第一阶段：内核基础与存储引擎 (Storage Engine)
 
-- [索引原理与 InnoDB 引擎](index-engine.md)：为什么是 B+ 树？解密聚簇索引与覆盖索引。
-- [MVCC 与锁机制深度解析](mvcc-locks.md)：读已提交、可重复读及其底层 ReadView 实现。
+- [索引原理、Buffer Pool 及 AHI](index-engine.md)：为什么是 B+ 树？解密聚簇索引、自适应哈希索引与变体 LRU 淘汰缓存池。
+- [MVCC 与锁机制深度解析](mvcc-locks.md)：读已提交、可重复读、ReadView 算法与自增锁/死锁排查。
 
 ---
 
 ## 🏗️ 第二阶段：日志体系与高可用 (Reliability)
 
-- [日志体系与复制原理](logs-replication.md)：深入 Redo Log、Binlog 二阶段提交（2PC）。
+- [日志体系与复制原理](logs-replication.md)：深入 Redo Log MTR 机制、Binlog 三阶段组提交（2PC）。
 
 ---
 
 ## ⚡ 第三阶段：性能诊断与调优 (Performance Tuning)
 
-- [MySQL 性能调优实战指南](optimization.md)：执行计划详解与生产慢查询优化。
+- [MySQL 性能调优与双写扩容](optimization.md)：执行计划详解、生产慢查询优化与不停机双写平滑扩容方案。
 - [MySQL 核心面试真题复盘](interview-mysql.md)：高频大厂必考点汇总。
