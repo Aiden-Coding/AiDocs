@@ -193,3 +193,95 @@ cargo bench
 ```
 
 - **输出与图表**：`criterion` 会在终端打印出运行时间的均值、中位数和置信区间。同时，会在项目根目录下的 `target/criterion/report/index.html` 生成精美的图形报表（如 PDF 分布图 and 回归趋势线），方便对比重构前后的性能表现。
+
+---
+
+## 🟡 测试进阶技巧
+
+### 1. 忽略特定测试
+
+对于耗时长或者特定的依赖环境测试，可以使用 `#[ignore]` 属性跳过。
+运行被忽略的测试使用：`cargo test -- --ignored`。
+
+```rust
+#[test]
+#[ignore = "耗时过长，仅在 CI 中运行"]
+fn test_complex_algorithm() {
+    // 耗时测试逻辑
+}
+```
+
+### 2. 恐慌测试 (Should Panic)
+
+有时需要验证特定输入是否会触发预期内的 Panic，可以使用 `#[should_panic]`。为了防止意外通过，建议总是通过 `expected` 参数指定匹配信息。
+
+```rust
+#[test]
+#[should_panic(expected = "被 0 除")]
+fn test_divide_by_zero() {
+    let _ = 10 / 0;
+}
+```
+
+---
+
+## 🔴 Criterion 基准测试指南 (Benchmarking)
+
+标准库自带的基准测试 (`#[bench]`) 仍处于不稳定状态，需要 Nightly 版本。因此，工业界主要采用 **Criterion.rs**，它是目前 Rust 最主流的高精度统计基准测试框架，可自动检测性能退化趋势。
+
+### 1. 配置 Criterion
+
+在 `Cargo.toml` 中配置 `[dev-dependencies]` 并声明自定义基准套件：
+
+```toml
+[dev-dependencies]
+criterion = "0.5"
+
+[[bench]]
+name = "my_benchmark"
+harness = false # 禁用标准基准测试隔离
+```
+
+### 2. 编写基准测试
+
+在项目根目录下新建 `benches/my_benchmark.rs`：
+
+```rust
+use criterion::{black_box, criterion_group, criterion_main, Criterion};
+use my_crate::fibonacci;
+
+fn criterion_benchmark(c: &mut Criterion) {
+    // 避免编译器对 benchmark 进行常量折叠和死代码优化，需使用 black_box
+    c.bench_function("fibonacci_20", |b| b.iter(|| fibonacci(black_box(20))));
+}
+
+// 注册 benchmark 分组及并生成运行入口
+criterion_group!(benches, criterion_benchmark);
+criterion_main!(benches);
+```
+
+### 3. 分析与解读报告
+
+运行 `cargo bench`。Criterion 会基于多次抽样生成统计学上的置信区间，并能把本次结果与历史参考数据作比较。
+生成的报告会包含异常检测、性能演进的吞吐分析等，甚至提供精美的 HTML 页面对比报告（位于 `/target/criterion/`）。
+
+---
+
+## 🔴 高级性能分析 (Profiling Tools)
+
+基准测试告诉你“代码跑多快”，而 Profiling 才能指出“为什么慢”。
+
+### Flamegraph (火焰图)
+
+火焰图能够视觉化函数调用的耗时占比。
+- **安装**：`cargo install cargo-flamegraph`
+- **使用**：`cargo flamegraph --bin my_app`
+- **分析**：宽度代表占用 CPU 的时长比例，寻找出乎意料过宽的调用栈底部，即是潜在的性能瓶颈。
+
+### Valgrind 与 Cachegrind
+
+在底层开发中，缓存命中率直接决定性能跳崖点。配合 Cachegrind 以及 Rust 属性如 `#[inline]` 调整，可以在微秒级别榨干硬件性能。
+
+---
+
+> 高级工程师不仅仅满足于测试的覆盖率评估，更是从性能数据变化趋势中，构建针对吞吐、延迟和硬件局部性（Cache Locality）全方位的“数字雷达”。
