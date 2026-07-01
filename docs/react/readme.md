@@ -45,100 +45,594 @@ mindmap
 
 ## 第一阶段：零基础入门与核心基石 (Beginner: Core Foundations)
 
-适合刚接触 React 的小白，建立声明式 UI 的基本直觉与开发习惯。
-
 ### 1.1 React 核心哲学
 
-- [React 核心哲学](basic/philosophy.md)：声明式 UI、组件化、单向数据流与 $UI = f(state)$ 的数学映射模型。
+- [React 核心哲学](basic/philosophy.md)：声明式 UI、组件化、单向数据流与 `UI = f(state)` 的数学映射模型。
+
+#### 💡 核心示例：命令式 vs 声明式
+
+```tsx
+// 命令式 (Imperative)：手动操作 DOM
+const container = document.getElementById('app');
+const btn = document.createElement('button');
+btn.innerText = `点击了 0 次`;
+let count = 0;
+btn.onclick = () => {
+  count++;
+  btn.innerText = `点击了 ${count} 次`;
+};
+container.appendChild(btn);
+
+// 声明式 (Declarative)：描述 UI 与状态的关系，框架处理 DOM 变更
+function Counter() {
+  const [count, setCount] = useState(0);
+  return <button onClick={() => setCount(count + 1)}>点击了 {count} 次</button>;
+}
+```
 
 ### 1.2 JSX 语法与规范
 
-- [JSX 语法与规范](basic/jsx-syntax.md)：探究 JSX 编译后的 JavaScript 本质；掌握闭合标签、单根节点、驼峰命名等书写规范；实战条件渲染（三元/逻辑与/if-else）与列表渲染（`key` 属性的最佳实践）。
+- [JSX 语法与规范](basic/jsx-syntax.md)：探究 JSX 编译后的 JavaScript 本质；掌握闭合标签、单根节点、驼峰命名等书写规范；实战条件渲染与列表渲染。
+
+#### 💡 核心示例：条件与列表渲染
+
+```tsx
+interface Item {
+  id: number;
+  name: string;
+}
+
+function ListDemo({ items, showList }: { items: Item[]; showList: boolean }) {
+  return (
+    <div className="list-wrapper">
+      {/* 1. 条件渲染 */}
+      {showList ? <h3>展示数据列表</h3> : <p>列表已被隐藏</p>}
+      
+      {/* 2. 列表渲染 (必须带上唯一 key 属性) */}
+      {showList && (
+        <ul>
+          {items.map(item => (
+            <li key={item.id} className="item-style">
+              {item.name}
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
+  );
+}
+```
 
 ### 1.3 组件与 Props 数据流
 
-- [组件与 Props 数据流](basic/components-props.md)：理解函数组件声明；掌握 Props 的传递与解构；探究 Props 的只读特性与单向数据流；利用 `children` 属性设计高复用布局组件；初探 TypeScript 类型约束下的安全 Props。
+- [组件与 Props 数据流](basic/components-props.md)：理解函数组件声明；掌握 Props 的传递与解构；探究 Props 的只读特性与单向数据流；利用 `children` 属性设计高复用布局组件。
+
+#### 💡 核心示例：只读 Props 与布局容器
+
+```tsx
+interface CardProps {
+  title: string;
+  children: React.ReactNode; // 接收子代 JSX
+}
+
+// 子组件：通过解构读取 Props，不允许在内部对其重新赋值修改
+function Card({ title, children }: CardProps) {
+  return (
+    <div className="card-box">
+      <div className="card-header"><h4>{title}</h4></div>
+      <div className="card-body">{children}</div>
+    </div>
+  );
+}
+
+// 父组件使用：嵌套任意子内容
+function App() {
+  return (
+    <Card title="最新公告">
+      <p>系统已升级至 React 19，享受更快的加载速度！</p>
+    </Card>
+  );
+}
+```
 
 ### 1.4 State 状态与事件绑定
 
-- [State 状态与事件绑定](basic/state-events.md)：深度辨析 State 与 Props 的本质区别；通过 `useState` Hook 激活组件心跳；理解状态更新的异步性与批处理（Batching）机制；学习函数式更新解决旧状态依赖；掌握 React 合成事件（SyntheticEvent）与状态提升（组件间通信）。
+- [State 状态与事件绑定](basic/state-events.md)：通过 `useState` 激活组件心跳；理解状态更新的异步性与批处理（Batching）机制；学习函数式更新解决旧状态依赖；掌握 React 合成事件与状态提升。
+
+#### 💡 核心示例：异步批处理与函数式更新
+
+```tsx
+function BatchingDemo() {
+  const [count, setCount] = useState(0);
+
+  const handleIncorrect = () => {
+    setCount(count + 1); // 依赖当前周期的 count = 0
+    setCount(count + 1); // 依赖当前周期的 count = 0
+    // 执行完后 count 的值仅为 1
+  };
+
+  const handleCorrect = () => {
+    // 传入函数，React 会将上一次更新的返回值作为下一次更新的参数传入
+    setCount(prev => prev + 1); // prev = 0 -> 1
+    setCount(prev => prev + 1); // prev = 1 -> 2
+    // 执行完后 count 的值为 2
+  };
+
+  return (
+    <div>
+      <p>Count: {count}</p>
+      <button onClick={handleCorrect}>函数式更新</button>
+    </div>
+  );
+}
+```
 
 ---
 
 ## 第二阶段：核心 Hooks 与应用开发 (Intermediate: Hooks & Ecosystem)
 
-已能编写简单组件，开始接触复杂的企业级业务和开发范式。
-
 ### 2.1 常用 Hooks 深度解析
 
-- [常用 Hooks 深度解析](basic/hooks.md)：深入掌握 `useState` 惰性初始化、`useEffect` 副作用及清理函数、`useRef` 跨周期共享引用、`useContext` 全局上下文等常用 Hooks 的开发技巧与闭包陷阱；揭秘底层 Fiber 单向链表机制以及为什么 Hooks 严禁在条件与循环中使用的技术内幕。
+- [常用 Hooks 深度解析](basic/hooks.md)：深入掌握 `useState` 惰性初始化、`useEffect` 副作用及清理函数、`useRef` 跨周期共享引用、`useContext` 全局上下文等常用 Hooks。
+
+#### 💡 核心示例：useEffect 清理函数与 useRef 操作 DOM
+
+```tsx
+import { useEffect, useRef, useState } from 'react';
+
+function TimerAndInput() {
+  const [seconds, setSeconds] = useState(0);
+  const inputRef = useRef<HTMLInputElement>(null); // 保存 DOM 节点
+
+  // 1. useEffect 处理定时器副作用与清理工作
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setSeconds(s => s + 1);
+    }, 1000);
+
+    return () => clearInterval(timer); // 组件销毁或重跑 effect 时清理，防止内存泄漏
+  }, []);
+
+  // 2. 使用 ref 直接聚焦原生 input 元素
+  const focusInput = () => {
+    inputRef.current?.focus();
+  };
+
+  return (
+    <div>
+      <p>已运行秒数: {seconds}s</p>
+      <input ref={inputRef} type="text" placeholder="点击按钮自动聚焦" />
+      <button onClick={focusInput}>立刻聚焦</button>
+    </div>
+  );
+}
+```
 
 ### 2.2 组件设计模式
 
-- [组件设计模式与最佳实践](basic/component-patterns.md)：复合组件模式、Render Props、高阶组件 (HOC)、受控与非受控组件、组件组合 vs 继承等企业级组件设计范式。
+- [组件设计模式与最佳实践](basic/component-patterns.md)：复合组件模式、Render Props、高阶组件 (HOC)、受控与非受控组件、组件组合等企业级组件设计范式。
+
+#### 💡 核心示例：复合组件模式 (Compound Components)
+
+```tsx
+import React, { createContext, useContext, useState } from 'react';
+
+const ToggleContext = createContext<{ on: boolean; toggle: () => void } | null>(null);
+
+// 1. 父容器组件维护状态
+function Toggle({ children }: { children: React.ReactNode }) {
+  const [on, setOn] = useState(false);
+  const toggle = () => setOn(!on);
+  return (
+    <ToggleContext.Provider value={{ on, toggle }}>
+      {children}
+    </ToggleContext.Provider>
+  );
+}
+
+// 2. 子组件消费状态，自由组合布局
+Toggle.On = function ToggleOn({ children }: { children: React.ReactNode }) {
+  const context = useContext(ToggleContext);
+  return context?.on ? <>{children}</> : null;
+};
+
+Toggle.Off = function ToggleOff({ children }: { children: React.ReactNode }) {
+  const context = useContext(ToggleContext);
+  return !context?.on ? <>{children}</> : null;
+};
+
+Toggle.Button = function ToggleButton() {
+  const context = useContext(ToggleContext);
+  return <button onClick={context?.toggle}>切换状态</button>;
+};
+
+// 3. 外部组合使用
+function PatternDemo() {
+  return (
+    <Toggle>
+      <Toggle.On>开启状态：显示成功面板</Toggle.On>
+      <Toggle.Off>关闭状态：显示警告面板</Toggle.Off>
+      <div style={{ marginTop: '10px' }}>
+        <Toggle.Button />
+      </div>
+    </Toggle>
+  );
+}
+```
 
 ### 2.3 状态管理生态
 
 - [Context 与 useReducer 模式](advanced/context-reducer.md)：Context API 的订阅更新机制、性能陷阱与优化方案；结合 `useReducer` 构建复杂可预测状态机。
-- [状态管理库选型与实践](advanced/state-management.md)：深度对比 Zustand 轻量方案、Redux Toolkit 经典方案、Jotai/Recoil 原子状态方案，探讨 React 19 时代的状态管理选型。
+- [状态管理库选型与实践](advanced/state-management.md)：对比 Zustand 轻量方案、Redux Toolkit 经典方案、Jotai/Recoil 原子状态方案。
+
+#### 💡 核心示例：Zustand 轻量化全局状态管理
+
+```tsx
+import { create } from 'zustand';
+
+// 1. 定义全局 Store，支持在外部独立定义，且没有 Provider 嵌套开销
+interface BearState {
+  bears: number;
+  increasePopulation: () => void;
+  removeAllBears: () => void;
+}
+
+const useBearStore = create<BearState>((set) => ({
+  bears: 0,
+  increasePopulation: () => set((state) => ({ bears: state.bears + 1 })),
+  removeAllBears: () => set({ bears: 0 }),
+}));
+
+// 2. 在任意组件中消费状态
+function BearCounter() {
+  const bears = useBearStore((state) => state.bears);
+  const increase = useBearStore((state) => state.increasePopulation);
+
+  return (
+    <div>
+      <h3>熊的数量: {bears}</h3>
+      <button onClick={increase}>孵化一只熊</button>
+    </div>
+  );
+}
+```
 
 ---
 
 ## 第三阶段：React 19 渲染引擎与底层原理 (Advanced: Rendering Engine)
 
-洞察 React 底层运行规律，攻克面试与复杂性能调优关卡。
-
 ### 3.1 Fiber 架构剖析
 
-- [Fiber 架构剖析](advanced/fiber-architecture.md)：全面解析 Fiber 底层结构与双缓冲树（Double Buffering）机制；深度拆解 Reconciliation 两个核心阶段：Render 阶段（递 beginWork 与归 completeWork 的可中断 workLoop）与 Commit 阶段（同步不可中断修改真实 DOM）；详解时间切片（Time Slicing）的运行逻辑。
+- [Fiber 架构剖析](advanced/fiber-architecture.md)：解析 Fiber 底层结构与双缓冲树机制；深度拆解 Reconciliation 两个核心阶段：Render 阶段与 Commit 阶段；详解时间切片调度机制。
+
+#### 💡 核心示例：模拟 Fiber 工作循环 (workLoop) 原理
+
+```javascript
+// 极简版 Fiber 结构与任务中断恢复机制模拟
+let nextUnitOfWork = null; // 指向当前正在计算的 WIP Fiber
+
+function workLoop(deadline) {
+  let shouldYield = false;
+  
+  // 只要还有工作，且没有超时（主线程还有剩余时间），就持续执行
+  while (nextUnitOfWork !== null && !shouldYield) {
+    nextUnitOfWork = performUnitOfWork(nextUnitOfWork);
+    shouldYield = deadline.timeRemaining() < 1; // 剩余时间不足 1ms 则让出主线程
+  }
+
+  if (nextUnitOfWork === null) {
+    commitRoot(); // 计算完成，进入 commit 阶段，同步渲染真实 DOM
+  } else {
+    requestIdleCallback(workLoop); // 时间切片被打断，在下一帧空闲时继续
+  }
+}
+
+function performUnitOfWork(fiber) {
+  // 1. 递阶段：构建子节点并返回 child 指针 (beginWork)
+  if (fiber.child) {
+    return fiber.child;
+  }
+  // 2. 归阶段：无子节点则处理兄弟节点，或向上返回父节点 (completeWork)
+  let nextFiber = fiber;
+  while (nextFiber) {
+    if (nextFiber.sibling) {
+      return nextFiber.sibling;
+    }
+    nextFiber = nextFiber.return; // 返回父节点
+  }
+  return null;
+}
+```
 
 ### 3.2 虚拟 DOM 与 Diff 算法
 
-- [Virtual DOM 与 Diff 算法优化](advanced/virtual-dom-diff.md)：分析 React 的 $O(n)$ 复杂度 Diff 算法三大策略：树分层比较、组件类型判断、`key` 属性优化。探究 `key` 的正确使用与反模式案例。
+- [Virtual DOM 与 Diff 算法优化](advanced/virtual-dom-diff.md)：分析 React 的 $O(n)$ 复杂度 Diff 算法三大策略：树分层比较、组件类型判断、`key` 属性优化。
+
+#### 💡 核心示例：Key 属性对于节点复用的重要性
+
+```tsx
+// 旧节点列表：[A (key="1"), B (key="2")]
+// 新节点列表：[B (key="2"), A (key="1")] (仅发生位置移动)
+
+// React 通过 key 复用原本的真实 DOM 实例：
+// 1. 发现 key="2" 的新节点在旧节点中存在，直接执行 DOM 移动
+// 2. 发现 key="1" 的新节点在旧节点中存在，直接执行 DOM 移动
+// 3. 零销毁、零重新挂载。
+
+// 反模式：不指定 key 或使用 Math.random()
+// 每次渲染生成全新 key，导致 React 彻底卸载旧节点并重新生成真实 DOM，造成严重卡顿。
+```
 
 ### 3.3 并发模式与调度器
 
-- [并发模式与时间切片调度](advanced/concurrent-mode.md)：Concurrent Mode 的优先级调度机制、`startTransition` 与 `useDeferredValue` 的应用场景、Scheduler 包的 Lane 模型与任务中断恢复策略。
+- [并发模式与时间切片调度](advanced/concurrent-mode.md)：Concurrent Mode 的优先级调度机制、`startTransition` 与 `useDeferredValue` 的应用场景、Scheduler 包的任务中断恢复策略。
+
+#### 💡 核心示例：startTransition 分离非紧急任务
+
+```tsx
+import { useState, startTransition } from 'react';
+
+function SearchResults() {
+  const [query, setQuery] = useState('');
+  const [searchResults, setSearchResults] = useState<string[]>([]);
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    // 1. 紧急任务：用户的键盘输入必须得到即时响应
+    setQuery(e.target.value);
+
+    // 2. 非紧急任务：耗时的过滤与结果集计算，包裹在 startTransition 中
+    startTransition(async () => {
+      const results = await fetchLargeData(e.target.value);
+      setSearchResults(results); // 如果有新输入进来，此更新会被打断，优先保障输入流畅
+    });
+  };
+
+  return <input type="text" value={query} onChange={handleChange} />;
+}
+```
 
 ---
 
 ## 第四阶段：性能调优与企业级工程化 (Expert: Performance & Engineering)
 
-将 React 应用的加载与渲染性能推向极致，建立一流工程化规范。
-
 ### 4.1 性能优化与 React Compiler
 
-- [性能优化与 React Compiler](advanced/performance-optimization.md)：React 19 引入的自动 Memoization 编译器、`useMemo` 与 `useCallback` 的正确使用时机、React DevTools Profiler 性能分析、虚拟列表 (react-window) 与代码分割 (React.lazy) 等优化技术。
+- [性能优化与 React Compiler](advanced/performance-optimization.md)：React 19 自动 Memoization 编译器原理、`useMemo` 与 `useCallback` 的正确使用时机、React DevTools Profiler 性能分析。
+
+#### 💡 核心示例：React.memo 与 useCallback 避免不必要重渲染
+
+```tsx
+import React, { useState, useCallback } from 'react';
+
+// 使用 React.memo 包裹：只有 Props 发生浅比较变化时，子组件才会重渲染
+const ExpensiveButton = React.memo(({ onClick }: { onClick: () => void }) => {
+  console.log('按钮组件被渲染了！');
+  return <button onClick={onClick}>提交</button>;
+});
+
+function ParentContainer() {
+  const [text, setText] = useState('');
+  const [count, setCount] = useState(0);
+
+  // 使用 useCallback 缓存函数引用，防止 ParentContainer 渲染时重新生成新的 onClick 引用
+  const handleButtonClick = useCallback(() => {
+    setCount(c => c + 1);
+  }, []); // 依赖项为空，引用始终不变
+
+  return (
+    <div>
+      <input value={text} onChange={e => setText(e.target.value)} />
+      {/* 改变 input 的 text 触发父组件更新，但由于 useCallback 的存在，ExpensiveButton 不会重新渲染 */}
+      <ExpensiveButton onClick={handleButtonClick} />
+    </div>
+  );
+}
+```
 
 ### 4.2 渲染优化与批量更新
 
-- [批量更新与渲染优化策略](advanced/render-optimization.md)：自动批处理 (Automatic Batching)、`flushSync` 强制同步渲染、避免不必要的重渲染、组件拆分与状态提升策略。
+- [批量更新与渲染优化策略](advanced/render-optimization.md)：自动批处理 (Automatic Batching)、`flushSync` 强制同步渲染、避免不必要的重渲染。
+
+#### 💡 核心示例：flushSync 强制同步获取最新 DOM 状态
+
+```tsx
+import { useState } from 'react';
+import { flushSync } from 'react-dom';
+
+function ScrollToBottom() {
+  const [messages, setMessages] = useState<string[]>([]);
+
+  const addMessage = () => {
+    // 强制 React 立即同步更新 DOM，跳过异步批处理
+    flushSync(() => {
+      setMessages(m => [...m, '新消息']);
+    });
+    // DOM 已经更新完毕，在此处可以安全获取滚动高度并自动滚动到底部
+    const listElement = document.getElementById('message-list');
+    if (listElement) {
+      listElement.scrollTop = listElement.scrollHeight;
+    }
+  };
+
+  return (
+    <div>
+      <div id="message-list" style={{ height: '100px', overflowY: 'auto' }}>
+        {messages.map((m, i) => <p key={i}>{m}</p>)}
+      </div>
+      <button onClick={addMessage}>发送</button>
+    </div>
+  );
+}
+```
 
 ### 4.3 TypeScript + React 类型系统
 
-- [TypeScript 类型体系与泛型约束](advanced/typescript-react.md)：`React.FC` vs 普通函数组件、泛型组件设计、`PropsWithChildren`、Refs 类型标注、事件处理类型、自定义 Hooks 类型推导等高级类型技巧。
+- [TypeScript 类型体系与泛型约束](advanced/typescript-react.md)：`React.FC` 与普通组件对比、泛型组件设计、事件处理类型、自定义 Hooks 类型推导。
+
+#### 💡 核心示例：通用泛型表格组件与事件类型
+
+```tsx
+import React from 'react';
+
+// 1. 定义泛型表格组件 Props
+interface TableProps<T> {
+  data: T[];
+  renderRow: (item: T) => React.ReactNode;
+}
+
+// 2. 泛型声明，使得传入不同的 data 可以自动推导 item 类型
+export function GenericTable<T>({ data, renderRow }: TableProps<T>) {
+  return (
+    <table>
+      <tbody>
+        {data.map((item, index) => (
+          <tr key={index}>{renderRow(item)}</tr>
+        ))}
+      </tbody>
+    </table>
+  );
+}
+
+// 3. 键盘事件类型标注
+function TypingInput() {
+  const handleKeyDown = (event: React.KeyboardEvent<HTMLInputElement>) => {
+    if (event.key === 'Enter') {
+      console.log('按下了回车键，提交值：', event.currentTarget.value);
+    }
+  };
+
+  return <input type="text" onKeyDown={handleKeyDown} />;
+}
+```
 
 ### 4.4 测试策略与 TDD
 
-- [测试驱动开发与测试策略](advanced/testing-strategy.md)：React Testing Library 最佳实践、组件单元测试、集成测试、E2E 测试 (Playwright)、Mock 策略与测试覆盖率管理。
+- [测试驱动开发与测试策略](advanced/testing-strategy.md)：React Testing Library 最佳实践、组件单元测试、集成测试、Mock 策略与测试覆盖率管理。
+
+#### 💡 核心示例：RTL 进行交互单元测试
+
+```tsx
+import { render, screen } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
+import Counter from './Counter';
+
+test('用户点击按钮，计数器应该递增', async () => {
+  // 1. 渲染待测试的组件
+  render(<Counter />);
+  
+  // 2. 寻找 DOM 元素
+  const button = screen.getByRole('button', { name: /点击/i });
+  const text = screen.getByText(/当前计数值: 0/i);
+  expect(text).toBeInTheDocument();
+
+  // 3. 模拟用户真实点击交互
+  await userEvent.click(button);
+
+  // 4. 断言验证期望结果
+  expect(screen.getByText(/当前计数值: 1/i)).toBeInTheDocument();
+});
+```
 
 ---
 
 ## 第五阶段：全栈架构、SSR 与 React 19 新特性 (Architect: Server & Future)
 
-掌握服务端渲染与全栈化应用，跟进 React 团队最新前沿动向。
-
 ### 5.1 SSR/SSG 架构与 Hydration
 
-- [SSR/SSG 架构与 Hydration 机制](advanced/ssr-ssg.md)：服务端渲染 (SSR) 与静态站点生成 (SSG) 的区别与适用场景、Hydration 注水过程与常见错误、`<BrowserOnly>` 防空设计、`useEffect` 在 SSG 中的执行时机。
+- [SSR/SSG 架构与 Hydration 机制](advanced/ssr-ssg.md)：服务端渲染 (SSR) 与静态站点生成 (SSG) 的区别与适用场景、Hydration 注水过程与常见错误、`<BrowserOnly>` 防空设计。
+
+#### 💡 核心示例：BrowserOnly 规避服务端 Node.js 没有 window 对象的崩溃报错
+
+```tsx
+import BrowserOnly from '@docusaurus/BrowserOnly';
+
+function ResponsiveWidget() {
+  return (
+    <BrowserOnly fallback={<div>正在检测视口...</div>}>
+      {() => {
+        // 这里的代码只会在客户端浏览器中执行，可以安全读取 window.innerWidth
+        const width = window.innerWidth;
+        return <div>当前屏幕宽度：{width}px</div>;
+      }}
+    </BrowserOnly>
+  );
+}
+```
 
 ### 5.2 Next.js 与 Docusaurus 实践
 
-- [Next.js App Router 与 Docusaurus 定制](advanced/nextjs-docusaurus.md)：Next.js 14+ App Router 架构、Server Components vs Client Components、Docusaurus 主题 Swizzling、静态资源管理与 `useBaseUrl` 路径映射。
+- [Next.js App Router 与 Docusaurus 定制](advanced/nextjs-docusaurus.md)：Next.js 14+ App Router 架构、Server Components vs Client Components、Docusaurus 主题定制。
+
+#### 💡 核心示例：RSC 服务端组件与客户端组件混合使用
+
+```tsx
+// 默认位于 App Router 下的文件均为 React Server Component (RSC)
+// 直接在服务端执行，可以进行数据库直连或 API 安全请求
+import { db } from '@/utils/db';
+import LikeButton from './LikeButton'; // 引入客户端组件
+
+export default async function ProductPage({ params }: { params: { id: string } }) {
+  const product = await db.queryProduct(params.id); // 服务端直接获取数据，零客户端 JS
+
+  return (
+    <div className="product-page">
+      <h1>{product.name}</h1>
+      <p>{product.description}</p>
+      
+      {/* 交互式的部分交由客户端组件完成 */}
+      <LikeButton productId={product.id} />
+    </div>
+  );
+}
+
+// ----------------------------------------------------
+// LikeButton.tsx
+// 'use client'; // 声明此模块为客户端组件边界，在浏览器中激活交互
+// import { useState } from 'react';
+// export default function LikeButton({ productId }) { ... }
+```
 
 ### 5.3 React 19 全新特性
 
-- [React 19 全新特性与 API](advanced/react19-features.md)：深入实践 React 19 异步 Action 管理器 `useActionState`、无感表单状态获取 `useFormStatus`、条件性解析 Resource 与 Context 的 `use` 关键字、`useOptimistic` 乐观更新 Hook 以及移除了 `forwardRef` 后的新 ref 传参体验。
+- [React 19 全新特性与 API](advanced/react19-features.md)：深入实践 React 19 异步 Action 管理器 `useActionState`、无感表单状态获取 `useFormStatus`、条件性解析 Resource 与 Context 的 `use` 关键字、`useOptimistic` 乐观更新 Hook。
+
+#### 💡 核心示例：useActionState 自动托管表单提交 Loading 与 Error 状态
+
+```tsx
+import { useActionState } from 'react';
+
+// 定义表单提交处理器
+async function submitFeedback(prevState: any, formData: FormData) {
+  const message = formData.get('message');
+  try {
+    await api.post('/feedback', { message });
+    return { success: true, error: null };
+  } catch (err: any) {
+    return { success: false, error: err.message };
+  }
+}
+
+function FeedbackForm() {
+  // state: 接收 Action 返回的结果
+  // formAction: 直接绑定到 <form action={...}> 的执行动作
+  // isPending: 自动感知异步操作状态，网络传输中为 true，完成后为 false
+  const [state, formAction, isPending] = useActionState(submitFeedback, {
+    success: false,
+    error: null
+  });
+
+  return (
+    <form action={formAction}>
+      <textarea name="message" required disabled={isPending} />
+      <button type="submit" disabled={isPending}>
+        {isPending ? '正在提交中...' : '提交反馈'}
+      </button>
+      {state.success && <p className="success">感谢您的宝贵意见！</p>}
+      {state.error && <p className="error">提交失败：{state.error}</p>}
+    </form>
+  );
+}
+```
 
 ---
 

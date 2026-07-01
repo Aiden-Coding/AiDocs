@@ -2,135 +2,151 @@
 sidebar_position: 9
 ---
 
-# React 测试策略与 TDD
+# 测试驱动开发与测试策略
 
-测试是 React 应用长期可维护性的关键。本文介绍 React 应用在单元测试、集成测试、端到端测试中的最佳实践，以及如何将测试驱动开发（TDD）纳入日常工作流。
+在企业级 React 应用开发中，高质量的测试套件是保障业务迭代不退化的“防弹背心”。本章我们将深入剖析 **React Testing Library (RTL)** 的设计哲学，并展示如何使用 **MSW (Mock Service Worker)** 对异步 API 数据进行三维立体测试。
 
 ---
 
-## 1. 单元测试：组件行为与逻辑验证
+## 1. React Testing Library 的设计哲学
 
-React Testing Library 是当前推荐的单元测试工具，强调以用户视角验证组件行为，而不是实现细节。
+传统的 React 测试工具（如 Enzyme）倾向于测试组件的“内部实现细节”（如检查组件的 state 值是什么，或者查找子组件的实例）。这种测试非常脆弱，一旦重构代码逻辑但功能没变，测试用例就会大面积挂掉。
 
-### 基本原则
+RTL 提出了颠覆性的测试指导思想：
+> **“测试你的组件时，应该尽可能像真实用户在跟它交互一样进行。”**
 
-- 以用户行为为中心，而非内部实现
-- 测试可见文本、按钮、输入等可交互元素
-- 使用 `screen` 和 `userEvent` 模拟用户操作
+### RTL 核心测试准则：
+- **测试用户体验而非实现**：用户看不到 state，用户只看得见 DOM 上的按钮、文字和输入框。
+- **优先使用语义化查询 (Queries)**：
+  - 首选 `getByRole`（按无障碍角色查询，如 `button`、`heading`），这能顺带检查页面是否具备无障碍易用性。
+  - 次选 `getByText`（按文本查询）。
+  - 最后万不得已，再使用 `getByTestId`（按自定义测试 ID 查询）。
 
-### 基本示例
+---
 
-```tsx
-import { render, screen } from '@testing-library/react';
-import userEvent from '@testing-library/user-event';
-import { LoginForm } from './LoginForm';
+## 2. Vitest 与 RTL 环境基本配置
 
-test('should submit credentials', async () => {
-  render(<LoginForm />);
+在现代化项目中，我们通常选择轻量、极速的 **Vitest** 结合 **RTL** 构建测试环境。
 
-  await userEvent.type(screen.getByLabelText(/用户名/i), 'alice');
-  await userEvent.type(screen.getByLabelText(/密码/i), 'pass123');
-  await userEvent.click(screen.getByRole('button', { name: /登录/i }));
+```javascript
+// vitest.config.ts (极简参考配置)
+import { defineConfig } from 'vitest/config';
+import react from '@vitejs/plugin-react';
 
-  expect(screen.getByText(/正在登录/i)).toBeInTheDocument();
+export default defineConfig({
+  plugins: [react()],
+  test: {
+    globals: true,
+    environment: 'jsdom', // 提供模拟浏览器 DOM 环境
+    setupFiles: './src/setupTests.ts', // 引入额外的断言库扩展
+  },
 });
+```
+
+在 `setupTests.ts` 中引入 `@testing-library/jest-dom` 以获得诸如 `toBeInTheDocument` 的断言扩展：
+```typescript
+import '@testing-library/jest-dom';
 ```
 
 ---
 
-## 2. 集成测试：组件协作与数据流验证
+## 3. 实战：使用 MSW 进行异步网络组件测试
 
-集成测试适合验证多个组件之间的协作逻辑，例如表单提交、路由导航、状态管理与网络请求流程。可结合 `msw`(Mock Service Worker) 来模拟后端响应。
+在真实业务中，最难写、最具含金量的是**异步网络请求交互测试**。直接 mock 全局的 `fetch` 会让测试用例变得非常假。**MSW (Mock Service Worker)** 的核心原理是：**拦截真实的浏览器/Node.js 网络请求层，并返回模拟的数据**，从而支持组件运行最真实的网络逻辑。
 
-### 推荐做法
+### 1. 业务组件代码
 
-- 使用 `setupServer` 和 `rest` 定义 API mock
-- 只 mock 网络边界，不 mock React 组件内部逻辑
-- 在测试中关注用户可见输出和关键路径
+```tsx
+import { useState } from 'react';
 
-### 集成测试示例
+export function UserLoader() {
+  const [user, setUser] = useState<{ name: string } | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const handleFetch = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const res = await fetch('/api/user/active');
+      if (!res.ok) throw new Error('接口出错');
+      const data = await res.json();
+      setUser(data);
+    } catch (err: any) {
+      setError(err.message || '加载出错');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div>
+      <button onClick={handleFetch} disabled={loading}>获取当前用户</button>
+      {loading && <p role="status">正在努力加载中...</p>}
+      {error && <p className="error-msg">{error}</p>}
+      {user && <p className="success-msg">用户名：{user.name}</p>}
+    </div>
+  );
+}
+```
+
+### 2. 测试用例编写 (MSW + RTL)
 
 ```tsx
 import { render, screen, waitFor } from '@testing-library/react';
-import { rest } from 'msw';
+import userEvent from '@testing-library/user-event';
+import { http, HttpResponse } from 'msw';
 import { setupServer } from 'msw/node';
-import { App } from './App';
+import { UserLoader } from './UserLoader';
+import { beforeAll, afterAll, afterEach, test, expect } from 'vitest';
 
+// 1. 初始化 Mock Server 并定义 API 拦截处理器
 const server = setupServer(
-  rest.get('/api/profile', (req, res, ctx) => {
-    return res(ctx.json({ name: 'Alice' }));
+  http.get('/api/user/active', () => {
+    return HttpResponse.json({ name: '李四' });
   })
 );
 
+// 2. 绑定生命周期钩子，托管请求拦截
 beforeAll(() => server.listen());
 afterEach(() => server.resetHandlers());
 afterAll(() => server.close());
 
-test('renders user profile', async () => {
-  render(<App />);
+test('异步成功加载用户信息流程', async () => {
+  // A. 渲染组件
+  render(<UserLoader />);
 
-  expect(screen.getByText(/加载中/i)).toBeInTheDocument();
-  await waitFor(() => expect(screen.getByText(/Alice/i)).toBeInTheDocument());
+  const fetchBtn = screen.getByRole('button', { name: /获取当前用户/i });
+  expect(screen.queryByText(/用户名：/i)).not.toBeInTheDocument();
+
+  // B. 模拟用户点击交互
+  await userEvent.click(fetchBtn);
+
+  // C. 校验 Loading 挂起态展示
+  expect(screen.getByRole('status')).toHaveTextContent('正在努力加载中...');
+
+  // D. 等待异步 DOM 变化出现
+  await waitFor(() => {
+    expect(screen.getByText('用户名：李四')).toBeInTheDocument();
+  });
+  expect(screen.queryByRole('status')).not.toBeInTheDocument();
+});
+
+test('接口报错时的异常捕获展示流程', async () => {
+  // 单次覆盖：将接口拦截改写为返回 500 报错
+  server.use(
+    http.get('/api/user/active', () => {
+      return new HttpResponse(null, { status: 500 });
+    })
+  );
+
+  render(<UserLoader />);
+  const fetchBtn = screen.getByRole('button', { name: /获取当前用户/i });
+
+  await userEvent.click(fetchBtn);
+
+  await waitFor(() => {
+    expect(screen.getByText('加载出错')).toBeInTheDocument();
+  });
 });
 ```
-
----
-
-## 3. 端到端测试：真实用户流程验证
-
-端到端测试覆盖最关键的业务流程，通常使用 Playwright 或 Cypress。它们运行在真实浏览器环境中，验证整个应用从入口到后端交互的真实体验。
-
-### 端到端测试建议
-
-- 只编写稳定的高价值测试，用于核心流量路径
-- 使用页面对象模式（Page Object）提高可维护性
-- 避免对样式、详细 DOM 结构的过度断言
-
-### 示例
-
-```ts
-import { test, expect } from '@playwright/test';
-
-test('user can log in and see dashboard', async ({ page }) => {
-  await page.goto('http://localhost:3000');
-  await page.fill('input[name="username"]', 'alice');
-  await page.fill('input[name="password"]', 'pass123');
-  await page.click('button[type="submit"]');
-  await expect(page.locator('text=欢迎, alice')).toBeVisible();
-});
-```
-
----
-
-## 4. TDD 工作流建议
-
-1. 先写失败测试：明确期待的用户行为。
-2. 仅实现足够代码，使测试通过。
-3. 重构代码，保持测试覆盖。
-4. 定期回顾测试用例，删除重复或低价值的测试。
-
-### TDD 的价值
-
-- 让设计更模块化
-- 提高代码可靠性
-- 降低回归风险
-- 形成可执行文档
-
----
-
-## 5. React 特殊测试场景
-
-- `Suspense` 与延迟加载组件：使用 `waitFor` 或 `findBy` 等待异步内容。
-- `useReducer` 与复杂状态机：测试状态更新后的渲染结果。
-- `Context` 提供器：使用测试专用提供器包裹组件，避免直接修补依赖。
-
----
-
-## 6. 测试工具链建议
-
-- `vitest` / `jest`：测试运行器
-- `@testing-library/react`：用户行为测试
-- `msw`：网络请求模拟
-- `playwright`：端到端测试
-- `eslint-plugin-testing-library`：测试规范检查
-- `coverage`：保持核心路径测试覆盖率

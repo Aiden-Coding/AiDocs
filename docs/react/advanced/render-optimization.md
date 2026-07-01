@@ -1,166 +1,150 @@
 ---
-sidebar_position: 4
+sidebar_position: 7
 ---
 
-# 批量更新与渲染优化策略
+# 渲染优化与批量更新
 
-在 React 中，渲染优化不只是加缓存，而是构建一种“只渲染必要部分”的工程习惯。本文介绍 React 渲染优化的核心策略，包括自动批处理、`flushSync`、组件拆分、Pure Component 模式，以及避免常见的性能反模式。
+React 18+ 的架构演进在底层对重渲染的合并调度进行了重大升级，核心特征是**全面自动批处理（Automatic Batching）**。掌握这一机制的运行模式以及精巧的架构避坑手法，能让我们的应用在不做底层算法优化的前提下，在重渲染开销上实现大幅瘦身。
 
 ---
 
 ## 1. 自动批处理 (Automatic Batching)
 
-React 18 之后，React 能够自动合并同一事件处理程序中的多次状态更新为一次渲染。
+### 什么是批处理？
+当用户点击一个事件，你触发了多个状态的修改，React 不会每一次修改都触发一次 UI 的重渲染，而是将这几个修改**“打包”**起来，只在最后触发**唯一一次** DOM 更新与重渲染。这就像你网购了多件衣服，商家打包寄送一个包裹，而不是分好几个快递寄给你。
+
+### React 18 前后的重大差异
+
+在 **React 18 之前**，React 仅对 **React 事件处理函数**（如 `onClick`、`onChange`）内部的状态修改执行批处理。一旦状态修改位于以下异步场景的内部：
+- `Promise.then` 回调中
+- `setTimeout` / `setInterval` 宏任务中
+- 原生事件监听器（如 `document.addEventListener`）中
+
+React 就会**失效批处理机制**，每一个 `setState` 都会同步且立刻触发一次单独的重渲染，这会造成极大的性能浪费。
+
+在 **React 18 及之后**，由于并发特性的引入，React 实现了**全面自动批处理**。不论状态修改发生在什么异步回调、原生事件或是定时器内部，一律执行打包更新。
 
 ```tsx
-function Counter() {
+function BatchingContrast() {
   const [count, setCount] = useState(0);
-  const [name, setName] = useState('张三');
+  const [flag, setFlag] = useState(false);
 
-  const handleClick = () => {
-    setCount(c => c + 1);
-    setName('李四');
-  };
-
-  return <button onClick={handleClick}>点击</button>;
-}
-```
-
-在 React 18 中，这两次状态更新会被自动批处理，避免触发两次渲染。
-
-### 1.1 何时需要 `flushSync`
-
-`flushSync` 用于在需要立即提交更新时强制同步渲染，例如在事件处理程序外部或与第三方库交互时：
-
-```tsx
-import { flushSync } from 'react-dom';
-
-function InputWrapper() {
-  const [value, setValue] = useState('');
-
-  const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    flushSync(() => {
-      setValue(event.target.value);
+  const handleClickAsync = () => {
+    fetch('/api/data').then(() => {
+      // 💡 在 React 18 之后，此处只会触发 1 次重新渲染！
+      // 而在旧版 React 中，由于在 Promise 回调内，此处会立即导致 2 次独立的重渲染
+      setCount(c => c + 1);
+      setFlag(f => !f);
     });
-    // 此时 value 会立即在下一次渲染中生效
   };
 
-  return <input value={value} onChange={handleChange} />;
+  return <button onClick={handleClickAsync}>异步状态触发</button>;
 }
 ```
-
-> 仅在确实需要立即同步结果时使用 `flushSync`，否则会破坏 React 的调度与性能优势。
 
 ---
 
-## 2. 组件拆分与避免大组件重渲染
+## 2. 绕过批处理：flushSync
 
-### 2.1 拆分大组件
+如果有些业务逻辑非常特殊，你**必须在状态修改后，立刻同步读取 DOM 最新的尺寸、高度或属性值**。此时如果你等待 React 异步批处理渲染，会读到旧的数据。
 
-将一个复杂组件拆分成更小、更单一职责的组件，可以让 React 更容易复用子树，减少不必要的渲染。
+你可以使用 `flushSync` 来强制 React 绕过批处理，立即同步更新 DOM：
 
 ```tsx
-function Dashboard({ user, stats }) {
+import { useState } from 'react';
+import { flushSync } from 'react-dom';
+
+function FlushSyncDemo() {
+  const [text, setText] = useState('初始值');
+
+  const handleUpdate = () => {
+    // 强制此更新同步进行
+    flushSync(() => {
+      setText('最新输入值');
+    });
+    // 由于 flushSync，下方的 DOM 元素内容已经同步被更改为 '最新输入值'
+    const divContent = document.getElementById('demo-div')?.innerText;
+    console.log('最新的 DOM 文本：', divContent); // 输出 '最新输入值'
+  };
+
   return (
     <div>
-      <UserCard user={user} />
-      <StatsPanel stats={stats} />
+      <div id="demo-div">{text}</div>
+      <button onClick={handleUpdate}>同步更新</button>
     </div>
   );
 }
 ```
 
-如果 `user` 不变，`StatsPanel` 也不会重新渲染，除非其 props 变化。
-
-### 2.2 `React.memo` 与纯组件模式
-
-`React.memo` 可以缓存组件输出，并仅在 props 发生浅比较变化时重新渲染。
-
-```tsx
-const UserCard = React.memo(function UserCard({ user }) {
-  return <div>{user.name}</div>;
-});
-```
-
-> 注意：只适用于 props 是可稳定比较的情况，避免无效 memo 导致复杂度上升。
+> [!CAUTION]
+> **不要滥用 `flushSync`**。
+> 它会严重破坏 React 的更新性能调度，极易触发主线程长时间卡顿，因此它只应该被用于对 DOM 元素尺寸读取有硬性实时性需求的极端微观场景。
 
 ---
 
-## 3. 传递 props 时避免创建新引用
+## 3. 通过“组件拆分与组合”巧妙规避重渲染
 
-在渲染函数中创建对象或函数会导致子组件接收到新引用，从而触发无意义渲染。
+很多时候，我们的组件被重新渲染，是因为它跟另外一些“高频更新的状态”塞在了同一个容器里。其实不需要写 `React.memo`，通过合理的架构重构，即可低成本地切断重渲染的传递。
 
-### 3.1 避免内联对象
+### 手法 A：状态下沉 (State Down)
+如果一个复杂的页面组件中，只有一小块区域（如一个展开/折叠面板）依赖某个状态，应当将这个状态和这块区域**打包提取为一个单独的子组件**，让状态留在子组件内部。
 
 ```tsx
-function Parent({ config }) {
-  return <Child style={{ color: 'red' }} />;
+// ❌ 错误做法：将面板状态留在父组件，每次 toggle 都会导致整个页面大卡顿
+function HeavyPage() {
+  const [isOpen, setIsOpen] = useState(false);
+  return (
+    <div>
+      <button onClick={() => setIsOpen(!isOpen)}>切换面板</button>
+      {isOpen && <PanelContent />}
+      <VeryHeavySubtree /> {/* 每次 toggle，这个昂贵的子树都会被连累重新渲染！ */}
+    </div>
+  );
+}
+
+//  正确做法：将状态下沉到局部组件
+function TogglePanel() {
+  const [isOpen, setIsOpen] = useState(false);
+  return (
+    <>
+      <button onClick={() => setIsOpen(!isOpen)}>切换面板</button>
+      {isOpen && <PanelContent />}
+    </>
+  );
+}
+
+function HealthyPage() {
+  return (
+    <div>
+      <TogglePanel />
+      <VeryHeavySubtree /> {/* 状态下沉后，此子树绝对不会因为面板的开合触发重渲染 */}
+    </div>
+  );
 }
 ```
 
-改为：
+### 手法 B：内容提取为 Children (Lifting Content Up)
+如果状态更改所在的组件确实包含一个极重的内容树，可以将这个极重的内容树提取出来，以 `children` 属性的方式传入，实现重渲染的物理隔离。
 
 ```tsx
-const RED_STYLE = { color: 'red' };
+//  推荐：由于 HeavyTree 是作为 children 从外部传入的，它的引用在渲染时保持稳定，
+// React 发现其未改变，会自动跳过 HeavyTree 的渲染，即使 Wrapper 的 state 改变了
+function ScrollWrapper({ children }: { children: React.ReactNode }) {
+  const [scrollPos, setScrollPos] = useState(0);
 
-function Parent({ config }) {
-  return <Child style={RED_STYLE} />;
+  return (
+    <div onScroll={(e) => setScrollPos(e.currentTarget.scrollTop)}>
+      <p>滑动距离：{scrollPos}px</p>
+      {children}
+    </div>
+  );
+}
+
+function Page() {
+  return (
+    <ScrollWrapper>
+      <VeryHeavyTree /> {/* 被成功保护，不跟随滑动高频重渲染 */}
+    </ScrollWrapper>
+  );
 }
 ```
-
-### 3.2 使用 `useMemo` 缓存复杂 props
-
-```tsx
-function Parent({ filters }) {
-  const memoizedOptions = useMemo(() => ({ filters }), [filters]);
-  return <Child options={memoizedOptions} />;
-}
-```
-
----
-
-## 4. `useMemo` / `useCallback` 的正确边界
-
-### 4.1 适合使用的场景
-
-- `useMemo`：缓存昂贵计算结果，例如排序、过滤、汇总等。
-- `useCallback`：为子组件提供稳定函数引用，避免触发依赖于函数的渲染。
-
-### 4.2 不要过度使用
-
-简单值计算或轻量对象通常不需要缓存，反而会增加维护成本。
-
-```tsx
-// 不建议
-const doubled = useMemo(() => count * 2, [count]);
-```
-
----
-
-## 5. 事件处理与状态提升
-
-### 5.1 将状态提升到最小共享范围
-
-仅在必要时将状态提升到父组件，避免整个树都因局部状态变化而重渲染。
-
-### 5.2 使用稳定事件回调
-
-如果函数反复创建，可通过 `useCallback` 或自定义 Hook 将其稳定化。
-
----
-
-## 6. 列表渲染与 Key 优化
-
-- 使用稳定的唯一 `key`，避免 `index` 作为 `key`。
-- 列表按业务 ID 而非位置匹配。
-- 对于大型列表，优先使用虚拟列表（`react-window`、`react-virtualized`）。
-
----
-
-## 7. 性能分析工具
-
-- React DevTools Profiler：查找渲染热点与不必要的重渲染。
-- Chrome Performance：分析 JS 执行、布局与绘制。
-- Lighthouse：整体性能评分与建议。
-
-优化不是一次性任务，而是持续观察与迭代的过程。

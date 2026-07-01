@@ -1,449 +1,113 @@
 ---
-sidebar_position: 10
+sidebar_position: 11
 ---
 
-# Next.js App Router 与 Docusaurus 定制
+# Next.js App Router 与 Docusaurus 全栈实践
 
-本文深入探索 Next.js 14+ App Router 架构的服务端组件模型，以及 Docusaurus 静态站点生成的主题定制、路径管理与性能优化策略。
+现代 React 已经从单纯的客户端渲染库进化为全栈渲染框架。本章我们将深入剖析 **Next.js 14+ App Router** 核心架构，详解 **React Server Components (RSC)** 与客户端组件的边界设计，并分享 **Docusaurus** 静态站点的工程化定制方案。
 
 ---
 
-## 1. Next.js App Router 核心概念
+## 1. Next.js App Router 与 React Server Components (RSC)
 
-Next.js 13+ 引入的 App Router 是基于 React Server Components (RSC) 的全新路由系统，彻底改变了传统的 Pages Router 架构。
+Next.js 13+ 引入的 App Router 建立在 React Server Components (RSC) 基础之上。在这一模型中，**默认所有在 `app` 目录下的组件都是服务端组件**。
 
-### 1.1 Server Components vs Client Components
+### Server Components vs Client Components
 
-```tsx
-// app/ServerComponent.tsx
-// 默认情况下，所有组件都是 Server Components
-export default function ServerComponent() {
-  // 可以直接访问数据库、文件系统
-  const data = await fetchDataFromDatabase();
-  
-  return <div>{data.title}</div>;
-}
+- **Server Components (服务端组件)**：
+  - **执行环境**：仅在服务端执行，直接渲染出 HTML 并流式传送到浏览器。
+  - **打包体积**：其依赖的包（如 marked 渲染库、数据库连接驱动）只在服务端运行，**不会被打包进客户端 JS 中**，从而实现了极致的包体积优化（Zero Bundle Size）。
+  - **限制**：**不能**使用 `useState`、`useEffect` 等 Hook，**不能**绑定 `onClick` 等客户端事件监听。
+- **Client Components (客户端组件)**：
+  - **开启方式**：在文件最顶部添加 `'use client'` 指令。
+  - **执行环境**：先在服务端预渲染 HTML（SSR），然后在浏览器中进行 Hydration 注水以激活交互。
+  - **限制**：不能直接读取服务端专有的文件系统或直连数据库。
 
-// app/ClientComponent.tsx
-'use client'; // 显式标记为客户端组件
+---
 
-import { useState } from 'react';
+## 2. RSC 序列化限制与数据穿透
 
-export default function ClientComponent() {
-  const [count, setCount] = useState(0);
-  
-  // 可以使用 Hooks 和浏览器 API
-  return <button onClick={() => setCount(count + 1)}>{count}</button>;
-}
-```
+在将数据从 Server Component 传递给 Client Component 时，所有传递的 Props 必须是**可序列化的（Serializable）**。
 
-**Server Components 特性**：
-- 在服务器端渲染，不打包到客户端 Bundle
-- 可以直接访问后端资源（数据库、文件系统）
-- 无法使用 Hooks、浏览器 API、事件处理器
-
-**Client Components 特性**：
-- 使用 `'use client'` 指令标记
-- 支持所有 React 特性（Hooks、事件处理）
-- 会打包到客户端 Bundle
-
-### 1.2 组件组合模式
+- **允许的数据**：普通的 JSON 数据（字符串、数字、布尔值、普通的数组和对象）。
+- **禁止的数据**：**函数**（如事件回调）、**类实例**（Class Instances）、**Symbol** 等。
 
 ```tsx
-// app/page.tsx - Server Component
-import ClientSidebar from './ClientSidebar';
-import ServerContent from './ServerContent';
+// ❌ 错误示范：Server Component 试图向 Client Component 传递函数
+// app/product/page.tsx (Server Component)
+import LikeButton from './LikeButton';
 
 export default function Page() {
-  return (
-    <div>
-      {/* Server Component 可以渲染 Client Component */}
-      <ClientSidebar />
-      
-      {/* Server Component 可以渲染其他 Server Component */}
-      <ServerContent />
-    </div>
-  );
-}
+  const handleLike = () => {
+    'use server';
+    console.log('点赞成功');
+  };
 
-// app/ClientSidebar.tsx
-'use client';
-
-export default function ClientSidebar({ children }) {
-  // Client Component 可以接收 Server Component 作为 children
-  return (
-    <aside>
-      {children}
-    </aside>
-  );
-}
-```
-
-### 1.3 数据获取模式
-
-```tsx
-// app/posts/[id]/page.tsx
-interface PageProps {
-  params: { id: string };
-  searchParams: { [key: string]: string | string[] | undefined };
-}
-
-// Server Component 中直接使用 async/await
-export default async function PostPage({ params }: PageProps) {
-  // 并行获取数据
-  const [post, comments] = await Promise.all([
-    fetch(`/api/posts/${params.id}`).then(r => r.json()),
-    fetch(`/api/posts/${params.id}/comments`).then(r => r.json())
-  ]);
-
-  return (
-    <article>
-      <h1>{post.title}</h1>
-      <p>{post.content}</p>
-      <CommentList comments={comments} />
-    </article>
-  );
-}
-
-// 生成静态参数（SSG）
-export async function generateStaticParams() {
-  const posts = await fetch('/api/posts').then(r => r.json());
-  
-  return posts.map((post) => ({
-    id: post.id.toString()
-  }));
-}
-```
-
-### 1.4 路由组与布局
-
-```tsx
-// app/layout.tsx - 根布局
-export default function RootLayout({ children }) {
-  return (
-    <html lang="zh-CN">
-      <body>
-        <header>网站头部</header>
-        {children}
-        <footer>网站底部</footer>
-      </body>
-    </html>
-  );
-}
-
-// app/dashboard/layout.tsx - 嵌套布局
-export default function DashboardLayout({ children }) {
-  return (
-    <div className="dashboard">
-      <nav>仪表盘导航</nav>
-      <main>{children}</main>
-    </div>
-  );
-}
-
-// app/dashboard/page.tsx
-export default function DashboardPage() {
-  return <h1>仪表盘首页</h1>;
+  // 报错：无法传递函数给客户端组件
+  return <LikeButton onLike={handleLike} />;
 }
 ```
 
 ---
 
-## 2. Docusaurus 主题定制
+## 3. Next.js 缓存机制：Data Cache 与 Full Route Cache
 
-Docusaurus 是基于 React 的静态站点生成器，广泛用于技术文档站点。
+Next.js 14+ 提供了极其强悍且细粒度的缓存机制以压榨服务端响应极限。
 
-### 2.1 Swizzling 主题组件
+### 1) Data Cache (数据缓存)
+Next.js 拦截并增强了原生的 `fetch` 方法。请求的数据会被自动持久化缓存到服务器硬盘中，即使服务器重启，下一次请求依然直接读取缓存。
 
-Swizzling 允许你覆盖或包装 Docusaurus 内置组件。
+```tsx
+// 默认缓存：无限期有效，直到手动清除 (revalidate)
+const res = await fetch('https://api.example.com/data', { cache: 'force-cache' });
+
+// 增量失效 (ISR)：缓存 1 小时 (3600 秒)
+const res = await fetch('https://api.example.com/data', { next: { revalidate: 3600 } });
+
+// 禁用缓存：每次请求都走网络
+const res = await fetch('https://api.example.com/data', { cache: 'no-store' });
+```
+
+### 2) Full Route Cache (整页路由缓存)
+在构建期，Next.js 会自动分析所有路由。如果检测到某个路由只依赖静态数据（即整个路径上没有使用 headers、cookies、searchParams，且 fetch 请求均开启了缓存），Next.js 会直接**将整个路由编译为静态 HTML 和 JSON 缓存文件**。
+当用户请求时，服务器会以零计算开销、微秒级的速度直接从内存或文件缓存中返回该路由。
+
+---
+
+## 4. Docusaurus 主题定制 (Swizzling)
+
+Docusaurus 是一款基于 React 驱动的极佳静态站点生成器。在深度开发文档时，我们需要定制一些默认的内置组件外观。这可以通过 **Swizzling** 技术实现。
+
+Swizzling 可以理解为“撬开”Docusaurus 内置的主题包，将指定组件暴露到项目的 `src/theme` 目录下进行覆盖重写。
+
+### Swizzling 操作命令
+在项目根目录下运行终端命令（以包装默认的 `DocItem` 组件为例）：
 
 ```bash
-# 查看可 Swizzle 的组件
-npm run swizzle @docusaurus/theme-classic -- --list
-
-# Swizzle 特定组件
-npm run swizzle @docusaurus/theme-classic Footer -- --eject
+# 自动生成 src/theme/DocItem 的代码副本，允许你自由修改
+npm run swizzle @docusaurus/theme-classic DocItem -- --wrap
 ```
 
-**两种 Swizzle 模式**：
-- `--eject`：完全复制组件源码，可完全自定义
-- `--wrap`：包装原组件，只添加额外功能
+### 💡 核心示例：安全使用路径映射与 Docusaurus 专属 Hooks
 
-```tsx
-// src/theme/Footer/index.tsx - 自定义 Footer
-import React from 'react';
-import Footer from '@theme-original/Footer';
-
-export default function FooterWrapper(props) {
-  return (
-    <>
-      <Footer {...props} />
-      <div className="custom-footer">
-        <p>自定义底部内容</p>
-      </div>
-    </>
-  );
-}
-```
-
-### 2.2 自定义 CSS 与主题变量
-
-```css
-/* src/css/custom.css */
-:root {
-  /* 主色调 */
-  --ifm-color-primary: #2e8555;
-  --ifm-color-primary-dark: #29784c;
-  
-  /* 代码块 */
-  --ifm-code-font-size: 95%;
-  
-  /* 导航栏 */
-  --ifm-navbar-height: 4rem;
-}
-
-/* 深色模式 */
-[data-theme='dark'] {
-  --ifm-color-primary: #25c2a0;
-  --ifm-background-color: #1b1b1d;
-}
-
-/* 自定义组件样式 */
-.custom-card {
-  border: 1px solid var(--ifm-color-emphasis-300);
-  border-radius: 8px;
-  padding: 1rem;
-}
-```
-
-### 2.3 MDX 组件注入
-
-```tsx
-// src/theme/MDXComponents.tsx
-import React from 'react';
-import MDXComponents from '@theme-original/MDXComponents';
-import Highlight from '@site/src/components/Highlight';
-import Tabs from '@theme/Tabs';
-import TabItem from '@theme/TabItem';
-
-export default {
-  ...MDXComponents,
-  Highlight, // 可在 MDX 中直接使用 <Highlight>
-  Tabs,
-  TabItem
-};
-```
-
-在 MDX 文件中使用：
-
-````mdx
-# 我的文档
-
-<Highlight color="#25c2a0">重点内容</Highlight>
-
-<Tabs>
-  <TabItem value="js" label="JavaScript">
-    ```js
-    console.log('Hello');
-    ```
-  </TabItem>
-  <TabItem value="ts" label="TypeScript">
-    ```ts
-    const msg: string = 'Hello';
-    ```
-  </TabItem>
-</Tabs>
-````
-
-### 2.4 useBaseUrl 路径管理
+Docusaurus 使用 `<Link>` 和 `useBaseUrl` 来智能管理不同静态资源在生产环境部署时的子路径映射，规避相对路径失效问题。
 
 ```tsx
 import useBaseUrl from '@docusaurus/useBaseUrl';
-import { useHistory } from '@docusaurus/router';
+import Link from '@docusaurus/Link';
 
-function MyComponent() {
-  // 自动处理 baseUrl 前缀
-  const logoUrl = useBaseUrl('/img/logo.svg');
-  const docsUrl = useBaseUrl('/docs/intro');
-  
-  const history = useHistory();
-  
-  const navigateToDocs = () => {
-    history.push(docsUrl);
-  };
-  
+export function NavigationCard() {
+  // 智能补全部署子路径前缀，防止 CDN 路径丢失
+  const logoUrl = useBaseUrl('/img/logo.png');
+
   return (
-    <div>
+    <div className="nav-card">
       <img src={logoUrl} alt="Logo" />
-      <button onClick={navigateToDocs}>查看文档</button>
+      {/* Link 能够自动实现首屏预加载，优化静态切换体验 */}
+      <Link to="/docs/react/basic/hooks">
+        去学习核心 Hooks
+      </Link>
     </div>
   );
 }
 ```
-
----
-
-## 3. 性能优化策略
-
-### 3.1 Next.js 优化
-
-**图片优化**：
-
-```tsx
-import Image from 'next/image';
-
-function HeroSection() {
-  return (
-    <Image
-      src="/hero.jpg"
-      alt="Hero"
-      width={1200}
-      height={600}
-      priority // 预加载关键图片
-      placeholder="blur" // 模糊占位符
-    />
-  );
-}
-```
-
-**字体优化**：
-
-```tsx
-// app/layout.tsx
-import { Inter } from 'next/font/google';
-
-const inter = Inter({ 
-  subsets: ['latin'],
-  display: 'swap' // 字体交换策略
-});
-
-export default function RootLayout({ children }) {
-  return (
-    <html lang="en" className={inter.className}>
-      <body>{children}</body>
-    </html>
-  );
-}
-```
-
-**路由预取**：
-
-```tsx
-import Link from 'next/link';
-
-function Navigation() {
-  return (
-    <nav>
-      {/* 默认预取可见链接 */}
-      <Link href="/about">关于</Link>
-      
-      {/* 禁用预取 */}
-      <Link href="/heavy-page" prefetch={false}>
-        重页面
-      </Link>
-    </nav>
-  );
-}
-```
-
-### 3.2 Docusaurus 优化
-
-**代码分割**：
-
-```tsx
-import React, { lazy, Suspense } from 'react';
-
-const HeavyComponent = lazy(() => import('./HeavyComponent'));
-
-function MyPage() {
-  return (
-    <Suspense fallback={<div>加载中...</div>}>
-      <HeavyComponent />
-    </Suspense>
-  );
-}
-```
-
-**静态资源压缩**：
-
-```js
-// docusaurus.config.js
-module.exports = {
-  webpack: {
-    jsLoader: (isServer) => ({
-      loader: require.resolve('swc-loader'),
-      options: {
-        jsc: {
-          parser: {
-            syntax: 'typescript',
-            tsx: true,
-          },
-          minify: {
-            compress: true,
-            mangle: true
-          }
-        },
-      },
-    }),
-  },
-};
-```
-
----
-
-## 4. 常见问题与解决方案
-
-### 问题 1：Hydration 不匹配
-
-**原因**：Server Component 和 Client Component 渲染结果不一致。
-
-**解决方案**：
-
-```tsx
-'use client';
-
-import { useEffect, useState } from 'react';
-
-function TimeDisplay() {
-  const [time, setTime] = useState<string | null>(null);
-  
-  useEffect(() => {
-    // 客户端挂载后再显示时间
-    setTime(new Date().toLocaleTimeString());
-  }, []);
-  
-  return <div>{time || '加载中...'}</div>;
-}
-```
-
-### 问题 2：Docusaurus 构建时访问浏览器 API
-
-**解决方案**：
-
-```tsx
-import BrowserOnly from '@docusaurus/BrowserOnly';
-import ExecutionEnvironment from '@docusaurus/ExecutionEnvironment';
-
-function SafeComponent() {
-  // 方法 1：BrowserOnly
-  return (
-    <BrowserOnly>
-      {() => <div>窗口宽度: {window.innerWidth}</div>}
-    </BrowserOnly>
-  );
-  
-  // 方法 2：ExecutionEnvironment
-  if (ExecutionEnvironment.canUseDOM) {
-    console.log(window.location.href);
-  }
-}
-```
-
----
-
-## 总结
-
-- **Next.js App Router**：拥抱 Server Components，合理划分客户端与服务端边界
-- **Docusaurus**：通过 Swizzling 和 MDX 定制实现灵活的文档体验
-- **性能优化**：利用框架内置工具（Image、Font、Suspense）提升加载性能
-- **SSR/SSG 防护**：始终注意服务端与客户端的环境差异，使用适当的防护模式

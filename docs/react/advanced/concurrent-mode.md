@@ -1,516 +1,146 @@
 ---
-sidebar_position: 8
+sidebar_position: 3
 ---
 
-# 并发模式与时间切片调度
+# 并发模式与时间切片
 
-React 18 引入的并发模式 (Concurrent Mode) 是 React 架构的重大革新，它使得 React 能够同时处理多个任务，并根据优先级智能调度，从而实现更流畅的用户体验。
+并发模式（Concurrent Mode）是现代 React（React 18+）最底层的运行架构。它颠覆了原本“一旦开始、必须同步完成”的渲染模式，让 React 能够“在多项任务之间切换调度”，并根据任务优先级来中断或恢复页面的更新，从而为用户提供极其流畅的交互体验。
 
 ---
 
-## 1. 并发模式的设计动机
+## 1. 为什么需要并发模式？
 
-### 传统同步渲染的问题
+在传统的同步更新模式下，如果执行了一个计算量极其庞大的页面重渲染：
+- 渲染线程一旦启动就会霸占主线程，直到所有组件渲染完毕。
+- 用户在此期间的所有点击、滚动、输入事件都会被挂起排队，导致浏览器出现几百毫秒甚至数秒的卡顿假死。
 
-在 React 17 及之前的版本中，一旦渲染开始，React 会同步执行整个组件树的渲染，直到完成才会将控制权交还给浏览器。
+并发模式的核心目标是**解决 CPU 瓶颈与 I/O 瓶颈**。它的核心策略是：
+1. **时间切片 (Time Slicing)**：将单一长渲染任务切碎为多帧微型子任务。
+2. **优先级调度 (Priority-based Scheduling)**：根据任务的紧急程度决定谁先执行，且高优先级的任务可以打断正在执行的低优先级任务。
 
-```tsx
-// 同步渲染示例
-function HeavyComponent() {
-  // 复杂的计算
-  const result = expensiveComputation(); // 阻塞主线程
-  
-  return <div>{result}</div>;
-}
+---
+
+## 2. 优先级标尺：Lane 模型 (The Lane Model)
+
+在 React 16 中，任务优先级采用的是 **ExpirationTime（过期时间）** 模型，数值越小代表优先级越高。但这一模型无法直观地表达“任务批处理、任务组合”的场景。
+
+React 17 起全面引入了 **Lane 模型**。Lane 意为“车道”，React 使用了一个 **32 位二进制的整型数（Bitmask）** 来代表任务的优先级和类别。
+
+### Lane 优先级位图划分（简化版）
+每个“车道”都是二进制中的一位（1 bit）：
+
+```typescript
+// 💡 Lane 优先级位图常量定义
+export const NoLanes: Lanes =             0b0000000000000000000000000000000;
+export const SyncLane: Lane =             0b0000000000000000000000000000001; // 同步车道（如输入框即时反馈、flushSync）
+export const InputContinuousLane: Lane =  0b0000000000000000000000000000010; // 连续输入车道（如滚动、拖拽）
+export const DefaultLane: Lane =          0b0000000000000000000000000010000; // 默认车道（如普通的 setState 状态修改）
+export const TransitionLane: Lane =       0b0000000000000000000000001000000; // 转换车道（如 startTransition、useDeferredValue）
+export const OffscreenLane: Lane =        0b1000000000000000000000000000000; // 后台/离屏车道（如隐藏的 Tab 预加载）
 ```
 
-**问题**：
+### Lane 模型的位运算应用
+因为使用了二进制表示，React 可以极其快速、轻量地通过 **位运算** 来合并、剥离或筛选出高优先级的任务车道：
 
-- 长时间占用主线程，导致页面卡顿
-- 无法中断正在进行的渲染
-- 用户交互（如输入、点击）被延迟响应
+```javascript
+// 1. 合并两个车道的任务（位或操作）
+const mergedLanes = laneA | laneB;
 
-### 并发模式的解决方案
+// 2. 判断某个车道是否在待处理集合中（位与操作）
+const isLaneContained = (mergedLanes & SyncLane) !== 0;
 
-并发模式允许 React 在渲染过程中暂停、恢复甚至放弃渲染工作，优先处理更紧急的任务。
+// 3. 提取出当前最高优先级的单个车道（获取二进制中最低位的 1：lanes & -lanes）
+const highestPriorityLane = mergedLanes & -mergedLanes;
+```
+
+---
+
+## 3. 并发更新中断与恢复流程 (Reconciliation Interruption)
+
+并发模式的核心奥秘在于 `workLoopConcurrent` 循环。当 React 渲染一个组件时，会调用 Scheduler（调度器）来判断是否需要把主线程控制权归还给浏览器。
 
 ```mermaid
-gantt
-    title 同步渲染 vs 并发渲染
-    dateFormat X
-    axisFormat %L
-    
-    section 同步渲染
-    长任务渲染 :a1, 0, 100
-    用户输入被阻塞 :crit, a2, 100, 120
-    
-    section 并发渲染
-    渲染切片 1 :b1, 0, 20
-    处理用户输入 :b2, 20, 30
-    渲染切片 2 :b3, 30, 50
-    处理用户输入 :b4, 50, 60
-    渲染切片 3 :b5, 60, 80
+sequenceDiagram
+    participant S as Scheduler
+    participant E as React Engine (workLoop)
+    participant B as Browser Main Thread
+
+    E->>E: 开始构建 WIP Fiber 树
+    loop performUnitOfWork
+        E->>S: shouldYield()?
+        alt 主线程时间已用尽 (> 5ms)
+            S-->>E: 返回 true (立即打断)
+            E->>E: 保存当前 WIP 指针位置
+            E->>B: 让出主线程控制权 (浏览器响应点击或重绘)
+            B->>E: 浏览器空闲，触发下一帧回调 (requestIdleCallback / MessageChannel)
+            E->>E: 恢复 WIP 指针，继续向下计算
+        else 时间充足
+            S-->>E: 返回 false
+            E->>E: 继续构建下一个 Fiber 节点
+        end
+    end
+    E->>B: 构建完毕，同步 Commit 到 DOM
 ```
+
+### 并发任务打断的完整场景：
+1. **低优先级渲染启动**：用户点击“加载更多商品”，触发 `DefaultLane` 更新。React 启动 `workLoopConcurrent` 在内存中慢慢计算。
+2. **紧急任务突袭**：计算到一半时，用户在搜索框里输入了一个字母，触发 `SyncLane` 更新。
+3. **调度器决策**：Scheduler 检测到有高优先级的 `SyncLane` 挂起，且 `SyncLane < DefaultLane`（优先级高于默认车道），立刻强行打断当前 WIP 树的计算。
+4. **优先处理紧急任务**：React 丢弃或挂起刚才计算到一半的低优先级 WIP 树，重新以最新输入值构建一棵全新的 `SyncLane` WIP 树，并以最快速度 Commit 到真实 DOM，呈现用户的输入反馈。
+5. **恢复低优先级任务**：紧急任务渲染完毕后，Scheduler 在下一次空闲时间里，重新安排并恢复低优先级 `DefaultLane` 任务的计算。
 
 ---
 
-## 2. 时间切片 (Time Slicing)
+## 4. 并发 API：startTransition 与 useDeferredValue
 
-### Scheduler 调度器
+并发模式的底层原理为我们提供了两个可以显著提升页面流畅度的 API：
 
-React 使用内部的 Scheduler 包来实现时间切片，将长任务拆分为多个小任务，在浏览器空闲时执行。
-
-```tsx
-// React 内部的时间切片机制（简化版）
-function workLoop(deadline) {
-  let shouldYield = false;
-  
-  while (nextUnitOfWork && !shouldYield) {
-    // 执行一小块工作
-    nextUnitOfWork = performUnitOfWork(nextUnitOfWork);
-    
-    // 检查是否需要让出控制权
-    shouldYield = deadline.timeRemaining() < 1;
-  }
-  
-  if (nextUnitOfWork) {
-    // 还有工作未完成，继续调度
-    requestIdleCallback(workLoop);
-  } else {
-    // 工作完成，提交更新
-    commitRoot();
-  }
-}
-```
-
-### 优先级模型
-
-React 根据任务的紧急程度分配不同的优先级：
-
-| 优先级 | 场景 | 过期时间 |
-| -------- | ------ | ---------- |
-| Immediate | 用户输入、点击 | 立即 |
-| UserBlocking | 滚动、动画 | 250ms |
-| Normal | 数据获取、异步更新 | 5s |
-| Low | 日志、分析 | 10s |
-| Idle | 不紧急的任务 | 永不过期 |
-
----
-
-## 3. startTransition：标记低优先级更新
-
-`startTransition` 允许你将某些更新标记为"过渡更新"（低优先级），从而保证紧急更新（如用户输入）不被阻塞。
-
-### 基础使用
+### 1) startTransition 的应用与原理解析
+`startTransition` 用来告诉 React，某个状态更新是一个**“非紧急的过渡任务”**。React 会将该更新标记为 `TransitionLane`。
 
 ```tsx
 import { useState, startTransition } from 'react';
 
-function SearchComponent() {
-  const [input, setInput] = useState('');
-  const [results, setResults] = useState([]);
+function SearchWidget() {
+  const [keyword, setKeyword] = useState('');
+  const [list, setList] = useState<string[]>([]);
 
-  const handleChange = (e) => {
-    // 高优先级：立即更新输入框
-    setInput(e.target.value);
-    
-    // 低优先级：延迟更新搜索结果
+  const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
+    // 紧急更新：让输入框文字立刻发生变化，避免键盘输入卡顿
+    setKeyword(e.target.value);
+
+    // 非紧急更新：如果过滤大数据耗时太长，允许被随时打断，保证用户输入响应
     startTransition(() => {
-      const filteredResults = heavySearch(e.target.value);
-      setResults(filteredResults);
+      const filtered = performExpensiveFilter(e.target.value);
+      setList(filtered);
     });
   };
 
   return (
     <div>
-      <input value={input} onChange={handleChange} />
-      <ul>
-        {results.map(result => (
-          <li key={result.id}>{result.name}</li>
-        ))}
-      </ul>
+      <input type="text" value={keyword} onChange={handleSearch} />
+      <ul>{list.map((item, i) => <li key={i}>{item}</li>)}</ul>
     </div>
   );
 }
 ```
 
-### 性能对比
+### 2) useDeferredValue 的应用与原理解析
+`useDeferredValue` 接受一个值，并返回该值的一个“延迟版本”。它非常适用于：你无法直接控制状态修改的来源（如数据直接来自于 Props），但依然希望推迟其渲染以防页面假死的场景。
 
 ```tsx
-// ❌ 不使用 startTransition：两个更新都是高优先级
-const handleChange = (e) => {
-  setInput(e.target.value);
-  setResults(heavySearch(e.target.value)); // 阻塞输入框更新
-};
+import { useState, useDeferredValue } from 'react';
 
-// ✅ 使用 startTransition：输入框立即响应
-const handleChange = (e) => {
-  setInput(e.target.value); // 立即执行
-  startTransition(() => {
-    setResults(heavySearch(e.target.value)); // 可中断执行
-  });
-};
-```
-
-### useTransition Hook
-
-```tsx
-import { useState, useTransition } from 'react';
-
-function TabContainer() {
-  const [activeTab, setActiveTab] = useState('home');
-  const [isPending, startTransition] = useTransition();
-
-  const handleTabClick = (tab) => {
-    startTransition(() => {
-      setActiveTab(tab); // 低优先级更新
-    });
-  };
+function ProductList({ rawData }: { rawData: string[] }) {
+  // 获取数据的延迟副本。当 rawData 频繁变化时，deferredData 会滞后更新，优先保证首屏渲染流畅
+  const deferredData = useDeferredValue(rawData);
 
   return (
-    <div>
-      <button onClick={() => handleTabClick('home')}>首页</button>
-      <button onClick={() => handleTabClick('profile')}>个人资料</button>
-      
-      {isPending && <Spinner />}
-      
-      {activeTab === 'home' && <HomeContent />}
-      {activeTab === 'profile' && <ProfileContent />}
-    </div>
-  );
-}
-```
-
----
-
-## 4. useDeferredValue：延迟派生值
-
-`useDeferredValue` 用于延迟更新派生值，保证 UI 的响应性。
-
-### useDeferredValue 基础使用
-
-```tsx
-import { useState, useDeferredValue, memo } from 'react';
-
-function SearchResults({ query }: { query: string }) {
-  // 执行昂贵的搜索操作
-  const results = heavySearch(query);
-  
-  return (
-    <ul>
-      {results.map(result => (
-        <li key={result.id}>{result.name}</li>
+    <div className="list-container">
+      {deferredData.map((item, i) => (
+        <div key={i} className="list-item">{item}</div>
       ))}
-    </ul>
-  );
-}
-
-const MemoizedResults = memo(SearchResults);
-
-function App() {
-  const [input, setInput] = useState('');
-  
-  // 延迟派生值
-  const deferredInput = useDeferredValue(input);
-
-  return (
-    <div>
-      {/* 输入框立即响应 */}
-      <input
-        value={input}
-        onChange={(e) => setInput(e.target.value)}
-      />
-      
-      {/* 搜索结果使用延迟的值 */}
-      <MemoizedResults query={deferredInput} />
     </div>
   );
 }
 ```
-
-### useDeferredValue vs startTransition
-
-| 特性 | useDeferredValue | startTransition |
-| ------ | ------------------ | ------------------ |
-| 使用场景 | 延迟派生值 | 标记低优先级更新 |
-| 返回值 | 延迟的值 | isPending 状态 |
-| 控制粒度 | 自动 | 手动 |
-| 适用场景 | 搜索框、过滤器 | 标签页切换、路由导航 |
-
----
-
-## 5. Suspense：异步组件加载
-
-`Suspense` 允许组件在渲染时"挂起"，等待异步数据加载完成。
-
-### 代码分割
-
-```tsx
-import { lazy, Suspense } from 'react';
-
-const HeavyComponent = lazy(() => import('./HeavyComponent'));
-
-function App() {
-  return (
-    <Suspense fallback={<div>加载中...</div>}>
-      <HeavyComponent />
-    </Suspense>
-  );
-}
-```
-
-### 数据获取
-
-```tsx
-// 使用 React 19 的 use() Hook
-import { use, Suspense } from 'react';
-
-function UserProfile({ userPromise }: { userPromise: Promise<User> }) {
-  // use() 会挂起组件，直到 Promise resolve
-  const user = use(userPromise);
-  
-  return <div>{user.name}</div>;
-}
-
-function App() {
-  const userPromise = fetch('/api/user').then(r => r.json());
-  
-  return (
-    <Suspense fallback={<div>加载用户信息...</div>}>
-      <UserProfile userPromise={userPromise} />
-    </Suspense>
-  );
-}
-```
-
-### 嵌套 Suspense
-
-```tsx
-function App() {
-  return (
-    <Suspense fallback={<PageSkeleton />}>
-      <Header />
-      
-      <Suspense fallback={<div>加载内容...</div>}>
-        <MainContent />
-      </Suspense>
-      
-      <Suspense fallback={<div>加载侧边栏...</div>}>
-        <Sidebar />
-      </Suspense>
-    </Suspense>
-  );
-}
-```
-
----
-
-## 6. Lane 模型：细粒度优先级调度
-
-React 内部使用 Lane 模型来管理任务优先级，每个 Lane 代表一个优先级通道。
-
-### Lane 的位运算表示
-
-```tsx
-// React 内部的 Lane 定义（简化版）
-const SyncLane = 0b0000000000000000000000000000001;
-const InputContinuousLane = 0b0000000000000000000000000000100;
-const DefaultLane = 0b0000000000000000000000000010000;
-const TransitionLane = 0b0000000000000000000001000000000;
-const IdleLane = 0b0100000000000000000000000000000;
-
-// 判断是否包含某个 Lane
-function includesSomeLane(set, subset) {
-  return (set & subset) !== 0;
-}
-
-// 合并多个 Lane
-function mergeLanes(a, b) {
-  return a | b;
-}
-```
-
-### Lane 优先级调度流程
-
-```mermaid
-sequenceDiagram
-    participant User as 用户交互
-    participant Scheduler as 调度器
-    participant Reconciler as 协调器
-    participant Renderer as 渲染器
-    
-    User->>Scheduler: 触发高优先级更新
-    Scheduler->>Scheduler: 分配 SyncLane
-    Scheduler->>Reconciler: 开始渲染
-    
-    User->>Scheduler: 触发低优先级更新
-    Scheduler->>Scheduler: 分配 TransitionLane
-    
-    Reconciler->>Reconciler: 执行高优先级任务
-    Reconciler->>Renderer: 提交高优先级更新
-    
-    Reconciler->>Reconciler: 继续执行低优先级任务
-    Reconciler->>Renderer: 提交低优先级更新
-```
-
----
-
-## 7. 并发渲染的最佳实践
-
-### 1. 合理使用 startTransition
-
-```tsx
-// ✅ 适合使用 startTransition 的场景
-function SearchComponent() {
-  const [query, setQuery] = useState('');
-  const [results, setResults] = useState([]);
-
-  const handleSearch = (value) => {
-    setQuery(value); // 立即更新输入框
-    
-    startTransition(() => {
-      // 复杂的搜索逻辑
-      const filtered = expensiveFilter(data, value);
-      setResults(filtered);
-    });
-  };
-
-  return (
-    <div>
-      <input value={query} onChange={(e) => handleSearch(e.target.value)} />
-      <ResultsList results={results} />
-    </div>
-  );
-}
-
-// ❌ 不适合使用 startTransition 的场景
-function Counter() {
-  const [count, setCount] = useState(0);
-
-  const handleClick = () => {
-    // 简单的更新不需要 startTransition
-    startTransition(() => {
-      setCount(count + 1);
-    });
-  };
-
-  return <button onClick={handleClick}>{count}</button>;
-}
-```
-
-### 2. 配合 Suspense 使用
-
-```tsx
-import { Suspense, startTransition } from 'react';
-
-function App() {
-  const [page, setPage] = useState('home');
-
-  const navigate = (newPage) => {
-    startTransition(() => {
-      setPage(newPage);
-    });
-  };
-
-  return (
-    <div>
-      <nav>
-        <button onClick={() => navigate('home')}>首页</button>
-        <button onClick={() => navigate('profile')}>个人资料</button>
-      </nav>
-      
-      <Suspense fallback={<PageLoader />}>
-        {page === 'home' && <HomePage />}
-        {page === 'profile' && <ProfilePage />}
-      </Suspense>
-    </div>
-  );
-}
-```
-
-### 3. 避免过度使用
-
-```tsx
-// ❌ 过度使用：每个状态更新都用 startTransition
-function Component() {
-  const [a, setA] = useState(0);
-  const [b, setB] = useState(0);
-
-  const handleClick = () => {
-    startTransition(() => setA(1));
-    startTransition(() => setB(2));
-  };
-}
-
-// ✅ 合理使用：只标记真正需要延迟的更新
-function Component() {
-  const [userInput, setUserInput] = useState('');
-  const [searchResults, setSearchResults] = useState([]);
-
-  const handleInputChange = (value) => {
-    setUserInput(value); // 立即更新
-    
-    startTransition(() => {
-      // 只有昂贵的搜索操作才需要延迟
-      setSearchResults(expensiveSearch(value));
-    });
-  };
-}
-```
-
----
-
-## 8. 性能监控与调试
-
-### React DevTools Profiler
-
-```tsx
-import { Profiler } from 'react';
-
-function App() {
-  const onRenderCallback = (
-    id,
-    phase,
-    actualDuration,
-    baseDuration,
-    startTime,
-    commitTime
-  ) => {
-    console.log(`${id} 的 ${phase} 阶段耗时 ${actualDuration}ms`);
-  };
-
-  return (
-    <Profiler id="App" onRender={onRenderCallback}>
-      <ExpensiveComponent />
-    </Profiler>
-  );
-}
-```
-
-### 检测并发模式是否启用
-
-```tsx
-import { createRoot } from 'react-dom/client';
-
-// React 18+ 默认启用并发模式
-const root = createRoot(document.getElementById('root'));
-root.render(<App />);
-
-// React 17 兼容模式（禁用并发特性）
-import { render } from 'react-dom';
-render(<App />, document.getElementById('root'));
-```
-
----
-
-## 9. 总结
-
-| 特性 | 用途 | 适用场景 |
-| ------ | ------ | ---------- |
-| startTransition | 标记低优先级更新 | 搜索、过滤、标签页切换 |
-| useTransition | 获取 isPending 状态 | 需要显示加载状态的场景 |
-| useDeferredValue | 延迟派生值 | 搜索框、实时过滤 |
-| Suspense | 异步加载 | 代码分割、数据获取 |
-| use() Hook | 消费 Promise | 数据获取、异步资源 |
-
-并发模式是 React 18 的核心特性，它使得 React 应用能够在保证流畅用户体验的同时，处理复杂的渲染任务。理解并合理使用这些 API，能够显著提升应用的响应性和性能。
