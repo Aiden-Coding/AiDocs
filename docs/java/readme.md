@@ -37,84 +37,89 @@ mindmap
 
 ---
 
-## 🚀 第一阶段：核心基石与底层原理 (Core Foundation)
+## 第一阶段:核心基石与底层原理 (Core Foundation)
 
 深入解析 Java 语言最引以为傲的并发模型与内存机制。
 
 ### 1.1 Java 基础与容器 (Basic & Collections)
 
-- [Java 基础与集合核心面试真题](basic/interview-basic.md)：深入底层剖析 `String` 不可变性、`HashMap` 与 `ConcurrentHashMap` 扩容演进机制。
-- [Java 集合框架底层源码深剖](basic/collection-framework.md)：探究 `ArrayList`、`LinkedList` 物理结构，深度解析 `LinkedHashMap` 构筑 LRU 及 `TreeMap` 红黑树旋转平衡。
-- [Java 新特性演进与核心底层原理](basic/java8-21-features.md)：剖析 Lambda `invokedynamic`、Stream 惰性求值与 JDK 21 虚拟线程 Carrier 调度机制。
+- [Java 核心基石:Object 方法、异常、反射、泛型与 SPI](basic/java-core-fundamentals.md):剖析 `Object` 六大契约、异常体系、反射与 `MethodHandle`、泛型擦除与桥接方法、注解与 SPI 扩展。
+- [Java 基础与集合核心面试真题](basic/interview-basic.md):深入底层剖析 `String` 不可变性、`HashMap` 与 `ConcurrentHashMap` 扩容演进机制。
+- [Java 集合框架底层源码深剖](basic/collection-framework.md):探究 `ArrayList`、`LinkedList` 物理结构,深度解析 `LinkedHashMap` 构筑 LRU 及 `TreeMap` 红黑树旋转平衡。
+- [Java 新特性演进与核心底层原理](basic/java8-21-features.md):剖析 Lambda `invokedynamic`、Stream 惰性求值与 JDK 21 虚拟线程 Carrier 调度机制。
 
 ### 1.2 JUC 高并发深度实践 (Concurrency)
 
-- [AQS 机制与显式锁实现](concurrent/aqs-locks.md)：深入 AQS `state` 变量与双向 CLH 队列，对比公平与非公平锁。
-- [HashMap 与 ConcurrentHashMap 源码](concurrent/hashmap-concurrenthashmap.md)：从 JDK 7 到 8 的演进，透析桶锁与 CAS。
-- [ThreadLocal 与 CAS 核心解析](concurrent/threadlocal-cas.md)：图解内存泄漏成因及 `LongAdder` 分段热点优化。
-- [线程池 ThreadPoolExecutor 全解](concurrent/threadpool.md)：掌握 `ctl` 位运算与动态调优思路。
+- [JMM 内存模型与 happens-before 原理](concurrent/jmm-memory-model.md):图解 MESI 与内存屏障,推导 volatile 双重语义与 happens-before 八大规则。
+- [AQS 机制与显式锁实现](concurrent/aqs-locks.md):深入 AQS `state` 变量与双向 CLH 队列,对比公平与非公平锁。
+- [HashMap 与 ConcurrentHashMap 源码](concurrent/hashmap-concurrenthashmap.md):从 JDK 7 到 8 的演进,透析桶锁与 CAS。
+- [ThreadLocal 与 CAS 核心解析](concurrent/threadlocal-cas.md):图解内存泄漏成因及 `LongAdder` 分段热点优化。
+- [线程池 ThreadPoolExecutor 全解](concurrent/threadpool.md):掌握 `ctl` 位运算与动态调优思路。
+- [CompletableFuture 异步编排与底层原理](concurrent/completable-future.md):回调链、Completion 栈与 `tryFire` 模型,生产级服务聚合网关实战。
+- [并发容器与同步工具源码精析](concurrent/concurrent-collections-sync.md):`CountDownLatch`、`CyclicBarrier`、`Semaphore`、COW 集合与无锁队列全景对比。
 
 ### 1.3 JVM 虚拟机内核 (Virtual Machine)
 
-- [内存模型与垃圾回收 (GC)](jvm/memory-gc.md)：从三色标记到 ZGC 染色指针、读屏障技术。
-- [类加载体系与字节码强化](jvm/classloader-bytecode.md)：解构双亲委派模型及 Java Agent 动态插桩原理。
-- [JIT 进阶之逃逸分析](jvm/escape-analysis.md)：解密标量替换与锁消除。
+- [内存模型与垃圾回收 (GC)](jvm/memory-gc.md):从三色标记到 ZGC 染色指针、读屏障技术。
+- [类加载体系与字节码强化](jvm/classloader-bytecode.md):解构双亲委派模型及 Java Agent 动态插桩原理。
+- [JIT 进阶之逃逸分析](jvm/escape-analysis.md):解密标量替换与锁消除。
 
 ---
 
-## 🏗️ 第二阶段：企业级框架深度剖析 (Framework Ecosystem)
+## 第二阶段:企业级框架深度剖析 (Framework Ecosystem)
 
-不仅仅是使用，更要掌握 Spring 宇宙的运动规律。
+不仅仅是使用,更要掌握 Spring 宇宙的运动规律。
 
 ### 2.1 Spring 核心全景
 
-- [IoC 容器与 Bean 生命周期](spring/bean-lifecycle.md)：从实例化到销毁的 $4$ 阶段全流程。
-- [AOP 动态代理与链式调用](spring/ioc-aop.md)：解密为什么只有三级缓存能解决 AOP 循环依赖。
-- [BeanDefinition 与容器初始化](spring/beandefinition-internals.md)：探索 Spring 如何感知开发者定义的 Bean 与配置类 CGLIB 增强原理。
-- [Context Refresh 刷新流程](spring/spring-context-refresh.md)：深度拆解 Spring 容器启动的 $12$ 个核心步骤与后置处理器执行顺序。
-- [声明式事务机制与失效场景](spring/transaction.md)：还原物理连接与 `ThreadLocal` 状态丢失。
-- [Spring 常用注解及其底层原理解析](spring/annotations.md)：剖析 `@Autowired`、`@Resource` 与 `@Configuration` 的装配注入链路。
-- [Spring 常用设计模式源码级深度解析](spring/design-patterns.md)：探究工厂、单例、代理、模板方法与观察者模式等在 Spring 源码中的落地。
-- [Spring 事件驱动机制与业务解耦](spring/spring-events.md)：解密事件发布广播器原理与事务同步器 `@TransactionalEventListener` 的 Phase 阶段。
+- [IoC 容器与 Bean 生命周期](spring/bean-lifecycle.md):从实例化到销毁的 $4$ 阶段全流程。
+- [AOP 动态代理与链式调用](spring/ioc-aop.md):解密为什么只有三级缓存能解决 AOP 循环依赖。
+- [BeanDefinition 与容器初始化](spring/beandefinition-internals.md):探索 Spring 如何感知开发者定义的 Bean 与配置类 CGLIB 增强原理。
+- [Context Refresh 刷新流程](spring/spring-context-refresh.md):深度拆解 Spring 容器启动的 $12$ 个核心步骤与后置处理器执行顺序。
+- [声明式事务机制与失效场景](spring/transaction.md):从 `TransactionInterceptor` 调用链到 ThreadLocal 连接绑定,还原 $12$ 种失效根因。
+- [Spring 常用注解及其底层原理解析](spring/annotations.md):剖析 `@Autowired`、`@Resource` 与 `@Configuration` 的装配注入链路。
+- [Spring 常用设计模式源码级深度解析](spring/design-patterns.md):探究工厂、单例、代理、模板方法与观察者模式等在 Spring 源码中的落地。
+- [Spring 事件驱动机制与业务解耦](spring/spring-events.md):解密事件发布广播器原理与事务同步器 `@TransactionalEventListener` 的 Phase 阶段。
 
 ### 2.2 Spring MVC 请求处理模型
 
-- [Spring MVC 工作流设计](spring/springmvc-principles.md)：理解 `DispatcherServlet` 与 `HandlerMapping` 的协作。
-- [Spring MVC 高级强化特性](spring/springmvc-advanced.md)：拦截器、过滤器与参数解析器深度定制。
+- [Spring MVC 工作流设计](spring/springmvc-principles.md):理解 `DispatcherServlet` 与 `HandlerMapping` 的协作。
+- [Spring MVC 高级强化特性](spring/springmvc-advanced.md):拦截器、过滤器与参数解析器深度定制。
 
 ### 2.3 Spring Boot 与微服务底座
 
-- [Spring Boot 启动原理与自动装配](spring/springboot-core.md)：解构 `@EnableAutoConfiguration` 与 `spring.factories`。
-- [Spring Boot 核心内部机制](spring/springboot-internals.md)：`Environment` 环境抽象与监听器模式。
-- [Spring Boot 扩展机制与 SPI 原理](spring/springboot-extension.md)：解析 Spring SPI 工厂加载器、自定义 Starter 流程及生命周期扩展点。
-- [Spring Boot FatJar 运行机制](spring/springboot-fatjar.md)：解密如何通过 `JarLauncher` 加载嵌套 Jar。
-- [Spring Boot 高级扩展与调优](spring/springboot-advanced.md)：自定义 Starter 与 Endpoint 监控。
-- [Spring 生态演进与 Spring Cloud 结合](spring/springboot-springcloud.md)：从 Boot 到分布式微服务架构。
+- [Spring Boot 启动原理与自动装配](spring/springboot-core.md):解构 `@EnableAutoConfiguration` 与 `spring.factories`。
+- [Spring Boot 核心内部机制](spring/springboot-internals.md):`Environment` 环境抽象与监听器模式。
+- [Spring Boot 扩展机制与 SPI 原理](spring/springboot-extension.md):解析 Spring SPI 工厂加载器、自定义 Starter 流程及生命周期扩展点。
+- [Spring Boot FatJar 运行机制](spring/springboot-fatjar.md):解密如何通过 `JarLauncher` 加载嵌套 Jar。
+- [Spring Boot 高级扩展与调优](spring/springboot-advanced.md):自定义 Starter 与 Endpoint 监控。
+- [Spring 生态演进与 Spring Cloud 结合](spring/springboot-springcloud.md):从 Boot 到分布式微服务架构。
 
 ### 2.4 持久层、连接池与缓存 (Persistence & Cache)
 
-- [MyBatis 持久层原理与 HikariCP 连接池](persistence/mybatis-hikaricp.md)：HikariCP 无锁化 `LocalBag` 容器与 MyBatis 插件责任链。
-- [Spring Cache 缓存抽象与声明式缓存原理](spring/spring-cache.md)：剖析 AOP 缓存拦截器、SpEL 键生成以及击穿/穿透/雪崩的生产级防护。
+- [MyBatis 持久层原理与 HikariCP 连接池](persistence/mybatis-hikaricp.md):HikariCP 无锁化 `LocalBag` 容器与 MyBatis 插件责任链。
+- [Spring Cache 缓存抽象与声明式缓存原理](spring/spring-cache.md):剖析 AOP 缓存拦截器、SpEL 键生成以及击穿/穿透/雪崩的生产级防护。
 
 ---
 
-## ⚡ 第三阶段：高性能计算与通信 (Performance)
+## 第三阶段:高性能计算与通信 (Performance)
 
-在微秒级竞争中，探索 Linux 底层与硬件缓存的极限。
+在微秒级竞争中,探索 Linux 底层与硬件缓存的极限。
 
-- [Netty 高性能网络编程底座](network/netty-io.md)：Epoll 空轮询 Bug 规避与堆外内存零拷贝。
-- [Netty 零拷贝与 ByteBuf 内存管理](network/netty-zero-copy-buf.md)：深度拆解直接内存、CompositeByteBuf、基于 Jemalloc 思想的 PoolArena 内存分配体系及虚引用泄漏检测。
-- [JDK 21 虚拟线程详解](concurrent/virtual-threads.md)：解密运行在用户态的轻量协程模型。
-- [Disruptor 无锁环形队列](concurrent/disruptor.md)：LMAX 架构下的预分配与零 GC 机制。
-- [CPU Cache Line 伪共享调优](concurrent/cache-line-sharing.md)：使用 `@Contended` 消除 MESI 协议竞争。
+- [JDK NIO 核心三件套:Channel、Buffer 与 Selector](network/jdk-nio-fundamentals.md):Buffer 状态机、Channel 非阻塞、Selector 多路复用与 Reactor 雏形。
+- [Netty 高性能网络编程底座](network/netty-io.md):Epoll 空轮询 Bug 规避与堆外内存零拷贝。
+- [Netty 零拷贝与 ByteBuf 内存管理](network/netty-zero-copy-buf.md):深度拆解直接内存、CompositeByteBuf、基于 Jemalloc 思想的 PoolArena 内存分配体系及虚引用泄漏检测。
+- [JDK 21 虚拟线程详解](concurrent/virtual-threads.md):解密运行在用户态的轻量协程模型。
+- [Disruptor 无锁环形队列](concurrent/disruptor.md):LMAX 架构下的预分配与零 GC 机制。
+- [CPU Cache Line 伪共享调优](concurrent/cache-line-sharing.md):使用 `@Contended` 消除 MESI 协议竞争。
 
 ---
 
-## 🛠️ 第四阶段：生产级实战与面试复盘 (Workshop)
+## 第四阶段:生产级实战与面试复盘 (Workshop)
 
-- [性能诊断与在线排障艺术](jvm/tuning-tools.md)：Arthas 实战与 MAT 内存泄露追踪。
-- [线上故障深度复盘记录](jvm/prod-troubleshooting-cases.md)：四大经典 OOM 与 CPU $100\%$ 根因分析。
-- [JVM 启动参数黄金配置模板](jvm/prod-practice.md)：在生产环境配置 G1/ZGC。
+- [性能诊断与在线排障艺术](jvm/tuning-tools.md):Arthas 实战与 MAT 内存泄露追踪。
+- [线上故障深度复盘记录](jvm/prod-troubleshooting-cases.md):四大经典 OOM 与 CPU $100\%$ 根因分析。
+- [JVM 启动参数黄金配置模板](jvm/prod-practice.md):在生产环境配置 G1/ZGC。
 
 - **核心面试真题与底层原理专题**
 
@@ -127,7 +132,7 @@ mindmap
 
 ---
 
-## 🔗 分布式联动推荐
+## 分布式联动推荐
 
-- **分布式锁实现**：关联学习 [分布式 ZooKeeper 锁](../distributed/system/lock-zookeeper.md)。
-- **分布式缓存**：关联学习 [Redis 高并发场景](../cache/redis/scenarios.md)。
+- **分布式锁实现**:关联学习 [分布式 ZooKeeper 锁](../distributed/system/lock-zookeeper.md)。
+- **分布式缓存**:关联学习 [Redis 高并发场景](../cache/redis/scenarios.md)。
