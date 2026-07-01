@@ -123,6 +123,36 @@ fn make_greeting(prefix: String) -> impl Fn(&str) -> String {
 }
 ```
 
+### 4. 闭包在标准库中的应用实例
+
+标准库中的许多集合操作都通过接收闭包作为参数来实现高阶处理。
+
+#### `Iterator::any`
+
+`any` 接收一个闭包，如果迭代器中任意元素满足闭包中的条件，则返回 `true`，否则返回 `false`（具有短路求值特性）：
+
+```rust
+fn main() {
+    let vec = vec![1, 2, 3];
+    // any 接收迭代项的引用，因此 x 的类型为 &i32
+    let has_two = vec.iter().any(|&x| x == 2);
+    println!("是否存在 2: {}", has_two); // true
+}
+```
+
+#### `Iterator::find`
+
+`find` 接收一个闭包，在迭代器中查找第一个满足条件的元素。它会返回一个 `Option` 包裹的该元素的借用：
+
+```rust
+fn main() {
+    let vec = vec![1, 2, 3];
+    // find 同样接收迭代项的引用，因为 iter() 产生引用，闭包参数 x 类型为 &&i32
+    let found = vec.iter().find(|&&x| x == 2);
+    println!("找到的元素: {:?}", found); // Some(2)
+}
+```
+
 ---
 
 ## 🟢 迭代器原理：零成本抽象的典范

@@ -74,6 +74,31 @@ fn main() {
 }
 ```
 
+#### 自定义 Key 的特征要求
+
+在 Rust 中，要将自定义类型用作 `HashMap` 的键（Key），该类型必须实现以下两个核心特征：
+- **`Eq`**：保证等值比较的等价关系。
+- **`Hash`**：用于计算该键的哈希值。
+
+通常，我们只需要在结构体上方通过派生自动引入它们即可：
+
+```rust
+use std::collections::HashMap;
+
+// 自动派生 Hash 与 Eq
+#[derive(PartialEq, Eq, Hash, Debug)]
+struct AccountKey {
+    id: u32,
+    region: String,
+}
+
+fn main() {
+    let mut accounts = HashMap::new();
+    let key = AccountKey { id: 1001, region: "CN".to_string() };
+    accounts.insert(key, "Alice");
+}
+```
+
 ---
 
 ## 🌐 路径与文件 I/O

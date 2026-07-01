@@ -133,6 +133,30 @@ fn print_and_clone<T: Debug + Clone>(arg: &T) -> T {
 }
 ```
 
+#### 空约束 (Empty Bounds)
+
+在 Rust 中，即使一个特征不包含任何方法，实现它也可以作为类型安全的标记（Marker）。这种约束被称为**空约束**（在标准库中广泛存在，如 `Send`、`Sync`、`Copy` 等）：
+
+```rust
+// 定义一个空特征，起标记作用
+trait RedColor {}
+
+struct Apple;
+struct Banana;
+
+impl RedColor for Apple {} // 仅为 Apple 实现该特征
+
+// 约束 T 必须实现 RedColor。虽然 RedColor 没有方法，但它起到了编译期标记筛选的作用
+fn paint_red<T: RedColor>(item: T) {
+    println!("Painting it red!");
+}
+
+fn main() {
+    paint_red(Apple);  // ✅ 成功！
+    // paint_red(Banana); // ❌ 编译期报错：RedColor 特征未实现！
+}
+```
+
 ### 2. `where` 子句
 
 当泛型参数较多或约束非常复杂时，使用 `where` 子句可以让类型签名更清晰：
