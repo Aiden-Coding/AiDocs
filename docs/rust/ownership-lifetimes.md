@@ -166,7 +166,30 @@ pub struct ZeroCopyParser<'a> {
 }
 ```
 
-### 2. 生命周期约束与强制转换 (Lifetime Coercion)
+### 2. 特征 (Traits) 与生命周期参数
+
+在特征声明中带上生命周期参数，主要用于约束特征方法返回的数据指针寿命必须与特征关联的借用对齐：
+
+```rust
+// 声明一个带有生命周期参数 'a 的特征
+trait TextExtractor<'a> {
+    fn extract(&self) -> &'a str;
+}
+
+struct Book {
+    content: String,
+}
+
+// 实现特征。注意：因为返回的 &str 指向 Book.content，
+// 它的生命周期 'a 受限于 Book 实例自身的生命周期
+impl<'a> TextExtractor<'a> for &'a Book {
+    fn extract(&self) -> &'a str {
+        &self.content
+    }
+}
+```
+
+### 3. 生命周期约束与强制转换 (Lifetime Coercion)
 
 生命周期的强制转换允许我们在长生命周期引用和短生命周期引用之间进行安全的隐式或显式类型替换。如果 `'a: 'b`（即 `'a` 活得比 `'b` 长），则 `'a` 的生命周期可以被安全地强制转换（缩短）为 `'b` 的生命周期：
 

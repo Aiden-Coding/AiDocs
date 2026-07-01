@@ -231,6 +231,37 @@ fn main() {
 }
 ```
 
+#### 测试实例：`Color`
+
+下面这个例子展示了如何通过 `fmt::Display` 格式化输出颜色值。我们使用特定的格式化参数 `{:02X}`（零填充，宽度为 2，十六进制大写）来打印其 RGB 与对应的十六进制颜色：
+
+```rust
+use std::fmt;
+
+struct Color {
+    red: u8,
+    green: u8,
+    blue: u8,
+}
+
+impl fmt::Display for Color {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        // 计算其十六进制值，并进行格式化输出。
+        // :02X 表示十六进制大写，不足两位的左边补零
+        write!(
+            f,
+            "RGB ({}, {}, {}) 0x{:02X}{:02X}{:02X}",
+            self.red, self.green, self.blue, self.red, self.green, self.blue
+        )
+    }
+}
+
+fn main() {
+    let color = Color { red: 128, green: 255, blue: 90 };
+    println!("{}", color); // 输出: RGB (128, 255, 90) 0x80FF5A
+}
+```
+
 ---
 
 ## 🔤 原生类型与字面量
