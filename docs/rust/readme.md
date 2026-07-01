@@ -21,7 +21,6 @@ mindmap
       环境配置与 rustup
       包管理器 Cargo
       基础语法与控制流
-      复合类型与 Option
       项目结构与模块化
     所有权与内存安全
       内存管理模型
@@ -29,23 +28,22 @@ mindmap
       生命周期标注与省略
     类型系统与抽象
       Trait 接口与派生
-      关联类型与泛型参数
       静态与动态分发
       函数式迭代器与闭包
     无畏并发与异步
       多线程与消息通道
       Tokio 异步工作窃取
-      Future 与 Pin/Unpin
+      Future 与 Pin 底层原理
     生产级健壮性
       Result与Option错误治理
       thiserror 与 anyhow
       标准库集合与系统级 I/O
-      单元与集成测试
-      Criterion基准测试
+      测试与基准测试
     系统底座与高级
       Unsafe 与 FFI 边界
       声明宏与过程宏开发
-      自我引用与 Pin 实战
+      高级生命周期与型变
+      设计模式与 Typestate
 ```
 
 ---
@@ -82,6 +80,7 @@ mindmap
 突破传统多线程的复杂性，使用现代异步模型压榨系统吞吐极限。
 
 - [Rust 并发编程与 Tokio](concurrency.md)：多线程同步、消息传递通道（Channels）与 Map-Reduce 实战，以及 `async/await` 异步生态与 Tokio 工作窃取机制。
+- [异步底层剖析：Future 与 Pin 机制](async-under-the-hood.md)：深入讲解 `Future` 的轮询模型、自引用结构体的内存移动漏洞，以及 `Pin` 和 `Unpin` 的底层安全保证与手写实践。
 
 ---
 
@@ -101,3 +100,4 @@ mindmap
 
 - [Unsafe Rust 与内存安全边界](unsafe-rust.md)：裸指针与未定义行为、安全抽象封装、FFI 跨语言交互、Unsafe 经典场景与 Miri 检测工具。
 - [宏与元编程系统](macros-metaprogramming.md)：声明宏 `macro_rules!` 指示符与重复匹配、过程宏开发（Derive 宏/属性宏）与 `syn`/`quote` 工具链实战。
+- [高级生命周期与设计模式](advanced-patterns.md)：探究型变（协变、逆变、不变）的本质与 `PhantomData` 应用，高阶生命周期绑定（HRTB, `for<'a>`），以及 Typestate 状态模式与 RAII Guard 等 Rust 独有的设计模式。
