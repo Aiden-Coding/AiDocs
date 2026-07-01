@@ -202,6 +202,7 @@ fn conditional_function() {
 ```
 
 在编译时，我们可以通过传参启用该标志：
+
 - 使用 `rustc` 编译时：`rustc --cfg some_custom_flag main.rs`。
 - 使用 Cargo 时：在 `Cargo.toml` 中配置 `[features]`，或者在运行时通过环境变量/参数传递。
 

@@ -235,6 +235,7 @@ let errors: Vec<_> = err_values.into_iter().map(Result::unwrap_err).collect();
 
 在系统级编程中，频繁在堆上分配错误（如 `Box<dyn std::error::Error>`、`anyhow::Error`）并进行动态派发会带来运行时损耗。
 高级 Rust 工程师应当：
+
 1. **坚持使用栈上枚举**：使用类似 `thiserror` 定义的强类型枚举，其所有变体只包含固定大小的栈上字段。
 2. **避免在高频循环内使用 `anyhow`**。
 3. **利用 `Cow<'static, str>` 避免错误消息的动态 String 堆分配**。

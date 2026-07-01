@@ -30,6 +30,7 @@ trait Greet {
 ### 2. 派生特征 (Derivable Traits)
 
 使用 `#[derive(...)]` 属性宏，可以让编译器自动生成常用特征的默认实现：
+
 - `Debug`：允许使用 `{:?}` 打印调试。
 - `Clone` 与 `Copy`：控制深浅拷贝行为。
 - `PartialEq` 与 `Eq`：控制等值比较（`==`）。

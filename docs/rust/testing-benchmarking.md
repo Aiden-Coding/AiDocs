@@ -223,6 +223,7 @@ cargo bench
 ### 1. Flamegraph (火焰图)
 
 火焰图能够直观呈现函数调用的耗时占比。
+
 - **安装**：`cargo install cargo-flamegraph`
 - **使用**：`cargo flamegraph --bin my_app`
 - **分析**：宽度代表占用 CPU 的时长比例，寻找异常宽阔的调用栈底部，即是潜在的性能瓶颈。
