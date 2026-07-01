@@ -134,6 +134,60 @@ fn high_performance_dispatch() {
 }
 ```
 
+### 3. 测试实例：Map-Reduce 并行计算
+
+为了演示通道在并行计算中的实践，以下展示了一个经典的 **Map-Reduce** 模型。它将大量数据划分为多个片段，在多个工作线程（Map 阶段）中并发计算部分和，再通过一个通道将结果汇总发送至主线程（Reduce 阶段）进行最终求和：
+
+```rust
+use std::sync::mpsc;
+use std::thread;
+
+fn main() {
+    // 待处理的原始数据
+    let data = "Rust is a systems programming language that runs blazingly fast, prevents segfaults, and guarantees thread safety. Fearless concurrency empowers developers to write robust and efficient code.";
+
+    // 将数据按空格分割，并分成 4 个分区
+    let words: Vec<&str> = data.split_whitespace().collect();
+    let num_partitions = 4;
+    let chunk_size = words.len() / num_partitions;
+
+    // 创建一个多生产者单消费者通道 (MPSC)
+    let (tx, rx) = mpsc::channel();
+
+    // Map 阶段：派生子线程并行处理各个分区
+    for i in 0..num_partitions {
+        let tx_clone = tx.clone();
+        
+        // 计算当前分区的范围
+        let start = i * chunk_size;
+        // 最后一个分区处理剩余所有单词
+        let end = if i == num_partitions - 1 { words.len() } else { (i + 1) * chunk_size };
+        let chunk = words[start..end].to_vec();
+
+        thread::spawn(move || {
+            // 在子线程中计算本分区的单词字数总和
+            let mut char_count = 0;
+            for word in chunk {
+                char_count += word.len();
+            }
+            // 将部分计算结果发送回通道
+            tx_clone.send(char_count).unwrap();
+        });
+    }
+
+    // 释放主线程持有的 Sender，否则接收端的循环将永远不会结束
+    drop(tx);
+
+    // Reduce 阶段：在主线程中从通道汇总所有结果
+    let mut total_chars = 0;
+    while let Ok(partial_count) = rx.recv() {
+        total_chars += partial_count;
+    }
+
+    println!("Map-Reduce 计算出的总字符数: {}", total_chars);
+}
+```
+
 ---
 
 ## 🟡 异步基石：无栈协程与 Pin 机制

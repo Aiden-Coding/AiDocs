@@ -7,7 +7,7 @@ sidebar_position: 1
 
 ## Rust 语法基石与工具链
 
-欢迎开启 Rust 的探索之旅！对于初学者而言，Rust 的编译器和工具链既是强大的安全卫士，也可能是最严苛的“导师”。本篇将从最基础的开发环境搭建与 Cargo 包管理器入手，逐步解析 Rust 的基本语法和类型系统，为后续攻克“所有权”等硬核课题打下坚实的基础。
+欢迎开启 Rust 的探索之旅！对于初学者而言，Rust 的编译器和工具链既是强大的安全卫士，也可能是最严苛的“导师”。本篇将从最基础的开发环境搭建与经典的 Hello World 开始，深入解构 Rust 的语法基石、格式化输出、基本数据类型以及多样的控制流机制。
 
 > 🟢 **基础**：适合完全零基础的 Rust 初学者阅读。
 
@@ -19,9 +19,9 @@ sidebar_position: 1
 
 ### 1. 安装 Rust 与 `rustup`
 
-`rustup` 是 Rust 的官方工具链安装器 and 管理器，支持跨平台管理不同的 Rust 版本（如 `stable`、`beta`、`nightly`）。
+`rustup` 是 Rust 的官方工具链安装器和管理器，支持跨平台管理不同的 Rust 版本（如 `stable`、`beta`、`nightly`）。
 
-在 macOS / Linux 上，打开终端执行以下命令进行安装：
+In macOS / Linux 上，打开终端执行以下命令进行安装：
 
 ```bash
 curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
@@ -102,195 +102,594 @@ edition = "2021"         # Rust 语言大版本（如 2018, 2021）
 
 ---
 
-## 📝 语法基石：变量与控制流
+## 📝 经典起步：Hello World 与格式化输出
 
-### 1. 变量绑定与可变性
+### 1. 注释
 
-在 Rust 中，**变量默认是不可变的（Immutable）**。这有利于并发安全和静态优化。
+Rust 支持两种注释方式。注释会被编译器忽略：
+
+```rust
+// 这是单行注释。
+
+/*
+  这是多行注释。
+  可以跨越多行。
+*/
+```
+
+### 2. 格式化输出 (Formatted Print)
+
+Rust 的格式化输出由 `std::fmt` 中定义的一系列宏（Macros）来处理。最常用的有：
+- `format!`：将格式化文本写入到 `String` 中。
+- `print!`：与 `format!` 类似，但将文本输出到控制台（stdout）。
+- `println!`：与 `print!` 类似，但输出时会在末尾追加换行符。
+- `eprintln!`：与 `println!` 类似，但文本输出到标准错误流（stderr）。
+
+#### 基础语法与控制参数
 
 ```rust
 fn main() {
-    let x = 5; // 默认不可变
-    // x = 6;  // ❌ 编译报错：cannot assign twice to immutable variable
+    // 1. 最基本的占位符，由参数依次替换
+    println!("{} days", 31);
 
-    let mut y = 10; // 使用 mut 关键字声明为可变变量
-    println!("y 的初始值: {}", y);
-    y = 15;        // ✅ 允许修改
-    println!("y 修改后的值: {}", y);
+    // 2. 位置参数：指定参数的索引
+    println!("{0} 的生日是 {1}。{0} 很开心！", "Alice", "10月1日");
+
+    // 3. 命名参数：直接使用变量名映射
+    println!("{subject} {verb} {object}",
+             object="the lazy dog",
+             subject="the quick brown fox",
+             verb="jumps over");
+
+    // 4. 进制格式化
+    println!("基数 10:       {}", 69420);
+    println!("基数 2 (二进制): {:b}", 69420);
+    println!("基数 8 (八进制): {:o}", 69420);
+    println!("基数 16 (十六进制): {:x}", 69420);
+
+    // 5. 对齐与宽度控制
+    // 右对齐，宽度为 5，多余部分空格填充
+    println!("{number:>5}", number=1);
+    // 左对齐，多余部分使用字符 '0' 填充，结果为 "10000"
+    println!("{number:0<5}", number=1);
+    // 使用命名参数来动态指定宽度
+    println!("{number:>width$}", number=1, width=5);
 }
 ```
 
-#### 常量 (Constants)
+#### `Debug` 与 `Display`
 
-使用 `const` 关键字定义常量，常量不仅默认不可变，而且**永远不可变**，并且必须显式标注类型：
+所有希望打印输出的类型都必须实现格式化特征（Formatting Traits）。默认情况下，标准库类型实现了 `Display`（用于面向普通用户的 `{}`）或 `Debug`（用于面向开发者的 `{:?}`）。
 
-```rust
-const MAX_POINTS: u32 = 100_000;
-```
-
-### 2. 基础数据类型
-
-Rust 拥有静态强类型系统，但在多数情况下，编译器能自动推导类型（Type Inference）。
-
-#### 标量类型 (Scalar Types)
-
-- **整数**：有符号（`i8`~`i128`, `isize`）与无符号（`u8`~`u128`, `usize`）。默认推导为 `i32`。
-- **浮点数**：`f32` 和 `f64`（默认）。
-- **布尔型**：`bool`，取值为 `true` 或 `false`。
-- **字符**：`char`，代表一个 Unicode 标量值（占用 4 字节），用单引号声明，例如 `let c = '蟹';`。
-
-#### 复合类型 (Compound Types)
-
-- **元组 (Tuple)**：长度固定，可包含多种不同类型：
-
-  ```rust
-  let tup: (i32, f64, u8) = (500, 6.4, 1);
-  let (x, y, z) = tup; // 解构元组
-  let first = tup.0;   // 通过索引访问
-  ```
-
-- **数组 (Array)**：长度固定，内部所有元素必须是相同类型：
-
-  ```rust
-  let arr: [i32; 5] = [1, 2, 3, 4, 5];
-  let first = arr[0];
-  ```
-
-### 3. 常用控制流
-
-#### 条件分支 `if`
-
-Rust 的 `if` 是一个**表达式**，这意味着它可以返回值。
+对于自定义类型（例如结构体），默认是无法打印的，必须手动实现或通过派生（derive）引入特征：
 
 ```rust
-let condition = true;
-let number = if condition { 5 } else { 6 }; // 两个分支返回类型必须一致
+// 1. 自动派生 Debug 特征。这使得该结构体可以使用 `{:?}` 打印
+#[derive(Debug)]
+struct Structure(i32);
+
+// 2. 手动实现 Display 特征以自定义漂亮的用户界面打印输出
+use std::fmt;
+
+struct Point2D {
+    x: f64,
+    y: f64,
+}
+
+impl fmt::Display for Point2D {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        // 自定义打印格式：(x, y)
+        write!(f, "x: {}, y: {}", self.x, self.y)
+    }
+}
+
+fn main() {
+    // Debug 打印
+    println!("Debug 输出: {:?}", Structure(3));
+    // 美化后的 Debug 打印，带有换行和缩进
+    println!("美化 Debug:\n{:#?}", Structure(3));
+
+    // Display 打印
+    let point = Point2D { x: 3.3, y: 4.4 };
+    println!("Display 输出: {}", point);
+}
 ```
 
-#### 循环结构
+#### 测试实例：`List`
 
-Rust 提供了三种循环：`loop`、`while` 和 `for`。
+下面的例子展示了如何通过 `write!` 宏为包含 `Vec` 的结构体实现 `fmt::Display`：
 
-- **`loop`**：无条件循环，常用于轮询，可以通过 `break` 返回一个值。
+```rust
+use std::fmt;
 
-  ```rust
-  let mut counter = 0;
-  let result = loop {
-      counter += 1;
-      if counter == 10 {
-          break counter * 2; // break 可以附带返回值
-      }
-  };
-  ```
+struct List(Vec<i32>);
 
-- **`while`**：条件循环。
+impl fmt::Display for List {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        // 解构内部 Vec
+        let vec = &self.0;
 
-  ```rust
-  let mut number = 3;
-  while number != 0 {
-      number -= 1;
-  }
-  ```
+        // 写入前缀字符 '['
+        write!(f, "[")?;
 
-- **`for`**：遍历集合（最安全、最高效的首选方式）。
+        // 迭代 vec 中的所有项
+        for (count, v) in vec.iter().enumerate() {
+            // 在除第一项外的其他项前加入逗号
+            if count != 0 { write!(f, ", ")?; }
+            // 写入当前元素的值及索引
+            write!(f, "{}: {}", count, v)?;
+        }
 
-  ```rust
-  let a = [10, 20, 30, 40, 50];
-  for element in a.iter() {
-      println!("the value is: {}", element);
-  }
-  ```
+        // 写入后缀字符 ']' 并返回结果
+        write!(f, "]")
+    }
+}
+
+fn main() {
+    let v = List(vec![1, 2, 3]);
+    println!("{}", v); // 输出: [0: 1, 1: 2, 2: 3]
+}
+```
 
 ---
 
-## 🏗️ 复合类型与模式匹配起步
+## 🔤 原生类型与字面量
 
-通过结构体和枚举，开发者可以轻松构建复杂的数据模型。
+### 1. 原生类型分类
+
+Rust 包含以下原生类型：
+- **标量类型 (Scalar Types)**：
+  - 整型：有符号（`i8`, `i16`, `i32`, `i64`, `i128`, `isize`）及无符号（`u8`, `u16`, `u32`, `u64`, `u128`, `usize`）。
+  - 浮点型：`f32`, `f64`。
+  - 布尔型：`bool`，取值为 `true` 或 `false`。
+  - 字符型：`char`（4 字节 Unicode 标量值），例如 `'a'`、`'🦀'`。
+- **复合类型 (Compound Types)**：
+  - 元组：例如 `(500, 6.4, 1)`。
+  - 数组：例如 `[1, 2, 3, 4, 5]`。
+
+### 2. 字面量与运算符
+
+Rust 拥有丰富的运算符，并且整型字面量支持添加后缀以显式指定类型。
+
+```rust
+fn main() {
+    // 1. 带有类型后缀的字面量
+    let x = 1u8;
+    let y = 2u32;
+    let z = 3.0f32;
+
+    // 2. 运算符与位运算
+    println!("1 + 2 = {}", 1u32 + 2u32);
+    println!("1 - 2 = {}", 1i32 - 2i32);
+    println!("0011 AND 0101 is {:04b}", 0b0011u32 & 0b0101u32);
+    println!("0011 OR 0101 is {:04b}", 0b0011u32 | 0b0101u32);
+    println!("0011 XOR 0101 is {:04b}", 0b0011u32 ^ 0b0101u32);
+    println!("1 << 5 is {}", 1u32 << 5);
+}
+```
+
+### 3. 元组 (Tuples) 深度解析
+
+元组是不同类型值的集合。元组可以作为函数的参数和返回值。
+
+#### 测试实例：矩阵转置
+
+```rust
+// 包含 4 个浮点数的结构体，表示 2x2 矩阵
+#[derive(Debug)]
+struct Matrix(f32, f32, f32, f32);
+
+// 实现转置函数，交换右上和左下角元素
+fn transpose(matrix: Matrix) -> Matrix {
+    Matrix(matrix.0, matrix.2, matrix.1, matrix.3)
+}
+
+fn main() {
+    let my_matrix = Matrix(1.0, 2.0, 3.0, 4.0);
+    println!("原始矩阵: {:?}", my_matrix);
+    println!("转置矩阵: {:?}", transpose(my_matrix));
+}
+```
+
+### 4. 数组 (Arrays) 与切片 (Slices)
+
+- **数组**：是一个在编译期大小已知的相同类型元素的集合，在栈上分配连续内存。
+- **切片**：是一个双字对象（类似于指针与长度），用于指向一个连续序列（通常是数组或 `Vec`）的某一段。
+
+```rust
+fn analyze_slice(slice: &[i32]) {
+    println!("切片第一个元素: {}", slice[0]);
+    println!("切片长度: {}", slice.len());
+}
+
+fn main() {
+    // 固定长度的数组（类型签名中必须包含长度）
+    let xs: [i32; 5] = [1, 2, 3, 4, 5];
+
+    // 初始化所有元素为 0 的数组
+    let ys: [i32; 500] = [0; 500];
+
+    // 数组分配在栈上
+    println!("数组 xs 占用字节数: {}", std::mem::size_of_val(&xs));
+
+    // 数组可以被自动转换为切片
+    analyze_slice(&xs);
+
+    // 获取数组 xs 的某一段作为切片 [开始索引..结束索引]（左闭右开）
+    analyze_slice(&xs[1..4]);
+}
+```
+
+---
+
+## 🎨 自定义类型：结构体与枚举
 
 ### 1. 结构体 (Structs)
 
-Rust 提供了三种结构体：
+除了经典的命名结构体，Rust 还支持元组结构体和单元结构体：
 
 ```rust
 // 1. 经典的命名结构体 (Named-field Struct)
-struct User {
-    username: String,
-    active: bool,
-    sign_in_count: u64,
+struct Point {
+    x: f32,
+    y: f32,
 }
 
-// 2. 元组结构体 (Tuple Struct) - 用于封装简单数据，无命名字段
-struct Color(i32, i32, i32);
+// 2. 元组结构体 (Tuple Struct)
+struct Pair(i32, f32);
 
-// 3. 单元结构体 (Unit-like Struct) - 不占用内存，常用于 Traits 的泛型标记
-struct AlwaysEqual;
+// 3. 单元结构体 (Unit-like Struct)
+struct Unit;
+```
+
+### 2. 枚举 (Enums)
+
+枚举允许一个类型只能是几种变体之一。Rust 的枚举极其强大，因为每个变体都可以携带数据：
+
+```rust
+// 定义枚举
+enum WebEvent {
+    PageLoad,                 // 无数据变体
+    PageUnload,
+    KeyPress(char),           // 包含 char 变体
+    Paste(String),            // 包含 String 变体
+    Click { x: i64, y: i64 }, // 包含匿名结构体变体
+}
+```
+
+#### 使用 `use` 引入枚举变体
+
+使用 `use` 声明可以让你省去书写冗长作用域的麻烦：
+
+```rust
+enum Status {
+    Rich,
+    Poor,
+}
 
 fn main() {
-    let mut user1 = User {
-        username: String::from("alice"),
-        active: true,
-        sign_in_count: 1,
+    // 显式导入枚举变体
+    use crate::Status::{Rich, Poor};
+
+    let status = Rich; // 不需要写 Status::Rich
+}
+```
+
+#### C 风格枚举 (C-like enums)
+
+在需要像 C 语言一样指定枚举变体的数值时，可以使用隐式或显式的整型值绑定：
+
+```rust
+// 显式指定整型值的枚举
+enum Number {
+    Zero, // 默认从 0 开始
+    One,
+    Two = 100, // 显式赋值为 100
+    Three,     // 接着上一个值递增，为 101
+}
+
+fn main() {
+    // 将枚举转换为 i32
+    println!("Zero is {}", Number::Zero as i32);
+    println!("Two is {}", Number::Two as i32);
+    println!("Three is {}", Number::Three as i32);
+}
+```
+
+#### 测试实例：递归链表
+
+利用枚举实现一个经典的函数式单链表（Singly Linked List）：
+
+```rust
+use crate::List::{Cons, Nil};
+
+enum List {
+    // Cons: 包含一个元素和一个指向下一节点的 Box 指针
+    Cons(u32, Box<List>),
+    // Nil: 表示链表的末尾节点
+    Nil,
+}
+
+impl List {
+    // 创建一个空链表
+    fn new() -> List {
+        Nil
+    }
+
+    // 在链表头部插入元素，并返回新链表
+    fn prepend(self, elem: u32) -> List {
+        Cons(elem, Box::new(self))
+    }
+
+    // 计算链表长度
+    fn len(&self) -> u32 {
+        match self {
+            // self 是不可变引用，因此对下一节点的 Box 只能借用 ref
+            Cons(_, ref tail) => 1 + tail.len(),
+            Nil => 0,
+        }
+    }
+}
+
+fn main() {
+    let mut list = List::new();
+    list = list.prepend(1);
+    list = list.prepend(2);
+    list = list.prepend(3);
+
+    println!("链表长度: {}", list.len()); // 输出: 3
+}
+```
+
+---
+
+## 🔒 变量绑定与类型系统
+
+### 1. 变量可变性与遮蔽
+
+- **可变性**：变量默认不可变。使用 `mut` 关键字标记为可变。
+- **变量遮蔽 (Shadowing)**：允许重新声明同名变量，从而暂时或永久遮蔽前一个变量绑定。
+
+```rust
+fn main() {
+    let x = 5;
+    // x = 6; // ❌ 默认不可变，编译报错
+
+    let mut y = 10;
+    y = 15; // ✅ 可变
+
+    // 变量遮蔽
+    let shadow = 1;
+    let shadow = shadow + 1; // 遮蔽前的 shadow，新 shadow 为 2
+    let shadow = "Now I am a string"; // 改变了类型，重新绑定
+}
+```
+
+### 2. 变量先声明
+
+Rust 允许先声明变量，再进行初始化。但是，**在使用未初始化的变量时，编译器会进行静态拦截**以防止未定义行为：
+
+```rust
+fn main() {
+    let a; // 仅声明，不初始化
+    a = 10; // 初始化
+    println!("a = {}", a); // ✅ 合法
+
+    let b: i32;
+    // println!("b = {}", b); // ❌ 编译报错：use of possibly-uninitialized variable
+}
+```
+
+### 3. 冻结 (Freezing)
+
+当一个数据被**不可变借用**时，它在当前借用作用域内会被“冻结”。即使它被声明为可变变量，在冻结期间也无法对其执行写修改操作：
+
+```rust
+fn main() {
+    let mut _mutable_integer = 7i32;
+
+    {
+        // 借用可变整数，数据在此作用域被冻结
+        let _large_integer = &_mutable_integer;
+
+        // _mutable_integer = 50; // ❌ 编译报错：cannot assign to `_mutable_integer` because it is borrowed
+    } // 借用结束，冻结解除
+
+    _mutable_integer = 50; // ✅ 合法
+}
+```
+
+### 4. 类型系统进阶
+
+- **`as` 强转**：用于原生类型之间的显式类型转换。
+- **类型推断**：编译器非常聪明，能自动推导大多数类型。但在没有足够上下文时需借助类型标注或字面量后缀。
+- **类型别名**：使用 `type` 关键字给类型赋予别名（通常用于简化长泛型签名）。
+
+```rust
+type NanoSecond = u64;
+
+fn main() {
+    // 1. as 强转
+    let decimal = 65.4321_f32;
+    let integer = decimal as u8; // 截断为 65
+    let character = integer as char; // 65 对应 'A'
+
+    // 2. 类型别名
+    let ns: NanoSecond = 10000;
+}
+```
+
+---
+
+## ⚡ 表达式与流程控制
+
+### 1. 表达式 (Expressions) vs 语句 (Statements)
+
+在 Rust 中，大多数代码块都是表达式，即它们**有返回值**。
+- **语句**：通常以分号 `;` 结尾，其值始终为单元类型 `()`（空元组）。
+- **表达式**：如果不加分号，代码块的最后一行会被作为值返回。
+
+```rust
+fn main() {
+    let x = 5;
+
+    // 代码块是一个表达式
+    let y = {
+        let x_squared = x * x;
+        let x_cube = x_squared * x;
+
+        // 该行无分号，会被返回并赋值给 y
+        x_cube + x_squared + x
     };
-    user1.sign_in_count = 2; // 如果实例是 mut 的，字段可修改
+
+    println!("y = {}", y); // 输出: 155
 }
 ```
 
-### 2. 枚举 (Enums) 与模式匹配
+### 2. 循环控制与标签
 
-枚举是 Rust 类型系统的明珠，支持将丰富的数据直接关联到变体（Variants）中。
+对于多层嵌套循环，可以使用生存期标签（Lifetime Label）在一层内部直接跳出外层循环：
 
 ```rust
-// 定义一个包含多种数据类型的枚举
-enum Message {
-    Quit,                         // 无关联数据
-    Move { x: i32, y: i32 },      // 关联匿名结构体
-    Write(String),                // 关联 String
-    ChangeColor(i32, i32, i32),   // 关联多个 i32
-}
+fn main() {
+    let mut count = 0;
 
-fn process_message(msg: Message) {
-    // 使用 match 表达式进行模式匹配（必须穷尽所有可能性）
-    match msg {
-        Message::Quit => {
-            println!("收到退出消息");
-        }
-        Message::Move { x, y } => {
-            println!("移动到坐标: x={}, y={}", x, y);
-        }
-        Message::Write(text) => {
-            println!("写入文本: {}", text);
-        }
-        Message::ChangeColor(r, g, b) => {
-            println!("更改颜色为: R={}, G={}, B={}", r, g, b);
+    // 外层循环加上标签 'outer
+    'outer: loop {
+        println!("进入外层循环");
+
+        loop {
+            println!("进入内层循环");
+            count += 1;
+
+            if count == 3 {
+                // 直接跳出最外层循环
+                break 'outer;
+            }
         }
     }
 }
 ```
 
-### 3. 至关重要的 `Option<T>`
+#### 从 `loop` 返回值
 
-Rust 中没有 `null`。相反，标准库定义了一个特殊的枚举 `Option<T>` 用来表示一个值“存在”或“不存在”：
+`loop` 可以在 `break` 之后返回一个值给外部绑定：
 
 ```rust
-// 标准库定义简化版：
-// enum Option<T> {
-//     Some(T),
-//     None,
-// }
+fn main() {
+    let mut counter = 0;
+
+    let result = loop {
+        counter += 1;
+        if counter == 10 {
+            break counter * 2; // 返回 20
+        }
+    };
+}
+```
+
+### 3. 深度模式匹配 (Pattern Matching)
+
+`match` 分支必须穷尽所有可能性。它支持极强的解构能力：
+
+#### 解构元组、枚举与结构体
+
+```rust
+struct Foo {
+    x: (u32, u32),
+    y: u32,
+}
 
 fn main() {
-    let some_number = Some(5);
-    let absent_number: Option<i32> = None;
+    // 1. 解构元组
+    let triple = (0, -2, 3);
+    match triple {
+        (0, y, z) => println!("第一个元素是 0, y: {}, z: {}", y, z),
+        _ => println!("其他情况"),
+    }
 
-    // 安全地解包
-    match some_number {
-        Some(val) => println!("数字是: {}", val),
-        None => println!("值为空"),
+    // 2. 解构结构体
+    let foo = Foo { x: (1, 2), y: 3 };
+    match foo {
+        Foo { x: (1, b), y } => println!("匹配！b: {}, y: {}", b, y),
+        Foo { y, .. } => println!("仅匹配 y: {}, 忽略 x", y),
     }
 }
 ```
 
-通过强制使用 `Option`，Rust 编译器可以在编译阶段拦截任何“空指针异常”（Null Pointer Exception），从根本上保证了程序的运行安全。
+#### 解构指针与引用
+
+当被匹配的变量是一个引用或指针时，解构有以下需要注意的映射逻辑（配合 `ref` 关键字）：
+
+```rust
+fn main() {
+    let reference = &4;
+
+    match reference {
+        // 如果匹配 &val，得到的是解包后的 i32 拷贝值 val
+        &val => println!("Got a value via destructuring: {:?}", val),
+    }
+
+    // 如果不想解构，可以利用 ref 关键字将未引用的变量绑定为引用类型
+    let value = 5;
+    match value {
+        ref r => println!("Got a reference to value: {:?}", r), // r 类型为 &i32
+    }
+}
+```
+
+#### match 卫语句 (Guards)
+
+可以用卫语句对匹配的分支加入更加灵活的 `if` 条件过滤：
+
+```rust
+fn main() {
+    let pair = (2, -2);
+
+    match pair {
+        (x, y) if x == y => println!("x == y"),
+        (x, y) if x + y == 0 => println!("互为相反数！"),
+        (x, y) => println!("普通数值对 ({}, {})", x, y),
+    }
+}
+```
+
+#### 模式绑定 `@`
+
+使用 `@` 可以在匹配模式的同时，将对应解构出的子项绑定到一个新的变量中：
+
+```rust
+fn main() {
+    let age = 15;
+
+    match age {
+        // 匹配 13~19 的范围，并将匹配到的数值绑定到 n 变量上
+        n @ 13..=19 => println!("青少年，年龄是: {}", n),
+        n => println!("其他年龄: {}", n),
+    }
+}
+```
+
+### 4. `if let` 与 `while let`
+
+当只需要处理一个特定的变体，而不在意其他情况时，`if let` 和 `while let` 是极好的语法糖：
+
+```rust
+fn main() {
+    let optional = Some(7);
+
+    // 替代了写冗长的 match 覆盖 None 分支
+    if let Some(i) = optional {
+        println!("Got Some: {}", i);
+    }
+
+    // while let 适用于循环消费迭代/变体
+    let mut optional_stack = vec![Some(1), Some(2), None];
+    while let Some(Some(value)) = optional_stack.pop() {
+        println!("Popped: {}", value);
+    }
+}
+```
 
 > [!NOTE]
-> **下一步建议**：掌握了这些基础之后，您就可以开始攻克 Rust 的核心难关——[所有权与生命周期](ownership-lifetimes.md)。那里将为您揭示 Rust 是如何在不依赖垃圾回收（GC）的情况下，实现极致的内存安全与零开销抽象的。
+> **下一步建议**：掌握了 Rust 极其严格的基础语法与类型系统后，请继续阅读 [所有权与生命周期核心](ownership-lifetimes.md)，了解 Rust 独特的 Borrow Checker 是如何保障内存安全与高并发的。

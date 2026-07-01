@@ -236,7 +236,7 @@ export default {
 
 在 MDX 文件中使用：
 
-```mdx
+````mdx
 # 我的文档
 
 <Highlight color="#25c2a0">重点内容</Highlight>
@@ -253,7 +253,7 @@ export default {
     ```
   </TabItem>
 </Tabs>
-```
+````
 
 ### 2.4 useBaseUrl 路径管理
 
