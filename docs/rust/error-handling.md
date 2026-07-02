@@ -285,7 +285,7 @@ fn main() {
 
 ## 处理多种错误类型
 
-### 使用 Box<dyn Error>
+### 使用 Box\<dyn Error\>
 
 最简单的方式是使用类型擦除：
 
