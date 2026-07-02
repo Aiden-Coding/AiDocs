@@ -191,3 +191,531 @@ function TemperatureButton({ onIncrement }) {
 ```
 
 通过这种单向流动的控制链条，组件之间的关系变得异常清晰，极易于调试和维护。
+
+---
+
+## 🧪 State 与事件自检清单
+
+在继续之前，检查以下几点你是否都掌握了：
+
+- [ ] **State vs Props**：能够区分什么时候该用 State，什么时候该用 Props
+- [ ] **useState 基本使用**：能够正确声明状态和更新状态
+- [ ] **异步更新机制**：理解状态更新的异步性和批处理机制
+- [ ] **函数式更新**：知道什么时候需要使用 `setState(prev => ...)` 形式
+- [ ] **事件绑定**：能够正确绑定事件处理函数
+- [ ] **SyntheticEvent**：理解 React 合成事件与原生事件的区别
+- [ ] **状态提升**：知道如何在兄弟组件间共享状态
+
+如果有任何不清楚的地方，建议再读一遍相关章节。
+
+---
+
+## ⚠️ 常见误区与陷阱
+
+### 误区 1：直接修改状态对象
+
+```tsx
+// ❌ 错误：直接修改状态对象，React 检测不到变化
+function Counter() {
+  const [user, setUser] = useState({ name: 'Alice', age: 20 });
+
+  const handleBirthday = () => {
+    user.age = user.age + 1; // 虽然修改了，但 React 不会重渲染
+    setUser(user);
+  };
+
+  return (
+    <div>
+      <p>{user.name} 今年 {user.age} 岁</p>
+      <button onClick={handleBirthday}>过生日</button>
+    </div>
+  );
+}
+
+// ✅ 正确：创建新对象，让 React 检测到变化
+function Counter() {
+  const [user, setUser] = useState({ name: 'Alice', age: 20 });
+
+  const handleBirthday = () => {
+    // 方案 1：使用对象展开符创建新对象
+    setUser({ ...user, age: user.age + 1 });
+    
+    // 或者方案 2：使用函数式更新
+    setUser(prevUser => ({ ...prevUser, age: prevUser.age + 1 }));
+  };
+
+  return (
+    <div>
+      <p>{user.name} 今年 {user.age} 岁</p>
+      <button onClick={handleBirthday}>过生日</button>
+    </div>
+  );
+}
+```
+
+**原因**：React 通过比较新旧对象的引用地址来判断是否发生了变化。直接修改不会改变引用地址，React 就检测不到。
+
+### 误区 2：闭包陷阱：多次 setState 只执行了一次
+
+```tsx
+// ❌ 错误：三次 setCount 都使用了同一个旧 count 值
+function AddThree() {
+  const [count, setCount] = useState(0);
+
+  const handleClick = () => {
+    setCount(count + 1);  // count 仍是 0，所以变成 1
+    setCount(count + 1);  // count 仍是 0，所以还是 1
+    setCount(count + 1);  // count 仍是 0，所以还是 1
+    // 最终 count = 1
+  };
+
+  return <button onClick={handleClick}>点击 {count}</button>;
+}
+
+// ✅ 正确：使用函数式更新，React 会排队执行
+function AddThree() {
+  const [count, setCount] = useState(0);
+
+  const handleClick = () => {
+    setCount(prev => prev + 1);  // 0 + 1 = 1
+    setCount(prev => prev + 1);  // 1 + 1 = 2
+    setCount(prev => prev + 1);  // 2 + 1 = 3
+    // 最终 count = 3
+  };
+
+  return <button onClick={handleClick}>点击 {count}</button>;
+}
+```
+
+### 误区 3：在渲染过程中调用 setState
+
+```tsx
+// ❌ 错误：无限渲染循环
+function BadComponent() {
+  const [count, setCount] = useState(0);
+
+  setCount(count + 1); // 这行代码在每次渲染时都会执行！
+  // 1. 组件首次渲染，count = 0，然后调用 setCount(1)
+  // 2. 状态更新，触发重渲染，count = 1，然后调用 setCount(2)
+  // 3. 无限循环...
+
+  return <div>{count}</div>;
+}
+
+// ✅ 正确：使用 useEffect 隔离副作用
+import { useState, useEffect } from 'react';
+
+function GoodComponent() {
+  const [count, setCount] = useState(0);
+
+  // useEffect 只在组件挂载时执行一次
+  useEffect(() => {
+    setCount(1);
+  }, []); // 空依赖项数组表示只执行一次
+
+  return <div>{count}</div>;
+}
+```
+
+### 误区 4：在事件处理函数中调用 setState 后立刻使用新值
+
+```tsx
+// ❌ 错误：setState 是异步的，下一行代码执行时还用不到新值
+function Form() {
+  const [formData, setFormData] = useState({ name: '' });
+
+  const handleSubmit = () => {
+    setFormData({ name: 'Alice' });
+    console.log(formData); // 输出的还是旧值 { name: '' }，不是 { name: 'Alice' }
+    submitToServer(formData);
+  };
+
+  return <button onClick={handleSubmit}>提交</button>;
+}
+
+// ✅ 正确方案 1：将需要用新值的逻辑放在 useEffect
+import { useState, useEffect } from 'react';
+
+function Form() {
+  const [formData, setFormData] = useState({ name: '' });
+
+  useEffect(() => {
+    // 这个 effect 会在 formData 更新后执行
+    if (formData.name) {
+      submitToServer(formData);
+    }
+  }, [formData]);
+
+  const handleSubmit = () => {
+    setFormData({ name: 'Alice' });
+  };
+
+  return <button onClick={handleSubmit}>提交</button>;
+}
+
+// ✅ 正确方案 2：直接使用新值而不依赖 state
+function Form() {
+  const handleSubmit = () => {
+    const newData = { name: 'Alice' };
+    submitToServer(newData);
+  };
+
+  return <button onClick={handleSubmit}>提交</button>;
+}
+```
+
+### 误区 5：错误地传递事件处理函数
+
+```tsx
+// ❌ 错误 1：立刻调用函数，而不是传递函数引用
+function Counter() {
+  const [count, setCount] = useState(0);
+
+  return (
+    <button onClick={setCount(count + 1)}>
+      加 1
+    </button>
+  );
+}
+// 问题：onClick={setCount(count + 1)} 会在渲染时立刻调用，导致无限更新
+
+// ❌ 错误 2：用字符串表示函数
+function Counter() {
+  const [count, setCount] = useState(0);
+
+  return (
+    <button onClick="setCount(count + 1)">
+      加 1
+    </button>
+  );
+}
+// 问题：React 会把字符串当作字面量，不会执行其中的代码
+
+// ✅ 正确 1：传递函数引用
+function Counter() {
+  const [count, setCount] = useState(0);
+
+  const handleClick = () => setCount(count + 1);
+
+  return <button onClick={handleClick}>加 1</button>;
+}
+
+// ✅ 正确 2：使用箭头函数包裹
+function Counter() {
+  const [count, setCount] = useState(0);
+
+  return (
+    <button onClick={() => setCount(count + 1)}>
+      加 1
+    </button>
+  );
+}
+```
+
+### 误区 6：直接传递参数到事件处理函数
+
+```tsx
+// ❌ 错误：无法传递额外参数
+function TodoList({ todos }) {
+  const handleDelete = (id) => {
+    console.log('删除 ID：', id);
+  };
+
+  return (
+    <ul>
+      {todos.map(todo => (
+        <li key={todo.id}>
+          {todo.text}
+          {/* 这样写无法传递 todo.id 给 handleDelete */}
+          <button onClick={handleDelete}>删除</button>
+        </li>
+      ))}
+    </ul>
+  );
+}
+
+// ✅ 正确 1：使用箭头函数包裹
+function TodoList({ todos }) {
+  const handleDelete = (id) => {
+    console.log('删除 ID：', id);
+  };
+
+  return (
+    <ul>
+      {todos.map(todo => (
+        <li key={todo.id}>
+          {todo.text}
+          <button onClick={() => handleDelete(todo.id)}>删除</button>
+        </li>
+      ))}
+    </ul>
+  );
+}
+
+// ✅ 正确 2：使用 bind 绑定参数（较少使用）
+function TodoList({ todos }) {
+  const handleDelete = (id) => {
+    console.log('删除 ID：', id);
+  };
+
+  return (
+    <ul>
+      {todos.map(todo => (
+        <li key={todo.id}>
+          {todo.text}
+          <button onClick={handleDelete.bind(null, todo.id)}>删除</button>
+        </li>
+      ))}
+    </ul>
+  );
+}
+```
+
+### 误区 7：状态提升但忘记传递更新回调
+
+```tsx
+// ❌ 错误：子组件只收到了数据，但没办法更新它
+function Parent() {
+  const [count, setCount] = useState(0);
+
+  return (
+    <div>
+      <Child count={count} />  {/* 只传递了数据，没有回调 */}
+    </div>
+  );
+}
+
+function Child({ count }) {
+  return (
+    <div>
+      <p>计数：{count}</p>
+      <button onClick={() => ???}>加 1</button>  {/* 无法更新！ */}
+    </div>
+  );
+}
+
+// ✅ 正确：既传递数据，也传递回调
+function Parent() {
+  const [count, setCount] = useState(0);
+
+  return (
+    <div>
+      <Child 
+        count={count} 
+        onIncrement={() => setCount(c => c + 1)}
+      />
+    </div>
+  );
+}
+
+function Child({ count, onIncrement }) {
+  return (
+    <div>
+      <p>计数：{count}</p>
+      <button onClick={onIncrement}>加 1</button>
+    </div>
+  );
+}
+```
+
+### 误区 8：忘记为表单受控组件设置 value
+
+```tsx
+// ❌ 错误：只设置了 onChange，但没有设置 value
+function TextInput() {
+  const [text, setText] = useState('');
+
+  return (
+    <input
+      onChange={(e) => setText(e.target.value)}
+      // 缺少 value 属性！
+    />
+  );
+}
+// 问题：输入框会显示浏览器的默认行为，用户输入不会被 React 控制
+
+// ✅ 正确：受控组件需要同时设置 value 和 onChange
+function TextInput() {
+  const [text, setText] = useState('');
+
+  return (
+    <input
+      value={text}
+      onChange={(e) => setText(e.target.value)}
+    />
+  );
+}
+```
+
+---
+
+## 📖 进阶思考
+
+### 为什么 React 设计成状态更新是异步的？
+
+1. **性能优化**：批量处理多个状态更新，只触发一次渲染，而不是每次都重新渲染
+2. **可预测性**：避免中间状态被暴露给用户，只呈现完整一致的最终状态
+3. **并发特性**：为 React 18+ 的 Concurrent Mode 打好基础，支持任务优先级调度
+
+### State 可以存储什么类型的数据？
+
+理论上 State 可以存储任何 JavaScript 类型的数据：
+- **基本类型**：数字、字符串、布尔值、null、undefined
+- **对象和数组**：非常常见，但更新时需要创建新引用
+- **函数引用**：虽然技术上可行，但通常不推荐
+
+最佳实践是：**State 应该只存储影响 UI 的数据**。不影响 UI 的数据（如计时器 ID、网络请求的 AbortController）应该存储在 `useRef` 中。
+
+---
+
+## 🎯 实战练习
+
+### 练习 1：构建一个受控表单
+
+需求：
+- 包含文本输入框、下拉菜单、复选框
+- 用 State 管理所有表单数据
+- 点击提交时打印表单数据
+
+<details>
+<summary>参考答案</summary>
+
+```tsx
+import { useState } from 'react';
+
+interface FormData {
+  name: string;
+  category: string;
+  subscribed: boolean;
+}
+
+function ControlledForm() {
+  const [formData, setFormData] = useState<FormData>({
+    name: '',
+    category: 'technology',
+    subscribed: false
+  });
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+    const { name, value, type } = e.target;
+    const val = type === 'checkbox' ? (e.target as HTMLInputElement).checked : value;
+    
+    setFormData(prev => ({
+      ...prev,
+      [name]: val
+    }));
+  };
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    console.log('提交的表单数据：', formData);
+  };
+
+  return (
+    <form onSubmit={handleSubmit}>
+      <input
+        type="text"
+        name="name"
+        value={formData.name}
+        onChange={handleChange}
+        placeholder="输入名称"
+      />
+      
+      <select name="category" value={formData.category} onChange={handleChange}>
+        <option value="technology">技术</option>
+        <option value="sports">体育</option>
+        <option value="entertainment">娱乐</option>
+      </select>
+      
+      <label>
+        <input
+          type="checkbox"
+          name="subscribed"
+          checked={formData.subscribed}
+          onChange={handleChange}
+        />
+        订阅我们的邮件
+      </label>
+      
+      <button type="submit">提交</button>
+    </form>
+  );
+}
+```
+
+</details>
+
+### 练习 2：修复状态提升中的 Bug
+
+以下代码有问题，找出并修复：
+
+```tsx
+function Parent() {
+  const [items, setItems] = useState(['apple', 'banana']);
+
+  const handleAddItem = (item) => {
+    items.push(item); // Bug 1
+    setItems(items);  // Bug 2
+  };
+
+  return (
+    <div>
+      <ItemList items={items} />
+      <AddItemButton onAdd={handleAddItem} />
+    </div>
+  );
+}
+```
+
+<details>
+<summary>参考答案</summary>
+
+问题：
+1. **Bug 1**：直接修改数组，React 检测不到引用变化
+2. **Bug 2**：即使调用了 setItems，由于引用相同，也不会触发重渲染
+
+修正代码：
+
+```tsx
+function Parent() {
+  const [items, setItems] = useState(['apple', 'banana']);
+
+  const handleAddItem = (item) => {
+    // 正确：创建新数组
+    setItems(prevItems => [...prevItems, item]);
+  };
+
+  return (
+    <div>
+      <ItemList items={items} />
+      <AddItemButton onAdd={handleAddItem} />
+    </div>
+  );
+}
+```
+
+</details>
+
+---
+
+## 📚 关键概念总结表
+
+| 概念 | 说明 | 例子 |
+|-----|------|------|
+| **State** | 组件内部可变的状态数据 | `const [count, setCount] = useState(0)` |
+| **setState** | 更新状态的函数 | `setCount(count + 1)` |
+| **异步更新** | 状态更新不会立刻生效 | setState 后的下一行无法使用新值 |
+| **批处理** | 多个 setState 合并为一次渲染 | 事件处理中的三个 setState 只触发一次渲染 |
+| **函数式更新** | 向 setState 传入函数获取最新状态 | `setCount(prev => prev + 1)` |
+| **事件对象** | React 的合成事件 | `(e: React.ChangeEvent<HTMLInputElement>)` |
+| **受控组件** | 表单值由 State 完全控制 | `<input value={text} onChange={...} />` |
+| **状态提升** | 将状态移到父组件以共享 | 兄弟组件通过父组件通信 |
+
+---
+
+## 🔗 下一步
+
+掌握了 State 和事件处理后，你已经可以构建有交互的 React 应用了。建议继续学习：
+1. [常用 Hooks 深度解析](hooks.md)：学习 useEffect、useRef 等核心 Hooks
+2. [组件设计模式](component-patterns.md)：设计可复用的高级组件
+3. [初级练习题](../practice/beginner-exercises.md)：通过实战强化理解

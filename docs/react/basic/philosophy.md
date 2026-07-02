@@ -146,3 +146,301 @@ function TodoList() {
 ### 单向数据流的工程优势
 - **极高的可预测性**：当应用中的某个地方数据出错了，你只需要顺着数据流向上游排查，很容易就能定位到是哪个组件的哪个 `setState` 触发了错误修改。
 - **避免隐式依赖**：彻底杜绝了传统的“双向绑定”可能引发的级联数据修改和“状态同步死循环”。
+---
+
+## 🧪 核心概念自检清单
+
+在继续学习之前，请检查以下几点你是否都理解了：
+
+- [ ] **声明式 vs 指令式**：能够用自己的话解释两者的本质区别，以及为什么 React 选择声明式
+- [ ] **UI = f(state)**：理解这个公式的含义，知道改变状态会导致 UI 重新渲染
+- [ ] **纯函数契约**：能够识别代码中的副作用，知道它们不应该出现在渲染函数中
+- [ ] **单向数据流**：理解 Props 如何从父流向子，回调如何从子向父通信
+- [ ] **组件拆分**：能够根据单一职责原则拆分一个大组件
+
+如果有任何一项你不太确定，建议再读一遍相关章节。
+
+---
+
+## ⚠️ 常见误区与陷阱
+
+### 误区 1：直接修改 Props
+
+```tsx
+// ❌ 错误：Props 是只读的，不能直接修改
+function UserCard({ user }: { user: { name: string; age: number } }) {
+  user.name = '新名字'; // 违反了 React 的单向数据流原则
+  return <div>{user.name}</div>;
+}
+
+// ✅ 正确：如果需要修改，应该在父组件进行，然后通过回调通知父组件
+function UserCard({ user, onUpdate }: { 
+  user: { name: string; age: number }; 
+  onUpdate: (newName: string) => void 
+}) {
+  const handleChangeName = () => {
+    onUpdate('新名字');
+  };
+  return (
+    <div>
+      <h3>{user.name}</h3>
+      <button onClick={handleChangeName}>改名</button>
+    </div>
+  );
+}
+```
+
+### 误区 2：在渲染函数中执行副作用
+
+```tsx
+// ❌ 错误：在渲染过程中发起网络请求，会导致无限请求
+function UserList() {
+  const [users, setUsers] = useState([]);
+  
+  // 每次渲染都会调用，导致无限的网络请求！
+  fetch('/api/users').then(res => res.json()).then(data => setUsers(data));
+  
+  return <div>{users.map(u => <p key={u.id}>{u.name}</p>)}</div>;
+}
+
+// ✅ 正确：使用 useEffect 隔离副作用
+import { useState, useEffect } from 'react';
+
+function UserList() {
+  const [users, setUsers] = useState([]);
+  
+  useEffect(() => {
+    // 这里的代码只在组件挂载时执行一次
+    fetch('/api/users')
+      .then(res => res.json())
+      .then(data => setUsers(data));
+  }, []); // 空依赖项数组表示只执行一次
+  
+  return <div>{users.map(u => <p key={u.id}>{u.name}</p>)}</div>;
+}
+```
+
+### 误区 3：忘记 Props 是单向的
+
+```tsx
+// ❌ 错误：期望通过修改子组件来自动更新父组件
+function Parent() {
+  const [name, setName] = useState('Alice');
+  return <Child name={name} />; // 传递 name
+}
+
+function Child({ name }: { name: string }) {
+  return (
+    <div>
+      <p>{name}</p>
+      <input 
+        value={name}
+        onChange={e => {
+          // 这样修改 name 是没有效果的，因为 Props 是只读的
+          // 父组件的 name 不会改变
+        }}
+      />
+    </div>
+  );
+}
+
+// ✅ 正确：通过回调函数向上通信
+function Parent() {
+  const [name, setName] = useState('Alice');
+  
+  const handleNameChange = (newName: string) => {
+    setName(newName);
+  };
+  
+  return <Child name={name} onNameChange={handleNameChange} />;
+}
+
+function Child({ name, onNameChange }: { 
+  name: string; 
+  onNameChange: (newName: string) => void 
+}) {
+  return (
+    <div>
+      <p>{name}</p>
+      <input 
+        value={name}
+        onChange={e => onNameChange(e.target.value)}
+      />
+    </div>
+  );
+}
+```
+
+### 误区 4：组件过于庞大，职责不清
+
+```tsx
+// ❌ 错误：一个组件承担了太多职责
+function UserManagementPage() {
+  // 1. 用户列表展示
+  // 2. 用户搜索过滤
+  // 3. 用户编辑表单
+  // 4. 用户删除确认
+  // 5. 网络请求与加载状态
+  // ... 还有 500 行代码
+  
+  return <div>{/* 混乱的大杂烩 */}</div>;
+}
+
+// ✅ 正确：按功能拆分为多个小组件
+function UserManagementPage() {
+  const [users, setUsers] = useState([]);
+  const [searchTerm, setSearchTerm] = useState('');
+  
+  const filteredUsers = users.filter(u => u.name.includes(searchTerm));
+  
+  return (
+    <div>
+      <SearchBar value={searchTerm} onChange={setSearchTerm} />
+      <UserList users={filteredUsers} onDelete={setUsers} />
+    </div>
+  );
+}
+
+function SearchBar({ value, onChange }: { value: string; onChange: (v: string) => void }) {
+  return <input value={value} onChange={e => onChange(e.target.value)} />;
+}
+
+function UserList({ users, onDelete }: { users: User[]; onDelete: (users: User[]) => void }) {
+  return (
+    <ul>
+      {users.map(u => (
+        <UserItem key={u.id} user={u} onDelete={() => onDelete(users.filter(x => x.id !== u.id))} />
+      ))}
+    </ul>
+  );
+}
+
+function UserItem({ user, onDelete }: { user: User; onDelete: () => void }) {
+  return (
+    <li>
+      <span>{user.name}</span>
+      <button onClick={onDelete}>删除</button>
+    </li>
+  );
+}
+```
+
+---
+
+## 📖 进阶思考
+
+### 为什么 React 坚持单向数据流？
+
+单向数据流看起来比双向绑定（如 Vue 2 的 `v-model`）更繁琐，但它带来的优势是：
+
+1. **可预测性**：数据总是从上向下流动，不会有"循环依赖"或"意外修改"
+2. **易于调试**：问题来源清晰，溯源容易
+3. **性能优化**：React 可以清楚地追踪到哪个状态变化导致了哪些组件更新
+4. **可测试性**：组件的输入（Props）和输出（回调）都很清晰
+
+### React 如何处理复杂的跨组件通信？
+
+当组件树过深，手动传递 Props 和回调变得繁琐时，React 提供了：
+- **Context API**：适合中等规模的全局状态（第二阶段学习）
+- **状态管理库**（Redux、Zustand、Jotai）：适合大型应用（第二阶段学习）
+
+---
+
+## 🎯 实战练习
+
+### 练习 1：重构一个声明式组件
+
+尝试将以下指令式代码改写为声明式的 React 组件：
+
+```javascript
+// 指令式原始代码
+const toggleButton = document.getElementById('toggle');
+const panel = document.getElementById('panel');
+
+toggleButton.addEventListener('click', () => {
+  if (panel.style.display === 'none') {
+    panel.style.display = 'block';
+  } else {
+    panel.style.display = 'none';
+  }
+});
+```
+
+<details>
+<summary>参考答案</summary>
+
+```tsx
+import { useState } from 'react';
+
+function TogglePanelDemo() {
+  const [isVisible, setIsVisible] = useState(false);
+  
+  return (
+    <div>
+      <button onClick={() => setIsVisible(!isVisible)}>切换</button>
+      {isVisible && <div id="panel">这是可见的面板</div>}
+    </div>
+  );
+}
+```
+
+注意区别：
+- 声明式方法只关心"什么时候显示面板"（`isVisible`），而不关心"如何改变样式"
+- React 自动处理了 DOM 更新的细节
+
+</details>
+
+### 练习 2：设计单向数据流
+
+设计一个"点赞按钮"组件，要求：
+- 父组件中维护"点赞数"状态
+- 子组件只负责展示和交互，不修改状态
+- 点击时通过回调通知父组件
+
+<details>
+<summary>参考答案</summary>
+
+```tsx
+function Parent() {
+  const [likes, setLikes] = useState(0);
+  
+  const handleLike = () => {
+    setLikes(likes + 1);
+  };
+  
+  return <LikeButton count={likes} onLike={handleLike} />;
+}
+
+function LikeButton({ count, onLike }: { count: number; onLike: () => void }) {
+  return (
+    <button onClick={onLike}>
+      👍 {count} 人点赞
+    </button>
+  );
+}
+```
+
+</details>
+
+---
+
+## 📚 关键术语解释
+
+| 术语 | 解释 |
+|-----|------|
+| **Declarative** | 声明式：描述"想要什么"，而不是"如何做" |
+| **Imperative** | 指令式：精确描述"如何一步步做" |
+| **Props** | 组件的输入参数，从父传向子，是只读的 |
+| **State** | 组件的内部状态，可以修改，修改后触发重渲染 |
+| **Callback** | 回调函数，子组件通过它向父组件通信 |
+| **Render Phase** | 渲染阶段，计算新的 UI 结构 |
+| **Commit Phase** | 提交阶段，将计算结果应用到真实 DOM |
+| **Pure Function** | 纯函数，相同输入必定产生相同输出，无副作用 |
+
+---
+
+## 🔗 下一步
+
+理解了 React 的核心哲学后，你已经准备好深入学习：
+1. [JSX 语法与规范](jsx-syntax.md)：学习如何用 JSX 描述 UI
+2. [组件与 Props](components-props.md)：深入掌握组件的设计与 Props 的用法

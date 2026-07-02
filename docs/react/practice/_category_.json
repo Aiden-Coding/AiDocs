@@ -1,0 +1,8 @@
+{
+  "label": "实战与练习",
+  "position": 3,
+  "link": {
+    "type": "generated-index",
+    "description": "通过真实项目实战和阶段性练习题，巩固 React 知识体系。"
+  }
+}

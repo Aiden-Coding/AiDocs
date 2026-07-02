@@ -251,3 +251,392 @@ function UserList() {
 > - `key` 应该是同级元素中**唯一且稳定**的标识符（通常使用来自数据库的 `id`）。
 > - **避免使用数组索引 (index) 作为 key**：如果列表顺序会发生变化（如排序、过滤、插入），使用索引作为 key 会导致严重的渲染性能问题和组件状态混乱。
 > - **不要使用随机数 (Math.random()) 作 key**：每次渲染都会生成新的 key，导致 React 无法复用旧节点，彻底废掉 Diff 算法的性能优化。
+
+---
+
+## 🧪 JSX 书写自检清单
+
+在编写 JSX 代码时，使用这个清单来检查你的代码是否规范：
+
+- [ ] **单一根元素**：JSX 表达式只返回一个根节点（或用 `<>` Fragment 包裹）
+- [ ] **标签闭合**：所有标签都正确闭合，单标签使用 `/>` 自闭合
+- [ ] **属性命名**：使用驼峰命名，`class` 改为 `className`，`for` 改为 `htmlFor`
+- [ ] **事件处理器**：使用驼峰命名，`onclick` 改为 `onClick`
+- [ ] **样式对象**：行内样式使用 `{}` 包裹 JavaScript 对象
+- [ ] **条件渲染**：正确使用三元操作符、`&&` 或 if-else 逻辑
+- [ ] **列表渲染**：每个列表项都指定稳定唯一的 `key`
+- [ ] **表达式正确**：大括号内只包含 JavaScript **表达式**，不包含语句
+
+---
+
+## ⚠️ JSX 常见误区与陷阱
+
+### 误区 1：忘记使用大括号嵌入变量
+
+```tsx
+// ❌ 错误：直接写变量名，会被当作字符串输出
+function Welcome({ name }) {
+  return <h1>Hello {name}</h1>;  // 如果省略大括号，会输出 "Hello name"
+}
+
+// ✅ 正确
+function Welcome({ name }) {
+  return <h1>Hello {name}</h1>;  // 输出 "Hello 张三"
+}
+```
+
+### 误区 2：大括号内写 if-else 语句
+
+```tsx
+// ❌ 错误：if-else 是语句，不能在大括号内直接使用
+function Status({ isActive }) {
+  return <p>{if (isActive) { "活跃中" } else { "离线" }}</p>;
+}
+
+// ✅ 正确：使用三元运算符
+function Status({ isActive }) {
+  return <p>{isActive ? "活跃中" : "离线"}</p>;
+}
+
+// 或者：在组件函数体中提前处理
+function Status({ isActive }) {
+  const status = isActive ? "活跃中" : "离线";
+  return <p>{status}</p>;
+}
+```
+
+### 误区 3：style 属性直接传字符串
+
+```tsx
+// ❌ 错误：style 属性期望接收对象，不是字符串
+function Card() {
+  return (
+    <div style="color: red; padding: 20px;">
+      卡片
+    </div>
+  );
+}
+
+// ✅ 正确：传递 JavaScript 对象
+function Card() {
+  return (
+    <div style={{ color: 'red', padding: '20px' }}>
+      卡片
+    </div>
+  );
+}
+```
+
+### 误区 4：忘记 className 驼峰命名
+
+```tsx
+// ❌ 错误：使用 HTML 的 class 属性
+function Button() {
+  return <button class="btn btn-primary">点击</button>;
+}
+
+// ✅ 正确：使用 className
+function Button() {
+  return <button className="btn btn-primary">点击</button>;
+}
+```
+
+### 误区 5：条件渲染中的 0 陷阱
+
+```tsx
+// ❌ 错误：当 count === 0 时，会在页面上显示 "0"
+function MessageBadge({ count }) {
+  return <div>{count && <span>新消息数：{count}</span>}</div>;
+}
+// 如果 count = 0，页面上会显示一个孤独的 "0"
+
+// ✅ 正确方案 1：显式比较
+function MessageBadge({ count }) {
+  return <div>{count > 0 && <span>新消息数：{count}</span>}</div>;
+}
+
+// ✅ 正确方案 2：转换为布尔值
+function MessageBadge({ count }) {
+  return <div>{!!count && <span>新消息数：{count}</span>}</div>;
+}
+```
+
+### 误区 6：使用索引作为 Key
+
+```tsx
+// ❌ 错误：使用索引作为 key，当列表重排时会产生 bug
+function TodoList({ todos }) {
+  return (
+    <ul>
+      {todos.map((todo, index) => (
+        <li key={index}>{todo.text}</li>  // 危险！
+      ))}
+    </ul>
+  );
+}
+
+// 场景：如果用户删除第一条 todo，React 会认为是数据改变了，而不是节点被删除
+// 这会导致输入框的状态、焦点、动画等全部混乱
+
+// ✅ 正确：使用唯一稳定的 ID
+function TodoList({ todos }) {
+  return (
+    <ul>
+      {todos.map(todo => (
+        <li key={todo.id}>{todo.text}</li>  // 安全！
+      ))}
+    </ul>
+  );
+}
+```
+
+### 误区 7：使用 Math.random() 作为 Key
+
+```tsx
+// ❌ 错误：每次渲染都生成新的随机数，导致节点无法复用
+function Items({ items }) {
+  return (
+    <ul>
+      {items.map(item => (
+        <li key={Math.random()}>{item.name}</li>  // 极端危险！
+      ))}
+    </ul>
+  );
+}
+
+// ✅ 正确：使用数据中的唯一 ID
+function Items({ items }) {
+  return (
+    <ul>
+      {items.map(item => (
+        <li key={item.id}>{item.name}</li>
+      ))}
+    </ul>
+  );
+}
+```
+
+### 误区 8：多个根元素没有包裹
+
+```tsx
+// ❌ 错误：返回多个根元素，会导致编译错误
+function UserCard() {
+  return (
+    <h1>用户信息</h1>
+    <p>邮箱：user@example.com</p>
+  );
+}
+
+// ✅ 正确：使用 div 或 Fragment 包裹
+function UserCard() {
+  return (
+    <div>
+      <h1>用户信息</h1>
+      <p>邮箱：user@example.com</p>
+    </div>
+  );
+}
+
+// ✅ 更好：使用 Fragment 避免额外 DOM 层级
+function UserCard() {
+  return (
+    <>
+      <h1>用户信息</h1>
+      <p>邮箱：user@example.com</p>
+    </>
+  );
+}
+```
+
+### 误区 9：JSX 属性中忘记大括号
+
+```tsx
+// ❌ 错误：事件处理器直接传入，会被当作字符串
+function Button() {
+  return <button onClick="handleClick()">点击</button>;
+}
+
+// ✅ 正确：用大括号传入函数引用
+function Button() {
+  const handleClick = () => console.log('被点击了');
+  return <button onClick={handleClick}>点击</button>;
+}
+
+// ✅ 也可以直接传入箭头函数
+function Button() {
+  return <button onClick={() => console.log('被点击了')}>点击</button>;
+}
+```
+
+### 误区 10：双重大括号的困惑
+
+```tsx
+// ❌ 理解错误：不知道为什么要两个大括号
+function StyledDiv() {
+  return <div style={{ color: 'red' }}>文本</div>;
+}
+
+// ✅ 理解正确：外层大括号表示 JSX 表达式，内层大括号表示 JavaScript 对象
+// 等价于：
+function StyledDiv() {
+  const styleObj = { color: 'red' };
+  return <div style={styleObj}>文本</div>;
+}
+```
+
+---
+
+## 📖 进阶：JSX 编译原理深度理解
+
+### React 17 之前的编译方式
+
+```tsx
+// 源代码
+const element = <h1 className="title">Hello</h1>;
+
+// 编译后（React 17 之前）
+const element = React.createElement('h1', { className: 'title' }, 'Hello');
+```
+
+需要在文件顶部导入 `React`，即使代码中没有显式使用它。
+
+### React 17+ 的新编译方式
+
+```tsx
+// 源代码
+const element = <h1 className="title">Hello</h1>;
+
+// 编译后（React 17+ 使用 jsx transform）
+import { jsx as _jsx } from 'react/jsx-runtime';
+
+const element = _jsx('h1', { className: 'title', children: 'Hello' });
+```
+
+不需要手动导入 `React`，编译器会自动引入 `jsx` 函数。
+
+---
+
+## 🎯 实战练习
+
+### 练习 1：构建一个产品列表组件
+
+需求：
+- 展示商品列表，每项包含名称、价格、库存
+- 如果库存为 0，显示"缺货"
+- 使用条件渲染和列表渲染
+
+<details>
+<summary>参考答案</summary>
+
+```tsx
+interface Product {
+  id: number;
+  name: string;
+  price: number;
+  stock: number;
+}
+
+function ProductList({ products }: { products: Product[] }) {
+  return (
+    <div className="product-list">
+      {products.length === 0 ? (
+        <p>暂无商品</p>
+      ) : (
+        <ul>
+          {products.map(product => (
+            <li key={product.id} className="product-item">
+              <h3>{product.name}</h3>
+              <p>¥{product.price}</p>
+              {product.stock > 0 ? (
+                <span className="in-stock">库存：{product.stock}</span>
+              ) : (
+                <span className="out-of-stock">缺货</span>
+              )}
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
+  );
+}
+```
+
+</details>
+
+### 练习 2：修复 JSX 代码中的错误
+
+以下代码有 5 个错误，找出并改正它们：
+
+```tsx
+function BuggyComponent({ items }) {
+  return (
+    <section>
+      <h1>Item List</h1>
+      {items.length > 0 && items.map(item => (
+        <div key={item.index} class="item" style="color: blue">
+          {item.name}
+          {item.active ? <span>Active</span> else <span>Inactive</span>}
+        </div>
+      ))}
+    </section>
+  );
+}
+```
+
+<details>
+<summary>参考答案</summary>
+
+错误与修正：
+
+1. `key={item.index}` → `key={item.id}`（使用唯一 ID，不用索引）
+2. `class=` → `className=`（驼峰命名）
+3. `style="color: blue"` → `style={{ color: 'blue' }}`（style 接收对象）
+4. `? <span>Active</span> else` → `? <span>Active</span> :`（三元运算符语法）
+5. 条件表达式缺少另一个根元素包裹
+
+正确代码：
+
+```tsx
+function BuggyComponent({ items }) {
+  return (
+    <section>
+      <h1>Item List</h1>
+      {items.length > 0 && (
+        <div>
+          {items.map(item => (
+            <div key={item.id} className="item" style={{ color: 'blue' }}>
+              {item.name}
+              {item.active ? <span>Active</span> : <span>Inactive</span>}
+            </div>
+          ))}
+        </div>
+      )}
+    </section>
+  );
+}
+```
+
+</details>
+
+---
+
+## 📚 关键概念总结表
+
+| 概念 | 说明 | 示例 |
+|-----|------|------|
+| **JSX** | HTML 与 JavaScript 的融合语法 | `<div>{name}</div>` |
+| **大括号** | 在 JSX 中嵌入 JavaScript 表达式 | `{count + 1}` |
+| **className** | 替代 HTML 的 `class` 属性 | `<div className="active">` |
+| **style** | 接收 JavaScript 对象的样式 | `style={{ color: 'red' }}` |
+| **Fragment** | 无约束的根元素包裹器 | `<>...</>` |
+| **条件渲染** | 根据条件展示或隐藏 JSX | `{isShow && <div/>}` |
+| **列表渲染** | 使用 `.map()` 遍历数组 | `{items.map(item => ...)}` |
+| **Key** | 帮助 React 识别列表元素 | `<li key={item.id}>` |
+
+---
+
+## 🔗 下一步
+
+掌握了 JSX 的语法与规范后，你已经可以开始编写简单的 React 组件了。建议继续学习：
+1. [组件与 Props](components-props.md)：学习如何创建可复用的组件
+2. [State 与事件处理](state-events.md)：给你的组件添加交互

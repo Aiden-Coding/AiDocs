@@ -42,7 +42,11 @@ mindmap
 ```
 
 ---
+## ⚡ 快速开始（推荐首先阅读）
 
+> 🎯 **第一次接触 React？** 建议先花 **15 分钟** 完成 [快速开始指南](basic/quick-start.md)，在你的电脑上运行第一个 React 应用，然后再开始系统学习。
+
+---
 ## 第一阶段：零基础入门与核心基石 (Beginner: Core Foundations)
 
 ### 1.1 React 核心哲学
@@ -636,9 +640,314 @@ function FeedbackForm() {
 
 ---
 
+---
+
+## 📚 实战练习与验证
+
+每个阶段都配备了**循序渐进的练习题**，从简单到复杂逐步训练：
+
+- [初级练习题](practice/beginner-exercises.md)：组件声明、Props 传递、State 管理、列表渲染
+- [中级练习题](practice/intermediate-exercises.md)：自定义 Hooks、状态提升、Context 使用、表单处理
+- [高级练习题](practice/advanced-exercises.md)：性能优化、渲染调试、TypeScript 约束、单元测试
+
+> **💡 学习建议**：先理解理论，立刻动手做练习，在做题过程中调试与反思。
+
+---
+
+## 🎯 学习路线图详解与时间预期
+
+### 第一阶段（2-3 周）：零基础到初级开发工程师
+
+| 步骤 | 内容 | 时间 | 先修条件 |
+|-----|------|------|--------|
+| 1.1 | React 核心哲学与声明式 UI | 3h | JavaScript 基础 |
+| 1.2 | JSX 语法、编译原理、条件/列表渲染 | 4h | 1.1 |
+| 1.3 | 函数组件、Props 与单向数据流 | 4h | 1.2 |
+| 1.4 | useState 与事件处理 | 4h | 1.3 |
+| 练习 | 初级练习题：5-8 个小项目 | 8h | 1.1-1.4 |
+| **验证** | ✅ 能独立构建简单的 TODO 应用 | - | - |
+
+**第一阶段达成目标**：
+- ✅ 理解 React 的核心设计哲学
+- ✅ 熟练使用 JSX 语法进行 UI 描述
+- ✅ 掌握组件组合与 Props 数据流
+- ✅ 能够用 `useState` 管理组件内部状态
+- ✅ 完成 5 个以上的小型项目（计数器、TODO、搜索过滤等）
+
+---
+
+### 第二阶段（3-4 周）：初级到中级开发工程师
+
+| 步骤 | 内容 | 时间 | 先修条件 |
+|-----|------|------|--------|
+| 2.1 | useEffect 深度解析与副作用管理 | 5h | 1.4 |
+| 2.2 | useRef、useContext 与更多 Hooks | 5h | 2.1 |
+| 2.3 | 组件设计模式（复合组件、HOC、Render Props） | 6h | 2.1-2.2 |
+| 2.4 | 状态管理生态（Context API vs Zustand vs Redux） | 6h | 2.3 |
+| 2.5 | 表单处理与验证最佳实践 | 4h | 2.1-2.2 |
+| 练习 | 中级练习题：3-5 个中型项目 | 12h | 2.1-2.5 |
+| **验证** | ✅ 完成实战：用户管理系统、仪表板、电商购物车 | - | - |
+
+**第二阶段达成目标**：
+- ✅ 深入理解副作用与依赖项管理
+- ✅ 掌握 Hooks 的链表机制与闭包陷阱
+- ✅ 设计可复用、可维护的组件架构
+- ✅ 选择合适的状态管理方案
+- ✅ 完成 3+ 个中等规模的真实项目
+
+---
+
+### 第三阶段（4-5 周）：中级到高级开发工程师
+
+| 步骤 | 内容 | 时间 | 先修条件 |
+|-----|------|------|--------|
+| 3.1 | Fiber 架构与渲染机制 | 8h | 2.1-2.5 |
+| 3.2 | Virtual DOM 与 Diff 算法优化 | 6h | 3.1 |
+| 3.3 | 并发模式、时间切片与调度器 | 7h | 3.1 |
+| 3.4 | 性能分析与优化（React DevTools Profiler） | 6h | 3.1-3.3 |
+| 3.5 | React Compiler 原理与 useMemo/useCallback 契约 | 5h | 3.4 |
+| 练习 | 高级练习题：性能优化与底层调试 | 10h | 3.1-3.5 |
+| **验证** | ✅ 优化一个真实项目的首屏加载时间 | - | - |
+
+**第三阶段达成目标**：
+- ✅ 深入理解 React 底层的渲染机制
+- ✅ 能够诊断与解决性能问题
+- ✅ 掌握并发特性与任务优先级调度
+- ✅ 能够独立阅读与理解 React 源码
+- ✅ 解决真实项目中的复杂性能问题
+
+---
+
+### 第四阶段（3-4 周）：高级到专家级工程师
+
+| 步骤 | 内容 | 时间 | 先修条件 |
+|-----|------|------|--------|
+| 4.1 | TypeScript + React 类型体系 | 6h | 3.1-3.5 |
+| 4.2 | 测试驱动开发（RTL、Jest、单元测试） | 7h | 3.1-3.5 |
+| 4.3 | SSR/SSG 架构与 Hydration 机制 | 6h | 3.1-3.5 |
+| 4.4 | Next.js 14+ App Router 深度应用 | 7h | 4.3 |
+| 4.5 | React 19 异步 Action 与新 Hooks | 5h | 4.4 |
+| 项目 | 全栈应用：Next.js 14 + TypeScript + TDD | 20h | 4.1-4.5 |
+| **验证** | ✅ 完成一个企业级全栈应用 | - | - |
+
+**第四阶段达成目标**：
+- ✅ 精通 TypeScript 与 React 的类型系统
+- ✅ 建立完善的测试体系与 TDD 工作流
+- ✅ 掌握 SSR/SSG 与 Next.js 生产环境实践
+- ✅ 跟进 React 19 的最新 API 与设计模式
+- ✅ 能够构建与维护企业级 React 应用
+
+---
+
+## 🚀 快速开始三步走
+
+### 步骤 1：搭建开发环境（15 分钟）
+
+如果你还没有 React 开发环境，按照下面的快速指南搭建：
+
+```bash
+# 使用 Vite 快速创建 React + TypeScript 项目
+npm create vite@latest my-react-app -- --template react-ts
+cd my-react-app
+npm install
+npm run dev
+
+# 或者使用 Next.js 创建全栈项目
+npx create-next-app@latest --typescript --tailwind
+cd my-next-app
+npm run dev
+```
+
+打开 `http://localhost:5173`（或 Next.js 的 `http://localhost:3000`），你会看到初始界面。
+
+### 步骤 2：完成第一个组件（30 分钟）
+
+在 `src/components` 目录下创建 `Counter.tsx`：
+
+```tsx
+import { useState } from 'react';
+
+interface CounterProps {
+  initialValue?: number;
+}
+
+export function Counter({ initialValue = 0 }: CounterProps) {
+  const [count, setCount] = useState(initialValue);
+
+  const increment = () => setCount(c => c + 1);
+  const decrement = () => setCount(c => c - 1);
+  const reset = () => setCount(initialValue);
+
+  return (
+    <div className="counter-box">
+      <h2>计数器: {count}</h2>
+      <div className="button-group">
+        <button onClick={decrement}>-1</button>
+        <button onClick={increment}>+1</button>
+        <button onClick={reset}>重置</button>
+      </div>
+    </div>
+  );
+}
+```
+
+然后在你的主页面引入并使用它：
+
+```tsx
+import { Counter } from './components/Counter';
+
+export default function App() {
+  return (
+    <div>
+      <h1>欢迎来到 React</h1>
+      <Counter initialValue={5} />
+    </div>
+  );
+}
+```
+
+保存后，你将在浏览器中看到一个可交互的计数器组件。恭喜！你已经完成了第一个 React 应用。
+
+### 步骤 3：深入学习（按节奏推进）
+
+1. 完成 [第一阶段](#第一阶段零基础到初级开发工程师) 的所有内容
+2. 做 [初级练习题](practice/beginner-exercises.md)
+3. 根据时间与学习进度，逐步推进到后续阶段
+
+---
+
+## 📖 各阶段核心知识点速查表
+
+### 第一阶段：核心基石
+```
+React 核心哲学
+  ├─ 声明式 UI vs 指令式编程
+  ├─ UI = f(state) 数学映射
+  └─ 纯函数与副作用隔离
+
+JSX 与组件
+  ├─ JSX 编译原理与 React.createElement
+  ├─ 组件声明与组合
+  ├─ Props 单向数据流
+  └─ 条件渲染与列表渲染
+
+State 与交互
+  ├─ useState 基本用法
+  ├─ 状态更新的异步性与批处理
+  ├─ 函数式更新解决闭包陷阱
+  └─ React 合成事件
+```
+
+### 第二阶段：应用开发
+```
+Hooks 体系
+  ├─ useEffect 副作用与依赖项
+  ├─ useRef 跨渲染周期
+  ├─ useContext 全局状态
+  └─ 自定义 Hooks 逻辑复用
+
+组件架构
+  ├─ 复合组件模式
+  ├─ HOC 与 Render Props
+  ├─ 受控与非受控组件
+  └─ 状态提升
+
+状态管理
+  ├─ Context API
+  ├─ useReducer 复杂状态
+  ├─ Zustand 轻量级方案
+  └─ Redux Toolkit 标准方案
+```
+
+### 第三阶段：原理与优化
+```
+渲染引擎
+  ├─ Fiber 节点结构与链表树
+  ├─ 双缓冲树与 alternate 指针
+  ├─ Render 阶段与 Commit 阶段
+  └─ Virtual DOM Diff 算法
+
+性能调优
+  ├─ React.memo 与 useCallback 缓存
+  ├─ 自动批处理与 flushSync
+  ├─ React DevTools Profiler 分析
+  └─ React Compiler 自动优化
+
+并发特性
+  ├─ Concurrent Mode 与时间切片
+  ├─ startTransition 分离优先级
+  ├─ useDeferredValue 延迟值
+  └─ Scheduler 包的工作原理
+```
+
+### 第四阶段：专家级技能
+```
+类型系统
+  ├─ React.FC 与泛型组件
+  ├─ 事件处理类型
+  ├─ 自定义 Hooks 类型推导
+  └─ 约束条件与条件类型
+
+测试与质量
+  ├─ React Testing Library 最佳实践
+  ├─ 组件单元测试
+  ├─ 集成测试与 Mock 策略
+  └─ 测试覆盖率管理
+
+全栈开发
+  ├─ SSR/SSG 架构
+  ├─ Hydration 机制
+  ├─ Next.js App Router
+  └─ Server Components vs Client Components
+
+React 19
+  ├─ useActionState 表单管理
+  ├─ useFormStatus 表单状态感知
+  ├─ use() 条件解析 Resource
+  └─ useOptimistic 乐观更新
+```
+
+---
+
+## 💡 常见误区与解决方案
+
+| 误区 | 问题表现 | 解决方案 |
+|-----|--------|--------|
+| **闭包陷阱** | `setCount(count + 1)` 多次调用仅 +1 | 使用函数式更新：`setCount(prev => prev + 1)` |
+| **忘记依赖项** | effect 多次执行或数据未更新 | 仔细检查依赖项数组，使用 ESLint 插件 |
+| **render 中副作用** | 无限渲染循环、数据请求重复 | 将副作用移至 useEffect 或事件处理器 |
+| **列表渲染无 key** | DOM 复用错误、输入框状态混乱 | 每个列表项都要指定稳定唯一的 key |
+| **过度 memoization** | 代码复杂但性能无改善 | 先测量后优化，只在真实性能问题处使用 |
+| **Context 过度订阅** | 不必要的重渲染 | 拆分 Context 或使用 useMemo 缓存 value |
+| **忘记清理定时器** | 内存泄漏与 console 警告 | 在 useEffect cleanup 函数中清理资源 |
+| **直接修改 state** | React 未检测到变化 | 始终返回新对象，不要直接修改原对象 |
+
+---
+
+## 🔗 推荐资源
+
+### 官方文档
+- [React 官方文档](https://react.dev)（必读，新版本设计精妙）
+- [React 源码仓库](https://github.com/facebook/react)（进阶必读）
+- [Next.js 官方文档](https://nextjs.org/docs)
+
+### 优质教程与博客
+- [Dan Abramov 的深度讲解](https://overreacted.io/)：React Hooks、闭包陷阱等
+- [Kent C. Dodds 的 Testing Library](https://kentcdodds.com/blog)：测试最佳实践
+- [Josh Comeau 的 React 文章](https://www.joshwcomeau.com/)：动画与交互
+
+### 学习工具与插件
+- **React DevTools**：浏览器插件，实时查看组件树、Profiler 性能分析
+- **ESLint 插件**：`eslint-plugin-react-hooks`，自动检测 Hooks 依赖项错误
+- **Chrome DevTools**：Network 分析、Performance 录制、Lighthouse 审计
+
+---
+
 ## 学习建议
 
 1. **循序渐进**：建议按照路线图顺序学习，第一阶段建立直觉，第二阶段掌握应用，第三阶段吃透原理。
 2. **源码探索**：鼓励结合 React 源码 (facebook/react) 进行深度学习，理解设计决策背后的权衡。
 3. **性能为王**：始终关注应用性能，使用 React DevTools Profiler 进行性能剖析。
 4. **类型安全**：在生产项目中全面拥抱 TypeScript，享受类型系统带来的开发效率提升。
+5. **动手实践**：每个阶段都要有对应的项目实战，理论与代码相结合效果最佳。
+6. **问题驱动**：遇到性能问题或奇怪现象时，深入调查根因，而不是快速修补。
