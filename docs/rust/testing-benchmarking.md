@@ -1,32 +1,168 @@
 ---
-title: Rust 测试与性能分析
+title: 测试与基准测试
 hide_title: true
-sidebar_label: 测试与性能分析
+sidebar_label: 测试与基准测试
+sidebar_position: 10
 ---
 
-## Rust 测试与性能分析
+# 测试与基准测试
 
-在现代软件工程中，测试和性能基准是保障系统级应用健壮与高效的底线。Rust 将测试作为一等公民内置于工具链中，提供了开箱即用的单元测试、集成测试和文档测试支持，并通过成熟的第三方生态（如 `criterion`）为高精度基准测试提供了标准路径。
-
-> 🟢 **基础**：掌握基本语法即可阅读 ｜ 🟡 **进阶**：需要有一定 Rust 开发经验 ｜ 🔴 **高级**：面向系统级开发者与性能工程师
+Rust 内置了强大的测试框架，本章介绍如何编写和运行测试。
 
 ---
 
-## 🟢 单元测试与集成测试架构
+## 编写测试
 
-Rust 区分了两种主要测试类型：单元测试（Unit Tests）和集成测试（Integration Tests）。它们的编译机制和设计目标各有侧重。
+### 基本测试
 
-### 1. 单元测试 (Unit Tests)
-
-单元测试主要关注模块内部逻辑的正确性，通常被定义在与被测试代码相同的源文件中，甚至可以测试被声明为 `pub(crate)` 或私有的函数和结构体。
-
-- **`#[cfg(test)]` 模块**：通过该条件编译属性，测试模块仅在执行 `cargo test` 时才会被编译，从而避免打包到最终的生产二进制文件中。
-- **`#[test]` 属性**：标记具体的测试入口函数。
-- **并行与串行执行**：默认情况下，`cargo test` 会以多线程并发运行所有测试。如果测试之间共享某些全局资源（如环境变量或文件句柄），应使用 `cargo test -- --test-threads=1` 强制串行执行。
+使用 `#[test]` 属性标记测试函数：
 
 ```rust
-// src/lib.rs
+#[cfg(test)]
+mod tests {
+    #[test]
+    fn it_works() {
+        assert_eq!(2 + 2, 4);
+    }
+}
+```
 
+### 运行测试
+
+```bash
+cargo test           # 运行所有测试
+cargo test test_name # 运行特定测试
+cargo test --test integration_test # 运行特定集成测试文件
+```
+
+---
+
+## 断言宏
+
+### assert!
+
+```rust
+#[test]
+fn test_assert() {
+    assert!(true);
+    assert!(1 + 1 == 2);
+}
+```
+
+### assert_eq! 和 assert_ne!
+
+```rust
+#[test]
+fn test_equality() {
+    assert_eq!(2 + 2, 4);
+    assert_ne!(2 + 2, 5);
+}
+```
+
+### 自定义错误消息
+
+```rust
+#[test]
+fn test_with_message() {
+    let result = 2 + 2;
+    assert_eq!(result, 4, "2 + 2 should equal 4, but got {}", result);
+}
+```
+
+---
+
+## 测试 panic
+
+### should_panic
+
+测试预期会 panic 的代码：
+
+```rust
+#[test]
+#[should_panic]
+fn test_panic() {
+    panic!("This should panic");
+}
+
+#[test]
+#[should_panic(expected = "divide by zero")]
+fn test_panic_with_message() {
+    let _ = 10 / 0;
+}
+```
+
+---
+
+## 使用 Result
+
+测试可以返回 `Result<T, E>`：
+
+```rust
+#[test]
+fn test_with_result() -> Result<(), String> {
+    if 2 + 2 == 4 {
+        Ok(())
+    } else {
+        Err(String::from("two plus two does not equal four"))
+    }
+}
+```
+
+---
+
+## 控制测试运行
+
+### 并行或串行运行
+
+```bash
+cargo test -- --test-threads=1  # 串行运行
+cargo test -- --test-threads=4  # 4个线程并行
+```
+
+### 显示打印输出
+
+```bash
+cargo test -- --show-output
+cargo test -- --nocapture
+```
+
+### 运行特定测试
+
+```bash
+cargo test test_name          # 运行名称包含 test_name 的测试
+cargo test --test integration # 运行集成测试
+cargo test --lib              # 只运行库测试
+cargo test --bin binary_name  # 运行特定二进制的测试
+```
+
+---
+
+## 忽略测试
+
+### 标记为 ignore
+
+```rust
+#[test]
+#[ignore]
+fn expensive_test() {
+    // 耗时的测试
+}
+```
+
+### 运行被忽略的测试
+
+```bash
+cargo test -- --ignored
+cargo test -- --include-ignored  # 运行所有测试包括被忽略的
+```
+
+---
+
+## 单元测试
+
+单元测试通常放在被测试代码的同一文件中：
+
+```rust
 pub fn add(a: i32, b: i32) -> i32 {
     a + b
 }
@@ -39,151 +175,186 @@ mod tests {
     fn test_add() {
         assert_eq!(add(2, 2), 4);
     }
+
+    #[test]
+    fn test_add_negative() {
+        assert_eq!(add(-1, 1), 0);
+    }
 }
 ```
 
-### 2. 集成测试 (Integration Tests)
+### 测试私有函数
 
-集成测试专门用于验证库（library）的多个部分是否能够协同工作，或者被外部调用者如何正确使用。
+单元测试可以测试私有函数：
 
-- **目录结构**：集成测试文件必须放置在项目根目录下的 `tests/` 文件夹中。
-- **编译机制**：`tests/` 目录下的每个 `.rs` 文件都会被编译成一个**独立的 crate**。这意味着集成测试无法访问被测试模块的私有成员，只能通过公开 API 进行调用。
-- **共享辅助函数**：若多个集成测试文件需要共享测试数据或辅助逻辑，可将其放入 `tests/common/mod.rs` 中。Rust 会识别 `common` 目录并避免将其单独编译为测试套件。
+```rust
+fn internal_adder(a: i32, b: i32) -> i32 {
+    a + b
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn internal() {
+        assert_eq!(internal_adder(2, 2), 4);
+    }
+}
+```
+
+---
+
+## 集成测试
+
+集成测试位于 `tests` 目录：
+
+```
+my_project/
+├── Cargo.toml
+├── src/
+│   └── lib.rs
+└── tests/
+    ├── integration_test.rs
+    └── common/
+        └── mod.rs
+```
+
+### 集成测试示例
 
 ```rust
 // tests/integration_test.rs
+use my_project;
 
-use my_crate;
+#[test]
+fn test_add() {
+    assert_eq!(my_project::add(2, 2), 4);
+}
+```
 
+### 共享代码
+
+```rust
+// tests/common/mod.rs
+pub fn setup() {
+    // 测试设置代码
+}
+
+// tests/integration_test.rs
 mod common;
 
 #[test]
-fn test_external_behavior() {
+fn test_with_setup() {
     common::setup();
-    assert_eq!(my_crate::add(2, 3), 5);
+    // 测试代码
 }
 ```
 
 ---
 
-## 🟢 断言与测试工具链
+## 文档测试
 
-### 1. 标准断言宏
-
-- `assert!(expr)`：期望表达式求值为 `true`，否则触发 panic。
-- `assert_eq!(left, right)`：期望左右两值相等。要求对比的类型实现了 `Debug` 和 `PartialEq` 特征。
-- `assert_ne!(left, right)`：期望左右两值不等。
-
-### 2. 开发依赖 (`[dev-dependencies]`)
-
-开发依赖允许我们在写测试、基准测试或文档示例时引入外部库，但在编译生产包时并不会打包这些库。
-
-例如，要在测试中使用高颜值彩色差异对比库 `pretty_assertions`，我们在 `Cargo.toml` 中配置：
-
-```toml
-[dev-dependencies]
-pretty_assertions = "1.4"
-```
-
-在我们的测试代码中覆写断言宏：
+文档注释中的代码会被测试：
 
 ```rust
-#[cfg(test)]
-mod tests {
-    // 遮蔽标准库的 assert_eq! 宏以提供漂亮的彩色 Diff 输出
-    use pretty_assertions::assert_eq;
-
-    #[derive(Debug, PartialEq)]
-    struct User {
-        name: String,
-        age: u32,
-    }
-
-    #[test]
-    fn test_user() {
-        let user1 = User { name: "Alice".to_string(), age: 30 };
-        let user2 = User { name: "Bob".to_string(), age: 30 };
-        assert_eq!(user1, user2); // 此时控制台会输出清晰的差异对比
-    }
-}
-```
-
----
-
-## 🟡 文档测试 (Doc-tests)
-
-Rust 首创了将文档与测试合二为一的“文档测试”机制。它能确保你写在 API 文档里的示例代码永远不会因为 API 重构而过时。
-
-- **工作原理**：当运行 `cargo test` 时，编译器会自动提取公有类型/函数上方由三斜杠 `///` 标识的 Markdown 块，并尝试编译和运行其中的 ```rust 示例。
-- **隐藏行语法**：为了保证展示文档的简洁性，可以使用 `#` 在文档中隐藏某些初始化代码（如 `use` 导入），但在编译和测试时这些代码依然会被运行。
-
-```rust
-/// 计算两个数字的乘积。
+/// 将两个数字相加
 ///
 /// # Examples
 ///
 /// ```
-/// # use my_crate::multiply;
-/// let result = multiply(2, 3);
-/// assert_eq!(result, 6);
+/// use my_crate::add;
+/// 
+/// let result = add(2, 2);
+/// assert_eq!(result, 4);
 /// ```
-pub fn multiply(a: i32, b: i32) -> i32 {
-    a * b
+pub fn add(a: i32, b: i32) -> i32 {
+    a + b
 }
+```
+
+### 隐藏文档测试中的行
+
+```rust
+/// # Examples
+///
+/// ```
+/// # fn main() {
+/// let x = 5;
+/// # }
+/// ```
+```
+
+### 标记为 no_run
+
+```rust
+/// ```no_run
+/// let server = Server::new();
+/// server.run(); // 不会实际运行
+/// ```
+```
+
+### 标记为 ignore
+
+```rust
+/// ```ignore
+/// This example is ignored
+/// ```
+```
+
+### 编译失败测试
+
+```rust
+/// ```compile_fail
+/// let x: i32 = "hello"; // 这应该无法编译
+/// ```
 ```
 
 ---
 
-## 🟡 测试进阶技巧
+## 基准测试
 
-### 1. 忽略特定测试
+### 使用 bencher (不稳定特性)
 
-对于耗时长的测试，可以使用 `#[ignore]` 属性跳过。运行被忽略的测试使用：`cargo test -- --ignored`。
+需要 nightly Rust：
 
 ```rust
-#[test]
-#[ignore = "耗时过长，仅在 CI 中运行"]
-fn test_complex_algorithm() {
-    // 耗时测试逻辑
+#![feature(test)]
+extern crate test;
+
+pub fn fibonacci(n: u64) -> u64 {
+    match n {
+        0 => 0,
+        1 => 1,
+        n => fibonacci(n - 1) + fibonacci(n - 2),
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use test::Bencher;
+
+    #[bench]
+    fn bench_fibonacci(b: &mut Bencher) {
+        b.iter(|| fibonacci(20));
+    }
 }
 ```
 
-### 2. 恐慌测试 (Should Panic)
+### 使用 Criterion (推荐)
 
-可以使用 `#[should_panic]` 验证某些操作是否会触发预期内的 Panic。建议使用 `expected` 参数指定具体的匹配错误信息：
-
-```rust
-#[test]
-#[should_panic(expected = "attempt to divide by zero")]
-fn test_divide_by_zero() {
-    let _ = 10 / 0;
-}
-```
-
----
-
-## 🔴 高精度基准测试 (Benchmarking)
-
-在系统级编程中，量化性能提升至关重要。标准库自带的基准测试 (`#[bench]`) 仍处于不稳定状态（需 Nightly 编译器）。因此，工业界通用标准是采用 **Criterion.rs**。
-
-`criterion` 运行在 Stable 编译器上，能基于多次抽样生成统计学上的置信区间，并能把本次结果与历史数据作比较以检测性能退化。
-
-### 1. 配置 Criterion
-
-在 `Cargo.toml` 中配置 `[dev-dependencies]` 并声明自定义基准套件：
+在 `Cargo.toml` 中添加：
 
 ```toml
 [dev-dependencies]
-criterion = { version = "0.5", features = ["html_reports"] }
+criterion = "0.5"
 
 [[bench]]
 name = "my_benchmark"
-harness = false # 禁用标准基准测试隔离
+harness = false
 ```
 
-### 2. 编写基准测试
-
-在项目根目录下新建 `benches/my_benchmark.rs`：
+创建 `benches/my_benchmark.rs`：
 
 ```rust
 use criterion::{black_box, criterion_group, criterion_main, Criterion};
@@ -197,37 +368,312 @@ fn fibonacci(n: u64) -> u64 {
 }
 
 fn criterion_benchmark(c: &mut Criterion) {
-    // 避免编译器对 benchmark 进行常量折叠和死代码消除优化，需使用 black_box
-    c.bench_function("fibonacci_20", |b| b.iter(|| fibonacci(black_box(20))));
+    c.bench_function("fib 20", |b| b.iter(|| fibonacci(black_box(20))));
 }
 
-// 注册 benchmark 分组并生成运行入口
 criterion_group!(benches, criterion_benchmark);
 criterion_main!(benches);
 ```
 
-运行基准分析命令：
+运行基准测试：
 
 ```bash
 cargo bench
 ```
 
-生成的精美 HTML 性能对比报告位于 `target/criterion/report/index.html`。
+---
+
+## 测试组织
+
+### 按功能分组
+
+```rust
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    mod addition {
+        use super::*;
+
+        #[test]
+        fn test_positive() {
+            assert_eq!(add(1, 2), 3);
+        }
+
+        #[test]
+        fn test_negative() {
+            assert_eq!(add(-1, -2), -3);
+        }
+    }
+
+    mod subtraction {
+        use super::*;
+
+        #[test]
+        fn test_positive() {
+            assert_eq!(subtract(5, 3), 2);
+        }
+    }
+}
+```
 
 ---
 
-## 🔴 高级性能分析 (Profiling Tools)
+## 属性宏
 
-基准测试告诉你“代码跑多快”，而 Profiling 才能指出“为什么慢”。
+### 常用测试属性
 
-### 1. Flamegraph (火焰图)
+- `#[test]` - 标记测试函数
+- `#[ignore]` - 忽略测试
+- `#[should_panic]` - 预期 panic
+- `#[cfg(test)]` - 条件编译
+- `#[bench]` - 基准测试 (需要 nightly)
 
-火焰图能够直观呈现函数调用的耗时占比。
+### 条件编译
 
-- **安装**：`cargo install cargo-flamegraph`
-- **使用**：`cargo flamegraph --bin my_app`
-- **分析**：宽度代表占用 CPU 的时长比例，寻找异常宽阔的调用栈底部，即是潜在的性能瓶颈。
+```rust
+#[cfg(test)]
+mod tests {
+    #[test]
+    #[cfg(target_os = "linux")]
+    fn linux_only_test() {
+        // 只在 Linux 上运行
+    }
 
-### 2. Valgrind 与 Cachegrind
+    #[test]
+    #[cfg(not(target_os = "windows"))]
+    fn not_windows_test() {
+        // 不在 Windows 上运行
+    }
+}
+```
 
-在底层开发中，缓存命中率直接决定性能瓶颈。配合 Cachegrind 以及 Rust 属性如 `#[inline]` 调整，可以在微秒级别压榨系统吞吐极限。
+---
+
+## Mock 和 Stub
+
+### 使用 mockall
+
+```toml
+[dev-dependencies]
+mockall = "0.12"
+```
+
+```rust
+use mockall::{automock, predicate::*};
+
+#[automock]
+trait Database {
+    fn get_user(&self, id: u64) -> Option<String>;
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_with_mock() {
+        let mut mock = MockDatabase::new();
+        mock.expect_get_user()
+            .with(eq(1))
+            .times(1)
+            .returning(|_| Some("Alice".to_string()));
+
+        assert_eq!(mock.get_user(1), Some("Alice".to_string()));
+    }
+}
+```
+
+---
+
+## 测试覆盖率
+
+### 使用 tarpaulin
+
+```bash
+cargo install cargo-tarpaulin
+cargo tarpaulin --out Html
+```
+
+### 使用 llvm-cov
+
+```bash
+cargo install cargo-llvm-cov
+cargo llvm-cov
+cargo llvm-cov --html
+```
+
+---
+
+## 最佳实践
+
+1. **为每个公共函数编写测试**
+2. **测试边界条件**：空输入、零值、最大值等
+3. **使用描述性的测试名称**
+4. **保持测试独立**：测试之间不应有依赖
+5. **测试错误情况**：不仅测试成功路径
+6. **使用测试夹具**：共享设置和清理代码
+7. **定期运行测试**：集成到 CI/CD 流程
+
+---
+
+## 实践示例
+
+### 示例 1：测试计算器
+
+```rust
+pub struct Calculator;
+
+impl Calculator {
+    pub fn add(a: i32, b: i32) -> i32 {
+        a + b
+    }
+
+    pub fn subtract(a: i32, b: i32) -> i32 {
+        a - b
+    }
+
+    pub fn multiply(a: i32, b: i32) -> i32 {
+        a * b
+    }
+
+    pub fn divide(a: i32, b: i32) -> Result<i32, String> {
+        if b == 0 {
+            Err("Division by zero".to_string())
+        } else {
+            Ok(a / b)
+        }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_add() {
+        assert_eq!(Calculator::add(2, 2), 4);
+        assert_eq!(Calculator::add(-1, 1), 0);
+    }
+
+    #[test]
+    fn test_subtract() {
+        assert_eq!(Calculator::subtract(5, 3), 2);
+        assert_eq!(Calculator::subtract(3, 5), -2);
+    }
+
+    #[test]
+    fn test_multiply() {
+        assert_eq!(Calculator::multiply(3, 4), 12);
+        assert_eq!(Calculator::multiply(-2, 3), -6);
+    }
+
+    #[test]
+    fn test_divide() {
+        assert_eq!(Calculator::divide(10, 2), Ok(5));
+        assert_eq!(Calculator::divide(7, 2), Ok(3));
+    }
+
+    #[test]
+    fn test_divide_by_zero() {
+        assert!(Calculator::divide(10, 0).is_err());
+    }
+}
+```
+
+### 示例 2：测试状态机
+
+```rust
+#[derive(Debug, PartialEq)]
+enum State {
+    Idle,
+    Running,
+    Stopped,
+}
+
+struct StateMachine {
+    state: State,
+}
+
+impl StateMachine {
+    fn new() -> Self {
+        StateMachine { state: State::Idle }
+    }
+
+    fn start(&mut self) -> Result<(), String> {
+        match self.state {
+            State::Idle => {
+                self.state = State::Running;
+                Ok(())
+            }
+            _ => Err("Cannot start from current state".to_string()),
+        }
+    }
+
+    fn stop(&mut self) -> Result<(), String> {
+        match self.state {
+            State::Running => {
+                self.state = State::Stopped;
+                Ok(())
+            }
+            _ => Err("Cannot stop from current state".to_string()),
+        }
+    }
+
+    fn reset(&mut self) {
+        self.state = State::Idle;
+    }
+
+    fn state(&self) -> &State {
+        &self.state
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_initial_state() {
+        let sm = StateMachine::new();
+        assert_eq!(sm.state(), &State::Idle);
+    }
+
+    #[test]
+    fn test_start() {
+        let mut sm = StateMachine::new();
+        assert!(sm.start().is_ok());
+        assert_eq!(sm.state(), &State::Running);
+    }
+
+    #[test]
+    fn test_stop() {
+        let mut sm = StateMachine::new();
+        sm.start().unwrap();
+        assert!(sm.stop().is_ok());
+        assert_eq!(sm.state(), &State::Stopped);
+    }
+
+    #[test]
+    fn test_invalid_transitions() {
+        let mut sm = StateMachine::new();
+        assert!(sm.stop().is_err());
+        
+        sm.start().unwrap();
+        assert!(sm.start().is_err());
+    }
+
+    #[test]
+    fn test_reset() {
+        let mut sm = StateMachine::new();
+        sm.start().unwrap();
+        sm.reset();
+        assert_eq!(sm.state(), &State::Idle);
+    }
+}
+```
+
+---
+
+> [!TIP]
+> **下一步**：掌握了测试后，继续学习 [宏与元编程](macros-metaprogramming.md)，了解如何使用宏来减少重复代码。

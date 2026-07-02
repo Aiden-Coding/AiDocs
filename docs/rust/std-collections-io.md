@@ -1,197 +1,526 @@
 ---
-title: Rust 标准库常用集合与 I/O 系统
+title: 标准库集合与 I/O
 hide_title: true
 sidebar_label: 标准库集合与 I/O
 sidebar_position: 8
 ---
 
-## Rust 标准库常用集合与 I/O 系统
+# 标准库集合与 I/O
 
-Rust 的标准库提供了丰富的集合数据结构、多层级的系统级 I/O 工具链、文件系统管理模块以及与操作系统交互的能力。本篇将详细解构常用集合的高阶实践、系统级路径处理、文件与流式 I/O、管道子进程以及跨语言 FFI 基础。
-
-> 🟢 **基础**：掌握基本语法即可阅读。
+Rust 标准库提供了丰富的集合类型和强大的 I/O 功能。本章介绍常用的数据结构和文件操作。
 
 ---
 
-## 📂 标准库常用集合 (Collections)
+## 标准库类型
 
-Rust 的常用集合包括 `Vec`、`String`、`HashMap` 以及 `HashSet`。
+### Vec（动态数组）
 
-### 1. 动态数组 (Vectors)
-
-`Vec` 是大小可变的数组，在堆上分配连续内存。
+`Vec<T>` 是可增长的数组，存储在堆上：
 
 ```rust
 fn main() {
-    // 1. 初始化
-    let mut vec1 = vec![1, 2, 3];
-    vec1.push(4); // 压入元素
+    // 创建 Vec
+    let mut v1: Vec<i32> = Vec::new();
+    let v2 = vec![1, 2, 3];
 
-    // 2. 预分配空间以提高写入性能
-    let mut vec2 = Vec::with_capacity(10);
-    vec2.extend(0..5);
+    // 添加元素
+    v1.push(1);
+    v1.push(2);
+    v1.push(3);
 
-    // 3. 迭代与解包
-    for x in &vec1 {
-        println!("Value: {}", x);
+    // 访问元素
+    let third: &i32 = &v2[2];
+    println!("The third element is {}", third);
+
+    match v2.get(2) {
+        Some(third) => println!("The third element is {}", third),
+        None => println!("There is no third element."),
+    }
+
+    // 遍历
+    for i in &v2 {
+        println!("{}", i);
+    }
+
+    // 可变遍历
+    let mut v3 = vec![1, 2, 3];
+    for i in &mut v3 {
+        *i += 50;
     }
 }
 ```
 
-### 2. 字符串 (Strings)
+### String（字符串）
 
-Rust 中有两种主要的字符串类型：
+Rust 有两种字符串类型：
 
-- **`&str`**：指向 UTF-8 编码字符切片的借用引用。
-- **`String`**：在堆上分配的可增长 UTF-8 字节数组。
+- `String` - 可增长的、可变的、有所有权的 UTF-8 编码字符串
+- `&str` - 不可变的字符串切片
 
 ```rust
 fn main() {
-    // 从只读字面量创建 String
-    let mut s = "hello".to_string();
-    s.push_str(", world!");
+    // 创建 String
+    let mut s = String::new();
+    let s = "initial contents".to_string();
+    let s = String::from("initial contents");
 
-    // 转为 &str 借用
-    let slice: &str = &s;
-    
-    // 字节数与字符数区别
-    println!("字节长度: {}, 字符长度: {}", s.len(), s.chars().count());
+    // 追加字符串
+    let mut s = String::from("foo");
+    s.push_str("bar");
+    s.push('!');
+
+    // 拼接字符串
+    let s1 = String::from("Hello, ");
+    let s2 = String::from("world!");
+    let s3 = s1 + &s2; // s1 被移动，不能再使用
+
+    // 使用 format! 宏
+    let s1 = String::from("tic");
+    let s2 = String::from("tac");
+    let s3 = String::from("toe");
+    let s = format!("{}-{}-{}", s1, s2, s3);
+
+    // 遍历字符串
+    for c in "नमस्ते".chars() {
+        println!("{}", c);
+    }
+
+    for b in "नमस्ते".bytes() {
+        println!("{}", b);
+    }
 }
 ```
 
-### 3. 哈希表 (HashMap) 与哈希集合 (HashSet)
-
-以键值对 (Key-Value) 或单键形式存储数据，默认使用符合加密安全性的 Siphah 哈希算法。
+### HashMap（哈希表）
 
 ```rust
 use std::collections::HashMap;
 
 fn main() {
+    // 创建 HashMap
     let mut scores = HashMap::new();
-    scores.insert("Alice".to_string(), 100);
+    scores.insert(String::from("Blue"), 10);
+    scores.insert(String::from("Yellow"), 50);
 
-    // Entry API：不存在则插入默认值，存在则获取引用
-    scores.entry("Bob".to_string()).or_insert(80);
+    // 访问值
+    let team_name = String::from("Blue");
+    let score = scores.get(&team_name);
+
+    // 遍历
+    for (key, value) in &scores {
+        println!("{}: {}", key, value);
+    }
+
+    // 只在键没有对应值时插入
+    scores.entry(String::from("Yellow")).or_insert(50);
+    scores.entry(String::from("Blue")).or_insert(50);
+
+    // 根据旧值更新值
+    let text = "hello world wonderful world";
+    let mut map = HashMap::new();
+
+    for word in text.split_whitespace() {
+        let count = map.entry(word).or_insert(0);
+        *count += 1;
+    }
+
+    println!("{:?}", map);
 }
 ```
 
-#### 自定义 Key 的特征要求
+### Box（堆分配）
 
-在 Rust 中，要将自定义类型用作 `HashMap` 的键（Key），该类型必须实现以下两个核心特征：
-
-- **`Eq`**：保证等值比较的等价关系。
-- **`Hash`**：用于计算该键的哈希值。
-
-通常，我们只需要在结构体上方通过派生自动引入它们即可：
+`Box<T>` 是最简单的智能指针，在堆上存储数据：
 
 ```rust
-use std::collections::HashMap;
-
-// 自动派生 Hash 与 Eq
-#[derive(PartialEq, Eq, Hash, Debug)]
-struct AccountKey {
-    id: u32,
-    region: String,
-}
-
 fn main() {
-    let mut accounts = HashMap::new();
-    let key = AccountKey { id: 1001, region: "CN".to_string() };
-    accounts.insert(key, "Alice");
+    let b = Box::new(5);
+    println!("b = {}", b);
+    
+    // 递归类型需要使用 Box
+    enum List {
+        Cons(i32, Box<List>),
+        Nil,
+    }
+
+    use List::{Cons, Nil};
+
+    let list = Cons(1, Box::new(Cons(2, Box::new(Cons(3, Box::new(Nil))))));
 }
 ```
 
 ---
 
-## 🌐 路径与文件 I/O
+## 文件 I/O
 
-### 1. 路径管理 (`Path` & `PathBuf`)
+### 读取文件
 
-- **`Path`**：类似于 `str`，是一个不可变的操作系统路径切片。
-- **`PathBuf`**：类似于 `String`，是一个在堆上分配的可增长操作系统路径缓冲区。
+```rust
+use std::fs;
+use std::io;
+
+fn main() -> io::Result<()> {
+    // 一次性读取整个文件
+    let contents = fs::read_to_string("hello.txt")?;
+    println!("File contents:\n{}", contents);
+
+    // 读取为字节
+    let bytes = fs::read("hello.txt")?;
+    println!("File size: {} bytes", bytes.len());
+
+    Ok(())
+}
+```
+
+### 写入文件
+
+```rust
+use std::fs;
+use std::io;
+
+fn main() -> io::Result<()> {
+    // 写入字符串
+    fs::write("output.txt", "Hello, Rust!")?;
+
+    // 写入字节
+    fs::write("output.bin", b"Binary data")?;
+
+    Ok(())
+}
+```
+
+### 使用 File 类型
+
+```rust
+use std::fs::File;
+use std::io::{self, Read, Write};
+
+fn main() -> io::Result<()> {
+    // 打开文件读取
+    let mut file = File::open("hello.txt")?;
+    let mut contents = String::new();
+    file.read_to_string(&mut contents)?;
+    println!("{}", contents);
+
+    // 创建并写入文件
+    let mut file = File::create("output.txt")?;
+    file.write_all(b"Hello, world!")?;
+
+    Ok(())
+}
+```
+
+### 缓冲读写
+
+使用 `BufReader` 和 `BufWriter` 提高性能：
+
+```rust
+use std::fs::File;
+use std::io::{self, BufRead, BufReader, BufWriter, Write};
+
+fn main() -> io::Result<()> {
+    // 缓冲读取
+    let file = File::open("input.txt")?;
+    let reader = BufReader::new(file);
+
+    for line in reader.lines() {
+        println!("{}", line?);
+    }
+
+    // 缓冲写入
+    let file = File::create("output.txt")?;
+    let mut writer = BufWriter::new(file);
+
+    writeln!(writer, "Line 1")?;
+    writeln!(writer, "Line 2")?;
+    writeln!(writer, "Line 3")?;
+
+    Ok(())
+}
+```
+
+---
+
+## 路径操作
+
+### Path 和 PathBuf
 
 ```rust
 use std::path::{Path, PathBuf};
 
 fn main() {
     // 创建 Path
-    let path = Path::new(".env");
+    let path = Path::new("./foo/bar.txt");
 
-    // 拼接路径，返回 PathBuf
-    let mut path_buf = PathBuf::from("usr");
-    path_buf.push("local");
-    path_buf.push("bin");
+    // 获取文件名
+    if let Some(file_name) = path.file_name() {
+        println!("File name: {:?}", file_name);
+    }
+
+    // 获取扩展名
+    if let Some(ext) = path.extension() {
+        println!("Extension: {:?}", ext);
+    }
+
+    // 获取父目录
+    if let Some(parent) = path.parent() {
+        println!("Parent: {:?}", parent);
+    }
+
+    // 使用 PathBuf 构建路径
+    let mut path_buf = PathBuf::from("/tmp");
+    path_buf.push("foo");
+    path_buf.push("bar.txt");
+    println!("Path: {:?}", path_buf);
+
+    // 设置扩展名
+    path_buf.set_extension("md");
+    println!("New path: {:?}", path_buf);
 }
 ```
 
-### 2. 文件读写
+---
 
-`std::fs::File` 用于表示被系统打开的文件描述符，支持读取和写入。
+## 文件系统操作
 
-#### 创建与写入文件
+### 创建和删除目录
 
 ```rust
-use std::fs::File;
-use std::io::prelude::*;
+use std::fs;
+use std::io;
 
-fn main() -> std::io::Result<()> {
-    // 创建并打开文件以供写入
-    let mut file = File::create("output.txt")?;
-    file.write_all(b"Hello, Rust I/O!")?;
+fn main() -> io::Result<()> {
+    // 创建目录
+    fs::create_dir("new_dir")?;
+
+    // 递归创建目录
+    fs::create_dir_all("path/to/new/dir")?;
+
+    // 删除空目录
+    fs::remove_dir("new_dir")?;
+
+    // 递归删除目录
+    fs::remove_dir_all("path/to/dir")?;
+
     Ok(())
 }
 ```
 
-#### 按行读取文件的经典实战
-
-为了防止一次性载入大文件导致内存崩溃，推荐使用 `BufReader` 流式按行读取：
-
-```rust
-use std::fs::File;
-use std::io::{self, BufRead};
-use std::path::Path;
-
-// 返回一个 Reader 的迭代器以供惰性消费
-fn read_lines<P>(filename: P) -> io::Result<io::Lines<io::BufReader<File>>>
-where P: AsRef<Path>, {
-    let file = File::open(filename)?;
-    Ok(io::BufReader::new(file).lines())
-}
-
-fn main() {
-    if let Ok(lines) = read_lines("./output.txt") {
-        for line in lines {
-            if let Ok(ip) = line {
-                println!("{}", ip);
-            }
-        }
-    }
-}
-```
-
-### 3. 文件系统操作 (`fs`)
-
-`std::fs` 包含一系列用于操纵文件系统项（拷贝文件、新建目录、重命名等）的实用函数。
+### 复制和移动文件
 
 ```rust
 use std::fs;
+use std::io;
 
-fn main() -> std::io::Result<()> {
-    // 创建目录
-    fs::create_dir_all("a/b/c")?;
-    // 拷贝文件
-    fs::copy("output.txt", "a/copy.txt")?;
+fn main() -> io::Result<()> {
+    // 复制文件
+    fs::copy("source.txt", "destination.txt")?;
+
+    // 重命名/移动文件
+    fs::rename("old_name.txt", "new_name.txt")?;
+
+    // 删除文件
+    fs::remove_file("file.txt")?;
+
+    Ok(())
+}
+```
+
+### 读取目录
+
+```rust
+use std::fs;
+use std::io;
+
+fn main() -> io::Result<()> {
+    // 读取目录内容
+    let entries = fs::read_dir(".")?;
+
+    for entry in entries {
+        let entry = entry?;
+        let path = entry.path();
+
+        if path.is_dir() {
+            println!("Directory: {:?}", path);
+        } else {
+            println!("File: {:?}", path);
+        }
+    }
+
+    Ok(())
+}
+```
+
+### 获取文件元数据
+
+```rust
+use std::fs;
+use std::io;
+
+fn main() -> io::Result<()> {
+    let metadata = fs::metadata("file.txt")?;
+
+    println!("File size: {} bytes", metadata.len());
+    println!("Is directory: {}", metadata.is_dir());
+    println!("Is file: {}", metadata.is_file());
+    println!("Read only: {}", metadata.permissions().readonly());
+
+    if let Ok(modified) = metadata.modified() {
+        println!("Last modified: {:?}", modified);
+    }
+
     Ok(())
 }
 ```
 
 ---
 
-## 💻 命令行参数与子进程
+## 标准输入输出
 
-### 1. 命令行参数
+### 读取标准输入
 
-使用 `std::env::args` 可以获取运行时传入的命令行参数。它的第一个参数通常是可执行文件的路径名：
+```rust
+use std::io::{self, BufRead};
+
+fn main() -> io::Result<()> {
+    println!("Enter your name:");
+
+    let mut input = String::new();
+    io::stdin().read_line(&mut input)?;
+
+    println!("Hello, {}!", input.trim());
+
+    // 读取所有行
+    let stdin = io::stdin();
+    for line in stdin.lock().lines() {
+        println!("You typed: {}", line?);
+    }
+
+    Ok(())
+}
+```
+
+### 写入标准输出和标准错误
+
+```rust
+use std::io::{self, Write};
+
+fn main() -> io::Result<()> {
+    // 标准输出
+    println!("This goes to stdout");
+    io::stdout().write_all(b"Direct stdout write\n")?;
+
+    // 标准错误
+    eprintln!("This goes to stderr");
+    io::stderr().write_all(b"Direct stderr write\n")?;
+
+    Ok(())
+}
+```
+
+---
+
+## 进程与命令
+
+### 执行外部命令
+
+```rust
+use std::process::Command;
+
+fn main() {
+    // 简单执行
+    let output = Command::new("ls")
+        .arg("-la")
+        .output()
+        .expect("Failed to execute command");
+
+    println!("Status: {}", output.status);
+    println!("Stdout: {}", String::from_utf8_lossy(&output.stdout));
+    println!("Stderr: {}", String::from_utf8_lossy(&output.stderr));
+
+    // 继承标准 I/O
+    let status = Command::new("echo")
+        .arg("Hello from child process")
+        .status()
+        .expect("Failed to execute command");
+
+    println!("Process exited with: {}", status);
+}
+```
+
+### 管道和重定向
+
+```rust
+use std::process::{Command, Stdio};
+use std::io::Write;
+
+fn main() {
+    // 管道示例
+    let mut child = Command::new("cat")
+        .stdin(Stdio::piped())
+        .stdout(Stdio::piped())
+        .spawn()
+        .expect("Failed to spawn child process");
+
+    if let Some(mut stdin) = child.stdin.take() {
+        stdin.write_all(b"Hello from Rust!\n").unwrap();
+    }
+
+    let output = child.wait_with_output().unwrap();
+    println!("Output: {}", String::from_utf8_lossy(&output.stdout));
+}
+```
+
+---
+
+## 环境变量
+
+### 读取环境变量
+
+```rust
+use std::env;
+
+fn main() {
+    // 获取特定环境变量
+    match env::var("HOME") {
+        Ok(val) => println!("HOME: {}", val),
+        Err(e) => println!("Couldn't read HOME: {}", e),
+    }
+
+    // 使用 var_os 获取 OsString
+    if let Some(path) = env::var_os("PATH") {
+        println!("PATH: {:?}", path);
+    }
+
+    // 遍历所有环境变量
+    for (key, value) in env::vars() {
+        println!("{}: {}", key, value);
+    }
+}
+```
+
+### 设置环境变量
+
+```rust
+use std::env;
+
+fn main() {
+    env::set_var("MY_VAR", "my_value");
+
+    match env::var("MY_VAR") {
+        Ok(val) => println!("MY_VAR: {}", val),
+        Err(e) => println!("Error: {}", e),
+    }
+
+    env::remove_var("MY_VAR");
+}
+```
+
+---
+
+## 程序参数
+
+### 读取命令行参数
 
 ```rust
 use std::env;
@@ -199,90 +528,114 @@ use std::env;
 fn main() {
     let args: Vec<String> = env::args().collect();
 
-    // 模式匹配解析参数
-    match args.len() {
-        1 => println!("无参数传入"),
-        2 => {
-            match args[1].parse::<i32>() {
-                Ok(n) => println!("数字参数: {}", n),
-                Err(_) => println!("参数不是数字"),
-            }
-        },
-        _ => println!("参数过多"),
+    println!("Program: {}", args[0]);
+    
+    if args.len() > 1 {
+        println!("Arguments:");
+        for (i, arg) in args.iter().enumerate().skip(1) {
+            println!("  {}: {}", i, arg);
+        }
     }
 }
 ```
 
-### 2. 子进程管理 (`Command`)
+### 使用 clap 解析参数
 
-`std::process::Command` 可以在 Rust 中生成一个新的操作系统子进程。
+虽然这是外部库，但值得一提：
 
 ```rust
-use std::process::Command;
+// Cargo.toml: clap = { version = "4", features = ["derive"] }
 
-fn main() {
-    // 在 Linux/macOS 下执行 ls -lah
-    let output = Command::new("ls")
-        .arg("-lah")
-        .output()
-        .expect("执行 ls 失败");
+use clap::Parser;
 
-    // 将标准输出转为 String
-    let stdout = String::from_utf8_lossy(&output.stdout);
-    println!("ls 结果:\n{}", stdout);
+#[derive(Parser)]
+#[command(name = "myapp")]
+#[command(about = "A simple CLI app", long_about = None)]
+struct Cli {
+    #[arg(short, long)]
+    name: String,
+
+    #[arg(short, long, default_value_t = 1)]
+    count: u8,
 }
-```
-
-#### 管道 (Pipes) 与等待 (Wait)
-
-我们可以将一个子进程的输出，通过管道重定向为另一个进程的输入，或使用 `wait` 等待子进程执行完毕：
-
-```rust
-use std::process::{Command, Stdio};
-use std::io::Write;
 
 fn main() {
-    // 生成 echo 子进程，配置其 stdout 为管道式传输
-    let mut child = Command::new("cat")
-        .stdin(Stdio::piped())
-        .stdout(Stdio::piped())
-        .spawn()
-        .expect("启动 cat 失败");
+    let cli = Cli::parse();
 
-    // 写入数据到 cat 的 stdin
-    {
-        let stdin = child.stdin.as_mut().expect("获取 stdin 失败");
-        stdin.write_all(b"Hello Pipe!").unwrap();
+    for _ in 0..cli.count {
+        println!("Hello, {}!", cli.name);
     }
-
-    // 等待子进程完成并获取输出
-    let output = child.wait_with_output().expect("等待子进程失败");
-    println!("输出: {}", String::from_utf8_lossy(&output.stdout));
 }
 ```
 
 ---
 
-## 🔌 外部语言接口 (FFI)
+## 实践示例
 
-Rust 提供了极高的 C 语言二进制接口（ABI）兼容性。通过 `extern` 块，我们可以直接在 Rust 中声明并调用其他语言编译的动态/静态库函数：
+### 示例 1：单词计数器
 
 ```rust
-use std::fmt;
-
-// 声明外部的 C 库依赖
-extern "C" {
-    // 声明 C 语言中的数学绝对值函数 abs
-    fn abs(input: i32) -> i32;
-}
+use std::collections::HashMap;
+use std::env;
+use std::fs;
 
 fn main() {
-    unsafe {
-        // 调用 C 函数必须被包裹在 unsafe 中
-        println!("C 语言 abs(-10) 结果为: {}", abs(-10));
+    let args: Vec<String> = env::args().collect();
+    
+    if args.len() < 2 {
+        eprintln!("Usage: {} <filename>", args[0]);
+        return;
+    }
+
+    let contents = fs::read_to_string(&args[1])
+        .expect("Failed to read file");
+
+    let mut word_count = HashMap::new();
+
+    for word in contents.split_whitespace() {
+        let word = word.to_lowercase();
+        *word_count.entry(word).or_insert(0) += 1;
+    }
+
+    for (word, count) in word_count.iter() {
+        println!("{}: {}", word, count);
     }
 }
 ```
 
-> [!NOTE]
-> **下一步建议**：掌握了标准库的集合和底层系统交互机制后，请继续阅读 [测试与性能分析](testing-benchmarking.md)，了解如何对涉及文件 I/O 和系统调用的程序进行单元测试与基准性能测试。
+### 示例 2：文件搜索工具
+
+```rust
+use std::env;
+use std::fs;
+use std::io::{self, BufRead, BufReader};
+
+fn main() -> io::Result<()> {
+    let args: Vec<String> = env::args().collect();
+    
+    if args.len() < 3 {
+        eprintln!("Usage: {} <pattern> <filename>", args[0]);
+        return Ok(());
+    }
+
+    let pattern = &args[1];
+    let filename = &args[2];
+
+    let file = fs::File::open(filename)?;
+    let reader = BufReader::new(file);
+
+    for (line_num, line) in reader.lines().enumerate() {
+        let line = line?;
+        if line.contains(pattern) {
+            println!("{}: {}", line_num + 1, line);
+        }
+    }
+
+    Ok(())
+}
+```
+
+---
+
+> [!TIP]
+> **下一步**：掌握了标准库集合和 I/O 后，继续学习 [并发编程](concurrency.md)，了解 Rust 的多线程和并发模型。

@@ -1,13 +1,13 @@
 ---
-title: Rust 语法基石与工具链
+title: Hello World
 hide_title: true
-sidebar_label: 语法基石与工具链
+sidebar_label: Hello World
 sidebar_position: 1
 ---
 
-## Rust 语法基石与工具链
+# Hello World
 
-欢迎开启 Rust 的探索之旅！对于初学者而言，Rust 的编译器和工具链既是强大的安全卫士，也可能是最严苛的“导师”。本篇将从最基础的开发环境搭建与经典的 Hello World 开始，深入解构 Rust 的语法基石、格式化输出、基本数据类型以及多样的控制流机制。
+这是传统的 Hello World 程序的源码。Rust 程序的入口点是一个名为 `main` 的函数，通过 Rust 编译器和工具链，我们可以从最简单的程序开始，逐步掌握格式化输出、基本类型、流程控制等核心语法。
 
 > 🟢 **基础**：适合完全零基础的 Rust 初学者阅读。
 
