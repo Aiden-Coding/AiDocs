@@ -129,7 +129,7 @@ const config: Config = {
         },
         {
           href: 'https://github.com/Aiden-Coding/AiDocs',
-          label: 'GitHub',
+          className: 'header-github-link',
           position: 'right',
         },
       ],
