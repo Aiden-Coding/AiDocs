@@ -810,7 +810,7 @@ export default function App() {
 
 ### 步骤 3：深入学习（按节奏推进）
 
-1. 完成 [第一阶段](#第一阶段零基础到初级开发工程师) 的所有内容
+1. 完成 [第一阶段](#第一阶段零基础入门与核心基石-beginner-core-foundations) 的所有内容
 2. 做 [初级练习题](practice/beginner-exercises.md)
 3. 根据时间与学习进度，逐步推进到后续阶段
 
