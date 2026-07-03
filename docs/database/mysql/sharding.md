@@ -17,6 +17,7 @@ sidebar_label: 分库分表与读写分离
 ### 1. 核心架构原理
 
 核心依赖于 MySQL 的 **Binlog** 进行数据同步。
+
 1. **主库 Binlog 刷盘**：主库事务提交时，把变更写入 Binlog。
 2. **从库 I/O Thread**：从库利用 `I/O 线程` 连接主库，请求获取 Binlog 日志，并将其写到中继日志（Relay Log）中。
 3. **主库 Dump Thread**：主库接收请求，利用 `Dump 线程` 把 Binlog 发送给从库。
@@ -41,6 +42,7 @@ sequenceDiagram
 **延迟的根源**：主库由于并发写入是多线程的，而从库的 SQL 重放线程在 MySQL 旧版本中是单线程的。加上 DDL 或大量 DML，极易导致从库跟不上主库步伐。
 
 **经典应对策略**：
+
 - **强制走主库（推荐）**：对于支付后立刻查询订单等对数据强一致性要求极高的核心业务环节，使用 ShardingSphere 或 Mybatis-Plus 动态数据源注解（如 `@Master` 强制路由），将这段读请求直接发送给主库。
 - **并行复制（MTS - Multi-Threaded Slave）**：MySQL 5.7+ 默认支持基于 Logical Clock 的并行重放，使得 SQL 线程也可以变成多线程并发执行（基于事务组或表级别），从而大幅缓解复制延迟。
 - **缓存延迟双删策略**：将最新数据写入 Redis 或 Memcached 作为主库到从库之间的过渡缓冲，写库后刷新缓存。
