@@ -1,0 +1,8 @@
+{
+  "label": "Web 核心基石",
+  "position": 1,
+  "link": {
+    "type": "generated-index",
+    "description": "前端开发的三驾马车：HTML5 语义化、CSS3 现代布局与现代 JavaScript (ES6+) 核心原理。"
+  }
+}

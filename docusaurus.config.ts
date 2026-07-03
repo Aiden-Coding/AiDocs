@@ -128,6 +128,12 @@ const config: Config = {
           label: 'React',
         },
         {
+          type: 'docSidebar',
+          sidebarId: 'webBasicsSidebar',
+          position: 'left',
+          label: 'Web 基础',
+        },
+        {
           href: 'https://github.com/Aiden-Coding/AiDocs',
           className: 'header-github-link',
           position: 'right',

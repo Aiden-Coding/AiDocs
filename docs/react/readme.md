@@ -42,11 +42,13 @@ mindmap
 ```
 
 ---
+
 ## ⚡ 快速开始（推荐首先阅读）
 
 > 🎯 **第一次接触 React？** 建议先花 **15 分钟** 完成 [快速开始指南](basic/quick-start.md)，在你的电脑上运行第一个 React 应用，然后再开始系统学习。
 
 ---
+
 ## 第一阶段：零基础入门与核心基石 (Beginner: Core Foundations)
 
 ### 1.1 React 核心哲学
@@ -659,7 +661,7 @@ function FeedbackForm() {
 ### 第一阶段（2-3 周）：零基础到初级开发工程师
 
 | 步骤 | 内容 | 时间 | 先修条件 |
-|-----|------|------|--------|
+| :--- | :--- | :--- | :--- |
 | 1.1 | React 核心哲学与声明式 UI | 3h | JavaScript 基础 |
 | 1.2 | JSX 语法、编译原理、条件/列表渲染 | 4h | 1.1 |
 | 1.3 | 函数组件、Props 与单向数据流 | 4h | 1.2 |
@@ -679,7 +681,7 @@ function FeedbackForm() {
 ### 第二阶段（3-4 周）：初级到中级开发工程师
 
 | 步骤 | 内容 | 时间 | 先修条件 |
-|-----|------|------|--------|
+| :--- | :--- | :--- | :--- |
 | 2.1 | useEffect 深度解析与副作用管理 | 5h | 1.4 |
 | 2.2 | useRef、useContext 与更多 Hooks | 5h | 2.1 |
 | 2.3 | 组件设计模式（复合组件、HOC、Render Props） | 6h | 2.1-2.2 |
@@ -700,7 +702,7 @@ function FeedbackForm() {
 ### 第三阶段（4-5 周）：中级到高级开发工程师
 
 | 步骤 | 内容 | 时间 | 先修条件 |
-|-----|------|------|--------|
+| :--- | :--- | :--- | :--- |
 | 3.1 | Fiber 架构与渲染机制 | 8h | 2.1-2.5 |
 | 3.2 | Virtual DOM 与 Diff 算法优化 | 6h | 3.1 |
 | 3.3 | 并发模式、时间切片与调度器 | 7h | 3.1 |
@@ -721,7 +723,7 @@ function FeedbackForm() {
 ### 第四阶段（3-4 周）：高级到专家级工程师
 
 | 步骤 | 内容 | 时间 | 先修条件 |
-|-----|------|------|--------|
+| :--- | :--- | :--- | :--- |
 | 4.1 | TypeScript + React 类型体系 | 6h | 3.1-3.5 |
 | 4.2 | 测试驱动开发（RTL、Jest、单元测试） | 7h | 3.1-3.5 |
 | 4.3 | SSR/SSG 架构与 Hydration 机制 | 6h | 3.1-3.5 |
@@ -819,7 +821,8 @@ export default function App() {
 ## 📖 各阶段核心知识点速查表
 
 ### 第一阶段：核心基石
-```
+
+```text
 React 核心哲学
   ├─ 声明式 UI vs 指令式编程
   ├─ UI = f(state) 数学映射
@@ -839,7 +842,8 @@ State 与交互
 ```
 
 ### 第二阶段：应用开发
-```
+
+```text
 Hooks 体系
   ├─ useEffect 副作用与依赖项
   ├─ useRef 跨渲染周期
@@ -860,7 +864,8 @@ Hooks 体系
 ```
 
 ### 第三阶段：原理与优化
-```
+
+```text
 渲染引擎
   ├─ Fiber 节点结构与链表树
   ├─ 双缓冲树与 alternate 指针
@@ -881,7 +886,8 @@ Hooks 体系
 ```
 
 ### 第四阶段：专家级技能
-```
+
+```text
 类型系统
   ├─ React.FC 与泛型组件
   ├─ 事件处理类型
@@ -912,7 +918,7 @@ React 19
 ## 💡 常见误区与解决方案
 
 | 误区 | 问题表现 | 解决方案 |
-|-----|--------|--------|
+| :--- | :--- | :--- |
 | **闭包陷阱** | `setCount(count + 1)` 多次调用仅 +1 | 使用函数式更新：`setCount(prev => prev + 1)` |
 | **忘记依赖项** | effect 多次执行或数据未更新 | 仔细检查依赖项数组，使用 ESLint 插件 |
 | **render 中副作用** | 无限渲染循环、数据请求重复 | 将副作用移至 useEffect 或事件处理器 |
@@ -927,16 +933,19 @@ React 19
 ## 🔗 推荐资源
 
 ### 官方文档
+
 - [React 官方文档](https://react.dev)（必读，新版本设计精妙）
 - [React 源码仓库](https://github.com/facebook/react)（进阶必读）
 - [Next.js 官方文档](https://nextjs.org/docs)
 
 ### 优质教程与博客
+
 - [Dan Abramov 的深度讲解](https://overreacted.io/)：React Hooks、闭包陷阱等
 - [Kent C. Dodds 的 Testing Library](https://kentcdodds.com/blog)：测试最佳实践
 - [Josh Comeau 的 React 文章](https://www.joshwcomeau.com/)：动画与交互
 
 ### 学习工具与插件
+
 - **React DevTools**：浏览器插件，实时查看组件树、Profiler 性能分析
 - **ESLint 插件**：`eslint-plugin-react-hooks`，自动检测 Hooks 依赖项错误
 - **Chrome DevTools**：Network 分析、Performance 录制、Lighthouse 审计
