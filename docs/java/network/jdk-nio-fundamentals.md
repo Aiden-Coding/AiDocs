@@ -37,7 +37,7 @@ while (true) {
 
 - **面向 Buffer**:`Buffer` 替代流,数据被搬进可读可写的缓冲区,可重复回放。
 - **通道双向**:`Channel` 可以同时读和写,且支持非阻塞模式。
-- **多路复用器**:`Selector` 让一线程同时监听成千上万的 `Channel` 事件,这正是 [Netty 高性能网络编程底座](netty-io.md) 的基石。
+- **多路复用器**:`Selector` 让一线程同时监听成千上万的 `Channel` 事件,这正是 [Netty 快速起步](netty-quickstart.md) 的基石。
 
 ---
 

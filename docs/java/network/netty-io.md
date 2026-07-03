@@ -8,6 +8,8 @@ sidebar_label: Netty 核心原理
 
 作为构建高性能、高吞吐量分布式微服务（如 Dubbo、Spring Cloud Gateway、Nacos 心跳协议）的核心底座，基于事件驱动的网络通信引擎 Netty 在高并发领域占据了绝对主导地位。本篇将从 Linux 底层 I/O 模型的演进、核心 Reactor 模型剖析以及 Netty 底层的设计精髓和调优实践展开深度拆解。
 
+> **学习路径引导**：如果您是初学者，建议先阅读 [Netty 快速起步：从 Hello World 走进高性能网络编程](netty-quickstart.md) 了解基础用法，再深入本篇探究底层机制。
+
 ---
 
 ## 一、 从 Linux 极境看 I/O 模型演进
