@@ -1,0 +1,46 @@
+.scrollTrackerContainer {
+  background-color: var(--ifm-background-color);
+  border: 1px solid var(--ifm-border-color);
+  border-radius: var(--ifm-global-radius);
+  padding: 1rem;
+  margin: 1.5rem 0;
+  box-shadow: var(--ifm-global-shadow);
+  transition: background-color var(--ifm-transition-fast), border-color var(--ifm-transition-fast);
+}
+
+.metaRow {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.9rem;
+  color: var(--ifm-color-emphasis-700);
+  margin-bottom: 0.5rem;
+}
+
+.metaRow strong {
+  color: var(--ifm-color-primary);
+}
+
+.progressBarBg {
+  background-color: var(--ifm-color-emphasis-200);
+  height: 8px;
+  border-radius: 4px;
+  overflow: hidden;
+  position: relative;
+}
+
+.progressBarFill {
+  background-color: var(--ifm-color-primary);
+  height: 100%;
+  border-radius: 4px;
+  width: 0%;
+  transition: width 0.1s cubic-bezier(0.25, 0.8, 0.25, 1);
+}
+
+.scrollTrackerFallback {
+  padding: 1rem;
+  background-color: var(--ifm-color-emphasis-100);
+  border: 1px dashed var(--ifm-color-emphasis-300);
+  border-radius: var(--ifm-global-radius);
+  color: var(--ifm-color-emphasis-500);
+  text-align: center;
+}
