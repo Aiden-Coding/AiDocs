@@ -27,7 +27,7 @@ public interface BeanFactory {
 ```
 
 - **模式应用**：`BeanFactory` 作为工厂角色，负责根据 Bean 的名称或类型产生相应的 Bean 实例。客户端（调用者）不需要关心 Bean 的具体实例化过程（如反射调用、依赖注入等），只需通过工厂获取即可。
-- **核心实现类**：[DefaultListableBeanFactory](file:///Users/dwx/Documents/GitHub/AiDocs/docs/java/spring/beandefinition-internals.md) 是最典型的代表。
+- **核心实现类**：[DefaultListableBeanFactory](./2-beandefinition-internals.md) 是最典型的代表。
 
 ### 2. 抽象工厂模式：FactoryBean
 
@@ -94,7 +94,7 @@ Spring AOP 支持两种动态代理技术：
 | **要求约束** | 目标类**必须实现接口** | 目标类及方法不能被 `final` 修饰 |
 | **性能表现** | 随着 JDK 版本升级，效率极高；生成代理类速度快 | 执行效率较高，但生成代理类的字节码开销稍大 |
 
-有关两者的动态生成选择逻辑，可在 [DefaultAopProxyFactory](file:///Users/dwx/Documents/GitHub/AiDocs/docs/java/spring/ioc-aop.md#1-代理的选择策略defaultaopproxyfactory) 源码中查看。
+有关两者的动态生成选择逻辑，可在 [DefaultAopProxyFactory](./1-ioc-aop.md#1-代理的选择策略defaultaopproxyfactory) 源码中查看。
 
 ```mermaid
 graph TD
@@ -135,7 +135,7 @@ public void refresh() throws BeansException, IllegalStateException {
 }
 ```
 
-这里 `postProcessBeanFactory` 和 `onRefresh` 就是预留给子类实现的钩子方法（Hook）。具体的刷新步骤详情请参见 [spring-context-refresh.md](file:///Users/dwx/Documents/GitHub/AiDocs/docs/java/spring/spring-context-refresh.md)。
+这里 `postProcessBeanFactory` 和 `onRefresh` 就是预留给子类实现的钩子方法（Hook）。具体的刷新步骤详情请参见 [spring-context-refresh.md](./3-spring-context-refresh.md)。
 
 ### 2. 各种 Template 工具类
 
@@ -228,7 +228,7 @@ public interface AdvisorAdapter {
 
 ### 1. Spring AOP 的方法调用拦截器链
 
-正如 [ReflectiveMethodInvocation.proceed()](file:///Users/dwx/Documents/GitHub/AiDocs/docs/java/spring/ioc-aop.md#2-aop-链式调用与责任链模式) 中所呈现的，Spring AOP 在执行切面时，把所有匹配的拦截器组成一个链表。
+正如 [ReflectiveMethodInvocation.proceed()](./1-ioc-aop.md#2-aop-链式调用与责任链模式) 中所呈现的，Spring AOP 在执行切面时，把所有匹配的拦截器组成一个链表。
 
 每个拦截器的执行方法 `invoke` 都会接收 `MethodInvocation` 实例，并通过显式或隐式地回调 `invocation.proceed()`，把执行控制权传递给下一个拦截器，直至到达底层真正的目标方法。
 

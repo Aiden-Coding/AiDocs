@@ -1,4 +1,4 @@
----
+﻿---
 title: Spring Cloud 微服务起步：架构演进与全家桶协同实战
 hide_title: true
 sidebar_label: 微服务快速入门
@@ -107,8 +107,8 @@ graph LR
 
 入门只是第一步。在微服务化后，您将面临更深层次的挑战，我们将在后续章节持续拆解：
 
-- **配置管理**：如何实现生产环境配置的“秒级”生效？参考 [Nacos 高级配置管理与多环境隔离](./nacos-config-advanced.md)。
-- **流量防卫**：如何防止一个服务的崩溃拖垮整个系统？参考 [Sentinel 深度实践：从限流到热点参数排队](./sentinel-governance.md)。
-- **数据一致性**：分布式事务怎么搞？参考 [Seata AT 模型原理与实战](./seata-distributed-transaction.md)。
+- **配置管理**：如何实现生产环境配置的“秒级”生效？参考 [Nacos 高级配置管理与多环境隔离](./23-nacos-config-advanced.md)。
+- **流量防卫**：如何防止一个服务的崩溃拖垮整个系统？参考 [Sentinel 深度实践：从限流到热点参数排队](./27-sentinel-governance.md)。
+- **数据一致性**：分布式事务怎么搞？参考 [Seata AT 模型原理与实战](./25-seata-distributed-transaction.md)。
 
-> 更多底层原理请参考：[Spring Boot 自动装配与微服务组件原理](./springboot-springcloud.md)
+> 更多底层原理请参考：[Spring Boot 自动装配与微服务组件原理](./15-springboot-springcloud.md)

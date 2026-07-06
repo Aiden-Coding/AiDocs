@@ -53,7 +53,7 @@ sidebar_label: 常用注解底层解析
 - **`@Component`**：通用组件注解，可用于任何层级的类。
 - **`@Service`**：标注在业务逻辑层，当前无额外特殊逻辑。
 - **`@Repository`**：标注在数据访问层（DAO）。Spring 会为其自动织入 `PersistenceExceptionTranslationPostProcessor`，将底层数据库抛出的特定异常（如 `SQLException`）统一转化为 Spring 的 `DataAccessException` 体系。
-- **`@Controller`**：标注在控制层。Spring MVC 在启动扫描时，`RequestMappingHandlerMapping` 会通过判断类上是否含有 `@Controller` 或 `@RequestMapping`，来决定是否将其中的方法解析为处理器映射接口（参见 [RequestMappingHandlerMapping 映射原理](file:///Users/dwx/Documents/GitHub/AiDocs/docs/java/spring/springmvc-principles.md#1-url-映射注册流程)）。
+- **`@Controller`**：标注在控制层。Spring MVC 在启动扫描时，`RequestMappingHandlerMapping` 会通过判断类上是否含有 `@Controller` 或 `@RequestMapping`，来决定是否将其中的方法解析为处理器映射接口（参见 [RequestMappingHandlerMapping 映射原理](./8-springmvc-principles.md#1-url-映射注册流程)）。
 
 ### 2. @Component 与 @Bean 的区别
 
@@ -113,7 +113,7 @@ graph TD
    - 核心方法：`registerBeanDefinitions(AnnotationMetadata importingClassMetadata, BeanDefinitionRegistry registry)`。
    - 工作机制：直接暴露了 `BeanDefinitionRegistry` 注册器，开发者可以通过 `BeanDefinitionBuilder` 手动组装并注册任何复杂的 Bean 定义。
 
-关于这部分的详细流程和生命周期触发时机，可以参考 [BeanDefinition 加载原理](file:///Users/dwx/Documents/GitHub/AiDocs/docs/java/spring/beandefinition-internals.md#四-import-的三种玩法)。
+关于这部分的详细流程和生命周期触发时机，可以参考 [BeanDefinition 加载原理](./2-beandefinition-internals.md#四-import-的三种玩法)。
 
 ---
 
@@ -128,7 +128,7 @@ graph TD
 
 ### 2. 在整个生命周期中的执行顺序
 
-结合 [ioc-aop.md](file:///Users/dwx/Documents/GitHub/AiDocs/docs/java/spring/ioc-aop.md#1-详细生命周期链路) 中的 Bean 生命周期，当一个 Bean 初始化时，各方法的执行顺序如下：
+结合 [ioc-aop.md](./1-ioc-aop.md#1-详细生命周期链路) 中的 Bean 生命周期，当一个 Bean 初始化时，各方法的执行顺序如下：
 
 1. **构造器实例化**（Constructor）
 2. **属性赋值**（`@Autowired` 依赖注入）

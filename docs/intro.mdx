@@ -62,10 +62,10 @@ graph TD
 ### 💾 关系型数据库与高性能缓存
 在海量高吞吐系统中，数据存储与一致性是系统最脆弱也是最核心的地方。
 - **MySQL 关系型数据库**：
-  - [InnoDB 索引物理结构与 B+ 树路由](database/mysql/index-engine.md)
-  - [InnoDB MVCC 多版本链与 Read View 隔离算法](database/mysql/mvcc-locks.md)
-  - [物理回滚日志 (Undo) 与主从复制机制](database/mysql/logs-replication.md)
-  - [MySQL 慢查询调优与高性能开发规约](database/mysql/optimization.md)
+  - [InnoDB 索引物理结构与 B+ 树路由](database/mysql/1-index-engine.md)
+  - [InnoDB MVCC 多版本链与 Read View 隔离算法](database/mysql/2-mvcc-locks.md)
+  - [物理回滚日志 (Undo) 与主从复制机制](database/mysql/3-logs-replication.md)
+  - [MySQL 慢查询调优与高性能开发规约](database/mysql/5-optimization.md)
 - **Redis 高性能缓存**：
   - [自研多路复用 I/O 线程模型与核心数据结构](cache/redis/1-datastructures-io.md)
   - [Redis 哨兵与 Cluster 集群高可用构筑](cache/redis/3-highavailability.md)
@@ -74,12 +74,12 @@ graph TD
 
 ---
 
-### 🌐 [分布式系统核心底盘](distributed/system/lock-zookeeper.md)
+### 🌐 [分布式系统核心底盘](distributed/system/1-lock-zookeeper.md)
 探究跨物理机器如何保持协同、数据一致及网络容错。
-- **一致性协议**：[Paxos 与 Raft 强一致性共识算法](distributed/system/consensus.md)
-- **分布式锁**：[基于 ZooKeeper / Curator 临时顺序节点的排他锁实现](distributed/system/lock-zookeeper.md)
-- **分布式事务**：[2PC, 3PC 及 TCC 补偿事务模型底层设计](distributed/system/transactions.md)
-- **消息队列**：[高吞吐 RocketMQ / Kafka 零拷贝与 ACK 可靠性模型](distributed/system/message-queue.md)
+- **一致性协议**：[Paxos 与 Raft 强一致性共识算法](distributed/system/2-consensus.md)
+- **分布式锁**：[基于 ZooKeeper / Curator 临时顺序节点的排他锁实现](distributed/system/1-lock-zookeeper.md)
+- **分布式事务**：[2PC, 3PC 及 TCC 补偿事务模型底层设计](distributed/system/3-transactions.md)
+- **消息队列**：[高吞吐 RocketMQ / Kafka 零拷贝与 ACK 可靠性模型](distributed/system/4-message-queue.md)
 
 ---
 

@@ -1,4 +1,4 @@
----
+﻿---
 sidebar_position: 0
 ---
 
@@ -412,10 +412,10 @@ const [count, setCount] = useState(0);  // 改成 10
 
 完成这个快速开始后，建议按以下顺序继续学习：
 
-1. **[React 核心哲学](philosophy.md)**：理解 React 设计的本质
-2. **[JSX 语法与规范](jsx-syntax.md)**：掌握 JSX 的规则与最佳实践
-3. **[组件与 Props](components-props.md)**：学习组件间的数据传递
-4. **[State 与事件处理](state-events.md)**：深入理解状态管理
+1. **[React 核心哲学](0-philosophy.md)**：理解 React 设计的本质
+2. **[JSX 语法与规范](2-jsx-syntax.md)**：掌握 JSX 的规则与最佳实践
+3. **[组件与 Props](3-components-props.md)**：学习组件间的数据传递
+4. **[State 与事件处理](4-state-events.md)**：深入理解状态管理
 
 ---
 
@@ -425,7 +425,7 @@ const [count, setCount] = useState(0);  // 改成 10
 **A:** 这叫 Hot Module Replacement (HMR)。Vite 的一个强大特性，可以在保留应用状态的情况下实时更新代码。
 
 ### Q: useState 的 `count + 1` 为什么有时候只增加 1？
-**A:** 这是一个常见的陷阱。如果你在一个事件处理函数中多次调用 `setCount(count + 1)`，React 会将多个状态更新合并（批处理）。详见 [State 与事件处理](state-events.md)。
+**A:** 这是一个常见的陷阱。如果你在一个事件处理函数中多次调用 `setCount(count + 1)`，React 会将多个状态更新合并（批处理）。详见 [State 与事件处理](4-state-events.md)。
 
 ### Q: 如何构建生产版本？
 **A:** 运行 `npm run build`，产物会在 `dist/` 目录下。

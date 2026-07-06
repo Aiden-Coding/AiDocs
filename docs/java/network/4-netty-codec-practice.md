@@ -1,4 +1,4 @@
----
+﻿---
 title: Netty 高性能协议编解码：解决粘包拆包与实战私有协议
 hide_title: true
 sidebar_label: Netty 编解码实战
@@ -98,4 +98,4 @@ public class MyProtocolInitializer extends ChannelInitializer<SocketChannel> {
 2. **利用 Pipeline 的分层思想**：解码 -> 转化 -> 业务逻辑。
 3. **优先选择 `LengthFieldBasedFrameDecoder`** 作为你的私有协议底座。
 
-更多底层内存管理内容，请参考：[Netty 零拷贝与 ByteBuf 内存管理机制](netty-zero-copy-buf.md)。
+更多底层内存管理内容，请参考：[Netty 零拷贝与 ByteBuf 内存管理机制](2-netty-zero-copy-buf.md)。

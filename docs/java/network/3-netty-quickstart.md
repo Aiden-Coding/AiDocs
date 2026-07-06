@@ -1,4 +1,4 @@
----
+﻿---
 title: Netty 快速起步：从 Hello World 走进高性能网络编程
 hide_title: true
 sidebar_label: Netty 快速入门
@@ -152,5 +152,5 @@ sequenceDiagram
 - **心跳机制**：如何检测死掉的连接？
 
 更多深度内容请参考：
-- [Netty 高性能协议编解码实战](netty-codec-practice.md)
-- [Netty 核心原理与 I/O 模型深度拆解](netty-io.md)
+- [Netty 高性能协议编解码实战](4-netty-codec-practice.md)
+- [Netty 核心原理与 I/O 模型深度拆解](1-netty-io.md)

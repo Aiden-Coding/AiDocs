@@ -1,4 +1,4 @@
----
+﻿---
 title: Nacos 动态配置管理与多租户隔离实践
 hide_title: true
 sidebar_label: Nacos 配置中心
@@ -97,4 +97,4 @@ public class TestController {
 2. **读写分离与高可用**：在生产环境，Nacos 应部署为 3 节点以上的集群，并使用外部 MySQL 存储元数据。
 3. **隔离策略**：严禁在生产 Namespace 进行任何手动调试，应通过 Nacos 的“配置克隆”功能进行变更，并开启配置变更审计。
 
-> 进阶探讨：当流量激增时，如何利用 Nacos 配合 Sentinel 实现快速扩容与限流？请参考 [Sentinel 高级流量治理](./sentinel-governance.md)。
+> 进阶探讨：当流量激增时，如何利用 Nacos 配合 Sentinel 实现快速扩容与限流？请参考 [Sentinel 高级流量治理](./27-sentinel-governance.md)。

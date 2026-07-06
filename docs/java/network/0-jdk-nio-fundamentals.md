@@ -1,4 +1,4 @@
----
+﻿---
 title: JDK NIO 核心三件套:Channel、Buffer 与 Selector
 hide_title: true
 sidebar_label: JDK NIO 核心原理
@@ -6,7 +6,7 @@ sidebar_label: JDK NIO 核心原理
 
 ## JDK NIO 核心三件套:Channel、Buffer 与 Selector
 
-在进入 [Netty 高性能网络编程底座](netty-io.md) 之前,必须先打通它的语言底座——JDK NIO(`java.nio` 包)。NIO 在 JDK 1.4 引入,把 Java 的网络与文件 IO 模型从“流式阻塞”升级为“**面向缓冲区 + 通道路复用**”模型,这是 Netty、Mina、gRPC-Java 等高性能网络库的共同基础。
+在进入 [Netty 高性能网络编程底座](1-netty-io.md) 之前,必须先打通它的语言底座——JDK NIO(`java.nio` 包)。NIO 在 JDK 1.4 引入,把 Java 的网络与文件 IO 模型从“流式阻塞”升级为“**面向缓冲区 + 通道路复用**”模型,这是 Netty、Mina、gRPC-Java 等高性能网络库的共同基础。
 
 ---
 
@@ -37,7 +37,7 @@ while (true) {
 
 - **面向 Buffer**:`Buffer` 替代流,数据被搬进可读可写的缓冲区,可重复回放。
 - **通道双向**:`Channel` 可以同时读和写,且支持非阻塞模式。
-- **多路复用器**:`Selector` 让一线程同时监听成千上万的 `Channel` 事件,这正是 [Netty 快速起步](netty-quickstart.md) 的基石。
+- **多路复用器**:`Selector` 让一线程同时监听成千上万的 `Channel` 事件,这正是 [Netty 快速起步](3-netty-quickstart.md) 的基石。
 
 ---
 
@@ -84,7 +84,7 @@ buf.clear();        // 复位到写模式:position=0、limit=capacity
 | IO 性能 | IO 时需中转拷贝到直接内存 | 零拷贝直送内核,IO 延迟低 |
 | GC | 受 GC 管理 | 由 `Cleaner`+`PhantomReference` 显式释放 |
 
-> 关键陷阱:SocketChannel 写 `HeapBuffer` 时,JDK 内部仍会**临时分配一块堆外内存**做中转,然后 `memcpy` 一次,这本质就是非零拷贝。追求性能的中间件一律用 `DirectBuffer`,Netty 的 ByteBuf 体系即建立了完整的池化堆外内存池。详见 [Netty 零拷贝与 ByteBuf 内存管理](netty-zero-copy-buf.md)。
+> 关键陷阱:SocketChannel 写 `HeapBuffer` 时,JDK 内部仍会**临时分配一块堆外内存**做中转,然后 `memcpy` 一次,这本质就是非零拷贝。追求性能的中间件一律用 `DirectBuffer`,Netty 的 ByteBuf 体系即建立了完整的池化堆外内存池。详见 [Netty 零拷贝与 ByteBuf 内存管理](2-netty-zero-copy-buf.md)。
 
 ### 4. 视图 Buffer 与类型转换
 
@@ -222,7 +222,7 @@ graph TD
 - **Handler**:处理 IO 读/写以及简单的协议解码。
 - **Worker Pool**:把复杂业务丢给线程池,避免阻塞 reactor。
 
-这是 Netty **主从 Reactor 模型**的雏形,完整的 BossGroup + WorkerGroup + 业务线程池三层结构详见 [Netty 高性能网络编程底座](netty-io.md)。
+这是 Netty **主从 Reactor 模型**的雏形,完整的 BossGroup + WorkerGroup + 业务线程池三层结构详见 [Netty 高性能网络编程底座](1-netty-io.md)。
 
 ---
 
@@ -230,11 +230,11 @@ graph TD
 
 ### 1. epoll 空轮询 Bug
 
-JDK NIO 在 Linux 下若客户端异常断开或 socket 状态特异,`select()` 在无事件时本应阻塞,却返回 0,导致 CPU 飙到 100%。Netty 通过 `selectCnt` 计数与重建 Selector 规避,详见 [Netty 高性能网络编程底座](netty-io.md) 第二节。
+JDK NIO 在 Linux 下若客户端异常断开或 socket 状态特异,`select()` 在无事件时本应阻塞,却返回 0,导致 CPU 飙到 100%。Netty 通过 `selectCnt` 计数与重建 Selector 规避,详见 [Netty 高性能网络编程底座](1-netty-io.md) 第二节。
 
 ### 2. 堆外内存泄漏
 
-`DirectByteBuffer` 由 `Cleaner`(基于 `PhantomReference`)+ `Deallocator` 在 GC 时回收,但 GC 时机不可控。一旦分配速率高于 GC 频率,直接内存涨满,抛 `OutOfMemoryError: Direct buffer memory`。Netty 用 `PoolArena` + 引用计数(`ByteBuf.release()`)解决,详见 [Netty 零拷贝与 ByteBuf 内存管理](netty-zero-copy-buf.md)。
+`DirectByteBuffer` 由 `Cleaner`(基于 `PhantomReference`)+ `Deallocator` 在 GC 时回收,但 GC 时机不可控。一旦分配速率高于 GC 频率,直接内存涨满,抛 `OutOfMemoryError: Direct buffer memory`。Netty 用 `PoolArena` + 引用计数(`ByteBuf.release()`)解决,详见 [Netty 零拷贝与 ByteBuf 内存管理](2-netty-zero-copy-buf.md)。
 
 ---
 
@@ -297,6 +297,6 @@ JDK NIO 是 Netty 的“前置概念集”,它的核心是三大角色:
 
 掌握 NIO 后,推荐衔接阅读:
 
-- [Netty 高性能网络编程底座](netty-io.md):Netty 如何把 NIO 封装成 Reactor。
-- [Netty 零拷贝与 ByteBuf 内存管理](netty-zero-copy-buf.md):Netty 内存池的 Jemalloc 思想。
-- [JVM 虚拟机内核](../jvm/memory-gc.md):堆外内存与 GC 时机对 DirectBuffer 的影响。
+- [Netty 高性能网络编程底座](1-netty-io.md):Netty 如何把 NIO 封装成 Reactor。
+- [Netty 零拷贝与 ByteBuf 内存管理](2-netty-zero-copy-buf.md):Netty 内存池的 Jemalloc 思想。
+- [JVM 虚拟机内核](../jvm/0-memory-gc.md):堆外内存与 GC 时机对 DirectBuffer 的影响。

@@ -1,4 +1,4 @@
----
+﻿---
 title: Spring Boot 自动装配与微服务组件原理
 hide_title: true
 sidebar_label: 自动装配与微服务组件
@@ -99,19 +99,19 @@ sequenceDiagram
 
 ### 2. 核心机制：心跳与健康检查
 
-> **微服务实战之路**：如果您想从零开始搭建完整的微服务体系，请参考 [Spring Cloud 微服务起步：架构演进与全家桶协同实战](./springcloud-quickstart.md)。
+> **微服务实战之路**：如果您想从零开始搭建完整的微服务体系，请参考 [Spring Cloud 微服务起步：架构演进与全家桶协同实战](./30-springcloud-quickstart.md)。
 
 ---
 
 ## 三、 Sentinel 流量治理核心原理
 
-我们已经在 [Sentinel 核心原理：高可用流量治理与故障容错之道](./sentinel-governance.md) 中详细探讨过 Sentinel。它是保障微服务不因流量洪峰崩溃的“防火墙”。
+我们已经在 [Sentinel 核心原理：高可用流量治理与故障容错之道](./27-sentinel-governance.md) 中详细探讨过 Sentinel。它是保障微服务不因流量洪峰崩溃的“防火墙”。
 
 ---
 
 ## 四、 分布式事务 Seata 的设计与挑战
 
-在分布式环境下，数据的一致性至关重要。关于 Seata 的 AT 模式及隔离性，详见 [Seata 分布式事务全解：AT 模式深度剖析与实战](./seata-distributed-transaction.md)。
+在分布式环境下，数据的一致性至关重要。关于 Seata 的 AT 模式及隔离性，详见 [Seata 分布式事务全解：AT 模式深度剖析与实战](./25-seata-distributed-transaction.md)。
 
 
 

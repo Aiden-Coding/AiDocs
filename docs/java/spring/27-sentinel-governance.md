@@ -1,4 +1,4 @@
----
+﻿---
 title: Sentinel 核心原理：高可用流量治理与故障容错之道
 hide_title: true
 sidebar_label: Sentinel 流量治理
@@ -99,4 +99,4 @@ graph TD
 **推荐方案**：**Sentinel Dashboard -> Nacos -> 微服务**。
 通过配置 `DataSource`，我们可以在 Nacos 中定义 JSON 格式的规则，Sentinel 客户端会实时监听 Nacos 的变更并刷新内存规则，从而实现生产级的动态治理。
 
-> 解决分布式链路中的数据最终一致性？请参考 [Seata 分布式事务全解](./seata-distributed-transaction.md)。
+> 解决分布式链路中的数据最终一致性？请参考 [Seata 分布式事务全解](./25-seata-distributed-transaction.md)。

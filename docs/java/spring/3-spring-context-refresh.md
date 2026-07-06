@@ -102,7 +102,7 @@ graph TD
 
 - **核心操作**：
   - 寻找自定义名称为 `applicationEventMulticaster` 的广播器。
-  - 若无，则默认新建一个同步/单线程分发的 `SimpleApplicationEventMulticaster` 归属到容器中（参见 [spring-events.md](spring-events.md)）。
+  - 若无，则默认新建一个同步/单线程分发的 `SimpleApplicationEventMulticaster` 归属到容器中（参见 [spring-events.md](7-spring-events.md)）。
 
 ### 9. `onRefresh()`：子类特异刷新钩子
 

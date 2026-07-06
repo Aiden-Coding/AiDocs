@@ -1,4 +1,4 @@
----
+﻿---
 sidebar_position: 5
 ---
 
@@ -681,6 +681,6 @@ function ResponsiveComponent() {
 ## 🔗 下一步
 
 掌握了核心 Hooks 后，你已经可以构建复杂的React应用了。建议继续学习：
-1. [组件设计模式](component-patterns.md)：设计高复用组件
-2. [Context与useReducer](../advanced/context-reducer.md)：复杂状态管理
-3. [性能优化](../advanced/performance-optimization.md)：useMemo与useCallback深度应用
+1. [组件设计模式](6-component-patterns.md)：设计高复用组件
+2. [Context与useReducer](../advanced/5-context-reducer.md)：复杂状态管理
+3. [性能优化](../advanced/3-performance-optimization.md)：useMemo与useCallback深度应用

@@ -1,4 +1,4 @@
----
+﻿---
 sidebar_position: 4
 ---
 
@@ -716,6 +716,6 @@ function Parent() {
 ## 🔗 下一步
 
 掌握了 State 和事件处理后，你已经可以构建有交互的 React 应用了。建议继续学习：
-1. [常用 Hooks 深度解析](hooks.md)：学习 useEffect、useRef 等核心 Hooks
-2. [组件设计模式](component-patterns.md)：设计可复用的高级组件
-3. [初级练习题](../practice/beginner-exercises.md)：通过实战强化理解
+1. [常用 Hooks 深度解析](5-hooks.md)：学习 useEffect、useRef 等核心 Hooks
+2. [组件设计模式](6-component-patterns.md)：设计可复用的高级组件
+3. [初级练习题](../practice/0-beginner-exercises.md)：通过实战强化理解

@@ -1,4 +1,4 @@
----
+﻿---
 sidebar_position: 11
 ---
 
@@ -104,7 +104,7 @@ export function NavigationCard() {
     <div className="nav-card">
       <img src={logoUrl} alt="Logo" />
       {/* Link 能够自动实现首屏预加载，优化静态切换体验 */}
-      <Link to="/docs/react/basic/hooks">
+      <Link to="/docs/react/basic/5-hooks">
         去学习核心 Hooks
       </Link>
     </div>

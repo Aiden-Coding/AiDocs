@@ -1,4 +1,4 @@
----
+﻿---
 title: Seata 分布式事务全解：AT 模式深度剖析与实战
 hide_title: true
 sidebar_label: Seata 分布式事务
@@ -99,4 +99,4 @@ public class OrderServiceImpl implements OrderService {
 2. **AT 模式是首选**。它兼顾了开发效率与数据准确性。
 3. **保证隔离性**。务必理解 `GlobalLock` 对读写性能的影响。
 
-> 了解微服务网关如何统一管理入口？请参考 [Spring Cloud Gateway 流量入口与安全网关实战](./gateway-advanced.md)。
+> 了解微服务网关如何统一管理入口？请参考 [Spring Cloud Gateway 流量入口与安全网关实战](./21-gateway-advanced.md)。

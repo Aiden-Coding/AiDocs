@@ -1,4 +1,4 @@
----
+﻿---
 title: CompletableFuture 异步编排与底层原理
 hide_title: true
 sidebar_label: CompletableFuture 异步编排
@@ -230,7 +230,7 @@ JDK 21 之前,`CompletableFuture` 的异步线程本质仍是 OS 平台线程。
 JDK 21 的虚拟线程将阻塞 IO 改为可卸载(unmount),`CompletableFuture` 在虚拟线程中执行 `Thread.sleep` 或阻塞 IO 时不会阻塞 carrier。两者结合可做到:
 
 - 轻 IO 场景:`CompletableFuture` + commonPool(老生态)。
-- 高 IO 场景:虚拟线程 + `Executors.newVirtualThreadPerTaskExecutor()`,更简洁、可读,推荐新项目全部使用虚拟线程。详见 [JDK 21 虚拟线程详解](virtual-threads.md)。
+- 高 IO 场景:虚拟线程 + `Executors.newVirtualThreadPerTaskExecutor()`,更简洁、可读,推荐新项目全部使用虚拟线程。详见 [JDK 21 虚拟线程详解](7-virtual-threads.md)。
 
 ---
 
@@ -271,7 +271,7 @@ public static <T> CompletableFuture<T> retry(Supplier<CompletableFuture<T>> sup,
 }
 ```
 
-借助 `thenCompose` 把“重试得到的下一阶段 CompletionStage”串联起来,与 [ThreadLocal 与 CAS 核心解析](threadlocal-cas.md) 中的乐观重试机制相通。
+借助 `thenCompose` 把“重试得到的下一阶段 CompletionStage”串联起来,与 [ThreadLocal 与 CAS 核心解析](3-threadlocal-cas.md) 中的乐观重试机制相通。
 
 ---
 
@@ -286,4 +286,4 @@ public static <T> CompletableFuture<T> retry(Supplier<CompletableFuture<T>> sup,
 
 ## 十、 小结
 
-`CompletableFuture` 是 Java 异步编排的标杆,但回调式编程依然有“嵌套地狱”、“异常传播复杂”的固有缺陷。新项目推荐结合 [JDK 21 虚拟线程详解](virtual-threads.md) 使用线性同步代码风格,可读性更佳;老项目改造则借助 `CompletableFuture` + 自定义线程池即可大幅提升吞吐。配套学习 [线程池 ThreadPoolExecutor 全解](threadpool.md) 与 [JMM 内存模型](jmm-memory-model.md),可形成完整的异步协同认知。
+`CompletableFuture` 是 Java 异步编排的标杆,但回调式编程依然有“嵌套地狱”、“异常传播复杂”的固有缺陷。新项目推荐结合 [JDK 21 虚拟线程详解](7-virtual-threads.md) 使用线性同步代码风格,可读性更佳;老项目改造则借助 `CompletableFuture` + 自定义线程池即可大幅提升吞吐。配套学习 [线程池 ThreadPoolExecutor 全解](4-threadpool.md) 与 [JMM 内存模型](0-jmm-memory-model.md),可形成完整的异步协同认知。

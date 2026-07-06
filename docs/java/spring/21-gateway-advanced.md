@@ -1,4 +1,4 @@
----
+﻿---
 title: Spring Cloud Gateway 流量入口与安全网关实战
 hide_title: true
 sidebar_label: Gateway 统一网关
@@ -91,4 +91,4 @@ filters:
 
 网关并非万能。在高级微服务开发中，通常在网关层完成 **JWT 令牌校验**，将解析后的 `UserId` 放在 Header 中透传给下游服务，而下游服务则通过 **“内部鉴权拦截器”** 确保请求只来自于网关。
 
-> 想要了解如何保障分布式事务一致性？请参考 [Seata 分布式事务全解](./seata-distributed-transaction.md)。
+> 想要了解如何保障分布式事务一致性？请参考 [Seata 分布式事务全解](./25-seata-distributed-transaction.md)。

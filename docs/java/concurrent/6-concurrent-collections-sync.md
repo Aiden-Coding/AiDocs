@@ -1,4 +1,4 @@
----
+﻿---
 title: 并发容器与同步工具源码精析
 hide_title: true
 sidebar_label: 并发容器与同步工具
@@ -6,7 +6,7 @@ sidebar_label: 并发容器与同步工具
 
 ## 并发容器与同步工具源码精析
 
-`java.util.concurrent` 不仅提供了 [AQS 显式锁](aqs-locks.md) 与 [线程池](threadpool.md),还提供了一系列面向**高并发场景**的并发容器与同步工具。它们通过 CAS、分段锁、写时复制、`VarHandle` 等无锁化或细粒度锁技术把同步成本压到最低,是构建高性能中间件、缓存与协同流程的必备积木。
+`java.util.concurrent` 不仅提供了 [AQS 显式锁](1-aqs-locks.md) 与 [线程池](4-threadpool.md),还提供了一系列面向**高并发场景**的并发容器与同步工具。它们通过 CAS、分段锁、写时复制、`VarHandle` 等无锁化或细粒度锁技术把同步成本压到最低,是构建高性能中间件、缓存与协同流程的必备积木。
 
 ---
 
@@ -128,7 +128,7 @@ public E get(int i) { return (E) array[i]; } // 无锁直接读
 
 ## 三、 并发 Map
 
-`ConcurrentHashMap` 的并发设计已有 [独立章节](hashmap-concurrenthashmap.md) 深度拆解,本节聚焦其余两个高阶 Map。
+`ConcurrentHashMap` 的并发设计已有 [独立章节](2-hashmap-concurrenthashmap.md) 深度拆解,本节聚焦其余两个高阶 Map。
 
 ### 1. `ConcurrentSkipListMap`:基于跳表的并发有序 Map
 
@@ -319,4 +319,4 @@ start.countDown(); // 发令枪
 
 ## 九、 小结
 
-同步工具(CountDownLatch/CyclicBarrier/Semaphore/Phaser)是“线程协同的语法糖”,底层全部基于 [AQS](aqs-locks.md);并发容器则覆盖有序、无序、阻塞、无锁等多种语义。选择合适容器的核心是问自己两件事:**读多写多?** 与 **是否需要阻塞?**。前者决定 `CopyOnWrite` vs `ConcurrentHashMap` vs `SkipListMap`,后者决定 `BlockingQueue` vs `ConcurrentLinkedQueue`。配合 [线程池 ThreadPoolExecutor 全解](threadpool.md) 中各队列的实战描述,可形成完整的“队列选型决策树”。
+同步工具(CountDownLatch/CyclicBarrier/Semaphore/Phaser)是“线程协同的语法糖”,底层全部基于 [AQS](1-aqs-locks.md);并发容器则覆盖有序、无序、阻塞、无锁等多种语义。选择合适容器的核心是问自己两件事:**读多写多?** 与 **是否需要阻塞?**。前者决定 `CopyOnWrite` vs `ConcurrentHashMap` vs `SkipListMap`,后者决定 `BlockingQueue` vs `ConcurrentLinkedQueue`。配合 [线程池 ThreadPoolExecutor 全解](4-threadpool.md) 中各队列的实战描述,可形成完整的“队列选型决策树”。

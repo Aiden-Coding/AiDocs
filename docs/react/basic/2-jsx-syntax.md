@@ -1,4 +1,4 @@
----
+﻿---
 sidebar_position: 2
 ---
 
@@ -638,5 +638,5 @@ function BuggyComponent({ items }) {
 ## 🔗 下一步
 
 掌握了 JSX 的语法与规范后，你已经可以开始编写简单的 React 组件了。建议继续学习：
-1. [组件与 Props](components-props.md)：学习如何创建可复用的组件
-2. [State 与事件处理](state-events.md)：给你的组件添加交互
+1. [组件与 Props](3-components-props.md)：学习如何创建可复用的组件
+2. [State 与事件处理](4-state-events.md)：给你的组件添加交互

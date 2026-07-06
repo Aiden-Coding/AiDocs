@@ -1,4 +1,4 @@
----
+﻿---
 title: Spring Boot 核心运行原理与启动加载机制
 hide_title: true
 sidebar_label: 核心原理与启动加载
@@ -80,7 +80,7 @@ sequenceDiagram
 
 ## 二、 自动装配的生命周期与初始化时机
 
-在 [springboot-springcloud.md](springboot-springcloud.md) 中，我们学习了自动装配的核心入口 `@EnableAutoConfiguration`。本节深入剖析它在 **IoC 容器启动过程中的加载与初始化时机**。
+在 [15-springboot-springcloud.md](15-springboot-springcloud.md) 中，我们学习了自动装配的核心入口 `@EnableAutoConfiguration`。本节深入剖析它在 **IoC 容器启动过程中的加载与初始化时机**。
 
 ### 1. 自动装配在 `refreshContext` 的何处触发？
 
