@@ -676,4 +676,4 @@ mod tests {
 ---
 
 > [!TIP]
-> **下一步**：掌握了测试后，继续学习 [宏与元编程](macros-metaprogramming.md)，了解如何使用宏来减少重复代码。
+> **下一步**：掌握了测试后，继续学习 [宏与元编程](11-macros-metaprogramming.md)，了解如何使用宏来减少重复代码。

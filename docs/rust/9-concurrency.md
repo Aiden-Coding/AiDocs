@@ -684,4 +684,4 @@ fn main() {
 ---
 
 > [!TIP]
-> **下一步**：掌握了并发编程后，继续学习 [异步编程](async-under-the-hood.md)，了解 Rust 的异步运行时和 Future。
+> **下一步**：掌握了并发编程后，继续学习 [异步编程](8-async-under-the-hood.md)，了解 Rust 的异步运行时和 Future。

@@ -727,4 +727,4 @@ fn main() {
 ```
 
 > [!NOTE]
-> **下一步建议**：掌握了 Rust 极其严格的基础语法与类型系统后，请继续阅读 [所有权与生命周期核心](ownership-lifetimes.md)，了解 Rust 独特的 Borrow Checker 是如何保障内存安全与高并发的。
+> **下一步建议**：掌握了 Rust 极其严格的基础语法与类型系统后，请继续阅读 [所有权与生命周期核心](5-ownership-lifetimes.md)，了解 Rust 独特的 Borrow Checker 是如何保障内存安全与高并发的。
