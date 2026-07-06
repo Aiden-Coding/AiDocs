@@ -128,11 +128,11 @@ mindmap
   - [JVM 虚拟机面试真题](jvm/interview-jvm.md)
   - [Spring 框架生态面试真题](spring/interview-spring.md)
   - [MySQL 关系型数据库面试真题](../database/mysql/interview-mysql.md)
-  - [Redis 高性能缓存面试真题](../cache/redis/interview-redis.md)
+  - [Redis 高性能缓存面试真题](../cache/redis/6-interview-redis.md)
 
 ---
 
 ## 分布式联动推荐
 
 - **分布式锁实现**:关联学习 [分布式 ZooKeeper 锁](../distributed/system/lock-zookeeper.md)。
-- **分布式缓存**:关联学习 [Redis 高并发场景](../cache/redis/scenarios.md)。
+- **分布式缓存**:关联学习 [Redis 高并发场景](../cache/redis/4-scenarios.md)。
