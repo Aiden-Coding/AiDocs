@@ -63,6 +63,7 @@ mod my_mod {
     }
 
     // 3. 限定仅在当前宿主 Crate 内部任意位置可见
+    // 适用场景：库（Library）内部的底层 helper 接口或工具函数，允许自己的 Crate 内部全域自由调用，但完全不对最终打包使用的外部下游第三方用户公开，隔离底层细节。
     pub(crate) fn crate_visible_function() {
         println!("called `my_mod::crate_visible_function()`");
     }
@@ -97,6 +98,66 @@ fn test_execution() {
 
     my_mod::nested::function();
     // my_mod::nested::module_restricted_function(); // ❌ 编译报错：module_restricted_function 限制仅在 my_mod 内可见
+}
+```
+
+##### 生产落地：Crate 级别可见性限制的工业案例
+
+在高性能 Rust 底层库开发中，我们常常需要进行 Crate 强边界封装。下面这个工业案例展示了两个子组件（网络连接模块连接处理、加密模块加密握手）如何共享一些只有它们自己知道的核心秘钥或状态，同时绝不泄露给外部用户：
+
+```rust
+// 业务模拟外部第三方开发者正在使用本 SDK 库
+mod sdk_internals {
+    // 基础的加密子组件
+    pub(crate) mod cryptography {
+        // 1. 底层密匙解密安全校验。因为被 `pub(crate)` 修饰，
+        // 同一个 SDK 内部的连接器模块可以引用它，但 SDK 的最终使用者（外部 Crate）完全看不见！
+        pub(crate) fn decrypt_access_token(raw_bytes: &[u8]) -> String {
+            println!("解密组件: 正在安全解码底层敏感鉴权令牌...");
+            format!("decrypted-token-from-bytes: {:?}", raw_bytes)
+        }
+    }
+
+    // 核心连接调度子组件
+    pub mod connection {
+        use super::cryptography;
+
+        pub struct Session {
+            pub destination: String,
+            // 私有：安全上下文，外部不可读写
+            raw_security_key: Vec<u8>, 
+        }
+
+        impl Session {
+            pub fn new(dest: &str, key: Vec<u8>) -> Self {
+                Session {
+                    destination: dest.to_string(),
+                    raw_security_key: key,
+                }
+            }
+
+            // 2. 外部开发者的公开接口：暴露拨号连接功能
+            pub fn dial(&self) {
+                // 3. 内部共享：顺利调用兄弟加密模块的 `pub(crate)` 授权方法进行解密握手
+                let final_token = cryptography::decrypt_access_token(&self.raw_security_key);
+                println!("连接组件: 基于令牌 [{}] 成功建立与 {} 的安全传输握手连接。", final_token, self.destination);
+            }
+        }
+    }
+}
+
+fn main() {
+    // 模拟最终用户建立会话
+    let my_session = sdk_internals::connection::Session::new(
+        "api.rust-expert.io", 
+        vec![0xAA, 0xBB, 0xCC]
+    );
+
+    // 用户只需简单调用公有 API 建立拨号
+    my_session.dial();
+
+    // ⚠️ 外部试图直接窥探并使用其底层的加密校验手段 ── 静态编译器予以重拳打击！
+    // sdk_internals::cryptography::decrypt_access_token(&[0x11]); // ❌ 编译期拦截报错：module `cryptography` is private.
 }
 ```
 
