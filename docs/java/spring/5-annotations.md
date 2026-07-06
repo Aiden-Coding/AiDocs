@@ -113,7 +113,7 @@ graph TD
    - 核心方法：`registerBeanDefinitions(AnnotationMetadata importingClassMetadata, BeanDefinitionRegistry registry)`。
    - 工作机制：直接暴露了 `BeanDefinitionRegistry` 注册器，开发者可以通过 `BeanDefinitionBuilder` 手动组装并注册任何复杂的 Bean 定义。
 
-关于这部分的详细流程和生命周期触发时机，可以参考 [BeanDefinition 加载原理](./2-beandefinition-internals.md#四-import-的三种玩法)。
+关于这部分的详细流程和生命周期触发时机，可以参考 [BeanDefinition 加载原理](./2-beandefinition-internals.md#四-import-的三种玩法与自动装配支撑)。
 
 ---
 

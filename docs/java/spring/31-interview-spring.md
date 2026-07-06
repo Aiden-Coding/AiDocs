@@ -267,7 +267,7 @@ graph TD
     Condition -->|No| Filter[过滤丢弃，不加载]
 ```
 
-关于 Spring Boot 的 SPI 加载机制和自定义 Starter 实践，可以参考 [Boot 扩展机制与 SPI](./12-springboot-extension.md#一-springboot-spi-机制详解)。
+关于 Spring Boot 的 SPI 加载机制 and 自定义 Starter 实践，可以参考 [Boot 扩展机制与 SPI](./12-springboot-extension.md#一springboot-spi-机制详解)。
 
 ---
 

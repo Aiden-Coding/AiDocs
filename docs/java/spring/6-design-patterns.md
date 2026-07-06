@@ -228,7 +228,7 @@ public interface AdvisorAdapter {
 
 ### 1. Spring AOP 的方法调用拦截器链
 
-正如 [ReflectiveMethodInvocation.proceed()](./1-ioc-aop.md#2-aop-链式调用与责任链模式) 中所呈现的，Spring AOP 在执行切面时，把所有匹配的拦截器组成一个链表。
+正如 [ReflectiveMethodInvocation.proceed()](./1-ioc-aop.md#3-aop-链式调用与责任链模式) 中所呈现的，Spring AOP 在执行切面时，把所有匹配的拦截器组成一个链表。
 
 每个拦截器的执行方法 `invoke` 都会接收 `MethodInvocation` 实例，并通过显式或隐式地回调 `invocation.proceed()`，把执行控制权传递给下一个拦截器，直至到达底层真正的目标方法。
 
