@@ -1,13 +1,19 @@
 ---
-title: Hello World
+title: 语法基石与工具链
 hide_title: true
-sidebar_label: Hello World
+sidebar_label: 语法基石与工具链
 sidebar_position: 1
 ---
 
-# Hello World
+这是传统的 Hello World 程序的源码。Rust 程序的入口点是一个名为 `main` 的函数，通过 Rust 编译器 and 工具链，我们可以从最简单的程序开始，逐步掌握格式化输出、基本类型、流程控制等核心语法。
 
-这是传统的 Hello World 程序的源码。Rust 程序的入口点是一个名为 `main` 的函数，通过 Rust 编译器和工具链，我们可以从最简单的程序开始，逐步掌握格式化输出、基本类型、流程控制等核心语法。
+```rust
+// 传统的 Hello World 入门源程序
+fn main() {
+    // 它是 Rust 的宏，负责向标准输出控制台打印一整行文本信息
+    println!("Hello, World!");
+}
+```
 
 > 🟢 **基础**：适合完全零基础的 Rust 初学者阅读。
 
