@@ -52,8 +52,8 @@ graph LR
 sequenceDiagram
     autonumber
     participant Source
-    participant Map (Operator)
-    participant JM (JobMaster)
+    participant Map as Map (Operator)
+    participant JM as JM (JobMaster)
 
     JM->>Source: 1. 触发 Checkpoint, 注入 Barrier
     Source->>Source: 2. 本地快速状态快照 (State State1)

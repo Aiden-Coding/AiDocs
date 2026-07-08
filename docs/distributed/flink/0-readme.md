@@ -30,6 +30,12 @@ mindmap
       新型 Http Credit-based 反压
       轻量级非对齐快照 Unaligned Checkpoint
       通用增量快照 Generalized Incremental Checkpoint
+    时间与窗口
+      事件时间与 Watermark 乱序处理
+      Tumbling / Sliding / Session Window
+    高级特性
+      Flink SQL 动态表与连续查询
+      HA 高可用容错集群架构
 ```
 
 ---
@@ -49,3 +55,17 @@ mindmap
 ## ⚡ 第三阶段：反压机制与极速容错 (Backpressure & Unaligned Checkpoint)
 
 - [网络流控、反压机制与非对齐快照](3-backpressure.md)：起底基于 Netty Credit-based 网络层传输机制，并针对反压极端下快照对齐超时的痛点，全面解析 Flink 现代非对齐快照（Unaligned Checkpoint）的极速容错实现思路。
+
+---
+
+## ⏱️ 第四阶段：时间语义与窗口计算 (Time & Window)
+
+- [时间语义与 Watermark 机制](4-time-watermark.md)：深入解析 Event Time、Processing Time，以及用于处理乱序数据的核心控制流屏障 Watermark 生成与传递机制。
+- [窗口机制详解](5-windowing.md)：剖析 Tumbling、Sliding、Session 窗口的切分逻辑，及窗口函数、触发器 (Trigger) 和驱逐器 (Evictor) 架构。
+
+---
+
+## 📊 第五阶段：SQL 与高可用 (SQL & HA)
+
+- [Flink SQL 与表 API](6-flink-sql.md)：解密动态表 (Dynamic Table)、连续查询 (Continuous Query) 及底层 Calcite 优化器。
+- [HA 高可用机制](7-high-availability.md)：详述基于 ZooKeeper / Kubernetes 的 JobManager 故障选举与恢复机制，确保生产 7x24 不间断。

@@ -111,11 +111,12 @@ flowchart LR
   - **规避计算资源“热点失效”**：非槽位共享情况下，轻量级的 `Source` / `Filter` 算子会一直挂着一个 Slot 不释放极度浪费，而繁重的 `Window Join` 算子 Slot 经常爆满。槽位共享使得计算链路天然平衡了 CPU 损耗开销。
 
 ```mermaid
-rectangle "TaskManager (JVM 进程)" {
-    subgraph Slot1 [Task Slot 1]
-        S[Source Subtask] -.-> M[Map Subtask] -.-> K[Sink Subtask]
+graph TD
+    subgraph TM [TaskManager JVM 进程]
+        subgraph Slot1 [Task Slot 1]
+            S[Source Subtask] -.-> M[Map Subtask] -.-> K[Sink Subtask]
+        end
     end
-}
 ```
 
 ---
