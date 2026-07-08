@@ -150,7 +150,13 @@ sequenceDiagram
 - **粘包与拆包**：为什么我发了两个消息，服务端却收到一个大的？
 - **编解码器 (Codec)**：每次都手动操作 `ByteBuf` 太痛苦了，有没有自动转成 Model 对象的方法？
 - **心跳机制**：如何检测死掉的连接？
+- **HTTP / WebSocket**：如何把 Netty 做成实时消息服务？
+- **RPC**：如何用 Netty 搭一个简易分布式调用链？
 
-更多深度内容请参考：
+### 实战案例入口
+
 - [Netty 高性能协议编解码实战](4-netty-codec-practice.md)
+- [Netty 心跳保活与断线重连实战](5-netty-heartbeat.md)
+- [Netty 实战：HTTP 服务与 WebSocket 长连接](6-netty-http-websocket.md)
+- [Netty 实战：构建一个简易 RPC 框架](7-netty-rpc-practice.md)
 - [Netty 核心原理与 I/O 模型深度拆解](1-netty-io.md)

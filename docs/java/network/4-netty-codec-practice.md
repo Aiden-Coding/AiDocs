@@ -13,11 +13,14 @@ sidebar_label: Netty 编解码实战
 ## 一、 直击痛点：粘包与拆包
 
 ### 1. 为什么会发生粘包拆包？
+
 - **粘包**：发送端发送的若干包数据到接收端接收时粘成一团。通常是因为 TCP 缓冲区合并发送或接收导致。
 - **拆包**：发送的一个大数据包被拆分成多个小包发送，接收端一次只能接收到部分数据。
 
 ### 2. 解决方案模型
+
 为了划定数据的边界，业界通常有四种主流策略：
+
 1. **定长协议**：每个报文长度固定（如 1024 字节）。
 2. **特殊分隔符**：在包尾添加特殊符号（如 `\n` 或 `$_$`）。
 3. **长度域（Length Field）**：在报文头部增加一个字段，标明 Body 的长度。**（Netty 最推荐，最灵活）**
@@ -43,7 +46,9 @@ Netty 已经为我们封装好了应对这些问题的工具类：
 这是目前生产环境中最常用的私有协议实现方案。
 
 ### 1. 协议定义
+
 假设我们定义一个简单的协议：
+
 - **Header (4 bytes)**: 存放 Body 的长度（int）。
 - **Body**: 原始数据。
 
@@ -88,14 +93,26 @@ public class MyProtocolInitializer extends ChannelInitializer<SocketChannel> {
 | **Hessian/Kryo** | 优秀 | 较小 | 较差 | 适合纯 Java RPC |
 
 ### 2. Protobuf 整合建议
+
 在 Netty 中使用 Protobuf，只需将 `ProtobufVarint32FrameDecoder` 和 `ProtobufDecoder` 加入 Pipeline 即可。这能大幅压缩传输体积并提升序列化速度。
 
 ---
 
-## 五、 总结
+## 五、 从协议到业务：实战落地建议
+
+在真实项目里，建议把编解码器按“协议层 → 业务对象层 → 业务处理层”三层拆开：
+
+1. **协议层**：由 `LengthFieldBasedFrameDecoder` / `StringDecoder` 负责切包。
+2. **业务对象层**：将解码后的字节转成 Java 对象。
+3. **业务处理层**：在 Handler 里执行真正的业务逻辑。
+
+这套分层能显著降低后续扩展成本，尤其适合做 IM、消息网关和 Java 中间件。
+
+## 六、 总结
 
 1. **不要直接在 Handler 里处理裸 ByteBuf**，除非你正在编写非常底层的东西。
 2. **利用 Pipeline 的分层思想**：解码 -> 转化 -> 业务逻辑。
 3. **优先选择 `LengthFieldBasedFrameDecoder`** 作为你的私有协议底座。
+4. **将心跳、HTTP/WebSocket、RPC 这类场景与编解码器结合起来**，能形成完整的工程化 Netty 方案。
 
 更多底层内存管理内容，请参考：[Netty 零拷贝与 ByteBuf 内存管理机制](2-netty-zero-copy-buf.md)。
