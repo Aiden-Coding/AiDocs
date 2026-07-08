@@ -288,5 +288,4 @@ public class ECommerceGmvApplication {
   在 Flink 1.19+ 中，老旧的消费算子已被彻底切断移除。新版 API 支持**动态分区发现**与**流批一体统一提取接口（Unified Source API）**，无需任何硬编码重写便可在 `实时流` 与 `历史流重放` 间一键平滑对接切换。
 - **内存对齐的 Watermark 策略**：
   在主代码中，`.forBoundedOutOfOrderness(Duration.ofSeconds(3))` 代表系统将允许网卡重发等乱序数据滞后 3 秒，若超出 3 秒的超迟到数据，则被自动分流、旁路捕获写出到 `LATE_DATA_TAG` 旁路侧输出槽中进行冷归档补偿操作，完美平衡了计算延迟与结果完整。
-  在主代码中，`.forBoundedOutOfOrderness(Duration.ofSeconds(3))` 代表系统将允许网卡重发等乱序数据滞后 3 秒，若超出 3 秒的超迟到数据，则被自动分流、旁路捕获写出到 `LATE_DATA_TAG` 旁路侧输出槽中进行冷归档补偿操作，完美平衡了计算延迟与结果完整。
 
