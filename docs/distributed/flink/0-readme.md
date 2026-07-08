@@ -36,6 +36,8 @@ mindmap
     高级特性
       Flink SQL 动态表与连续查询
       HA 高可用容错集群架构
+      Connector / CDC 生态与动态表
+      Savepoint 恢复与迁移策略
 ```
 
 ---
@@ -69,3 +71,10 @@ mindmap
 
 - [Flink SQL 与表 API](6-flink-sql.md)：解密动态表 (Dynamic Table)、连续查询 (Continuous Query) 及底层 Calcite 优化器。
 - [HA 高可用机制](7-high-availability.md)：详述基于 ZooKeeper / Kubernetes 的 JobManager 故障选举与恢复机制，确保生产 7x24 不间断。
+
+---
+
+## 🧩 第六阶段：生态连接器与运维实战 (Connectors & Ops)
+
+- [Connector、CDC 与动态数据源](9-connectors-cdc.md)：说明 Flink 连接器模型、Table DDL 源汇定义，以及基于 Flink CDC 的数据库变更流实时同步架构。
+- [Savepoint、恢复与版本迁移](8-savepoint-recovery.md)：讲解 savepoint 与 checkpoint 的本质差异、手动恢复、版本迁移与无损升级实战。 
