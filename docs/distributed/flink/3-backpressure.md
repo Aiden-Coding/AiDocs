@@ -116,5 +116,176 @@ sequenceDiagram
 
 **答**：
 因为 Aligned Checkpoint（对齐快照）保存的纯粹只有已经流经算子、落于持久化状态管理器（其本质就是只包含 RocksDB 或 HashMap 里的 State 对象）内部的数据。
-而 **Unaligned Checkpoint 除了 State 对象外，还打包拉走了包含管道中处于排队、发送、未消费完的整个 Buffer 内存区内的 “在途飞行数据包”**。
-这些在途飞行数据包动辄几十兆到几百兆，且数量极度庞大和琐碎，这意味着每次保存快照向底层存储传输的数据容量与 SST 文件数大大攀升，直接带来磁盘和网络带宽的高强拉伸与写入吞吐挑战。
+... [0 lines omitted] ...
+这些在途飞行数据包动辄几十兆到几百兆，且数量极度庞大和琐碎，这意味着每次保存快照向底层存储传输的数据容量与 SST 文件数大大攀升，直接带来磁盘 and 网络带宽的高强拉伸与写入吞吐挑战。
+
+---
+
+## 四、 工业级 Java Flink 1.19+ 端到端流处理实战
+
+学习了反压和非对齐一致性快照的底层原理后，下面我们将结合最新的 Flink 1.19+ 架构体系与 Java 17+ 语法，编写一个端到端高吞吐、包含乱序延迟数据处理、Keyed State 状态管理的电商 GMV 增量统计实践案例。
+
+### 1. Flink 1.19+ 端到端实战经典案例
+
+```java
+package com.flink.practice.streaming;
+
+import org.apache.flink.api.common.eventtime.*;
+import org.apache.flink.api.common.functions.RichFlatMapFunction;
+import org.apache.flink.api.common.serialization.SimpleStringSchema;
+import org.apache.flink.api.common.state.ValueState;
+import org.apache.flink.api.common.state.ValueStateDescriptor;
+import org.apache.flink.api.common.typeinfo.Types;
+import org.apache.flink.configuration.Configuration;
+import org.apache.flink.connector.kafka.source.KafkaSource;
+import org.apache.flink.connector.kafka.source.enumerator.initializer.OffsetsInitializer;
+import org.apache.flink.streaming.api.datastream.DataStream;
+import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
+import org.apache.flink.streaming.api.functions.KeyedProcessFunction;
+import org.apache.flink.util.Collector;
+import org.apache.flink.util.OutputTag;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
+import java.io.Serializable;
+import java.time.Duration;
+
+public class ECommerceGmvApplication {
+
+    // 定义迟到过久数据的旁路输出 (Side Output Tag)
+    private static final OutputTag<OrderEvent> LATE_DATA_TAG = 
+            new OutputTag<>("late-orders", Types.POJO(OrderEvent.class));
+
+    public static void main(String[] args) throws Exception {
+        // 创建 Flink 1.19+ 运行时执行环境
+        final StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
+        
+        // 开启增量 Checkpoint (10 秒物理落盘一次)
+        env.getCheckpointConfig().setCheckpointInterval(10000);
+        
+        // 使用 Flink 1.19 现代化的声明式 KafkaSource
+        KafkaSource<String> kafkaSource = KafkaSource.<String>builder()
+                .setBootstrapServers("localhost:9092")
+                .setTopics("order-events")
+                .setGroupId("flink-gmv-group")
+                .setStartingOffsets(OffsetsInitializer.latest())
+                .setValueOnlyDeserializer(new SimpleStringSchema())
+                .build();
+
+        // 引入事件时间 (Event Time) 以及抵抗 3 秒延迟的乱序水位线策略 (Watermark)
+        DataStream<OrderEvent> orderStream = env.fromSource(
+                kafkaSource, 
+                WatermarkStrategy.<String>forBoundedOutOfOrderness(Duration.ofSeconds(3))
+                        .withTimestampAssigner((eventJson, timestamp) -> {
+                            try {
+                                return OrderEvent.fromJson(eventJson).getEventTime();
+                            } catch (Exception e) {
+                                return timestamp;
+                            }
+                        }),
+                "Kafka-Order-Source"
+        )
+        .flatMap(new OrderParserFlatMap())
+        .name("JSON-Parser");
+
+        // 按订单用户 keyBy 分组，进行秒级状态风控与滚动累加统计
+        DataStream<String> processedStream = orderStream
+                .keyBy(OrderEvent::getUserId)
+                .process(new UserGmvRiskProcessFunction())
+                .name("State-GMV-Analyzer");
+
+        processedStream.print("Calculated-Result");
+        processedStream.getSideOutput(LATE_DATA_TAG).printToErr("SideOutput-LateData");
+
+        env.execute("Flink-Java-Practice");
+    }
+
+    public static class OrderEvent implements Serializable {
+        private String orderId;
+        private String userId;
+        private double price;
+        private long eventTime;
+
+        public OrderEvent() {}
+
+        public OrderEvent(String orderId, String userId, double price, long eventTime) {
+            this.orderId = orderId;
+            this.userId = userId;
+            this.price = price;
+            this.eventTime = eventTime;
+        }
+
+        public String getOrderId() { return orderId; }
+        public String getUserId() { return userId; }
+        public double getPrice() { return price; }
+        public long getEventTime() { return eventTime; }
+
+        public static OrderEvent fromJson(String json) throws Exception {
+            return new ObjectMapper().readValue(json, OrderEvent.class);
+        }
+    }
+
+    public static class OrderParserFlatMap extends RichFlatMapFunction<String, OrderEvent> {
+        private transient ObjectMapper mapper;
+
+        @Override
+        public void open(Configuration parameters) {
+            this.mapper = new ObjectMapper();
+        }
+
+        @Override
+        public void flatMap(String value, Collector<OrderEvent> out) {
+            try {
+                OrderEvent event = mapper.readValue(value, OrderEvent.class);
+                if (event.getPrice() > 0 && event.getUserId() != null) {
+                    out.collect(event);
+                }
+            } catch (Exception ignored) {}
+        }
+    }
+
+    public static class UserGmvRiskProcessFunction extends KeyedProcessFunction<String, OrderEvent, String> {
+        private transient ValueState<Double> userGmvState;
+        private transient ValueState<Long> lastOrderTimeState;
+
+        @Override
+        public void open(Configuration parameters) {
+            userGmvState = getRuntimeContext().getState(
+                    new ValueStateDescriptor<>("user-gmv", Types.DOUBLE)
+            );
+            lastOrderTimeState = getRuntimeContext().getState(
+                    new ValueStateDescriptor<>("last-order-time", Types.LONG)
+            );
+        }
+
+        @Override
+        public void processElement(OrderEvent value, Context ctx, Collector<String> out) throws Exception {
+            Double currentGmv = userGmvState.value();
+            if (currentGmv == null) currentGmv = 0.0;
+
+            Long lastOrderTime = lastOrderTimeState.value();
+            long currentOrderTime = value.getEventTime();
+
+            // 1. 本地轻量级风控防盗刷：若 1 秒内连续重复下单，触发实时警报
+            if (lastOrderTime != null && (currentOrderTime - lastOrderTime) < 1000) {
+                out.collect("⚠️ 刷单警告 | 用户 [" + value.getUserId() + "] 触发高频下单!");
+            }
+
+            // 2. 状态增量合并与保存
+            double updatedGmv = currentGmv + value.getPrice();
+            userGmvState.update(updatedGmv);
+            lastOrderTimeState.update(currentOrderTime);
+
+            // 3. 正常输出聚合结果
+            out.collect("用户: " + value.getUserId() + " | 当前 GMV: " + updatedGmv);
+        }
+    }
+}
+```
+
+### 2. 实战中的技术细节原理
+
+- **KafkaSource 代替 FlinkKafkaConsumer**：
+  在 Flink 1.19+ 中，老旧的消费算子已被彻底切断移除。新版 API 支持**动态分区发现**与**流批一体统一提取接口（Unified Source API）**，无需任何硬编码重写便可在 `实时流` 与 `历史流重放` 间一键平滑对接切换。
+- **内存对齐的 Watermark 策略**：
+  在主代码中，`.forBoundedOutOfOrderness(Duration.ofSeconds(3))` 代表系统将允许网卡重发等乱序数据滞后 3 秒，若超出 3 秒的超迟到数据，则被自动分流、旁路捕获写出到 `LATE_DATA_TAG` 旁路侧输出槽中进行冷归档补偿操作，完美平衡了计算延迟与结果完整。
+
