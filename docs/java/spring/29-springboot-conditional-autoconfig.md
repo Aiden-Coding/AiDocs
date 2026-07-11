@@ -6,80 +6,221 @@ sidebar_label: 条件装配与自动配置
 
 ## Spring Boot 条件装配与自动配置深度内核
 
-Spring Boot 的核心魔力在于“约定优于配置”。理解 `@Conditional` 系列注解的判断逻辑以及 `AutoConfigurationImportSelector` 的工作流程，是掌握 Spring Boot 定制化开发的基石。
+Spring Boot “约定优于配置”的工程实现 = **候选自动配置类列表** + **`@Conditional` 过滤** + **`@Configuration` 注册 Bean**。本篇把条件体系、导入选择器、Starter 结构与排障一次讲清。
+
+相关：[Boot 启动](10-springboot-core.md)、[扩展机制](12-springboot-extension.md)、[SPI 扩展点](20-extension-points-spi.md)。
 
 ---
 
-## 一、 条件装配：@Conditional 体系
+## 一、@Conditional 体系
 
-Spring 4 引入了 `@Conditional` 注解，而 Spring Boot 在此基础上构建了庞大的条件判断家族。
+### 1. 常用注解
 
-### 1. 常用条件注解分类
+| 注解 | 生效条件 |
+| :--- | :--- |
+| `@ConditionalOnClass` | 类路径存在指定类 |
+| `@ConditionalOnMissingClass` | 类路径不存在 |
+| `@ConditionalOnBean` | 容器中已有指定 Bean |
+| `@ConditionalOnMissingBean` | 容器中尚无指定 Bean |
+| `@ConditionalOnProperty` | 配置属性存在/等于某值 |
+| `@ConditionalOnWebApplication` | Servlet/Reactive Web 环境 |
+| `@ConditionalOnExpression` | SpEL 为 true |
+| `@ConditionalOnResource` | 类路径资源存在 |
+| `@ConditionalOnSingleCandidate` | 指定类型仅有一个候选 Bean |
 
-$$
-\begin{array}{|l|l|}
-\hline
-\textbf{注解} & \textbf{生效条件} \\
-\hline
-\text{@ConditionalOnClass} & \text{类路径下存在指定的 Class} \\
-\hline
-\text{@ConditionalOnMissingBean} & \text{容器中不存在指定的 Bean} \\
-\hline
-\text{@ConditionalOnProperty} & \text{配置文件中存在指定的属性且符合特定值} \\
-\hline
-\text{@ConditionalOnWebApplication} & \text{当前环境是 Web 环境 (Servlet/Reactive)} \\
-\hline
-\end{array}
-$$
-
-### 2. 底层判断原理：ConditionOutcome
-
-条件判断的核心接口是 `Condition`。Spring Boot 内部通过 `OnBeanCondition`、`OnClassCondition` 等类实现。
+### 2. 判定流程
 
 ```mermaid
-graph TD
-    A[扫描到 @Configuration 类] --> B[查找类上的 @Conditional 注解]
-    B --> C[调用 Condition.matches 方法]
-    C --> D{结果为 true?}
-    D -- 是 --> E[解析并注册 BeanDefinition]
-    D -- 否 --> F[跳过该配置类]
+flowchart TD
+    A[解析 Configuration 类] --> B[收集 @Conditional]
+    B --> C[Condition.matches]
+    C --> D{全部通过?}
+    D -->|是| E[注册 BeanDefinition]
+    D -->|否| F[跳过 / 记录 ConditionOutcome]
+```
+
+实现接口：
+
+```java
+public interface Condition {
+    boolean matches(ConditionContext context, AnnotatedTypeMetadata metadata);
+}
+```
+
+`ConditionOutcome` 带 match 原因字符串，**`--debug`** 或 `ConditionEvaluationReport` 可打印为何某自动配置没生效——排障神器。
+
+### 3. 阶段差异：ConfigurationPhase
+
+- **PARSE_CONFIGURATION**：解析配置类时就判断（如 `@ConditionalOnClass`，避免类不存在导致解析失败）。
+- **REGISTER_BEAN**：注册 Bean 时再判断（如 `@ConditionalOnBean`，此时别的 BD 已可见）。
+
+`@ConditionalOnBean` 写在类上时要小心顺序；更稳妥常放在 `@Bean` 方法上。
+
+---
+
+## 二、自动配置入口
+
+```text
+@SpringBootApplication
+  └─ @EnableAutoConfiguration
+       └─ @Import(AutoConfigurationImportSelector)
+```
+
+### 1. 收集候选类
+
+| Boot 版本 | 清单位置 |
+| :--- | :--- |
+| 2.x | `META-INF/spring.factories` → `EnableAutoConfiguration` |
+| 3.x | `META-INF/spring/org.springframework.boot.autoconfigure.AutoConfiguration.imports` |
+
+每行一个全限定类名；多个 Starter 的列表会合并去重。
+
+### 2. 过滤
+
+1. 用户 `exclude` / `excludeName`
+2. ` Autoconfiguration.imports` 中的过滤 SPI
+3. 各配置类上的 `@Conditional*`
+4. 最终剩余类当作配置类导入容器
+
+### 3. 排序
+
+`@AutoConfigureBefore` / `@AutoConfigureAfter` / `@AutoConfigureOrder` 保证例如：
+
+```text
+DataSourceAutoConfiguration
+  → before → Mybatis 自动配置
+  → before → 业务 Repository
 ```
 
 ---
 
-## 二、 自动配置的核心流程
+## 三、典型自动配置类解剖
 
-自动配置的入口是 `@SpringBootApplication` 注解中的 `@EnableAutoConfiguration`。
+```java
+@AutoConfiguration
+@ConditionalOnClass(RedisOperations.class)
+@EnableConfigurationProperties(RedisProperties.class)
+@ConditionalOnProperty(name = "spring.data.redis.host")
+public class RedisAutoConfiguration {
 
-### 1. 核心组件：AutoConfigurationImportSelector
+    @Bean
+    @ConditionalOnMissingBean(name = "redisTemplate")
+    public RedisTemplate<?, ?> redisTemplate(RedisConnectionFactory factory) {
+        RedisTemplate<?, ?> template = new RedisTemplate<>();
+        template.setConnectionFactory(factory);
+        return template;
+    }
+}
+```
 
-该类实现了 `ImportSelector` 接口，负责收集并筛选出所有需要自动配置的类。
+设计套路：
 
-1.  **收集阶段**：读取所有 Jar 包下的 `META-INF/spring.factories`（或 Spring Boot 3+ 的 `META-INF/spring/org.springframework.boot.autoconfigure.AutoConfiguration.imports`）。
-2.  **筛选阶段**：根据 `@Conditional` 注解进行过滤。例如，如果你没有引入 `spring-boot-starter-data-redis`，那么 Redis 的自动配置类就会因为 `@ConditionalOnClass(RedisOperations.class)` 失败而被过滤掉。
-
-### 2. 自动配置的执行顺序
-
-自动配置类通常使用 `@AutoConfigureBefore` 或 `@AutoConfigureAfter` 来控制顺序，确保基础组件（如 `DataSource`）先于高级组件（如 `JdbcTemplate`）初始化。
-
----
-
-## 三、 自定义 Starter 的标准结构
-
-理解了自动配置，我们就具备了编写 Starter 的能力。一个标准的 Starter 通常包含两部分：
-
-1.  **`xxx-spring-boot-autoconfigure` 模块**：
-    - 包含 `@Configuration` 自动配置类。
-    - 包含属性映射类（`@ConfigurationProperties`）。
-    - 包含 `spring.factories` 配置文件。
-2.  **`xxx-spring-boot-starter` 模块**：
-    - 这是一个空项目，仅负责引入 `autoconfigure` 模块和必要的第三方依赖，提供给用户“一站式”引入的体验。
+1. **类路径门闩** `@ConditionalOnClass`：没引依赖就不加载。
+2. **属性绑定** `@EnableConfigurationProperties`。
+3. **可覆盖** `@ConditionalOnMissingBean`：用户自定义同类型 Bean 则跳过默认。
+4. **开关** `@ConditionalOnProperty`。
 
 ---
 
-## 四、 总结
+## 四、自定义 Starter 标准结构
 
-自动配置并非黑魔法，而是：
-**`spring.factories` 资源加载** + **`@Conditional` 条件筛选** + **`@Configuration` Bean 注册**。
+```text
+my-spring-boot-starter          // 空壳，只管依赖聚合
+  └─ pom 依赖 my-autoconfigure + 第三方库
 
-掌握了这一内核，你就能轻松应对微服务架构中各种组件的按需加载与定制化扩展。
+my-spring-boot-autoconfigure
+  ├─ com.example.MyAutoConfiguration
+  ├─ com.example.MyProperties
+  └─ META-INF/spring/org.springframework.boot.autoconfigure.AutoConfiguration.imports
+```
+
+`AutoConfiguration.imports`：
+
+```text
+com.example.MyAutoConfiguration
+```
+
+`MyProperties`：
+
+```java
+@ConfigurationProperties(prefix = "my.feature")
+public class MyProperties {
+    private boolean enabled = true;
+    private int timeoutMs = 3000;
+    // getters/setters
+}
+```
+
+用户侧：
+
+```yaml
+my:
+  feature:
+    enabled: true
+    timeout-ms: 5000
+```
+
+```xml
+<dependency>
+  <groupId>com.example</groupId>
+  <artifactId>my-spring-boot-starter</artifactId>
+</dependency>
+```
+
+---
+
+## 五、用户覆盖自动配置的正确姿势
+
+| 目标 | 做法 |
+| :--- | :--- |
+| 换实现 | 自己 `@Bean` + 类型与默认相同，靠 `OnMissingBean` |
+| 关掉某自动配置 | `@SpringBootApplication(exclude=...)` 或 `spring.autoconfigure.exclude` |
+| 改属性 | `application.yml` 绑定 `*Properties` |
+| 全部自己管 | exclude 后手写 `@Configuration` |
+
+避免：复制粘贴一整份官方 AutoConfiguration 再改三行——升级 Boot 即崩。
+
+---
+
+## 六、排障清单
+
+1. **Bean 没有？**  
+   - 开 `debug=true` 看 `Negative matches`。  
+   - 是否缺依赖导致 `OnClass` 失败。  
+   - 是否被 `OnProperty` 关掉。  
+   - 是否已有同名 Bean 导致 `OnMissingBean` 失败。
+
+2. **Bean 重复？**  
+   - 自己 `@Bean` 与自动配置都生效 → 给自动配置加 `OnMissingBean` 或 exclude。
+
+3. **顺序错误？**  
+   - 使用 `@AutoConfigureAfter`；或 `@DependsOn`；或 `@Order` 于 BPP。
+
+4. **Boot3 清单写错位置？**  
+   - 仍写 `spring.factories` 的 `EnableAutoConfiguration` 可能不加载。
+
+5. **多模块组件扫描不到？**  
+   - 自动配置类通常不靠组件扫描，靠 imports 列表；业务 `@Component` 才靠 `@SpringBootApplication` 扫描包。
+
+---
+
+## 七、与 Spring 原生 SPI 的关系
+
+| 机制 | 用途 |
+| :--- | :--- |
+| `SpringFactoriesLoader` / imports 文件 | 发现自动配置、监听器、失败分析器 |
+| `ApplicationContextInitializer` | 上下文刷新前改造 |
+| `EnvironmentPostProcessor` | 最早改 Environment |
+| `BeanFactoryPostProcessor` | 改 BeanDefinition |
+
+Starter 作者常组合：`EnvironmentPostProcessor` 加默认配置 + `AutoConfiguration` 建 Bean。
+
+---
+
+## 八、总结
+
+- 条件装配决定“何时创建”；自动配置决定“默认创建什么”。
+- 心智模型：**清单加载 → 条件过滤 → 有序注册 → 用户可覆盖**。
+- 会写 Starter = 会写带 `@Conditional` 的 `@AutoConfiguration` + 属性类 + imports 登记。
+
+更完整的 Boot 扩展与 FatJar 见 [扩展机制](12-springboot-extension.md)、[FatJar](13-springboot-fatjar.md)。

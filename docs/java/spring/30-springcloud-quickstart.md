@@ -1,4 +1,4 @@
-﻿---
+---
 title: Spring Cloud 微服务起步：架构演进与全家桶协同实战
 hide_title: true
 sidebar_label: 微服务快速入门
@@ -6,45 +6,78 @@ sidebar_label: 微服务快速入门
 
 ## Spring Cloud 微服务起步：架构演进与全家桶协同实战
 
-微服务架构并非银弹，但它是应对企业级复杂业务、实现弹性伸缩的必然之路。对于初学者而言，Spring Cloud 提供了一套标准化的“全家桶”方案，让我们能够以插件化的方式集成分布式系统的核心功能。
+Spring Cloud 是分布式能力的**集成标准库**：用 Spring Boot 自动装配，把注册发现、配置、网关、调用、治理、事务等组件收成可插拔 Starter。本篇给最小闭环与组件地图，细节链到各专章。
 
 ---
 
-## 一、 为什么是 Spring Cloud？从单体到分布式
+## 一、从单体到微服务
 
-在演进到微服务之前，我们必须理解为什么要付出“网络开销”的代价：
+| 单体痛点 | 微服务收益 | 新成本 |
+| :--- | :--- | :--- |
+| 编译部署慢 | 独立发布 | 分布式复杂度 |
+| 无法按模块扩容 | 按服务弹性伸缩 | 运维与观测 |
+| 技术栈锁死 | 多语言/多版本并存 | 接口兼容 |
+| 局部故障易拖垮整包 | 隔离故障域 | 需要治理与降级 |
 
-1.  **单体瓶颈**：牵一发而动全身，编译慢、部署难，无法针对不同任务进行垂直扩容。
-2.  **微服务演进**：将应用拆分为一组小型服务。每个服务运行在自己的进程中，通过轻量级机制（通常是 HTTP/JSON）通信。
-
-Spring Cloud 的地位：**它是分布式系统的“集成化标准库”**。它并不重复造轮子，而是通过 `SpringBoot` 的自动装配机制，将 Netflix、阿里、HashiCorp 等优秀的分布式组件封装成易用的 Starter。
+Spring Cloud 不消灭 CAP 与分布式事务难题，只降低**集成成本**。
 
 ---
 
-## 二、 核心组件选型：Spring Cloud Alibaba 成为主流
+## 二、组件选型地图（Netflix → Alibaba）
 
-随着 Netflix 家族组件的停更，**Spring Cloud Alibaba** 已成为国内事实上的首选方案，其核心对应关系如下：
-
-| 功能维度 | Spring Cloud Netflix (旧) | Spring Cloud Alibaba (新) | 说明 |
+| 能力 | 旧 Netflix 系 | 主流（国内） | 专章 |
 | :--- | :--- | :--- | :--- |
-| **注册中心** | Eureka | **Nacos** | Nacos 支持 CP/AP 切换，功能更全 |
-| **配置中心** | Spring Cloud Config | **Nacos** | Nacos 实现配置的动态感知，无需刷新 |
-| **服务调用** | Ribbon / Feign | **OpenFeign** | Feign 已整合 LoadBalancer |
-| **流量治理** | Hystrix | **Sentinel** | Sentinel 流量控制维度更丰富 |
-| **分布式事务** | 无 (需要 LCN/TCC) | **Seata** | 解决微服务数据一致性的核心利器 |
-| **网关** | Zuul | **Spring Cloud Gateway** | 基于 WebFlux，性能更强 |
+| 注册/配置 | Eureka / Config | **Nacos** | [Nacos](23-nacos-config-advanced.md) |
+| 服务调用 | Ribbon + Feign | **OpenFeign + LoadBalancer** | [远程调用](22-mvc-remote-call.md) |
+| 网关 | Zuul | **Spring Cloud Gateway** | [Gateway](21-gateway-advanced.md) |
+| 流控熔断 | Hystrix | **Sentinel** | [Sentinel](27-sentinel-governance.md) |
+| 分布式事务 | — | **Seata** | [Seata](25-seata-distributed-transaction.md) |
+| RPC（可选） | — | **Dubbo** | [Dubbo](19-dubbo-rpc-kernel.md) |
+| 安全 | Spring Security | Security + JWT/OAuth2 | [Security](28-spring-security-architecture.md) |
+
+版本对齐：`Spring Boot` ↔ `Spring Cloud` ↔ `Spring Cloud Alibaba` 必须查官方 BOM，禁止随意拼版本。
 
 ---
 
-## 三、 实战：构建第一个微服务链路
+## 三、最小闭环：注册 → 发现 → 调用
 
-一个典型的微服务闭环包含：**服务注册** -> **服务发现** -> **负载均衡调用**。
+```mermaid
+flowchart LR
+    GW[Gateway] --> Order[order-service]
+    Order -->|Feign| Product[product-service]
+    Order --> Nacos[(Nacos)]
+    Product --> Nacos
+    GW --> Nacos
+```
 
-### 1. 服务提供者：注册到 Nacos
+### 1. 公共 BOM（示意）
 
-在 `pom.xml` 引入 `spring-cloud-starter-alibaba-nacos-discovery` 后，只需一个配置：
+```xml
+<dependencyManagement>
+  <dependencies>
+    <dependency>
+      <groupId>org.springframework.cloud</groupId>
+      <artifactId>spring-cloud-dependencies</artifactId>
+      <version>${spring-cloud.version}</version>
+      <type>pom</type>
+      <scope>import</scope>
+    </dependency>
+    <dependency>
+      <groupId>com.alibaba.cloud</groupId>
+      <artifactId>spring-cloud-alibaba-dependencies</artifactId>
+      <version>${sca.version}</version>
+      <type>pom</type>
+      <scope>import</scope>
+    </dependency>
+  </dependencies>
+</dependencyManagement>
+```
+
+### 2. 服务提供者 product-service
 
 ```yaml
+server:
+  port: 8081
 spring:
   application:
     name: product-service
@@ -54,61 +87,137 @@ spring:
         server-addr: 127.0.0.1:8848
 ```
 
-### 2. 服务消费者：通过 OpenFeign 透明化调用
-
-使用 `OpenFeign` 时，我们只需定义一个接口，Spring Cloud 会自动生成代理类并集成负载均衡。
-
 ```java
-@FeignClient(value = "product-service") // 对应 Nacos 中的服务名
-public interface ProductClient {
-    @GetMapping("/products/{id}")
-    ProductDTO getProduct(@PathVariable("id") Long id);
-}
-
-@Service
-public class OrderService {
-    @Autowired
-    private ProductClient productClient;
-
-    public void createOrder(Long productId) {
-        // 像调用本地方法一样调用远程服务
-        ProductDTO product = productClient.getProduct(productId);
-        // ...执行下单逻辑
+@RestController
+@RequestMapping("/products")
+public class ProductController {
+    @GetMapping("/{id}")
+    public Product get(@PathVariable Long id) {
+        return new Product(id, "demo", 9.9);
     }
 }
 ```
 
----
+### 3. 服务消费者 order-service
 
-## 四、 微服务链路交互模型
+```yaml
+spring:
+  application:
+    name: order-service
+  cloud:
+    nacos:
+      discovery:
+        server-addr: 127.0.0.1:8848
+```
 
-```mermaid
-graph LR
-    subgraph ServiceRegistry[Nacos 注册中心]
-        Register[服务注册/健康检查]
-    end
+```java
+@EnableFeignClients
+@SpringBootApplication
+public class OrderApp {
+    public static void main(String[] args) {
+        SpringApplication.run(OrderApp.class, args);
+    }
+}
 
-    subgraph Cluster[微服务集群]
-        direction TB
-        P1[Provider: Product-1]
-        P2[Provider: Product-2]
-    end
+@FeignClient("product-service")
+public interface ProductClient {
+    @GetMapping("/products/{id}")
+    Product get(@PathVariable("id") Long id);
+}
+```
 
-    Consumer[Consumer: Order Service] -->|1. 获取实例列表| Register
-    Consumer -->|2. Ribbon/LoadBalancer 负载均衡| P1
-    Consumer -->|3. OpenFeign RPC 调用| P2
+调用方无需写死 IP；LoadBalancer 从 Nacos 取实例列表并轮询/随机选择。
 
-    Gateway[Spring Cloud Gateway] -->|4. 统一流量入口| Consumer
+### 4. 网关入口（可选但推荐）
+
+```yaml
+spring:
+  application:
+    name: api-gateway
+  cloud:
+    nacos:
+      discovery:
+        server-addr: 127.0.0.1:8848
+    gateway:
+      routes:
+        - id: order
+          uri: lb://order-service
+          predicates:
+            - Path=/order/**
+          filters:
+            - StripPrefix=1
 ```
 
 ---
 
-## 五、 后续进阶建议
+## 四、推荐落地顺序
 
-入门只是第一步。在微服务化后，您将面临更深层次的挑战，我们将在后续章节持续拆解：
+```text
+1. 单服务 Boot 可运行
+2. Nacos 注册发现
+3. OpenFeign 调用
+4. Gateway 统一入口
+5. 配置外置到 Nacos
+6. Sentinel 流控熔断
+7. 日志追踪 (Micrometer Tracing)
+8. 按需 Seata / 消息最终一致
+```
 
-- **配置管理**：如何实现生产环境配置的“秒级”生效？参考 [Nacos 高级配置管理与多环境隔离](./23-nacos-config-advanced.md)。
-- **流量防卫**：如何防止一个服务的崩溃拖垮整个系统？参考 [Sentinel 深度实践：从限流到热点参数排队](./27-sentinel-governance.md)。
-- **数据一致性**：分布式事务怎么搞？参考 [Seata AT 模型原理与实战](./25-seata-distributed-transaction.md)。
+不要第一天就上分布式事务与网格；先观测与治理。
 
-> 更多底层原理请参考：[Spring Boot 自动装配与微服务组件原理](./15-springboot-springcloud.md)
+---
+
+## 五、环境与配置隔离
+
+| 层级 | 建议 |
+| :--- | :--- |
+| Namespace | dev/test/prod 物理隔离 |
+| 配置 | Nacos DataId 带 profile |
+| 密钥 | 密文或 KMS，不进 Git |
+| 依赖版本 | 父 POM + BOM 统一 |
+
+详见 [Nacos 配置](23-nacos-config-advanced.md)。
+
+---
+
+## 六、可观测性底线
+
+1. **日志**：JSON + `traceId` 透传（网关生成，Feign/RestTemplate 传递）。
+2. **指标**：QPS、RT、错误率、线程池、Sentinel block 数。
+3. **追踪**：Micrometer Tracing / OpenTelemetry。
+4. **健康检查**：`/actuator/health` 与 Nacos 心跳一致。
+
+没有观测的微服务 = 分布式单体黑盒。
+
+---
+
+## 七、常见新手坑
+
+| 坑 | 处理 |
+| :--- | :--- |
+| 版本不兼容 | 用官方兼容表 BOM |
+| Feign 404 | 路径/context-path/StripPrefix |
+| 调到下线实例 | 检查心跳与 LoadBalancer 健康 |
+| 本地能调、集群不行 | Namespace、分组、防火墙 |
+| 配置不刷新 | `@RefreshScope` / 导入方式 |
+| 循环依赖服务 | 领域拆分，忌服务网状互调 |
+
+---
+
+## 八、何时不用 Spring Cloud
+
+- 团队小、业务简单：模块化单体 + 清晰边界更合适。
+- 极致 RPC 性能：可 [Dubbo](19-dubbo-rpc-kernel.md) / gRPC，与 Cloud 可并存。
+- 已上 Service Mesh：部分流量治理可下沉网格，应用侧变薄。
+
+---
+
+## 九、总结
+
+- Spring Cloud = Boot 风格的分布式组件集成。
+- 最小闭环：Nacos + Feign + Gateway。
+- 进阶：配置动态化、Sentinel、追踪、按需 Seata。
+
+专章路径：
+
+- [Gateway](21-gateway-advanced.md) · [Nacos](23-nacos-config-advanced.md) · [Sentinel](27-sentinel-governance.md) · [Seata](25-seata-distributed-transaction.md) · [Security](28-spring-security-architecture.md)

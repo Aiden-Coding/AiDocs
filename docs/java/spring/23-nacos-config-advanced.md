@@ -1,4 +1,4 @@
-﻿---
+---
 title: Nacos 动态配置管理与多租户隔离实践
 hide_title: true
 sidebar_label: Nacos 配置中心
@@ -6,95 +6,233 @@ sidebar_label: Nacos 配置中心
 
 ## Nacos 动态配置管理与多租户隔离实践
 
-在分布式系统中，**配置中心**是服务的“中枢神经”。Nacos 不仅是注册中心，更是业界领先的配置中心，它彻底解决了传统应用中修改配置需重启、配置文件散落在各服务中的痛点。
+Nacos 同时承担**注册中心**与**配置中心**。配置侧解决：集中管理、环境隔离、动态推送、共享配置与灰度。本篇聚焦配置模型、长轮询、Spring Cloud 集成与生产安全。
+
+相关：[微服务起步](30-springcloud-quickstart.md)、[Sentinel 规则持久化](27-sentinel-governance.md)、[Boot 配置环境](11-springboot-internals.md)。
 
 ---
 
-## 一、 Nacos 配置管理的核心概念
-
-理解 Nacos 的配置结构，需要掌握 **DataId**、**Group** 和 **Namespace**（三层结构）：
-
-- **DataId**：具体的配置文件名，通常建议采用 `${prefix}-${spring.profiles.active}.${file-extension}` 格式。
-- **Group**：分组。用于区分不同的业务模块（如 `DEFAULT_GROUP`, `ORDER_PAY`）。
-- **Namespace**：命名空间（逻辑隔离）。最高级别的隔离，通常用于区分 **环境**（如 `dev`, `test`, `prod`）。
+## 一、三层模型：Namespace / Group / DataId
 
 ```mermaid
-graph TD
-    NS[Namespace: 环境隔离] --> G1[Group: 业务分组]
+flowchart TD
+    NS[Namespace 环境/租户隔离]
+    NS --> G1[Group 业务线]
     NS --> G2[Group]
-    G1 --> D1[DataId: 核心配置]
-    G1 --> D2[DataId]
+    G1 --> D1[DataId 应用配置]
+    G1 --> D2[DataId 共享配置]
 ```
 
+| 概念 | 建议用法 |
+| :--- | :--- |
+| **Namespace** | `dev` / `test` / `prod`，或 SaaS 租户级隔离 |
+| **Group** | 业务域：`ORDER_GROUP`、`DEFAULT_GROUP` |
+| **DataId** | 文件名：`order-service-prod.yaml` |
+
+DataId 推荐：
+
+```text
+${spring.application.name}-${spring.profiles.active}.${file-extension}
+例：order-service-prod.yaml
+```
+
+**多租户**：
+
+- 强隔离：每租户独立 Namespace（权限与审计最好做）。
+- 弱隔离：同 Namespace + Group/DataId 前缀区分（注意 ACL）。
+
 ---
 
-## 二、 动态感知的底层原理
+## 二、动态感知：长轮询原理
 
-Nacos 是如何实现“不重启应用即生效”的？这得益于其高效的 **长轮询 (Long Polling)** 机制：
+```mermaid
+sequenceDiagram
+    participant App as 应用客户端
+    participant S as Nacos Server
 
-1. **客户端发起请求**：客户端通过 HTTP 请求 Nacos Server，带上当前配置的 MD5 摘要。
-2. **服务端挂起**：Server 获取请求后，发现没有变更，不会立即返回（通常挂起 20~30s）。
-3. **数据变更推送**：
-   - 如果此时管理员修改了配置，Server 会立即写回响应。
-   - 如果超时（30s）仍无变更，Server 返回“无变更”。
-4. **客户端感知并更新**：一旦感知到 MD5 不一致，客户端会重新拉取最新配置，并通过 Spring 的 `RefreshScope` 重新加载 Bean。
+    App->>S: 长轮询 (携带 dataId + md5)
+    alt 配置变更
+        S-->>App: 立即返回变更列表
+        App->>S: 拉取最新配置
+        App->>App: 更新内存 + 触发 Spring 刷新
+    else 无变更
+        S-->>App: 挂起约 30s 后返回空
+        App->>S: 再次长轮询
+    end
+```
+
+要点：
+
+1. 客户端带 **MD5**，服务端比较内容是否变化。
+2. 无变化时连接挂起（长轮询），不是疯狂短轮询。
+3. 变更时服务端打断挂起，客户端拉全量/增量后回调 Listener。
+4. Nacos 2.x 另有 gRPC 双向流优化，语义仍是“订阅 + 推送”。
+
+与 ZK 对比：Nacos 配置对运维更友好（控制台、命名空间）；强一致场景可开 CP 相关模式（版本能力以官方文档为准）。
 
 ---
 
-## 三、 实战：多环境配置隔离 (Namespace)
+## 三、Spring Cloud 集成
 
-在生产环境中，严禁逻辑代码与环境配置混淆。
+### 1. 引导配置
 
-### 1. 配置文件定义
+Boot 2.4+ 可用 `spring.config.import`，不必强依赖 bootstrap：
 
-在微服务中，我们需要使用 `bootstrap.yml`（或 `bootstrap.properties`）来加载 Nacos 配置，因为 Nacos 的加载优先级必须高于 `application.yml`。
+```yaml
+spring:
+  application:
+    name: order-service
+  profiles:
+    active: prod
+  config:
+    import: optional:nacos:order-service-prod.yaml
+  cloud:
+    nacos:
+      config:
+        server-addr: 127.0.0.1:8848
+        namespace: prod-namespace-id
+        group: DEFAULT_GROUP
+        file-extension: yaml
+        refresh-enabled: true
+      discovery:
+        server-addr: 127.0.0.1:8848
+        namespace: prod-namespace-id
+```
+
+旧项目 `bootstrap.yml` 仍常见：保证 Nacos 配置在应用上下文刷新前加载。
+
+### 2. `@RefreshScope` 与 `@ConfigurationProperties`
+
+```java
+@RestController
+@RefreshScope
+public class TimeoutController {
+
+    @Value("${user.order.timeout:10}")
+    private int orderTimeout;
+
+    @GetMapping("/timeout")
+    public int timeout() {
+        return orderTimeout;
+    }
+}
+```
+
+| 绑定方式 | 动态刷新 |
+| :--- | :--- |
+| `@Value` + `@RefreshScope` | 刷新时重建 Bean |
+| `@ConfigurationProperties` + `@RefreshScope` | 同上 |
+| 监听 `EnvironmentChangeEvent` / `NacosConfigListener` | 精细控制 |
+
+注意：`@RefreshScope` 代理 Bean 有序列化与原型行为差异；数据库连接池等重资源**不要**整 Bean Refresh，应只刷新业务开关。
+
+### 3. 共享配置与扩展配置
 
 ```yaml
 spring:
   cloud:
     nacos:
       config:
-        server-addr: 127.0.0.1:8848
-        file-extension: yaml
-        namespace: 35a8-xxx-xxx # 填写 Nacos 后台生成的 Namespace ID
-        group: DEFAULT_GROUP
+        shared-configs:
+          - data-id: common-redis.yaml
+            group: COMMON_GROUP
+            refresh: true
+        extension-configs:
+          - data-id: order-ext.yaml
+            group: ORDER_GROUP
+            refresh: true
 ```
 
-### 2. 局部刷新：`@RefreshScope`
+**优先级（高 → 低，常见规则）**：
 
-在需要动态刷新的 Bean（如 Controller 或 Service）上添加该注解，否则即便 Nacos 值变了，Spring 容器里的 Bean 属性仍是旧值。
+1. 精确 profile DataId（`app-prod.yaml`）
+2. 应用默认 DataId（`app.yaml`）
+3. `extension-configs`（列表中后者覆盖前者，以版本为准）
+4. `shared-configs`
+5. 本地 `application.yml`
+
+冲突时以高优先级为准；排查用 `/actuator/env` 看最终 property source。
+
+---
+
+## 四、配置变更与灰度
+
+1. **Beta 发布**：Nacos 控制台可对部分 IP 灰度推送，验证后再全量。
+2. **历史版本**：保留变更历史，支持一键回滚。
+3. **监听回调**：业务可注册 Listener，做缓存失效、线程池参数热更新。
 
 ```java
-@RestController
-@RefreshScope // 关键：允许动态刷新配置
-public class TestController {
-
-    @Value("${user.order.timeout:10}") // 默认值 10
-    private int orderTimeout;
-
-    @GetMapping("/config")
-    public String getConfig() {
-        return "当前订单超时时间: " + orderTimeout;
-    }
+@NacosConfigListener(dataId = "order-service-prod.yaml", timeout = 5000)
+public void onChange(String newContent) {
+    // 解析 yaml 后更新本地开关
 }
 ```
 
----
-
-## 四、 共享配置与冲突优先级
-
-当一个微服务需要引入多个配置（如 `common.yml` 和 `order.yml`）时，优先级如下：
-
-1. **`${prefix}-${spring.profiles.active}.${file-extension}`** (精确匹配) - **最高**
-2. **`${prefix}.${file-extension}`**
-3. **`extension-configs` / `shared-configs`** - 优先级随 index 增加而递增。
+（具体注解/API 随 `nacos-spring` 与 `spring-cloud-alibaba` 版本略有差异，以项目依赖为准。）
 
 ---
 
-## 五、 企业级安全建议
+## 五、注册中心侧（简要联动）
 
-1. **配置加解密**：Nacos 2.x 支持敏感配置（如数据库密码）的插件化加密。
-2. **读写分离与高可用**：在生产环境，Nacos 应部署为 3 节点以上的集群，并使用外部 MySQL 存储元数据。
-3. **隔离策略**：严禁在生产 Namespace 进行任何手动调试，应通过 Nacos 的“配置克隆”功能进行变更，并开启配置变更审计。
+同一 Nacos 上配置与发现建议 **Namespace 对齐**，避免 dev 服务注册到 prod。
 
-> 进阶探讨：当流量激增时，如何利用 Nacos 配合 Sentinel 实现快速扩容与限流？请参考 [Sentinel 高级流量治理](./27-sentinel-governance.md)。
+健康检查：临时实例心跳 vs 永久实例；网关与 Feign 只调健康实例。
+
+临时实例下线快，适合无状态微服务；有状态或需人工上下线场景再评估。
+
+---
+
+## 六、高可用与存储
+
+```mermaid
+flowchart LR
+    C1[Nacos] --> VIP[VIP/SLB]
+    C2[Nacos] --> VIP
+    C3[Nacos] --> VIP
+    C1 --> DB[(MySQL 元数据)]
+    C2 --> DB
+    C3 --> DB
+    App[应用] --> VIP
+```
+
+生产建议：
+
+1. **≥3 节点** 集群；客户端地址写域名/SLB。
+2. 元数据外置 **MySQL**（多数据源主备按官方方案）。
+3. 监控：推送延迟、长轮询连接数、磁盘与 DB 连接。
+4. 网络分区时理解 AP 倾向：配置短暂不一致窗口 vs 可用性。
+
+---
+
+## 七、安全与合规
+
+| 项 | 做法 |
+| :--- | :--- |
+| 鉴权 | 开 Nacos Auth；生产禁空密码 |
+| 敏感配置 | 密文 + 解密插件 / 对接 KMS |
+| 权限 | 按 Namespace 做 RBAC，开发无 prod 写权限 |
+| 审计 | 变更人、变更内容、回滚记录 |
+| 传输 | 内网 TLS 或专线；公网慎暴露 8848 |
+| 禁止 | 把 prod 密码提交到 Git |
+
+数据库密码、三方密钥不要明文落 DataId；可用 Jasypt/Nacos 加密插件，启动时解密。
+
+---
+
+## 八、常见故障
+
+1. **改了配置不生效**：缺 `@RefreshScope`；或改了 DataSource 类重资源未重建。
+2. **连错环境**：Namespace ID 填成名称；发现与配置 Namespace 不一致。
+3. **本地覆盖远程**：`spring.config.import` 顺序与 `optional:` 行为理解错误。
+4. **推送风暴**：超大配置频繁改 → 拆分 DataId，减少刷新面。
+5. **客户端狂打日志**：长轮询超时属正常，调日志级别避免噪音。
+
+---
+
+## 九、总结
+
+- 模型：`Namespace` 隔离环境，`Group` 分业务，`DataId` 定文件。
+- 动态：长轮询/gRPC 订阅 + MD5 比较 + Spring 刷新。
+- 生产：集群 + MySQL + 鉴权加密 + 灰度回滚 + 监控。
+
+规则持久化场景可把 [Sentinel 规则](27-sentinel-governance.md) 也放进 Nacos，实现“配置中心驱动流量治理”。
