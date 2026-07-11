@@ -75,13 +75,15 @@ group_replication_member_weight=50
 ```
 
 **初始化 Primary 节点（仅第一次执行）**：
+
 ```sql
 SET GLOBAL group_replication_bootstrap_group=ON;
 START GROUP_REPLICATION;
 SET GLOBAL group_replication_bootstrap_group=OFF;
 ```
 
-** Secondary 节点加入**：
+**Secondary 节点加入**：
+
 ```sql
 CHANGE MASTER TO
   MASTER_USER='repl',
@@ -203,17 +205,21 @@ ProxySQL 自动监控 Master/Slave 状态，当 Master 宕机，将 Slave 提升
 ## 四、 高可用架构演进路线图
 
 ### 1. 初期阶段（1~2 年，< 1000 QPS）
+
 - **方案**：主从复制 + MHA（Master High Availability）
 - **缺点**：MHA 依赖 SSH 切换，故障转移时间 ~30 秒。
 
 ### 2. 中期阶段（2~5 年，1000~10000 QPS）
+
 - **方案**：MGR 单主模式 + 自研连接池（如 ShardingSphere-Proxy）
 - **优势**：秒级 failover，强一致性。
 
 ### 3. 高级阶段（5 年+，> 10000 QPS）
+
 - **方案**：InnoDB Cluster + ProxySQL + 分库分表
 - **架构分层**：
-  ```
+
+  ```text
   Client -> [ProxySQL: 读写分离/缓存] -> [InnoDB Cluster: 3 节点 MGR]
                                      -> [Sharding-Table: 16 库 64 表]
   ```
