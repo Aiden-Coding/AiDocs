@@ -238,9 +238,113 @@ impl TimerFuture {
 
 ---
 
-## 6. 总结：何时关注 Pin 与 Unpin？
+## 6. 异步 Send 与 Sync 的编译瓶颈及重构
 
-在日常的业务开发中（例如使用 Axum 或 Actix-web 编写 Web 服务），你几乎不需要直接面对 `Pin`。但在以下场景，`Pin` 将是你的必修课：
+在多线程异步运行时（如 Tokio 默认的 Work-stealing 多线程运行时）中，`tokio::spawn` 调度的每一个异步 Task 都被要求实现 `Send` 特征。这意味着该 Future 所生成的底层状态机在被挂起（即遇到 `.await`）时，**其状态机中所有正在存活的局部变量都必须是 `Send` 的**。
+
+### 1. 经典错误：跨 `.await` 点持有非 `Send` 变量
+
+`std::sync::MutexGuard` 是一个非 `Send` 的类型（因为它内部与操作系统的 OS 线程锁机制绑定，不能在 A 线程加锁而在 B 线程释放锁）。如果我们在 `await` 前后持有了它，编译就会报错：
+
+```rust
+use std::sync::Mutex;
+
+struct SharedData {
+    value: i32,
+}
+
+async fn some_async_io() {}
+
+// ❌ 编译报错：future cannot be sent between threads safely
+async fn bad_async_lock(mutex: &Mutex<SharedData>) {
+    let guard = mutex.lock().unwrap(); // 获取标准库锁 Guard (非 Send)
+    some_async_io().await;             // 跨越了 await 点！
+    println!("value: {}", guard.value);
+} // 锁 Guard 在这里才释放
+```
+
+### 2. 解决方案一：限制锁的生命周期（局部作用域）
+
+让非 `Send` 变量在遇见 `.await` 之前被主动 `drop` 掉，使状态机在挂起时不再包含该非 `Send` 数据：
+
+```rust
+async fn good_async_lock_scope(mutex: &Mutex<SharedData>) {
+    {
+        let guard = mutex.lock().unwrap();
+        // 在这里进行同步操作
+        println!("value: {}", guard.value);
+    } // 👈 锁 Guard 在这里被自动释放
+    
+    some_async_io().await; // ✅ 成功编译：await 点上没有非 Send 变量
+}
+```
+
+### 3. 解决方案二：使用异步锁
+
+如果确实需要在多个 `.await` 之间保持加锁状态，必须使用 Tokio 提供的异步 Mutex：
+
+```rust
+use tokio::sync::Mutex as TokioMutex; // 👈 其 Guard 实现了 Send
+
+async fn good_async_tokio_lock(mutex: &TokioMutex<SharedData>) {
+    let guard = mutex.lock().await; // 异步等待锁
+    some_async_io().await;          // ✅ 成功编译：TokioMutexGuard 是 Send 的
+    println!("value: {}", guard.value);
+}
+```
+
+---
+
+## 7. 异步流 (Stream) 与通道 (Channels)
+
+除了单个 Future，异步开发中经常需要处理数据流与组件间的通信。
+
+### 1. 异步流 (Stream)
+
+`Stream` 相当于异步版的 `Iterator`。它在不同的时间点产出序列值，直到产生 `None` 为止：
+
+```rust
+use futures::stream::Stream;
+use std::pin::Pin;
+use std::task::{Context, Poll};
+
+// 手动实现一个简单的 Stream
+pub struct CounterStream {
+    count: usize,
+}
+
+impl Stream for CounterStream {
+    type Item = usize;
+
+    fn poll_next(mut self: Pin<&mut Self>, _cx: &mut Context<'_>) -> Poll<Option<Self::Item>> {
+        self.count += 1;
+        if self.count <= 3 {
+            Poll::Ready(Some(self.count))
+        } else {
+            Poll::Ready(None)
+        }
+    }
+}
+```
+
+在实际开发中，我们通常使用 `tokio_stream::StreamExt` 的各种组合子（如 `next()`, `map()`, `filter()`）来高效消费流。
+
+### 2. 异步通道 (Channels)
+
+通道是并发组件之间进行消息传递的解耦桥梁。Tokio 提供了 4 种专为异步设计的高效 Channel：
+
+| 通道类型 | 模式 | 场景与特点 |
+| :--- | :--- | :--- |
+| `mpsc` | 多生产者，单消费者 | 最常用。用于向单个异步管理任务（如后台 Worker）发送指令。 |
+| `oneshot` | 单生产者，单消费者 | 仅发送一次值。常用于等待特定异步计算任务的单次结果返回。 |
+| `broadcast` | 多生产者，多消费者 | 广播通道。每个发送的值都会被所有订阅的接收者完整读取。 |
+| `watch` | 单生产者，多消费者 | 状态监听。只保留最新的一个值，用于向多个接收者通知配置或状态更新。 |
+
+---
+
+## 8. 总结：何时关注 Pin 与 Unpin？
+
+在日常的业务开发中（例如使用 Axum 编写 Web 服务），你几乎不需要直接面对 `Pin`。但在以下场景，`Pin` 将是你的必修课：
 
 1. **手写自定义 `Future`**：例如需要手动实现流量控制、自定义超时逻辑或底层轮询协议时。
 2. **在 `async` 上下文中复用流（Streams）或多个 Future**：例如使用 `tokio::select!` 或 `futures::stream::StreamExt` 轮询时，必须先使用 `tokio::pin!` 将它们 Pin 在栈上。

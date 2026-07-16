@@ -325,6 +325,113 @@ fn conditional_function() {
 - `#[derive(...)]`：为类型自动派生常用特征（如 `Clone`, `Debug` 等）。
 - `#[inline]`：向编译器建议将该函数进行内联展开，以优化性能。
 
+## 📦 高级 Cargo 项目管理与构建优化
+
+当 Rust 项目规模逐渐扩大，涉及到多子模块联合编译与性能敏感场景时，掌握 Cargo Workspace、Features 以及构建 Profile 优化对组织代码和压缩二进制文件体积至关重要。
+
+### 1. Cargo Workspace (工作空间)
+
+在多 Crate 组成的复杂软件工程中，Cargo Workspace 允许我们使用单仓库（Mono-repo）集中管理多个相互依赖的 Crate，共享同一个 `Cargo.lock` 和输出 `target` 目录，极大地提升编译效率。
+
+#### 工作空间目录布局
+
+```text
+my_project/
+├── Cargo.toml          # 根 Workspace 配置文件
+├── Cargo.lock          # 共享依赖版本锁定文件
+├── my_app/             # 顶层业务二进制 Crate
+│   ├── Cargo.toml
+│   └── src/main.rs
+└── my_lib/             # 被依赖的底层库 Crate
+    ├── Cargo.toml
+    └── src/lib.rs
+```
+
+#### 根 `Cargo.toml` 配置与依赖共享
+
+从 Rust 1.64 起，我们可以使用 `[workspace.dependencies]` 在工作空间根部统一定义依赖，避免子 Crate 中配置重复：
+
+```toml
+# 根目录 Cargo.toml
+[workspace]
+members = [
+    "my_app",
+    "my_lib",
+]
+
+[workspace.dependencies]
+serde = { version = "1.0", features = ["derive"] }
+tokio = { version = "1.0", features = ["full"] }
+```
+
+在子 Crate 的 `Cargo.toml` 中，直接声明继承（`workspace = true`）：
+
+```toml
+# my_app/Cargo.toml
+[package]
+name = "my_app"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+# 继承根目录共享的依赖
+serde = { workspace = true }
+# 引入同工作空间内部的其它库 Crate
+my_lib = { path = "../my_lib" }
+```
+
+### 2. Cargo Features (功能剪裁)
+
+Cargo Feature 是一种强力的条件编译机制，可供用户选择性地激活某个 Crate 的某些依赖或功能。这在库开发中常用于控制库包体积和支持跨平台。
+
+#### 定义 Feature
+
+```toml
+# Cargo.toml
+[package]
+name = "my_crypt"
+version = "0.1.0"
+
+[features]
+# 默认开启的功能
+default = ["std"]
+# 自定义特征：不带依赖的纯编译开关
+std = []
+# 带特定第三方库依赖的特征
+json = ["dep:serde", "dep:serde_json"]
+
+[dependencies]
+# 设置为 optional，只有 json 特征激活时才会编译此依赖
+serde = { version = "1.0", optional = true }
+serde_json = { version = "1.0", optional = true }
+```
+
+#### 局部条件编译代码
+
+在 Rust 源码中，可以通过 `#[cfg(feature = "...")]` 拦截不被激活的模块或逻辑：
+
+```rust
+#[cfg(feature = "json")]
+pub fn serialize_data<T: serde::Serialize>(data: &T) -> String {
+    serde_json::to_string(data).unwrap()
+}
+```
+
+### 3. Cargo Profile (构建优化与剪裁)
+
+Rust 编译器默认提供了四种主要的构建 Profile：`dev`（非优化、带调试信息）、`release`（高度优化）、`test`（测试模式）和 `bench`（基准测试模式）。我们可以通过在 `Cargo.toml` 中对其参数深度调优，实现二进制体积与性能的极限优化。
+
+```toml
+# Cargo.toml
+
+# 针对 Release 发行版本深度剪裁性能与体积
+[profile.release]
+opt-level = 3            # 开启最高性能优化（0~3，s 表示大小优化，z 表示更极限的大小优化）
+lto = true               # 启用“链接时优化”（Link-Time Optimization），跨 Crate 进行死代码消除与内联
+codegen-units = 1        # 将编译单元限制为 1，虽然牺牲编译速度，但可促使 LLVM 进行更充分的全局内联与合并
+panic = "abort"          # 遇到 Panic 时直接终止进程，而非堆栈回溯，大幅消减二进制体积
+```
+
 ---
 
 ## 🌐 兼容性与补充

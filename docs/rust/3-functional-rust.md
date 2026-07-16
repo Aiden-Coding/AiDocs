@@ -124,7 +124,76 @@ fn make_greeting(prefix: String) -> impl Fn(&str) -> String {
 }
 ```
 
-### 4. 闭包在标准库中的应用实例
+### 4. Fn, FnMut 与 FnOnce 的解糖本质
+
+在 Rust 标准库中，这三个特征的底层定义（简化版）存在明确的层级与继承关系：
+
+```rust
+pub trait FnOnce<Args> {
+    type Output;
+    extern "rust-call" fn call_once(self, args: Args) -> Self::Output;
+}
+
+pub trait FnMut<Args>: FnOnce<Args> {
+    extern "rust-call" fn call_mut(&mut self, args: Args) -> Self::Output;
+}
+
+pub trait Fn<Args>: FnMut<Args> {
+    extern "rust-call" fn call(&self, args: Args) -> Self::Output;
+}
+```
+
+这说明任何实现了 `Fn` 的闭包都必须实现 `FnMut`，而实现了 `FnMut` 必然实现了 `FnOnce`。
+- **`FnOnce`**：`call_once` 参数是 `self`（按值传递）。这导致闭包在执行时其底层的捕获结构体会被消费掉，因而**只能调用一次**。
+- **`FnMut`**：`call_mut` 参数是 `&mut self`（可变借用）。这允许闭包修改其捕获的外部变量状态，可以被多次调用，但要求调用它的变量本身被声明为 `mut`。
+- **`Fn`**：`call` 参数是 `&self`（只读借用）。仅以只读方式引用外部环境，可以任意无副作用地被多次调用，亦可跨线程并发运行。
+
+### 5. 闭包作为参数与返回值（静动态分发）
+
+由于闭包是一个匿名且唯一的类型，如果需要在函数中传递或返回闭包，必须借助泛型或特征对象。
+
+#### 作为参数
+
+- **静态分发 (Monomorphization)**：使用泛型约束。编译器在编译期会为每一个具体的闭包类型生成独立的函数特化，具有零运行时开销。
+- **动态分发 (Trait Object)**：使用指针，在运行期通过虚表（Vtable）派发。
+
+```rust
+// 静态分发：通过泛型和 where 子句
+fn apply_static<F>(f: F) -> i32
+where
+    F: Fn(i32) -> i32,
+{
+    f(10)
+}
+
+// 动态分发：使用 dyn 借用特征对象
+fn apply_dynamic(f: &dyn Fn(i32) -> i32) -> i32 {
+    f(10)
+}
+```
+
+#### 作为返回值
+
+- **静态分发：使用 `impl Trait`**。编译器会推导匿名闭包的真实大小与类型，但该写法**只能返回单一的闭包类型**（函数内所有返回分支必须生成完全相同的闭包）。
+- **动态分发：使用 `Box<dyn Trait>`**。可以配合条件分支返回结构或捕获逻辑完全不同的闭包。
+
+```rust
+// 静态分发：只允许返回一种闭包结构
+fn returns_closure_static() -> impl Fn(i32) -> i32 {
+    |x| x + 1
+}
+
+// 动态分发：可借助智能指针返回不同的闭包分支
+fn returns_closure_dynamic(cond: bool) -> Box<dyn Fn(i32) -> i32> {
+    if cond {
+        Box::new(|x| x + 1)
+    } else {
+        Box::new(|x| x * 2)
+    }
+}
+```
+
+### 6. 闭包在标准库中的应用实例
 
 标准库中的许多集合操作都通过接收闭包作为参数来实现高阶处理。
 

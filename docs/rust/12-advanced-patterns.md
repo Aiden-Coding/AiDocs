@@ -215,4 +215,44 @@ impl ServerBuilder {
         }
     }
 }
+
+### 3.4 零拷贝反序列化 (Zero-Copy Deserialization)
+
+在处理高吞吐网络解析或文件流时，反序列化往往是性能瓶颈。传统的反序列化会从字节数组中把字符串和数组复制（拷贝）并重新分配到堆上。
+Rust 支持通过**零拷贝反序列化（Zero-Copy Deserialization）**，直接借用原始输入字节流中的切片（即返回 `&str` 或 `&[u8]`），使得整个反序列化过程**不需要任何堆内存分配**。
+
+#### 使用 Serde 库实现零拷贝反序列化
+
+在 `serde` 库中，我们使用 `'de` 生命周期（代表输入反序列化源数据的生命周期）来标注结构体：
+
+```rust
+use serde::Deserialize;
+
+// 1. 被反序列化的结构体直接借用输入字节流中的数据，类型因而携带生命周期 `'a`
+#[derive(Deserialize, Debug)]
+struct NetworkMessage<'a> {
+    id: u32,
+    // 零拷贝借用：不分配新的 String，直接指向接收缓冲区的某一段内存
+    #[serde(borrow)]
+    payload: &'a str,
+}
+
+fn process_packet() {
+    // 模拟从 Socket 接收到的 JSON 原始字节流
+    let raw_data = b"{\"id\": 101, \"payload\": \"data_content\"}";
+    
+    // 反序列化：整个解析过程没有任何堆拷贝！
+    // message.payload 的指针直接指向 raw_data 数组的内部地址
+    let message: NetworkMessage<'_> = serde_json::from_slice(raw_data).unwrap();
+    
+    println!("Payload content: {}", message.payload);
+    // ⚠️ 警告：因为 message 借用了 raw_data，如果 raw_data 在这之前被释放或覆盖，
+    // 编译器会直接报错，从根本上防止了悬空指针与 UB。
+}
+```
+
+#### 零拷贝生命周期对比：`Deserialize` vs `Deserialize<'de>`
+
+- **`T: Deserialize<'de>`**：说明 `T` 可以从生命周期为 `'de` 的输入源中反序列化，且 `T` 可以借用输入数据，其生命周期最长与 `'de` 相同。
+- **`T: for<'de> Deserialize<'de>`**：说明 `T` 能够从**任意**生命周期的输入源中反序列化（不依赖于借用输入源的数据，通常是自身拥有所有权的数据结构，如包含 `String` 字段）。
 ```

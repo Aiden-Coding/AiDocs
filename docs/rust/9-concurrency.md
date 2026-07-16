@@ -275,6 +275,74 @@ fn main() {
 - `AtomicU8`, `AtomicU16`, `AtomicU32`, `AtomicU64` - 原子无符号整数
 - `AtomicUsize`, `AtomicIsize` - 原子指针大小整数
 
+### 原子内存顺序 (Memory Ordering)
+
+在多核 CPU 以及存在编译器指令重排的现代系统上，单凭“原子操作”是无法保证跨线程内存修改顺序的。为了控制不同线程间操作的**可见性顺序**，Rust 在 `std::sync::atomic::Ordering` 中定义了 5 种内存顺序模型：
+
+#### 1. `Relaxed` (宽松顺序)
+
+- **行为**：仅保证该原子操作本身的原子性，**不提供任何跨线程的同步与顺序化担保**。编译器和 CPU 可以任意重排该原子操作前后的其他内存读写。
+- **场景**：简单的计数器（如全局统计、非临界区统计），不需要依赖此原子变量同步其他数据。
+
+#### 2. `Release` (释放语义)
+
+- **行为**：用于**写操作（Store）**。保证在此 Store 操作之前的所有内存读写操作，都不能被重排到该 Store 之后。
+- **作用**：将当前线程的内存改动“释放”出来，使任何随后读取此原子变量的线程都可以感知到在此之前的改动。
+
+#### 3. `Acquire` (获取语义)
+
+- **行为**：用于**读操作（Load）**。保证在此 Load 操作之后的所有内存读写操作，都不能被重排到该 Load 之前。
+- **作用**：确保在获取到原子变量的最新状态后，后续读取到的共享内存数据是最新且被当前线程正确感知同步的。
+
+> [!TIP]
+> **Acquire-Release 配对同步模型**：如果线程 A 使用 `Release` 写入一个原子值，线程 B 随后使用 `Acquire` 读取这个值，那么线程 A 在写入原子值之前的所有内存修改，都保证对线程 B 在读取之后的操作完全可见。这是高性能无锁数据结构中最基础的同步桥梁。
+
+#### 4. `AcqRel` (获取释放语义)
+
+- **行为**：同时具有 `Acquire` 和 `Release` 语义。在进行“读-改-写”（Read-Modify-Write，如 `fetch_add`）操作时，读取时应用 `Acquire`，写入时应用 `Release`。
+
+#### 5. `SeqCst` (顺序一致性)
+
+- **行为**：最强的保障（也是 Rust 的默认安全级别）。在 `AcqRel` 基础上，保证**全系统内所有线程看到的所有 `SeqCst` 操作都存在一个全局一致的单一顺序**。这完全禁止了绝大多数 CPU 级别的高级读写缓存优化，会带来较明显的性能开销。
+
+#### 实践配对范式（无锁数据发布示例）
+
+```rust
+use std::sync::atomic::{AtomicBool, Ordering};
+use std::sync::{Arc, Mutex};
+use std::thread;
+
+struct Resource {
+    data: String,
+}
+
+struct Singleton {
+    initialized: AtomicBool,
+    resource: Mutex<Option<Resource>>,
+}
+
+// 线程 A 初始化并发布
+fn init(singleton: &Singleton) {
+    let mut lock = singleton.resource.lock().unwrap();
+    *lock = Some(Resource { data: "core_payload".to_string() });
+    
+    // 使用 Release 写入：在此之前的 resource 赋值操作绝对不会被重排到该写入之后！
+    singleton.initialized.store(true, Ordering::Release);
+}
+
+// 线程 B 获取并使用
+fn get_data(singleton: &Singleton) -> Option<String> {
+    // 使用 Acquire 读取：在此之后的读取操作绝对不会被重排到此 Load 之前！
+    if singleton.initialized.load(Ordering::Acquire) {
+        let lock = singleton.resource.lock().unwrap();
+        // 此时我们百分之百确信，resource 里的资源已被正确初始化并同步到了我们当前的 CPU 核心缓存中！
+        lock.as_ref().map(|r| r.data.clone())
+    } else {
+        None
+    }
+}
+```
+
 ---
 
 ## RwLock（读写锁）

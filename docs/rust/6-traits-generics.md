@@ -518,6 +518,46 @@ fn main() {
 }
 ```
 
+### 特征对象安全 (Object Safety)
+
+并非所有的特征都能够作为特征对象（如 `Box<dyn Draw>`）使用。只有**对象安全（Object Safe）**的特征才能拥有动态虚表并在运行时实例化特征对象。
+
+如果一个特征符合以下两个核心规则，它就是对象安全的：
+1. **特征方法的所有返回类型都不能是 `Self`**（因为特征对象在运行期类型已被擦除，无法预知 `Self` 的真实大小和实际类型）。
+2. **特征方法不能有任何泛型类型参数**（因为泛型方法要求在编译期进行 Monomorphization 特化展开，而在运行期使用特征对象时，编译器无法得知究竟该特化哪一个泛型单态版）。
+
+#### 破坏对象安全的常见特征
+
+例如标准库的 `Clone` 特征是非对象安全的，因为其定义中包含返回 `Self` 的方法：`fn clone(&self) -> Self;`
+```rust
+// ❌ 编译报错：特征 `Clone` 不能作为特征对象使用
+// let my_clonable: Box<dyn Clone>;
+```
+
+#### 局部方法豁免：`where Self: Sized`
+
+如果特征中某个必要的方法返回了 `Self`，但你仍然希望该特征可以被用作特征对象，可以在该非安全的方法后附加 `where Self: Sized` 约束。这会通知编译器在构建特征对象虚表时，**直接排除此方法**，从而使特征整体重获对象安全性：
+
+```rust
+trait MyWidget {
+    // 1. 符合对象安全规则，可以正常参与动态分发
+    fn render(&self);
+
+    // 2. 本方法由于返回 Self，默认会导致特征非对象安全。
+    // 通过添加 `where Self: Sized` 约束，将其从特征对象中隔离。
+    fn make_copy(&self) -> Self
+    where
+        Self: Sized;
+}
+
+fn render_widgets(widgets: Vec<Box<dyn MyWidget>>) {
+    for widget in widgets {
+        widget.render(); // ✅ 正常运行
+        // widget.make_copy(); // ❌ 编译报错：特征对象无法调用此方法
+    }
+}
+```
+
 ---
 
 ## 高级特性
@@ -560,13 +600,27 @@ fn main() {
 }
 ```
 
-### Newtype 模式
+### 孤儿规则 (Orphan Rule) 与 Newtype 模式
 
-使用元组结构体包装类型来实现外部特征：
+#### 1. 什么是孤儿规则？
+
+Rust 强制实施一个非常严格的类型系统约束，称为**孤儿规则（Orphan Rule）**：在为类型实现特征时，**特征（Trait）或类型（Type）必须至少有一个定义在当前 Crate 中**。
+
+- **允许**：为你本地定义的结构体 `NewsArticle` 实现标准库的 `Display` 特征。
+- **允许**：为标准库的 `Vec<T>` 类型实现你本地定义的 `Summary` 特征。
+- **禁止**：为标准库的 `Vec<T>` 类型实现标准库的 `Display` 特征。因为两者都定义在外部标准库中。
+
+这一规则能够彻底避免多个独立的第三方库在不知道彼此存在的情况下，为同一个外部类型实现相同的外部特征（即命名冲突或特征实现冲突），从而保证了整个 Rust 依赖生态的可合并与安全集成。
+
+#### 2. 绕过限制：Newtype 模式
+
+如果确实需要为外部类型实现外部特征，唯一的机制是使用 **Newtype 模式**：定义一个元组结构体，在本地 Crate 中包装那个外部类型，使得这个包裹后的元组结构体成为本地定义的新类型，从而完美规避孤儿规则。
 
 ```rust
 use std::fmt;
 
+// Vec<String> 和 Display 特征都属于外部库，无法直接结合
+// Wrapper 是在本地 Crate 定义的元组结构体，包装了 Vec<String>
 struct Wrapper(Vec<String>);
 
 impl fmt::Display for Wrapper {

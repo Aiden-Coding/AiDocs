@@ -147,6 +147,80 @@ fn main() {
 
 ---
 
+## 🔴 内存别名规则 (Aliasing Rules) 与 UnsafeCell
+
+在 Safe Rust 中，借用检查器强制执行**独占性借用规则**：一个值可以有多个不可变引用（`&T`），或者有且仅有一个可变引用（`&mut T`），但两者绝不能同时并存。这一借用契约在编译器底层被称为 **无别名规则 (Aliasing Rules)**。
+
+### 1. 编译器对 `&mut T` 的优化假设与 UB
+
+编译器在优化汇编指令时，会基于“无别名规则”进行极其强力的假设。如果它看到一个 `&mut T`，它就会假设**在当前作用域内，绝对没有任何其他指针能够修改该内存**。这使得编译器可以将内存数据直接缓存到 CPU 寄存器中，而不需要频繁回写到内存。
+
+如果在 `unsafe` 中打破了这一规则，制造了两个同时存活、指向同一地址的可变引用（或一个可变引用加一个不可变引用），就会触发灾难性的**编译器未定义行为 (UB)**：
+
+```rust
+// ❌ 经典 UB 示例：别名规则冲突
+unsafe fn evil_alias(x: &mut i32) {
+    let ptr = x as *mut i32;
+    let ref1 = &mut *ptr; // 创造了第一个可变引用
+    let ref2 = &mut *ptr; // 创造了第二个可变引用（指向同一地址！）
+    
+    *ref1 = 10;
+    *ref2 = 20; 
+    // 此时 ref1 和 ref2 都是可变的且同时存活，编译器在重排指令时
+    // 可能会将对 ref1 的写入重排到 ref2 之后，或进行错误的寄存器缓存，导致数据错乱。
+}
+```
+
+### 2. 借用规则的“后门”：`UnsafeCell<T>`
+
+如果确实需要将一个不可变引用（`&T`）内部的数据进行可变修改，必须使用 `std::cell::UnsafeCell<T>`。
+
+`UnsafeCell<T>` 是 Rust 核心类型系统中**唯一**能够关闭“无别名”编译器优化的类型。所有运行时内部可变性容器（如 `Cell`, `RefCell`, `Mutex`）其底层无一例外都是包裹了 `UnsafeCell<T>`。
+
+---
+
+## 🔴 裸指针的高级内存操作
+
+在实现高级数据结构（如自定义 `Vec` 或环形缓冲区）时，单纯使用裸指针的 `*ptr = value` 赋值不仅受制于对齐限制，还会触发隐式的 `Drop`，可能导致未初始化内存被释放（Double Free）。因此，必须使用 `std::ptr` 模块中提供的高级裸指针原子读写与拷贝函数：
+
+### 1. 读写操作 (`std::ptr::read` 与 `write`)
+
+- **`std::ptr::write(dst, src)`**：将 `src` 的值写入 `dst` 地址，**不调用 `dst` 处的析构函数（Drop）**。这在向未初始化的内存写入数据时至关重要。
+- **`std::ptr::read(src)`**：从 `src` 地址读取值，转移其所有权，**但不使 `src` 地址失效且不调用其析构函数**。这在将堆中某项移动出来时很有用。
+
+```rust
+use std::ptr;
+
+fn swap_demo<T>(a: &mut T, b: &mut T) {
+    unsafe {
+        let ptr_a = a as *mut T;
+        let ptr_b = b as *mut T;
+        
+        // 读取 a 处的变量（不触发 Drop）
+        let temp = ptr::read(ptr_a);
+        // 将 b 写入 a 处（由于 a 已经被读出，这里不触发 Drop，直接覆盖）
+        ptr::write(ptr_a, ptr::read(ptr_b));
+        // 将 temp 写入 b 处
+        ptr::write(ptr_b, temp);
+    }
+}
+```
+
+### 2. 内存块拷贝 (`std::ptr::copy` 与 `copy_nonoverlapping`)
+
+类似于 C 语言中的 `memmove` 和 `memcpy`：
+- **`copy_nonoverlapping(src, dst, count)`**：类似于 `memcpy`。要求源内存块和目标内存块**绝对不能有任何重叠**。它执行极其高效的位拷贝。
+- **`copy(src, dst, count)`**：类似于 `memmove`。允许源内存与目标内存有重叠（如在同一个数组内向前或向后移动元素）。
+
+```rust
+unsafe fn shift_left<T>(ptr: *mut T, len: usize) {
+    // 将整个数组的所有元素向左移动 1 位（源和目标内存高度重叠，必须使用 copy 而非 copy_nonoverlapping）
+    std::ptr::copy(ptr.add(1), ptr, len - 1);
+}
+```
+
+---
+
 ## 🟡 安全抽象接口 (Safe Abstractions)
 
 Unsafe Rust 的最佳实践是**限制污染范围**：使用最少量的 `unsafe` 代码去实现高性能或底层操作，并将其封装在 100% 安全的公开 API 之后。
