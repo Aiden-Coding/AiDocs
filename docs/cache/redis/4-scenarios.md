@@ -133,7 +133,6 @@ sequenceDiagram
 > 在 Redisson 的最新版本中，`RedissonRedLock` 对象已被标记为 **`@Deprecated`（废弃）**。
 > 官方给出的废弃理由是，在大部分情况下，红锁过于复杂且依然无法完美解决物理时钟漂移、GC 停顿引发的锁失效问题。在需要强 CP（强一致性）锁保障的场景下，推荐直接使用基于 CP 协议的系统（如 ZooKeeper、etcd），而在绝大多数高吞吐互联网场景下，单 Master + 哨兵/集群架构下的普通 `RLock`（配合看门狗机制与业务幂等）便已足够，无须引入极重且存在隐患的红锁。
 
-
 #### 💡 著名的学术 PK：Martin Kleppmann vs Antirez
 
 分布式领域专家 **Martin Kleppmann**（*DDIA* 作者）曾发表文章指出 Redlock 并非想象中那么安全，与 Redis 作者 **Antirez** 展开了长达数轮的精彩论战。

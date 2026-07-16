@@ -36,7 +36,7 @@ graph TD
 - **`RecursiveAction`**：递归执行，**无返回值**（如大数组并发赋值）。
 - **`RecursiveTask<V>`**：递归执行，**有返回值**（如并发累加计算）。
 
-#### 典型使用骨架（以 RecursiveTask 为例）：
+#### 典型使用骨架（以 RecursiveTask 为例）
 
 ```java
 public class MyTask extends RecursiveTask<Integer> {

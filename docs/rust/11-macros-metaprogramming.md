@@ -216,6 +216,7 @@ fn main() {
 #### 安装工具
 
 在支持的系统上运行安装指令：
+
 ```bash
 cargo install cargo-expand
 ```
@@ -223,11 +224,13 @@ cargo install cargo-expand
 #### 基础调试用法
 
 假设我们在项目中调用了宏，在根目录下运行以下指令即可直接审查展开后的结果：
+
 ```bash
 cargo expand
 ```
 
 若只想审查特定的模块或路径：
+
 ```bash
 cargo expand path::to::my_module
 ```

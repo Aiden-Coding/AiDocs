@@ -529,6 +529,7 @@ fn main() {
 #### 破坏对象安全的常见特征
 
 例如标准库的 `Clone` 特征是非对象安全的，因为其定义中包含返回 `Self` 的方法：`fn clone(&self) -> Self;`
+
 ```rust
 // ❌ 编译报错：特征 `Clone` 不能作为特征对象使用
 // let my_clonable: Box<dyn Clone>;

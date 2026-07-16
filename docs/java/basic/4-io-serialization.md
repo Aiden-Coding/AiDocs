@@ -79,7 +79,7 @@ classDiagram
 - **装饰器角色（Decorator）**：`FilterInputStream`，内部持有一个 `InputStream` 引用。
 - **具体装饰器（ConcreteDecorator）**：`BufferedInputStream`（增加缓冲能力）、`DataInputStream`（增加强类型读取能力，如 `readInt()`）。
 
-#### 代码组合示例：
+#### 代码组合示例
 
 ```java
 // 动态为文件输入流包装“缓冲区能力”和“结构化数据读取能力”
