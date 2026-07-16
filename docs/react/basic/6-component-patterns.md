@@ -126,6 +126,7 @@ const SecuredDashboard = withAuthentication(ProjectDashboard);
 ### ⚠️ 编写 HOC 的两大黄金准则
 
 #### 1. 别丢掉 Ref！—— 使用 forwardRef 转发
+
 由于高阶组件实际上返回的是一个新的“包装容器组件”，当你直接把 `ref` 传递给增强后的组件（如 `SecuredDashboard`）时，该 `ref` 只会绑定在外层的匿名组件上，而**无法向下传递到真实的业务组件 `ProjectDashboard`**。
 
 为了确保 `ref` 在高阶组件中不丢失，必须结合 `React.forwardRef` 进行转发：
@@ -151,6 +152,7 @@ function withLogging<T>(WrappedComponent: React.ComponentType<T>) {
 ```
 
 #### 2. 方便调试！—— 动态生成可辨识的 `displayName`
+
 React 默认会根据函数/类名推导组件的 `displayName`。如果在 HOC 中返回的是匿名组件，React DevTools 里的组件树就会充斥着一堆复用名字（如 `AnonymousComponent`），导致调试困难。
 
 我们需要手动将内部组件的名字与其增强的性质拼在一起：
@@ -353,8 +355,8 @@ function FlatTracker() {
 ### 为什么必须使用 Class 组件？
 
 截至 React 19，React 仍然**没有提供**能捕获子组件渲染错误的 Hook (如没有对应的 `useErrorBoundary` 等)。因此，实现错误边界**必须使用 Class 组件**，通过实现以下两个生命周期方法：
-1.  `static getDerivedStateFromError(error)`：从错误中导出状态，从而触发重渲染展示 Fallback UI。
-2.  `componentDidCatch(error, errorInfo)`：用于将错误信息上报给日志服务器。
+1. `static getDerivedStateFromError(error)`：从错误中导出状态，从而触发重渲染展示 Fallback UI。
+2. `componentDidCatch(error, errorInfo)`：用于将错误信息上报给日志服务器。
 
 ### 标准的错误边界 Class 组件模板
 
@@ -416,10 +418,10 @@ export default ErrorBoundary;
 ### 错误边界的捕获局限性
 
 错误边界**不会**捕获以下场景中的错误：
-1.  **事件处理器**（例如 `onClick` 内部抛出的错误）。因为它们不在 React 渲染周期内发生。处理此类错误应使用传统的 `try/catch`。
-2.  **异步代码**（例如 `setTimeout`、`requestAnimationFrame` 或异步的 `fetch` 请求回调）。
-3.  **服务端渲染 (SSR)** 期间的错误。
-4.  **错误边界自身**（而非其子组件）抛出的错误。
+1. **事件处理器**（例如 `onClick` 内部抛出的错误）。因为它们不在 React 渲染周期内发生。处理此类错误应使用传统的 `try/catch`。
+2. **异步代码**（例如 `setTimeout`、`requestAnimationFrame` 或异步的 `fetch` 请求回调）。
+3. **服务端渲染 (SSR)** 期间的错误。
+4. **错误边界自身**（而非其子组件）抛出的错误。
 
 ### 现代化推荐：使用 `react-error-boundary` 库
 
@@ -460,8 +462,8 @@ function App() {
 
 在构建 UI 组件时，有些元素需要在视觉上“打破”父组件的 DOM 树层级限制（例如：Modal 模态框、Tooltip 气泡提示、Dropdown 下拉菜单、Drawer 抽屉）。
 
-*   **痛点**：如果这些浮层组件直接嵌套在父组件的 DOM 树内，如果父级容器设置了 `overflow: hidden`，浮层会被截断；或者如果父级设置了特定的 `z-index`，浮层可能会被其他组件遮挡。
-*   **解决方案**：使用 React 提供的 `createPortal` 将子节点渲染到**原本组件树之外的任意 DOM 节点**（通常是 `document.body`），但在逻辑上它依然是该组件的子代。
+- **痛点**：如果这些浮层组件直接嵌套在父组件的 DOM 树内，如果父级容器设置了 `overflow: hidden`，浮层会被截断；或者如果父级设置了特定的 `z-index`，浮层可能会被其他组件遮挡。
+- **解决方案**：使用 React 提供的 `createPortal` 将子节点渲染到**原本组件树之外的任意 DOM 节点**（通常是 `document.body`），但在逻辑上它依然是该组件的子代。
 
 ### 使用语法
 
@@ -536,8 +538,8 @@ function Dashboard() {
 尽管通过 `createPortal` 传送出去的 DOM 元素在**真实 DOM 树中渲染到了外面**（例如在 `<body>` 底部），但它在 **React 组件树的结构和上下文依然保持不变**。
 
 这意味着：
-*   **Context 共享**：Portal 内部依然可以顺畅地消费定义在父级组件中的 React Context。
-*   **事件冒泡**：在 Portal 节点内部触发的事件，仍然会按照 **React 组件树的层级结构** 向父组件冒泡，而不是沿着 DOM 树的层级。
+- **Context 共享**：Portal 内部依然可以顺畅地消费定义在父级组件中的 React Context。
+- **事件冒泡**：在 Portal 节点内部触发的事件，仍然会按照 **React 组件树的层级结构** 向父组件冒泡，而不是沿着 DOM 树的层级。
 
 #### 事件冒泡示例
 
@@ -558,4 +560,3 @@ function Dashboard() {
   );
 }
 ```
-
