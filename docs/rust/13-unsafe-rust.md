@@ -446,3 +446,90 @@ fn main() {
     println!("当前使用: {} 字节", alloc - dealloc);
 }
 ```
+
+---
+
+## 🔴 `std::mem::transmute` — 类型双关（Type Punning）
+
+`transmute<T, U>(val: T) -> U` 将一个类型的位模式强制重新解释为另一个类型，是 Rust 中**最危险**的操作之一。它要求 `T` 和 `U` 的大小完全相同，否则编译拒绝。
+
+### 1. 基本用法
+
+```rust
+use std::mem;
+
+fn main() {
+    // 将 f64 的位模式解释为 u64（检查 IEEE 754 表示）
+    let f: f64 = 1.0_f64;
+    let bits: u64 = unsafe { mem::transmute(f) };
+    println!("1.0_f64 的位模式: 0x{:016X}", bits);
+    // 0x3FF0000000000000（IEEE 754 双精度 1.0）
+
+    // 反向：u64 -> f64
+    let recovered: f64 = unsafe { mem::transmute(bits) };
+    println!("恢复: {}", recovered); // 1
+
+    // 将 &str 的胖指针重新解释为 (*const u8, usize) 元组
+    let s = "hello";
+    let (ptr, len): (*const u8, usize) = unsafe { mem::transmute(s) };
+    println!("字符串指针: {:p}, 长度: {}", ptr, len);
+}
+```
+
+### 2. 安全替代方案
+
+大多数 `transmute` 使用场景都有更安全的替代：
+
+```rust
+use std::mem;
+
+fn main() {
+    // ❌ 危险：transmute 强转 i32 -> u32
+    let x: i32 = -1;
+    let _y: u32 = unsafe { mem::transmute(x) };
+
+    // ✅ 安全替代：as 强转（对数值类型）
+    let y: u32 = x as u32;
+    println!("{}", y); // 4294967295
+
+    // ❌ 危险：transmute 强转 *const T -> *mut T
+    let val = 5i32;
+    let _ptr: *mut i32 = unsafe { mem::transmute(&val as *const i32) };
+
+    // ✅ 安全替代：直接 cast
+    let ptr: *mut i32 = &val as *const i32 as *mut i32;
+
+    // ❌ 危险：transmute 延长生命周期
+    let local = String::from("temporary");
+    let _extended: &'static str = unsafe { mem::transmute(local.as_str()) };
+    // 此后 local 被 drop，_extended 成为悬空引用！
+
+    // ✅ 安全替代：Box::leak（真正将数据泄漏为 'static）
+    let s = Box::leak(Box::new(String::from("truly static")));
+    println!("真正的 'static: {}", s);
+}
+```
+
+### 3. 合理的使用场景（零成本数组初始化）
+
+```rust
+use std::mem;
+
+fn zeroed_array<const N: usize>() -> [u8; N] {
+    // 安全：[u8; N] 的所有位模式都是有效的（u8 没有无效位）
+    unsafe { mem::zeroed() }
+}
+
+fn main() {
+    let arr: [u8; 8] = zeroed_array();
+    println!("{:?}", arr); // [0, 0, 0, 0, 0, 0, 0, 0]
+}
+```
+
+> [!WARNING]
+> `transmute` 的危险等级在 Rust 的 unsafe 操作中是最高级别：
+> - 不验证目标类型的有效性约束（如 `NonZeroU32` 不能为 0，`bool` 只能是 0/1）
+> - 不处理对齐问题（可能产生未对齐指针）
+> - 可以任意延长生命周期（破坏借用安全）
+>
+> 绝大多数场景应优先使用 `as` 强转、`From`/`Into`、`ptr::read`/`ptr::write` 或 `bytemuck` crate。

@@ -910,3 +910,170 @@ fn main() {
 ```
 
 Rayon 内部使用**工作窃取（Work Stealing）**调度器，自动平衡各 CPU 核心的负载。
+
+---
+
+## `std::sync::Once` — 一次性初始化
+
+`Once` 是标准库提供的原语，保证某段代码**在整个程序生命周期内只执行一次**，即使多个线程同时尝试执行。在 Rust 1.70+ 的项目中通常优先使用 `OnceLock`，但 `Once` 仍广泛存在于老代码和 FFI 场景中：
+
+```rust
+use std::sync::Once;
+
+static INIT: Once = Once::new();
+static mut GLOBAL_STATE: Option<String> = None;
+
+fn initialize() {
+    INIT.call_once(|| {
+        // 这段代码只会执行一次，即使多个线程并发调用
+        unsafe {
+            GLOBAL_STATE = Some("已初始化".to_string());
+        }
+        println!("初始化执行（只打印一次）");
+    });
+}
+
+fn main() {
+    use std::thread;
+
+    let handles: Vec<_> = (0..5).map(|_| {
+        thread::spawn(initialize)
+    }).collect();
+
+    for h in handles { h.join().unwrap(); }
+
+    // 检查是否已完成初始化
+    println!("初始化完成: {}", INIT.is_completed()); // true
+}
+```
+
+`Once` 的错误处理：如果 `call_once` 闭包 panic，`Once` 会进入"中毒（poisoned）"状态，后续调用 `call_once` 会 panic：
+
+```rust
+use std::sync::Once;
+
+static ONCE: Once = Once::new();
+
+fn safe_init() {
+    // call_once_force 允许在中毒后重新尝试初始化
+    ONCE.call_once_force(|state| {
+        if state.is_poisoned() {
+            println!("检测到中毒状态，重新初始化");
+        }
+        // 执行初始化...
+    });
+}
+```
+
+---
+
+## `parking_lot` — 高性能同步原语
+
+[`parking_lot`](https://github.com/Amanieu/parking_lot) 是标准库 `Mutex`/`RwLock`/`Condvar` 的高性能替代，主要优势：
+
+- **更小的内存占用**：`parking_lot::Mutex<T>` 比 `std::sync::Mutex<T>` 小一个 `usize`
+- **不中毒（No Poisoning）**：lock() 返回直接是 `MutexGuard`，无需 `.unwrap()`
+- **更快**：在低竞争场景下比标准库快 2-5 倍
+- **额外功能**：`try_lock_for`（带超时）、`lock_arc`（跨线程持有 Guard）
+
+```toml
+[dependencies]
+parking_lot = "0.12"
+```
+
+### 1. `parking_lot::Mutex`
+
+```rust
+use parking_lot::Mutex;
+use std::sync::Arc;
+use std::thread;
+
+fn main() {
+    let counter = Arc::new(Mutex::new(0u32));
+    let mut handles = vec![];
+
+    for _ in 0..10 {
+        let counter = Arc::clone(&counter);
+        handles.push(thread::spawn(move || {
+            // lock() 直接返回 MutexGuard，无需 .unwrap()
+            let mut num = counter.lock();
+            *num += 1;
+        }));
+    }
+
+    for h in handles { h.join().unwrap(); }
+    println!("计数: {}", *counter.lock()); // 10
+}
+```
+
+### 2. `parking_lot::RwLock`
+
+```rust
+use parking_lot::RwLock;
+use std::sync::Arc;
+use std::thread;
+
+fn main() {
+    let data = Arc::new(RwLock::new(vec![1, 2, 3]));
+
+    // 多个读者可以并发持有读锁
+    let data_r = Arc::clone(&data);
+    let reader = thread::spawn(move || {
+        let r = data_r.read(); // 无需 .unwrap()
+        println!("读取: {:?}", *r);
+    });
+
+    // try_read / try_write：非阻塞尝试
+    if let Some(r) = data.try_read() {
+        println!("非阻塞读取成功: {:?}", *r);
+    }
+
+    reader.join().unwrap();
+
+    // 带超时的加锁
+    use std::time::Duration;
+    match data.try_write_for(Duration::from_millis(100)) {
+        Some(mut w) => { w.push(4); println!("写入成功"); }
+        None => println!("获取写锁超时"),
+    }
+}
+```
+
+### 3. `parking_lot::Condvar`
+
+```rust
+use parking_lot::{Mutex, Condvar};
+use std::sync::Arc;
+use std::thread;
+
+fn main() {
+    let pair = Arc::new((Mutex::new(false), Condvar::new()));
+    let pair2 = Arc::clone(&pair);
+
+    thread::spawn(move || {
+        let (lock, cvar) = &*pair2;
+        thread::sleep(std::time::Duration::from_millis(50));
+        *lock.lock() = true;  // parking_lot: 无需 .unwrap()
+        cvar.notify_one();
+    });
+
+    let (lock, cvar) = &*pair;
+    let mut started = lock.lock();
+    // parking_lot 的 wait 直接接受 MutexGuard，无需解包
+    cvar.wait_while(&mut started, |s| !*s);
+    println!("条件满足！");
+}
+```
+
+### 4. `std::sync` vs `parking_lot` 选型
+
+| 特性 | `std::sync` | `parking_lot` |
+| :--- | :--- | :--- |
+| 依赖 | 无（标准库） | 需加依赖 |
+| 中毒机制 | ✅ lock() 返回 Result | ❌ 无（更简洁） |
+| 内存占用 | 较大 | 更小 |
+| 性能 | 良好 | 更快（低竞争时） |
+| 超时加锁 | ❌ | ✅ `try_lock_for` |
+| `no_std` 支持 | 需 OS 支持 | 部分支持 |
+
+> 推荐原则：新项目且不在乎一个外部依赖时，优先用 `parking_lot`；库代码为减少依赖可用 `std::sync`。

@@ -968,3 +968,193 @@ fn main() {
 
 > [!NOTE]
 > **下一步建议**：掌握了 Rust 极其严格的基础语法与类型系统后，请继续阅读 [所有权与生命周期核心](5-ownership-lifetimes.md)，了解 Rust 独特的 Borrow Checker 是如何保障内存安全与高并发的。
+
+---
+
+## 🔢 常量与静态变量
+
+### 1. `const` — 编译期常量
+
+`const` 声明的值在编译期就已确定，会被内联到每一个使用处，**没有固定的内存地址**：
+
+```rust
+// 命名约定：全大写 + 下划线，必须标注类型
+const MAX_CONNECTIONS: u32 = 100;
+const PI: f64 = 3.141592653589793;
+
+// 可以在任何作用域中使用，包括全局作用域
+const GREETING: &str = "Hello, Rust!";
+
+fn main() {
+    println!("最大连接数: {}", MAX_CONNECTIONS);
+    println!("圆周率: {}", PI);
+
+    // const 可以在块作用域中声明，遮蔽外部同名常量
+    const LOCAL_MAX: u32 = 50;
+    println!("局部常量: {}", LOCAL_MAX);
+}
+```
+
+### 2. `static` — 静态变量（全局变量）
+
+`static` 变量在程序整个生命周期内存活，拥有**固定的内存地址**，生命周期为 `'static`：
+
+```rust
+// 不可变静态变量：安全
+static LANGUAGE: &str = "Rust";
+static MAX_POINTS: u32 = 100_000;
+
+fn main() {
+    println!("语言: {}", LANGUAGE);
+    println!("最大积分: {}", MAX_POINTS);
+
+    // 可以获取 static 的地址（它是唯一的）
+    println!("LANGUAGE 的地址: {:p}", &LANGUAGE as *const _);
+}
+```
+
+> [!IMPORTANT]
+> `const` vs `static` 核心区别：
+> - `const`：编译期内联替换，无内存地址，类似 C 的 `#define`
+> - `static`：运行期固定内存地址，整个程序只有一份，生命周期 `'static`
+> - 需要**可变全局状态**时用 `static mut`（需 `unsafe`）或 `OnceLock<T>`
+
+### 3. `const fn` — 编译期常量函数
+
+`const fn` 允许函数在编译期执行，结果可用于初始化 `const` 和 `static`：
+
+```rust
+// 编译期计算阶乘
+const fn factorial(n: u64) -> u64 {
+    if n <= 1 { 1 } else { n * factorial(n - 1) }
+}
+
+// 在编译期就求值，不占运行时开销
+const FACT_10: u64 = factorial(10);
+
+// 编译期计算数组大小
+const fn array_size(base: usize) -> usize {
+    base * base
+}
+const GRID: [u8; array_size(4)] = [0; array_size(4)]; // 16 元素数组
+
+fn main() {
+    println!("10! = {}", FACT_10); // 3628800
+    println!("网格大小: {}", GRID.len()); // 16
+
+    // const fn 也可以在运行时调用，行为与普通函数相同
+    let n = 5;
+    println!("{}! = {}", n, factorial(n));
+}
+```
+
+`const fn` 的限制（随 Rust 版本不断放宽）：
+- 不能包含裸指针解引用（`unsafe` 操作需在 `unsafe` 块中）
+- 不能进行堆分配（`Box::new` 等）
+- 不能调用非 `const fn` 函数
+
+---
+
+## 🔀 现代语法糖
+
+### 1. `let-else` — 否则绑定（Rust 1.65+）
+
+`let-else` 用于在模式不匹配时执行发散代码（`return`、`break`、`panic!` 等），避免深层嵌套：
+
+```rust
+fn process_config(config: Option<&str>) -> &str {
+    // 旧写法：需要嵌套 match 或 if let
+    // let value = if let Some(v) = config { v } else { return "default" };
+
+    // let-else：模式匹配失败时执行 else 块（必须发散）
+    let Some(value) = config else {
+        return "default";
+    };
+    value
+}
+
+fn parse_port(s: &str) -> u16 {
+    // 解析失败就 panic，成功则绑定 port
+    let Ok(port) = s.parse::<u16>() else {
+        panic!("无效的端口号: {}", s);
+    };
+    port
+}
+
+fn main() {
+    println!("{}", process_config(Some("production")));  // production
+    println!("{}", process_config(None));                // default
+    println!("端口: {}", parse_port("8080"));            // 8080
+}
+```
+
+`let-else` 相比 `if let` + `else` 的优势：绑定的变量 `value` 直接在**外层作用域**可用，无需额外层级。
+
+### 2. 解构赋值（Destructuring Assignment，Rust 1.59+）
+
+Rust 1.59 允许在赋值语句左侧使用任意模式进行解构：
+
+```rust
+fn main() {
+    // 1. 元组解构赋值
+    let (mut a, mut b) = (1, 2);
+    (a, b) = (b, a); // 交换两个值，无需临时变量
+    println!("a={}, b={}", a, b); // a=2, b=1
+
+    // 2. 结构体解构赋值
+    struct Point { x: i32, y: i32 }
+    let mut p = Point { x: 0, y: 0 };
+    Point { x: p.x, y: p.y } = Point { x: 10, y: 20 };
+    println!("({}, {})", p.x, p.y); // (10, 20)
+
+    // 3. 切片解构赋值
+    let mut arr = [1, 2, 3];
+    [arr[0], arr[1]] = [arr[1], arr[0]]; // 交换前两个元素
+    println!("{:?}", arr); // [2, 1, 3]
+
+    // 4. 在 for 循环中解构
+    let pairs = [(1, 'a'), (2, 'b'), (3, 'c')];
+    for (num, ch) in pairs {
+        println!("{}: {}", num, ch);
+    }
+
+    // 5. 嵌套解构
+    let ((x1, y1), (x2, y2)) = ((0, 1), (5, 6));
+    println!("线段: ({},{}) -> ({},{})", x1, y1, x2, y2);
+}
+```
+
+### 3. `matches!` 宏 — 模式匹配断言
+
+`matches!` 宏检查一个值是否匹配某个模式，返回 `bool`：
+
+```rust
+#[derive(Debug)]
+enum Status { Active, Inactive, Pending(u32) }
+
+fn main() {
+    let s = Status::Pending(42);
+
+    // 等价于 matches!(s, Status::Pending(_))
+    if matches!(s, Status::Pending(_)) {
+        println!("处于等待状态");
+    }
+
+    // 支持卫语句
+    let num = 7;
+    let is_small_odd = matches!(num, 1 | 3 | 5 | 7 | 9);
+    println!("小奇数: {}", is_small_odd); // true
+
+    // 在 filter 中使用
+    let statuses = vec![
+        Status::Active,
+        Status::Inactive,
+        Status::Pending(1),
+        Status::Pending(2),
+    ];
+    let pending_count = statuses.iter()
+        .filter(|s| matches!(s, Status::Pending(_)))
+        .count();
+    println!("等待数量: {}", pending_count); // 2
+}
+```

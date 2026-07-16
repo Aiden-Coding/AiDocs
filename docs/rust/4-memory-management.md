@@ -419,3 +419,184 @@ fn main() {
 
 > [!TIP]
 > 选择指南：`OnceCell` 用于结构体字段单线程场景，`OnceLock` 用于全局静态变量多线程场景，`LazyLock` 是 `OnceLock` 的语法糖，优先选用。
+
+---
+
+## 🟡 `Deref` 与 `DerefMut`：解引用强制转换
+
+`Deref` trait 允许自定义 `*` 运算符的行为，Rust 编译器会自动应用**解引用强制转换（Deref Coercion）**，消除手动解引用的繁琐。
+
+### 1. 手动实现 `Deref`
+
+```rust
+use std::ops::{Deref, DerefMut};
+
+struct MyBox<T>(T);
+
+impl<T> MyBox<T> {
+    fn new(x: T) -> MyBox<T> {
+        MyBox(x)
+    }
+}
+
+impl<T> Deref for MyBox<T> {
+    type Target = T;
+
+    fn deref(&self) -> &T {
+        &self.0 // 返回内部值的引用
+    }
+}
+
+impl<T> DerefMut for MyBox<T> {
+    fn deref_mut(&mut self) -> &mut T {
+        &mut self.0
+    }
+}
+
+fn hello(name: &str) {
+    println!("Hello, {}!", name);
+}
+
+fn main() {
+    let x = 5;
+    let y = MyBox::new(x);
+
+    assert_eq!(5, x);
+    assert_eq!(5, *y); // *y 等价于 *(y.deref())
+
+    let m = MyBox::new(String::from("Rust"));
+    // 解引用强制转换链：&MyBox<String> -> &String -> &str
+    hello(&m);  // 编译器自动完成两次解引用，无需 hello(&(*m)[..])
+}
+```
+
+### 2. 解引用强制转换规则
+
+编译器会自动在以下三种情况下插入解引用：
+
+| 转换方向 | 触发条件 |
+| :--- | :--- |
+| `&T` → `&U`（当 `T: Deref<Target=U>`） | 不可变引用 → 不可变引用 |
+| `&mut T` → `&mut U`（当 `T: DerefMut<Target=U>`） | 可变引用 → 可变引用 |
+| `&mut T` → `&U`（当 `T: Deref<Target=U>`） | 可变引用 → 不可变引用 |
+
+```rust
+fn main() {
+    // String -> &str 的自动 Deref
+    let s = String::from("hello");
+    let _: &str = &s;          // &String 自动转 &str
+
+    // Vec<T> -> &[T] 的自动 Deref
+    let v = vec![1, 2, 3];
+    let _: &[i32] = &v;       // &Vec<i32> 自动转 &[i32]
+
+    // Box<T> -> &T 的自动 Deref
+    let b = Box::new(String::from("world"));
+    let _: &str = &b;          // &Box<String> -> &String -> &str（两次自动）
+
+    // 实际函数调用中的链式转换
+    fn takes_str(s: &str) { println!("{}", s); }
+    takes_str(&s);             // ✅ &String 自动转 &str
+    takes_str(&b);             // ✅ &Box<String> 自动转 &str
+}
+```
+
+---
+
+## 🟡 `ManuallyDrop` 与 `mem::forget`：控制析构时机
+
+### 1. `std::mem::forget` — 泄漏值（不调用 Drop）
+
+`mem::forget` 接管一个值的所有权但**不调用其析构函数**，相当于"安全地泄漏"这个值：
+
+```rust
+use std::mem;
+
+struct Noisy(i32);
+impl Drop for Noisy {
+    fn drop(&mut self) { println!("dropping {}", self.0); }
+}
+
+fn main() {
+    let a = Noisy(1);
+    let b = Noisy(2);
+
+    mem::forget(a);  // a 的 Drop 永远不会被调用
+    println!("b 即将离开作用域");
+    // 只会打印 "dropping 2"，不会打印 "dropping 1"
+}
+```
+
+**合法使用场景**：实现 FFI 时，将 Rust 分配的内存所有权转移给 C 代码管理：
+
+```rust
+use std::mem;
+
+fn pass_to_c() -> *mut i32 {
+    let boxed = Box::new(42i32);
+    let raw = Box::into_raw(boxed); // 等价于 mem::forget + as_ptr
+    raw // 由 C 负责释放，Rust 不调用 Drop
+}
+```
+
+> [!WARNING]
+> `mem::forget` 不违反内存安全（不会读写无效内存），但会造成**内存泄漏**。在安全 Rust 中基本不需要使用它；正确的所有权转移应优先使用 `Box::into_raw` 或 `ManuallyDrop`。
+
+### 2. `ManuallyDrop<T>` — 精确控制 Drop 时机
+
+`ManuallyDrop<T>` 是标准库提供的包装类型，**禁止编译器自动调用内部值的析构函数**。比 `mem::forget` 更灵活，因为值仍然可以被访问和手动 drop：
+
+```rust
+use std::mem::ManuallyDrop;
+
+struct Resource(String);
+impl Drop for Resource {
+    fn drop(&mut self) { println!("释放资源: {}", self.0); }
+}
+
+fn main() {
+    let mut r = ManuallyDrop::new(Resource("数据库连接".to_string()));
+
+    // 仍然可以正常访问内部值
+    println!("资源名称: {}", r.0);
+
+    // 手动决定何时调用 Drop
+    unsafe {
+        ManuallyDrop::drop(&mut r); // 此后 r 不能再被使用
+    }
+    println!("已手动释放");
+    // 离开作用域时，ManuallyDrop 本身不调用内部的 Drop，避免 double-free
+}
+```
+
+**典型应用：在 `union` 或自定义 `Vec` 中管理未初始化内存**：
+
+```rust
+use std::mem::ManuallyDrop;
+
+// 自定义联合体：手动控制哪个字段有效
+union Variant {
+    integer: ManuallyDrop<i64>,
+    text: ManuallyDrop<String>,
+}
+
+fn main() {
+    let mut v = Variant { integer: ManuallyDrop::new(42) };
+
+    unsafe {
+        println!("整型: {}", *v.integer);
+
+        // 切换到 text 字段前，先清理（如果当前是 text 的话需要 drop）
+        v.text = ManuallyDrop::new(String::from("hello"));
+        println!("字符串: {}", *v.text);
+
+        // 手动 drop 当前有效字段
+        ManuallyDrop::drop(&mut v.text);
+    }
+}
+```
+
+| 方式 | 值可访问 | 可手动 Drop | 适用场景 |
+| :--- | :---: | :---: | :--- |
+| `mem::forget(v)` | ❌（所有权转移） | ❌ | 简单的 FFI 所有权转移 |
+| `ManuallyDrop::new(v)` | ✅ | ✅（unsafe） | union、自定义容器、FFI |

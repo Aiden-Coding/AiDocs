@@ -411,3 +411,169 @@ fn main() {
     println!("前 10 项斐波那契数之和: {}", sum); // 88
 }
 ```
+
+---
+
+## 🟡 聚合迭代器：`fold`、`reduce` 与 `sum`/`product`
+
+### 1. `fold` — 带初始值的累积
+
+`fold` 接受一个初始值和一个二元闭包，从左到右将所有元素累积：
+
+```rust
+fn main() {
+    let numbers = vec![1, 2, 3, 4, 5];
+
+    // 等价于 sum()，但更灵活
+    let sum = numbers.iter().fold(0, |acc, &x| acc + x);
+    println!("总和: {}", sum); // 15
+
+    // 用 fold 构建字符串
+    let words = vec!["Hello", "beautiful", "world"];
+    let sentence = words.iter().fold(String::new(), |mut acc, &w| {
+        if !acc.is_empty() { acc.push(' '); }
+        acc.push_str(w);
+        acc
+    });
+    println!("{}", sentence); // "Hello beautiful world"
+
+    // 用 fold 实现 map + filter 的组合
+    let even_squares: Vec<i32> = (1..=10).fold(Vec::new(), |mut acc, x| {
+        if x % 2 == 0 { acc.push(x * x); }
+        acc
+    });
+    println!("{:?}", even_squares); // [4, 16, 36, 64, 100]
+
+    // 统计最大值（等价于 max()）
+    let max = numbers.iter().fold(i32::MIN, |acc, &x| acc.max(x));
+    println!("最大值: {}", max); // 5
+}
+```
+
+### 2. `reduce` — 无初始值的累积
+
+`reduce` 与 `fold` 类似，但以迭代器第一个元素作为初始值，返回 `Option`（空迭代器返回 `None`）：
+
+```rust
+fn main() {
+    let numbers = vec![1, 2, 3, 4, 5];
+
+    // 求积
+    let product = numbers.iter().copied().reduce(|acc, x| acc * x);
+    println!("乘积: {:?}", product); // Some(120)
+
+    // 找最长字符串
+    let words = vec!["apple", "banana", "kiwi", "strawberry"];
+    let longest = words.iter().copied().reduce(|a, b| {
+        if a.len() >= b.len() { a } else { b }
+    });
+    println!("最长: {:?}", longest); // Some("strawberry")
+
+    // 空迭代器返回 None
+    let empty: Vec<i32> = vec![];
+    println!("空集合 reduce: {:?}", empty.iter().copied().reduce(|a, b| a + b)); // None
+}
+```
+
+### 3. `fold` vs `reduce` 对比
+
+| 特性 | `fold(init, f)` | `reduce(f)` |
+| :--- | :--- | :--- |
+| 初始值 | 显式提供 | 第一个元素 |
+| 返回类型 | `B`（可与元素不同类型） | `Option<T>` |
+| 空迭代器 | 返回初始值 | 返回 `None` |
+| 适合场景 | 类型转换、复杂累积 | 同类元素的简单归约 |
+
+---
+
+## 🟡 切片迭代器：`windows`、`chunks`、`split_at`
+
+### 1. `windows` — 滑动窗口
+
+产生所有长度为 `n` 的**连续重叠子切片**：
+
+```rust
+fn main() {
+    let data = [1, 2, 3, 4, 5];
+
+    // 每次滑动 1 步，窗口大小为 3
+    for window in data.windows(3) {
+        println!("{:?}", window);
+    }
+    // [1, 2, 3]
+    // [2, 3, 4]
+    // [3, 4, 5]
+
+    // 实用：计算相邻元素之差（一阶差分）
+    let diffs: Vec<i32> = data.windows(2)
+        .map(|w| w[1] - w[0])
+        .collect();
+    println!("差分: {:?}", diffs); // [1, 1, 1, 1]
+
+    // 检测是否有连续三个递增元素
+    let has_increasing = data.windows(3)
+        .any(|w| w[0] < w[1] && w[1] < w[2]);
+    println!("有连续递增三元: {}", has_increasing); // true
+}
+```
+
+### 2. `chunks` — 非重叠分块
+
+将切片分成大小为 `n` 的**不重叠块**（最后一块可能不足 `n` 个元素）：
+
+```rust
+fn main() {
+    let data = [1, 2, 3, 4, 5, 6, 7];
+
+    for chunk in data.chunks(3) {
+        println!("{:?}", chunk);
+    }
+    // [1, 2, 3]
+    // [4, 5, 6]
+    // [7]        ← 最后一块不足 3 个
+
+    // chunks_exact：只产出完整的块，尾部余数可用 remainder() 获取
+    let mut iter = data.chunks_exact(3);
+    for chunk in &mut iter {
+        println!("完整块: {:?}", chunk);
+    }
+    println!("余数: {:?}", iter.remainder()); // [7]
+
+    // 实用：批量处理（每批 2 个）
+    let tasks = vec!["a", "b", "c", "d", "e"];
+    for (batch_idx, batch) in tasks.chunks(2).enumerate() {
+        println!("批次 {}: {:?}", batch_idx, batch);
+    }
+}
+```
+
+### 3. `split_at` — 切片拆分
+
+将切片在指定位置拆分为两个不重叠的子切片：
+
+```rust
+fn main() {
+    let data = [1, 2, 3, 4, 5];
+
+    // 在索引 2 处拆分
+    let (left, right) = data.split_at(2);
+    println!("left: {:?}", left);  // [1, 2]
+    println!("right: {:?}", right); // [3, 4, 5]
+
+    // split_at_mut：可变拆分（借用检查器允许同时持有两个可变子切片）
+    let mut arr = [1, 2, 3, 4, 5];
+    let (left, right) = arr.split_at_mut(3);
+    left[0] = 10;
+    right[0] = 40;
+    println!("{:?}", arr); // [10, 2, 3, 40, 5]
+
+    // split：按条件分割成多个子切片
+    let sentence = "hello world foo bar";
+    let words: Vec<&str> = sentence.split(' ').collect();
+    println!("{:?}", words); // ["hello", "world", "foo", "bar"]
+
+    // splitn：最多分割 n 次
+    let limited: Vec<&str> = sentence.splitn(3, ' ').collect();
+    println!("{:?}", limited); // ["hello", "world", "foo bar"]
+}
+```

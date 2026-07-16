@@ -873,3 +873,146 @@ fn main() {
     p.outline_print();
 }
 ```
+
+---
+
+## `Index` 与 `IndexMut`：自定义 `[]` 运算符
+
+实现 `Index` 和 `IndexMut` trait 可以让自定义类型支持 `container[key]` 语法：
+
+```rust
+use std::ops::{Index, IndexMut};
+
+struct Matrix {
+    data: Vec<Vec<f64>>,
+    rows: usize,
+    cols: usize,
+}
+
+impl Matrix {
+    fn new(rows: usize, cols: usize) -> Self {
+        Matrix {
+            data: vec![vec![0.0; cols]; rows],
+            rows,
+            cols,
+        }
+    }
+}
+
+// 实现 Index：支持不可变访问 matrix[(row, col)]
+impl Index<(usize, usize)> for Matrix {
+    type Output = f64;
+
+    fn index(&self, (row, col): (usize, usize)) -> &f64 {
+        assert!(row < self.rows && col < self.cols, "索引越界");
+        &self.data[row][col]
+    }
+}
+
+// 实现 IndexMut：支持可变访问 matrix[(row, col)] = value
+impl IndexMut<(usize, usize)> for Matrix {
+    fn index_mut(&mut self, (row, col): (usize, usize)) -> &mut f64 {
+        assert!(row < self.rows && col < self.cols, "索引越界");
+        &mut self.data[row][col]
+    }
+}
+
+fn main() {
+    let mut m = Matrix::new(3, 3);
+    m[(0, 0)] = 1.0;
+    m[(1, 1)] = 5.0;
+    m[(2, 2)] = 9.0;
+
+    println!("m[0][0] = {}", m[(0, 0)]); // 1.0
+    println!("m[1][1] = {}", m[(1, 1)]); // 5.0
+}
+```
+
+---
+
+## 虚类型参数 (Phantom Types) 与 `PhantomData`
+
+**虚类型参数（Phantom Type）**是指在类型定义中出现但在运行时不持有任何数据的泛型参数。其核心用途是在**编译期**通过类型系统区分语义不同但内存表示相同的值。
+
+### 1. 为什么需要 PhantomData
+
+如果泛型参数 `T` 未被实际字段使用，编译器会报 `unused type parameter` 错误。`PhantomData<T>` 占位符解决此问题：大小为 0，运行时无开销，但在类型系统中等同于"持有一个 `T`"。
+
+```rust
+use std::marker::PhantomData;
+
+// 带单位的数值类型：编译器阻止不同单位混算
+struct Meters;
+struct Feet;
+
+#[derive(Debug, Clone, Copy)]
+struct Distance<Unit> {
+    value: f64,
+    _unit: PhantomData<Unit>, // 零大小，不占内存
+}
+
+impl<Unit> Distance<Unit> {
+    fn new(value: f64) -> Self {
+        Distance { value, _unit: PhantomData }
+    }
+
+    fn value(&self) -> f64 { self.value }
+}
+
+impl Distance<Meters> {
+    fn to_feet(self) -> Distance<Feet> {
+        Distance::new(self.value * 3.28084)
+    }
+}
+
+fn build_wall(height: Distance<Meters>) {
+    println!("墙高 {} 米", height.value());
+}
+
+fn main() {
+    let h_meters = Distance::<Meters>::new(2.5);
+    let h_feet = h_meters.to_feet();
+
+    build_wall(h_meters);
+    // build_wall(h_feet); // ❌ 编译报错：期望 Meters，得到 Feet
+
+    println!("{:.2} 米 = {:.2} 英尺", h_meters.value(), h_feet.value());
+    // Distance<Meters> 和 Distance<Feet> 内存布局相同，但类型不同
+    assert_eq!(std::mem::size_of::<Distance<Meters>>(), std::mem::size_of::<f64>());
+}
+```
+
+### 2. PhantomData 控制型变（Variance）
+
+在 `unsafe` 代码中，用 `PhantomData` 告诉编译器泛型参数的所有权/借用语义：
+
+```rust
+use std::marker::PhantomData;
+
+// 自定义迭代器持有生命周期 'a 的引用（协变）
+struct Iter<'a, T> {
+    ptr: *const T,
+    end: *const T,
+    // 告诉编译器：逻辑上持有 &'a T，对 'a 和 T 都是协变
+    _marker: PhantomData<&'a T>,
+}
+
+// 自定义可变迭代器（对 T 不变，因为可以写入）
+struct IterMut<'a, T> {
+    ptr: *mut T,
+    end: *mut T,
+    // 告诉编译器：逻辑上持有 &'a mut T，对 T 不变
+    _marker: PhantomData<&'a mut T>,
+}
+```
+
+### 3. PhantomData 选型速查
+
+| `PhantomData<T>` 写法 | 语义 | 型变 |
+| :--- | :--- | :--- |
+| `PhantomData<T>` | 拥有 T（会 drop T） | 对 T 协变 |
+| `PhantomData<&'a T>` | 借用 &'a T | 对 'a 和 T 协变 |
+| `PhantomData<&'a mut T>` | 借用 &'a mut T | 对 'a 协变，对 T 不变 |
+| `PhantomData<*const T>` | 持有裸指针 | 对 T 协变 |
+| `PhantomData<*mut T>` | 持有可变裸指针 | 对 T 不变 |
+| `PhantomData<fn(T)>` | 函数参数 | 对 T 逆变 |
