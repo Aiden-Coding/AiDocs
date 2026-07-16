@@ -51,6 +51,7 @@ mindmap
 - [Java 核心基石：Object 方法、异常、反射、泛型与 SPI](basic/1-java-core-fundamentals.md)：剖析 `Object` 六大契约、异常体系、反射与 `MethodHandle`、泛型擦除与桥接方法、注解与 SPI 扩展。
 - [Java 新特性演进与核心底层原理](basic/2-java8-21-features.md)：剖析 Lambda `invokedynamic`、Stream 惰性求值与 JDK 21 虚拟线程 Carrier 调度机制。
 - [Java 基础与集合核心面试真题](basic/3-interview-basic.md)：深入底层剖析 `String` 不可变性、`HashMap` 与 `ConcurrentHashMap` 扩容演进机制。
+- [Java I/O 体系与序列化深剖](basic/4-io-serialization.md)：探究字节流与字符流关系、`BufferedInputStream` 内部缓冲区、装饰器模式应用，以及 Java 原生序列化和第三方协议对比。
 
 ### 1.2 JUC 高并发深度实践 (Concurrency)
 
@@ -65,6 +66,7 @@ mindmap
 - [Disruptor 无锁环形队列](concurrent/8-disruptor.md)：LMAX 架构下的预分配与零 GC 机制。
 - [CPU Cache Line 伪共享调优](concurrent/9-cache-line-sharing.md)：使用 `@Contended` 消除 MESI 协议竞争。
 - [JUC 并发编程面试真题](concurrent/10-interview-concurrent.md)：AQS、线程池、并发容器与虚拟线程高频考点复盘。
+- [ForkJoinPool 与并行流原理](concurrent/11-forkjoin-parallelstream.md)：解密分治法与工作窃取（Work-Stealing）底层机制，拆解全局共享 commonPool 的性能饥饿与并行流线程安全陷阱。
 
 ### 1.3 JVM 虚拟机内核 (Virtual Machine)
 

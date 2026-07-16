@@ -66,8 +66,15 @@ public record UserDto(Long id, String username, String email) {}
 ### 4. 并发编程与线程池
 
 - **线程池定义**：禁止使用 `Executors` 工具类创建线程池（如 `newCachedThreadPool`），必须通过 `ThreadPoolExecutor` 显式创建，并指定有界队列和清晰的拒绝策略（RejectedExecutionHandler）。
+- **并行流与共享池限制**：严禁在默认并行流 `parallelStream()` 或全局共享的 `ForkJoinPool.commonPool()` 中执行阻塞性 I/O 任务（如 RPC 调用、DB 查询）。对含有 I/O 阻塞的并行任务，必须使用独立的自定义 `ForkJoinPool` 或普通线程池进行物理隔离，防止阻塞 JVM 级共享池。
 - **线程上下文清理**：使用 `ThreadLocal` 传递上下文时，必须在 `finally` 块中调用 `remove()` 方法，防止内存泄漏。
 - **并发锁**：优先使用 `synchronized` 或 `ReentrantLock`。在高并发场景下，优先考虑无锁结构（如 `AtomicXxx`）或乐观锁机制。
+
+### 5. 序列化与数据传输
+
+- **显式版本控制**：所有实现 `Serializable` 接口的类必须显式声明 `private static final long serialVersionUID`，以防止因类结构微调导致反序列化 `InvalidClassException`。
+- **单例防卫**：实现反序列化的单例类必须重写 `readResolve()` 方法，防止反序列化生成新实例破坏单例。
+- **安全防范**：严禁反序列化不受信任的外部字节流。分布式调用中，优先使用跨语言、安全性高、体积小的序列化协议（如 Protobuf、Hessian 2），避免使用 Java 原生序列化以防止反序列化远程代码执行（RCE）漏洞。
 
 ## 性能调优与故障排查
 
