@@ -1,5 +1,5 @@
 ---
-sidebar_position: 7
+sidebar_position: 4
 ---
 
 # 渲染优化与批量更新

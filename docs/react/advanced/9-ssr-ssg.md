@@ -1,5 +1,5 @@
 ---
-sidebar_position: 10
+sidebar_position: 9
 ---
 
 # SSR/SSG 架构与 Hydration 机制

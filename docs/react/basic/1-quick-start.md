@@ -1,5 +1,5 @@
 ---
-sidebar_position: 0
+sidebar_position: 1
 ---
 
 # 快速开始：构建的第一个 React 应用
