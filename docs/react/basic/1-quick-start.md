@@ -1,4 +1,4 @@
-﻿---
+---
 sidebar_position: 0
 ---
 
@@ -82,8 +82,8 @@ function App() {
   const [count, setCount] = useState(0);
 
   // 事件处理函数
-  const increment = () => setCount(count + 1);
-  const decrement = () => setCount(count - 1);
+  const increment = () => setCount(prev => prev + 1);
+  const decrement = () => setCount(prev => prev - 1);
   const reset = () => setCount(0);
 
   return (
