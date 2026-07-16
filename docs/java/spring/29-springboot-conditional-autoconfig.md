@@ -78,7 +78,7 @@ public interface Condition {
 ### 2. 过滤
 
 1. 用户 `exclude` / `excludeName`
-2. ` Autoconfiguration.imports` 中的过滤 SPI
+2. `Autoconfiguration.imports` 中的过滤 SPI
 3. 各配置类上的 `@Conditional*`
 4. 最终剩余类当作配置类导入容器
 

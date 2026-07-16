@@ -10,7 +10,7 @@ Outputs only the message. Does not stage, commit, or amend.
 
 ## How to invoke
 
-```
+```text
 /caveman-commit
 ```
 
@@ -20,7 +20,7 @@ Also triggers on phrases like "write a commit", "commit message", "generate comm
 
 Diff: new endpoint for user profile.
 
-```
+```text
 feat(api): add GET /users/:id/profile
 
 Mobile client needs profile data without the full user payload
@@ -31,7 +31,7 @@ Closes #128
 
 Diff: breaking API rename.
 
-```
+```text
 feat(api)!: rename /v1/orders to /v1/checkout
 
 BREAKING CHANGE: clients on /v1/orders must migrate to /v1/checkout

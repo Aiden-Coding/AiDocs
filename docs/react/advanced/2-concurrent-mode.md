@@ -27,6 +27,7 @@ sidebar_position: 3
 React 17 起全面引入了 **Lane 模型**。Lane 意为“车道”，React 使用了一个 **32 位二进制的整型数（Bitmask）** 来代表任务的优先级和类别。
 
 ### Lane 优先级位图划分（简化版）
+
 每个“车道”都是二进制中的一位（1 bit）：
 
 ```typescript
@@ -40,6 +41,7 @@ export const OffscreenLane: Lane =        0b1000000000000000000000000000000; // 
 ```
 
 ### Lane 模型的位运算应用
+
 因为使用了二进制表示，React 可以极其快速、轻量地通过 **位运算** 来合并、剥离或筛选出高优先级的任务车道：
 
 ```javascript
@@ -82,7 +84,8 @@ sequenceDiagram
     E->>B: 构建完毕，同步 Commit 到 DOM
 ```
 
-### 并发任务打断的完整场景：
+### 并发任务打断的完整场景
+
 1. **低优先级渲染启动**：用户点击“加载更多商品”，触发 `DefaultLane` 更新。React 启动 `workLoopConcurrent` 在内存中慢慢计算。
 2. **紧急任务突袭**：计算到一半时，用户在搜索框里输入了一个字母，触发 `SyncLane` 更新。
 3. **调度器决策**：Scheduler 检测到有高优先级的 `SyncLane` 挂起，且 `SyncLane < DefaultLane`（优先级高于默认车道），立刻强行打断当前 WIP 树的计算。
@@ -96,6 +99,7 @@ sequenceDiagram
 并发模式的底层原理为我们提供了两个可以显著提升页面流畅度的 API：
 
 ### 1) startTransition 的应用与原理解析
+
 `startTransition` 用来告诉 React，某个状态更新是一个**“非紧急的过渡任务”**。React 会将该更新标记为 `TransitionLane`。
 
 ```tsx
@@ -126,6 +130,7 @@ function SearchWidget() {
 ```
 
 ### 2) useDeferredValue 的应用与原理解析
+
 `useDeferredValue` 接受一个值，并返回该值的一个“延迟版本”。它非常适用于：你无法直接控制状态修改的来源（如数据直接来自于 Props），但依然希望推迟其渲染以防页面假死的场景。
 
 ```tsx

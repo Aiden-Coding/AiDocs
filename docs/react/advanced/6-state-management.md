@@ -13,22 +13,25 @@ sidebar_position: 5
 目前 React 社区形成了三大阵营：
 
 ### A. Flux 经典阵营（如 Redux Toolkit - RTK）
+
 - **核心思想**：全局单实例 Store、单向数据流（Action -> Reducer -> Store -> View）。
 - **心智模型**：高度规范化、强调行为（Actions）的可回溯性与可调试性。
 - **缺点**：样板代码依然相对繁琐。
 
 ### B. 现代化轻量阵营（如 Zustand）
+
 - **核心思想**：基于发布订阅模式的外部 Store，无 Provider 包裹需求，通过 Selector 进行高细粒度订阅。
 - **心智模型**：极简、对开发者心智负担极低，契合 Hook 直觉。
 
 ### C. 原子状态阵营（如 Jotai / Recoil）
+
 - **核心思想**：底层的原子状态（Atoms）相互依赖、自下而上组合出复杂的应用状态网。
 - **心智模型**：特别适合高频局部重绘、复杂画布应用或看板系统。
 
 | 维度 | Redux Toolkit | Zustand | Jotai |
 | :--- | :--- | :--- | :--- |
 | **状态流模型** | 全局单一大状态树 | 模块化多 Store | 散落的 Atom 原子树 |
-| **Provider 依赖**| 必须 (React Redux Provider) | 不需要 | 可选 |
+| **Provider 依赖** | 必须 (React Redux Provider) | 不需要 | 可选 |
 | **性能机制** | Selector 浅比较过滤 | Selector 浅比较过滤 | 依赖树图依赖自动收集 |
 | **学习曲线** | 陡峭 | 平缓 | 中等 |
 

@@ -988,7 +988,3 @@ export default AutoFocusSearch;
 - [ ] 受控组件同时有 value 和 onChange
 - [ ] useEffect 有依赖项数组
 - [ ] useRef 正确操作 DOM
-
----
-
-## 学习建议

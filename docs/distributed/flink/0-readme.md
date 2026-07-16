@@ -77,4 +77,4 @@ mindmap
 ## 🧩 第六阶段：生态连接器与运维实战 (Connectors & Ops)
 
 - [Connector、CDC 与动态数据源](9-connectors-cdc.md)：说明 Flink 连接器模型、Table DDL 源汇定义，以及基于 Flink CDC 的数据库变更流实时同步架构。
-- [Savepoint、恢复与版本迁移](8-savepoint-recovery.md)：讲解 savepoint 与 checkpoint 的本质差异、手动恢复、版本迁移与无损升级实战。 
+- [Savepoint、恢复与版本迁移](8-savepoint-recovery.md)：讲解 savepoint 与 checkpoint 的本质差异、手动恢复、版本迁移与无损升级实战。

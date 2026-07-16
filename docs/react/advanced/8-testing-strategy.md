@@ -15,7 +15,8 @@ sidebar_position: 9
 RTL 提出了颠覆性的测试指导思想：
 > **“测试你的组件时，应该尽可能像真实用户在跟它交互一样进行。”**
 
-### RTL 核心测试准则：
+### RTL 核心测试准则
+
 - **测试用户体验而非实现**：用户看不到 state，用户只看得见 DOM 上的按钮、文字和输入框。
 - **优先使用语义化查询 (Queries)**：
   - 首选 `getByRole`（按无障碍角色查询，如 `button`、`heading`），这能顺带检查页面是否具备无障碍易用性。
@@ -44,6 +45,7 @@ export default defineConfig({
 ```
 
 在 `setupTests.ts` 中引入 `@testing-library/jest-dom` 以获得诸如 `toBeInTheDocument` 的断言扩展：
+
 ```typescript
 import '@testing-library/jest-dom';
 ```

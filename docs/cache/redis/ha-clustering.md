@@ -169,7 +169,7 @@ aof-use-rdb-preamble yes
 
 **混合文件结构**：
 
-```
+```text
 +------------------+------------------+
 |  RDB Header      |  AOF Incremental |
 |  (Full Snapshot) |  (Delta Commands)|
@@ -342,6 +342,7 @@ sentinel parallel-syncs mymaster 1
 **现象**：`CLUSTERDOWN Hash slot not served`
 
 **排查**：
+
 ```bash
 # 检查槽位分布
 redis-cli --cluster info 127.0.0.1:7001
@@ -355,6 +356,7 @@ redis-cli --cluster fix 127.0.0.1:7001
 **现象**：从节点持续触发全量同步
 
 **排查**：
+
 ```bash
 # 检查复制偏移量
 redis-cli INFO replication | grep -E "master_repl_offset|slave_repl_offset"
@@ -366,6 +368,7 @@ redis-cli CONFIG GET repl-backlog-size
 ### 3. 内存突增（OOM）
 
 **排查**：
+
 ```bash
 # 查看内存明细
 redis-cli INFO memory | grep -E "used_memory_human|used_memory_peak_human"

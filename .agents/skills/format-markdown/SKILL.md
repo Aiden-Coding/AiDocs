@@ -59,7 +59,7 @@ disable-model-invocation: false
   普通文本
   ```java
   System.out.println("Hello");
-  ```
+  ```text
   普通文本
 
   <!-- 正确 -->
@@ -67,7 +67,7 @@ disable-model-invocation: false
 
   ```java
   System.out.println("Hello");
-  ```
+  ```text
 
   普通文本
   ````

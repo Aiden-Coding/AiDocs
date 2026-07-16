@@ -133,7 +133,8 @@ function workLoopConcurrent() {
 
 Commit 阶段是**绝对同步、不可中断**的，因为这个阶段会直接修改真实的 DOM 树。如果在此处中断，用户就会在屏幕上看到半截渲染的残破界面。
 
-#### Commit 阶段的三个子阶段：
+#### Commit 阶段的三个子阶段
+
 1. **Before Mutation 阶段**：DOM 节点被实际修改前，触发 `getSnapshotBeforeUpdate` 等生命周期。
 2. **Mutation 阶段**：遍历所有副作用标记，执行真实的 DOM 插入、更新、删除操作。
 3. **Layout 阶段**：DOM 修改完毕。此时可以安全读取最新的 DOM 属性，触发 `useLayoutEffect`、生命周期回调，并安排 `useEffect` 的异步调用。

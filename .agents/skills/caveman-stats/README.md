@@ -10,13 +10,13 @@ Each run also writes a lifetime-savings suffix file used by the statusline badge
 
 ## How to invoke
 
-```
+```text
 /caveman-stats
 ```
 
 ## Example output
 
-```
+```text
 Session: 47 turns
 Input:   12,304 tokens
 Output:   3,891 tokens (caveman)

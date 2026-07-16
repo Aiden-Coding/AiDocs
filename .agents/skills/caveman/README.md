@@ -9,7 +9,7 @@ Compress every model response to caveman-style prose. Drops articles, filler, pl
 Six intensity levels:
 
 | Level | What change |
-|-------|-------------|
+| ------- | ------------- |
 | `lite` | Drop filler/hedging. Sentences stay full. Professional but tight. |
 | `full` | Default. Drop articles, fragments OK, short synonyms. |
 | `ultra` | Bare fragments. Abbreviations (DB, auth, fn). Arrows for causality. |
@@ -21,7 +21,7 @@ Auto-clarity rule: caveman drops to normal prose for security warnings, irrevers
 
 ## How to invoke
 
-```
+```text
 /caveman              # full mode (default)
 /caveman lite         # lighter compression
 /caveman ultra        # extreme compression

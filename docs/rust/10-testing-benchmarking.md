@@ -39,7 +39,7 @@ cargo test --test integration_test # 运行特定集成测试文件
 
 ## 断言宏
 
-### assert!
+### assert
 
 ```rust
 #[test]
@@ -49,7 +49,7 @@ fn test_assert() {
 }
 ```
 
-### assert_eq! 和 assert_ne!
+### assert_eq! 和 assert_ne
 
 ```rust
 #[test]
@@ -209,7 +209,7 @@ mod tests {
 
 集成测试位于 `tests` 目录：
 
-```
+```text
 my_project/
 ├── Cargo.toml
 ├── src/

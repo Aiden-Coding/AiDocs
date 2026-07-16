@@ -186,7 +186,7 @@ function MessageCenter({ unreadCount }) {
 > [!WARNING]
 > **小心数字 `0` 的陷阱！**
 > 如果 `unreadCount` 的值为 `0`，`0 && <span/>` 表达式会被求值为数字 `0`。React 会把数字 `0` 直接渲染到屏幕上，导致 UI 出现一个多余的 `0`。
-> 
+>
 > **安全写法**：转为布尔值判断 `unreadCount > 0 && ...` 或 `{!!unreadCount && ...}`。
 
 ### 方式 3：If-Else 语句（适用于复杂的渲染分支）
@@ -623,7 +623,7 @@ function BuggyComponent({ items }) {
 ## 📚 关键概念总结表
 
 | 概念 | 说明 | 示例 |
-|-----|------|------|
+| ----- | ------ | ------ |
 | **JSX** | HTML 与 JavaScript 的融合语法 | `<div>{name}</div>` |
 | **大括号** | 在 JSX 中嵌入 JavaScript 表达式 | `{count + 1}` |
 | **className** | 替代 HTML 的 `class` 属性 | `<div className="active">` |

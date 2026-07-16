@@ -32,7 +32,7 @@ Yes: "Bug in auth middleware. Token expiry check use `<` not `<=`. Fix:"
 ## Intensity
 
 | Level | What change |
-|-------|------------|
+| ------- | ------------ |
 | **lite** | No filler/hedging. Keep articles + full sentences. Professional but tight |
 | **full** | Drop articles, fragments OK, short synonyms. Classic caveman. No tool-call narration, no decorative tables/emoji, no long raw error-log dumps unless asked. Standard acronyms OK; no invented abbreviations |
 | **ultra** | Strip conjunctions when cause-then-effect stay unambiguous. One word when one word enough. State each fact once. NO prose abbreviations (cfg/impl/req/res/fn/auth), NO arrows (X → Y) — measured zero token saving under tokenizer, cost decode clarity. Code symbols, function names, API names, error strings: never touch |
@@ -68,9 +68,11 @@ Resume caveman after clear part done.
 
 Example — destructive op:
 > **Warning:** This will permanently delete all rows in the `users` table and cannot be undone.
+>
 > ```sql
 > DROP TABLE users;
 > ```
+>
 > Caveman resume. Verify backup exist first.
 
 ## Boundaries

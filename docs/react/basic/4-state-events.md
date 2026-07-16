@@ -701,7 +701,7 @@ function Parent() {
 ## 📚 关键概念总结表
 
 | 概念 | 说明 | 例子 |
-|-----|------|------|
+| ----- | ------ | ------ |
 | **State** | 组件内部可变的状态数据 | `const [count, setCount] = useState(0)` |
 | **setState** | 更新状态的函数 | `setCount(count + 1)` |
 | **异步更新** | 状态更新不会立刻生效 | setState 后的下一行无法使用新值 |

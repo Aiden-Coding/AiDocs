@@ -41,6 +41,7 @@ function Provider({ children }) {
 为了规避上述渲染陷阱，我们可以采用以下三种优化方案：
 
 ### 方案 1：拆分 Context（推荐）
+
 根据业务维度，将一个庞大臃肿的 Context 拆分为多个相互独立的小 Context，实现职责分离与按需订阅。
 
 ```tsx
@@ -63,6 +64,7 @@ function OptimizedProvider({ children }) {
 ```
 
 ### 方案 2：利用 `children` 属性进行性能隔离
+
 如果你有一个经常更新的 Provider 组件，为了防止它的子组件树跟着重渲染，可以利用 `children` 占位来让 React 复用原有的 WIP Fiber 节点，从而中断向下重渲染。
 
 ```tsx
@@ -80,6 +82,7 @@ function StateWrapper({ children }: { children: React.ReactNode }) {
 ```
 
 ### 方案 3：使用 `useMemo` 缓存 Provider 的 Value
+
 如果 value 的属性较多，应当保证传入 value 对象的引用稳定性，避免因父组件更新重新生成对象：
 
 ```tsx
@@ -104,7 +107,8 @@ function MemoizedProvider({ children }) {
 
 对于结构复杂、包含多种业务动作的状态（例如：购物车、多步骤表单），使用简单的 `useState` 会导致代码中充满散乱的修改逻辑。`useReducer` 允许我们以类似 Redux 的单向数据流思想管理状态。
 
-### 核心要素：
+### 核心要素
+
 - **State**：状态机的当前只读快照。
 - **Action**：描述“发生了什么操作”的普通 JavaScript 对象。
 - **Reducer**：一个纯函数，接收 `state` 和 `action`，并根据 action 的类型计算出并返回一个全新的 `state`。

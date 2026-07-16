@@ -33,14 +33,14 @@ slug: /rust/
 
 ### 🟢 基础篇
 
-**适合完全零基础的 Rust 初学者**
+💡 **适合完全零基础的 Rust 初学者**
 
 - [语法基石与工具链](./getting-started) - 环境搭建、Cargo 使用、基础语法
 - [项目结构与模块系统](./project-structure) - 模块组织、可见性、包管理
 
 ### 🟡 核心篇
 
-**需要有一定 Rust 开发经验**
+💡 **需要有一定 Rust 开发经验**
 
 - [所有权与生命周期](./ownership-lifetimes) - Rust 最核心的概念
 - [内存管理模型](./memory-management) - 栈与堆、智能指针、RAII
@@ -50,7 +50,7 @@ slug: /rust/
 
 ### 🔴 高级篇
 
-**面向系统级开发者与性能工程师**
+💡 **面向系统级开发者与性能工程师**
 
 - [并发编程](./concurrency) - 线程、消息传递、Arc 与 Mutex
 - [异步编程原理](./async-under-the-hood) - Future、Pin、异步运行时

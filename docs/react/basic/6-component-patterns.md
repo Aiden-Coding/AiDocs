@@ -13,6 +13,7 @@ sidebar_position: 6
 在处理 HTML 表单元素（如 `<input>`、`<select>`、`<textarea>`）时，React 提供了两种管理数据的方式。
 
 ### 受控组件 (Controlled Components)
+
 表单的数据完全由 React 组件的 `state` 来托管。每一次字符输入都会触发事件处理器更新 state，再通过重新渲染改变输入框的 `value`。
 
 - **优势**：状态实时同步，可以极方便地进行即时校验（如限制输入格式、动态展示错误提示）、过滤或清空输入。
@@ -45,6 +46,7 @@ function ControlledInput() {
 ```
 
 ### 非受控组件 (Uncontrolled Components)
+
 表单的数据不由 React 状态管理，而是保留在 DOM 元素自身内部。我们通过 `useRef` 在需要的时候（例如点击提交按钮时）直接去 DOM 节点上“抓取”数据。
 
 - **优势**：不需要频繁触发 React 重渲染，代码简单，非常适合用于“仅在提交时读取一次数据”的简单表单或第三方非 React 库的集成。

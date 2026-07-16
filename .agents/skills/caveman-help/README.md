@@ -8,7 +8,7 @@ Prints a cheat sheet of all caveman modes, sibling skills, deactivation triggers
 
 ## How to invoke
 
-```
+```text
 /caveman-help
 ```
 
@@ -16,7 +16,7 @@ Also triggers on "caveman help", "what caveman commands", "how do I use caveman"
 
 ## Example output
 
-```
+```text
 Modes:
   /caveman              full (default)
   /caveman lite         lighter

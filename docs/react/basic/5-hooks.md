@@ -1,4 +1,4 @@
-﻿---
+---
 sidebar_position: 5
 ---
 
@@ -40,6 +40,7 @@ function Counter() {
 ```
 
 - **惰性初始状态**：如果初始状态需要通过复杂计算获得，可以给 `useState` 传入一个函数。该函数只会在组件初次渲染时执行一次，避免重复计算。
+
   ```tsx
   const [data, setData] = useState(() => {
     return someExpensiveComputation();
@@ -82,6 +83,7 @@ function UserProfile({ userId }) {
 `useRef` 返回一个可变的 ref 对象，其 `.current` 属性被初始化为传入的参数。它有两个核心用途：
 
 1. **获取真实 DOM 节点的引用**：
+
    ```tsx
    import { useRef, useEffect } from 'react';
 
@@ -95,7 +97,9 @@ function UserProfile({ userId }) {
      return <input ref={inputRef} type="text" />;
    }
    ```
+
 2. **保存跨渲染周期的持久化变量**：修改 `ref.current` **不会触发组件的重新渲染**。可以用它来保存定时器 ID、上一次的状态等。
+
    ```tsx
    const timerRef = useRef<NodeJS.Timeout | null>(null);
    // 即使 timerRef.current 被赋值，组件也不会重新渲染
@@ -169,7 +173,8 @@ graph LR
 更新调用：执行 HooksA (复用 HookA) -> 执行 HooksC (此时 React 指针复用了 HookB 的内存！)
 ```
 
-这会导致极其严重的后果：HooksC 意外读写了原本属于 HookB 的持久化状态数据（导致类型错乱，状态漂移，UI 崩溃）。这就是 Hooks 必须遵守**“只在最外层、无条件地使用”**铁律的技术内幕。
+这会导致极其严重的后果：HooksC 意外读写了原本属于 HookB 的持久化状态数据（导致类型错乱，状态漂移，UI 崩溃）。这就是 Hooks 必须遵守**“只在最外层、无条件地使用”**铁律的技术内幕
+
 ---
 
 ## 🧪 Hooks 自检清单
@@ -533,7 +538,7 @@ function GoodComponent() {
 ### useEffect vs useLayoutEffect 的区别
 
 | 特性 | useEffect | useLayoutEffect |
-|-----|-----------|-----------------|
+| ----- | ----------- | ----------------- |
 | **执行时机** | 浏览器绘制**之后**异步执行 | 浏览器绘制**之前**同步执行 |
 | **阻塞渲染** | 不阻塞 | 会阻塞 |
 | **使用场景** | 数据请求、事件订阅等异步操作 | DOM 测量、同步修改 DOM |
@@ -667,7 +672,7 @@ function ResponsiveComponent() {
 ## 📚 关键概念总结表
 
 | Hook | 用途 | 注意事项 |
-|------|------|---------|
+| ------ | ------ | --------- |
 | **useState** | 声明组件状态 | 使用函数式更新避免闭包陷阱 |
 | **useEffect** | 处理副作用 | 正确设置依赖项，记得清理 |
 | **useRef** | DOM引用或持久化变量 | 修改不触发重渲染 |

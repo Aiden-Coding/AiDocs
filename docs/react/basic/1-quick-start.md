@@ -37,7 +37,7 @@ npm install
 
 项目结构会是这样的：
 
-```
+```text
 my-first-react-app/
 ├── src/
 │   ├── App.tsx           # 主应用组件
@@ -58,7 +58,7 @@ npm run dev
 
 你会看到类似的输出：
 
-```
+```text
   VITE v5.0.0  ready in 234 ms
 
   ➜  Local:   http://localhost:5173/
@@ -353,28 +353,35 @@ footer {
 ## 🎯 理解发生了什么
 
 ### 1. **状态声明**
+
 ```tsx
 const [count, setCount] = useState(0);
 ```
+
 - `count`：当前状态值（初始值为 0）
 - `setCount`：更新状态的函数
 - 每次调用 `setCount` 后，组件会重新渲染，`count` 变量会拿到最新值
 
 ### 2. **事件绑定**
+
 ```tsx
 <button onClick={increment}>➕ 增加</button>
 ```
+
 - `onClick` 属性绑定事件处理函数
 - 用户点击按钮时，React 会调用 `increment` 函数
 
 ### 3. **条件渲染**
+
 ```tsx
 {count > 10 && <p>计数已超过 10</p>}
 ```
+
 - 使用 `&&` 操作符进行条件渲染
 - 只有当条件为真时，才会渲染后面的 JSX
 
 ### 4. **热更新**
+
 - 修改代码后，浏览器会自动刷新应用（Fast Refresh）
 - 你可以持续改进应用而无需手动刷新
 
@@ -385,13 +392,17 @@ const [count, setCount] = useState(0);
 现在试试这些改动，加深对 React 的理解：
 
 ### 挑战 1：改变初始值
+
 修改这一行：
+
 ```tsx
 const [count, setCount] = useState(0);  // 改成 10
 ```
 
 ### 挑战 2：添加新按钮
+
 在 `.button-group` 中添加一个新按钮：
+
 ```tsx
 <button onClick={() => setCount(count + 10)} className="btn btn-primary">
   ➕➕ 加 10
@@ -399,7 +410,9 @@ const [count, setCount] = useState(0);  // 改成 10
 ```
 
 ### 挑战 3：添加更多条件反馈
+
 在 `.status-section` 中添加：
+
 ```tsx
 {count % 2 === 0 && (
   <p className="alert alert-success">✅ 当前是偶数！</p>
@@ -422,20 +435,24 @@ const [count, setCount] = useState(0);  // 改成 10
 ## 💡 常见问题
 
 ### Q: 为什么修改代码后浏览器自动刷新了？
+
 **A:** 这叫 Hot Module Replacement (HMR)。Vite 的一个强大特性，可以在保留应用状态的情况下实时更新代码。
 
 ### Q: useState 的 `count + 1` 为什么有时候只增加 1？
+
 **A:** 这是一个常见的陷阱。如果你在一个事件处理函数中多次调用 `setCount(count + 1)`，React 会将多个状态更新合并（批处理）。详见 [State 与事件处理](4-state-events.md)。
 
 ### Q: 如何构建生产版本？
+
 **A:** 运行 `npm run build`，产物会在 `dist/` 目录下。
 
 ### Q: 如何部署我的应用？
+
 **A:** 你可以将 `dist/` 目录部署到任何静态服务（如 Netlify、Vercel、GitHub Pages）。
 
 ---
 
-## 🎉 恭喜！
+## 🎉 恭喜
 
 你已经完成了 React 的快速开始！你现在已经理解了：
 - ✅ 如何创建 React 项目

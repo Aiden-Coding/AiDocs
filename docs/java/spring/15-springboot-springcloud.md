@@ -113,8 +113,6 @@ sequenceDiagram
 
 在分布式环境下，数据的一致性至关重要。关于 Seata 的 AT 模式及隔离性，详见 [Seata 分布式事务全解：AT 模式深度剖析与实战](./25-seata-distributed-transaction.md)。
 
-
-
 Nacos 将服务实例分为**临时实例**和**持久实例**：
 
 - **临时实例（默认）**：

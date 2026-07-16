@@ -157,7 +157,7 @@ mindmap
 - [线上故障深度复盘记录](jvm/4-prod-troubleshooting-cases.md)：四大经典 OOM 与 CPU 100% 根因分析。
 - [JVM 启动参数黄金配置模板](jvm/5-prod-practice.md)：在生产环境配置 G1/ZGC。
 
-**核心面试真题与底层原理专题**
+### 核心面试真题与底层原理专题
 
 - [Java 基础与集合面试真题](basic/3-interview-basic.md)
 - [JUC 并发编程面试真题](concurrent/10-interview-concurrent.md)
