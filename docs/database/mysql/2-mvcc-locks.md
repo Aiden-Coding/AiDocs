@@ -175,3 +175,68 @@ sequenceDiagram
 3. **定位业务源码做调优**：
    - 根据死锁日志中暴露的 SQL，回溯项目中的 Service / Mapper 文件，看是否存在由于业务逻辑错乱导致两个接口加锁顺序不一致的问题。
    - **防范策略**：统一物理接口的**加锁访问顺序**（先排队加锁 id=1，再加锁 id=2）；尽量在业务逻辑中降低事务的整体持锁周期，长事务拆分为小短事务。
+
+---
+
+### 4. 线上死锁日志案例实战拆解
+
+以下是一段真实的 `SHOW ENGINE INNODB STATUS` 输出的死锁日志，该案例是典型的**并发 Insert 导致间隙锁与插入意向锁冲突**引发的死锁：
+
+```sql
+------------------------
+LATEST DETECTED DEADLOCK
+------------------------
+2026-07-16 14:33:53 0x7f8c1c0a5700
+*** (1) TRANSACTION:
+TRANSACTION 284300, ACTIVE 5 sec inserting
+mysql tables in use 1, locked 1
+LOCK WAIT 3 lock struct(s), heap size 1136, 2 row lock(s)
+MySQL thread id 12, OS thread handle 140240026216192, query id 98 localhost root update
+INSERT INTO orders (id, order_no, status) VALUES (6, '20260716006', 1)
+
+*** (1) WAITING FOR THIS LOCK TO BE GRANTED:
+RECORD LOCKS space id 45 page no 3 n bits 72 index PRIMARY of table `test`.`orders` trx id 284300 lock_mode X insert intention waiting
+Record lock, heap no 1 PHYSICAL RECORD: n_fields 1; compact format; info bits 0
+ 0: len 8; hex 800000000000000a; asc         ;;
+
+*** (2) TRANSACTION:
+TRANSACTION 284301, ACTIVE 4 sec inserting
+mysql tables in use 1, locked 1
+3 lock struct(s), heap size 1136, 2 row lock(s)
+MySQL thread id 13, OS thread handle 140240026269440, query id 99 localhost root update
+INSERT INTO orders (id, order_no, status) VALUES (7, '20260716007', 1)
+
+*** (2) HOLDS THE LOCK(S):
+RECORD LOCKS space id 45 page no 3 n bits 72 index PRIMARY of table `test`.`orders` trx id 284301 lock mode Gaps
+Record lock, heap no 5 PHYSICAL RECORD: n_fields 5; compact format; info bits 0
+ 0: len 8; hex 800000000000000a; asc         ;;
+
+*** (2) WAITING FOR THIS LOCK TO BE GRANTED:
+RECORD LOCKS space id 45 page no 3 n bits 72 index PRIMARY of table `test`.`orders` trx id 284301 lock_mode X insert intention waiting
+Record lock, heap no 1 PHYSICAL RECORD: n_fields 1; compact format; info bits 0
+ 0: len 8; hex 800000000000000a; asc         ;;
+
+*** WE ROLL BACK TRANSACTION (1)
+```
+
+#### 日志深度诊断
+
+1. **事务 1 (`*** (1) TRANSACTION`)**：
+   - 事务 ID 为 `284300`，已活跃 5 秒，当前正在执行 `inserting` 操作：`INSERT INTO orders ... (6)`。
+   - 此时它处于 `LOCK WAIT` 状态。
+2. **事务 1 等待的锁 (`*** (1) WAITING FOR THIS LOCK TO BE GRANTED`)**：
+   - 在表 `test`.`orders` 的主键索引 `PRIMARY` 上等待一个 `lock_mode X insert intention waiting`（**排他插入意向锁**）。
+   - 该锁作用于物理页 `page no 3`。
+3. **事务 2 (`*** (2) TRANSACTION`)**：
+   - 事务 ID 为 `284301`，已活跃 4 秒，当前也在执行 `inserting` 操作：`INSERT INTO orders ... (7)`。
+4. **事务 2 持有的锁 (`*** (2) HOLDS THE LOCK(S)`)**：
+   - 占有了 `lock mode Gaps`（**间隙锁**），范围在主键值为 `10`（十六进制 `hex 800000000000000a` 代表 10）的前面。
+5. **事务 2 等待的锁 (`*** (2) WAITING FOR THIS LOCK TO BE GRANTED`)**：
+   - 同样在等待 `lock_mode X insert intention waiting`（**排他插入意向锁**），主键为 `10`。
+6. **死锁成因剖析**：
+   - 事务 1 和事务 2 在之前某个时间，均在区间 `(5, 10)` 内申请了 **Gap Lock**（可能由于执行了类似 `SELECT ... WHERE id = 6 FOR UPDATE` 的当前读，但当时 `id=6` 记录并不存在）。
+   - **注意**：间隙锁（Gap Lock）之间是**兼容**的，所以事务 1 和事务 2 可以同时持有同一个区间的间隙锁。
+   - 随后，事务 1 执行 `INSERT` 试图插入 `id=6`，需要先获取该区间的**插入意向锁（Insert Intention Lock）**。然而，插入意向锁与事务 2 占有的 Gap Lock **互斥**，导致事务 1 阻塞等待事务 2 释放间隙锁。
+   - 紧接着，事务 2 执行 `INSERT` 试图插入 `id=7`，同样需要获取该区间的插入意向锁。然而，这又与事务 1 占有的 Gap Lock **互斥**，导致事务 2 阻塞等待事务 1 释放间隙锁。
+   - 两个事务形成闭环等待：**T1 等待 T2 释放 Gap Lock，T2 也在等待 T1 释放 Gap Lock**。
+   - InnoDB 监测到该等待环，决定回滚持有锁较少的事务 1（`*** WE ROLL BACK TRANSACTION (1)`）。
