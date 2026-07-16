@@ -48,8 +48,9 @@ mindmap
 
 ## 🏗️ 第二阶段：高可用集群架构 & 性能调优 (High Availability & Performance)
 
-- [主从、哨兵、集群与脑裂防御](3-highavailability.md)：解析 Cluster  下的哈希槽（Slot）与故障自动转移。
-- [性能调优与生产实战](5-performance-tuning.md)：企业级对齐 BigKey / HotKey 治理、脑裂规避、缓冲区调优。
+- [主从、哨兵与集群基础](3-highavailability.md)：解析持久化机制（RDB / AOF）、哨兵（Sentinel）工作原理与集群分片槽位基础理论。
+- [高可用集群实战与运维](ha-clustering.md)：实战演练 Cluster 动态扩缩容、主从同步 PSYNC2 优化与混合持久化故障恢复。
+- [性能调优与生产实战](5-performance-tuning.md)：企业级对齐 BigKey / HotKey 治理、脑裂规避、缓冲区与内存碎片率调优。
 
 ---
 

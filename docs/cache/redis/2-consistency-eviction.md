@@ -68,10 +68,51 @@ sidebar_label: 双写一致性与淘汰策略
 ##### 补充：双写一致性下的强一致性方案 —— 读写锁
 
 > 如果业务场景要求绝对的强一致性（不能容忍任何短暂的最终一致延迟），可以使用 Redisson 提供的分布式读写锁（`RReadWriteLock`）。
-> - **读锁 (Shared Lock)**：允许多个读请求并发获取读锁，不互斥。
+> - **读锁 (Shared Lock)**：允许多个读请求并发获取读锁，与写锁互斥，但读读不互斥。
 > - **写锁 (Exclusive Lock)**：写请求获取写锁，会排斥其他的读锁和写锁。
 >
 > 读写锁底层依赖 Redis Hash 的状态标志和不同的客户端线程 ID 维护逻辑，保证了写操作进行时读请求被阻塞，或者读操作进行时写操作被阻塞，实现完美的强一致性。
+
+**Java 代码实现示例**：
+
+```java
+// 读操作
+public String readData(String key) {
+    RReadWriteLock rwLock = redissonClient.getReadWriteLock("rwlock:" + key);
+    RLock readLock = rwLock.readLock();
+    // 获取读锁，若有写锁正在占用，读锁会阻塞等待
+    readLock.lock();
+    try {
+        // 1. 尝试从缓存读取
+        String value = redisTemplate.opsForValue().get(key);
+        if (value != null) {
+            return value;
+        }
+        // 2. 缓存失效，从数据库读取并回写
+        value = mySqlMapper.queryData(key);
+        redisTemplate.opsForValue().set(key, value, 30, TimeUnit.MINUTES);
+        return value;
+    } finally {
+        readLock.unlock(); // 释放读锁
+    }
+}
+
+// 写操作
+public void writeData(String key, String newValue) {
+    RReadWriteLock rwLock = redissonClient.getReadWriteLock("rwlock:" + key);
+    RLock writeLock = rwLock.writeLock();
+    // 获取写锁（排他锁，会阻塞其他所有的读锁和写锁请求）
+    writeLock.lock();
+    try {
+        // 1. 更新数据库
+        mySqlMapper.updateData(key, newValue);
+        // 2. 删除缓存
+        redisTemplate.delete(key);
+    } finally {
+        writeLock.unlock(); // 释放写锁
+    }
+}
+```
 
 #### 方案二：延迟双删（针对先删缓存，后写库方案的补救）
 
