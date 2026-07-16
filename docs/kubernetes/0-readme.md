@@ -1,7 +1,7 @@
 ---
 id: readme
 title: Kubernetes 学习路线
-sidebar_position: 1
+sidebar_position: 0
 ---
 
 # Kubernetes (K8s) 从入门到精通

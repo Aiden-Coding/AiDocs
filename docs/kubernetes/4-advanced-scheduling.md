@@ -1,7 +1,7 @@
 ---
 id: advanced-scheduling
 title: Taint、Toleration 与亲和性调度
-sidebar_position: 5
+sidebar_position: 4
 ---
 
 # 高级调度机制

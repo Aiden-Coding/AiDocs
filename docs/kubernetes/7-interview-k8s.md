@@ -1,7 +1,7 @@
 ---
 id: interview-k8s
 title: K8s 高频面试题
-sidebar_position: 8
+sidebar_position: 7
 ---
 
 # Kubernetes 高频面试题解析

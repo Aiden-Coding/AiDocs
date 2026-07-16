@@ -1,7 +1,7 @@
 ---
 id: architecture
 title: K8s 体系架构与组件
-sidebar_position: 3
+sidebar_position: 2
 ---
 
 # K8s 体系架构与组件

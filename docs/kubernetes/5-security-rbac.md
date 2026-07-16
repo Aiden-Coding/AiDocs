@@ -1,7 +1,7 @@
 ---
 id: security-rbac
 title: 安全、RBAC 与网络策略
-sidebar_position: 6
+sidebar_position: 5
 ---
 
 # K8s 安全体系

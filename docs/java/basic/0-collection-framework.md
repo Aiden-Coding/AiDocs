@@ -2,7 +2,7 @@
 title: Java 集合框架底层源码深剖
 hide_title: true
 sidebar_label: 集合框架底层机制
-sidebar_position: 10
+sidebar_position: 0
 ---
 
 ## 深入 Java 集合框架源码与物理结构

@@ -1,7 +1,7 @@
 ---
 id: getting-started
 title: K8s 基础概念与入门
-sidebar_position: 2
+sidebar_position: 1
 ---
 
 # K8s 基础概念与入门

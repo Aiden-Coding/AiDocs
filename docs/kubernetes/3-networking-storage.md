@@ -1,7 +1,7 @@
 ---
 id: networking-storage
 title: K8s 网络与存储
-sidebar_position: 4
+sidebar_position: 3
 ---
 
 # K8s 网络与存储

@@ -1,7 +1,7 @@
 ---
 title: 浏览器渲染机制与关键渲染路径调优
 sidebar_label: 3. 浏览器渲染与性能
-sidebar_position: 3
+sidebar_position: 2
 ---
 
 ## 浏览器渲染机制与关键渲染路径调优

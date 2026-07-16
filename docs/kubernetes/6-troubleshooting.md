@@ -1,7 +1,7 @@
 ---
 id: troubleshooting
 title: 常见排障与最佳实践
-sidebar_position: 7
+sidebar_position: 6
 ---
 
 # 常见排障与最佳实践
