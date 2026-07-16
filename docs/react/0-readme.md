@@ -76,7 +76,31 @@ function Counter() {
 }
 ```
 
-### 1.2 JSX 语法与规范
+### 1.2 JavaScript 必备基础
+
+- [JavaScript 常用语法](basic/1.5-js-essentials.md)：现代 React 开发所需的 ES6+ 语法子集，包括解构赋值、展开运算符、常用数组方法、可选链操作符等。
+
+#### 💡 核心示例：解构赋值与属性展开
+
+```tsx
+interface Props {
+  title: string;
+  className?: string;
+  [key: string]: any;
+}
+
+// 1. 在参数中直接进行对象解构，并设置默认值
+function InfoCard({ title, className = 'default-card', ...restProps }: Props) {
+  return (
+    // 2. 模板字符串动态类名，以及展开运算符传参
+    <div className={`card-wrapper ${className}`} {...restProps}>
+      <h3>{title}</h3>
+    </div>
+  );
+}
+```
+
+### 1.3 JSX 语法与规范
 
 - [JSX 语法与规范](basic/2-jsx-syntax.md)：探究 JSX 编译后的 JavaScript 本质；掌握闭合标签、单根节点、驼峰命名等书写规范；实战条件渲染与列表渲染。
 
@@ -109,7 +133,7 @@ function ListDemo({ items, showList }: { items: Item[]; showList: boolean }) {
 }
 ```
 
-### 1.3 组件与 Props 数据流
+### 1.4 组件与 Props 数据流
 
 - [组件与 Props 数据流](basic/3-components-props.md)：理解函数组件声明；掌握 Props 的传递与解构；探究 Props 的只读特性与单向数据流；利用 `children` 属性设计高复用布局组件。
 
@@ -141,7 +165,7 @@ function App() {
 }
 ```
 
-### 1.4 State 状态与事件绑定
+### 1.5 State 状态与事件绑定
 
 - [State 状态与事件绑定](basic/4-state-events.md)：通过 `useState` 激活组件心跳；理解状态更新的异步性与批处理（Batching）机制；学习函数式更新解决旧状态依赖；掌握 React 合成事件与状态提升。
 
@@ -827,6 +851,11 @@ React 核心哲学
   ├─ 声明式 UI vs 指令式编程
   ├─ UI = f(state) 数学映射
   └─ 纯函数与副作用隔离
+
+JavaScript 常用语法
+  ├─ 解构赋值与展开运算符
+  ├─ 数组常用方法 (map, filter, reduce)
+  └─ 异步请求与可选链操作符
 
 JSX 与组件
   ├─ JSX 编译原理与 React.createElement
