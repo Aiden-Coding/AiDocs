@@ -1077,3 +1077,108 @@ fn main() {
 | `no_std` 支持 | 需 OS 支持 | 部分支持 |
 
 > 推荐原则：新项目且不在乎一个外部依赖时，优先用 `parking_lot`；库代码为减少依赖可用 `std::sync`。
+
+---
+
+## Send 和 Sync：线程安全的类型系统保证
+
+`Send` 和 `Sync` 是 Rust 并发安全的编译期基石——它们是**标记 trait（Marker Traits）**，没有任何方法，纯粹用于向编译器传递类型的线程安全语义。
+
+### 定义
+
+```rust
+// Send：类型的所有权可以安全地跨线程转移
+// （类型的值可以从一个线程"发送"到另一个线程）
+pub unsafe auto trait Send {}
+
+// Sync：类型的共享引用可以安全地跨线程使用
+// （&T 可以安全地在多个线程中同时持有）
+pub unsafe auto trait Sync {}
+```
+
+### 自动推导规则
+
+编译器对结构体/枚举自动推导：
+- 若所有字段都是 `Send` → 整体自动 `Send`
+- 若所有字段都是 `Sync` → 整体自动 `Sync`
+
+```rust
+use std::sync::{Arc, Mutex};
+
+// ✅ Send + Sync（所有字段都安全）
+struct SafeData {
+    count: Arc<Mutex<u32>>,
+    name: String,
+}
+
+// ❌ 不是 Send（Rc 不能跨线程）
+use std::rc::Rc;
+struct UnsafeData {
+    value: Rc<u32>, // Rc 不是 Send，因为引用计数非原子
+}
+```
+
+### 常见类型的 Send/Sync 状态
+
+| 类型 | Send | Sync | 原因 |
+| :--- | :---: | :---: | :--- |
+| 基础类型 `i32`, `bool` | ✅ | ✅ | 无状态共享问题 |
+| `String`, `Vec<T>` | ✅ | ✅ | 有所有权，无共享状态 |
+| `Arc<T>` | ✅（T: Send+Sync） | ✅ | 原子引用计数 |
+| `Mutex<T>` | ✅（T: Send） | ✅ | 通过锁保证独占访问 |
+| `Rc<T>` | ❌ | ❌ | 非原子引用计数 |
+| `Cell<T>` | ✅（T: Send） | ❌ | 内部可变性无锁保护 |
+| `RefCell<T>` | ✅（T: Send） | ❌ | 运行时借用检查不跨线程 |
+| 裸指针 `*const T` | ❌ | ❌ | 编译器保守假设 |
+| `MutexGuard<T>` | ❌ | ✅（T: Sync） | 必须在加锁线程释放 |
+
+### 手动实现 Send/Sync
+
+在封装裸指针的 unsafe 代码中，有时需要手动声明类型是线程安全的。这要求程序员自己保证安全性：
+
+```rust
+use std::marker::PhantomData;
+
+// 一个线程安全的环形缓冲区指针包装
+struct RingBufPtr<T> {
+    ptr: *mut T,
+    len: usize,
+    _marker: PhantomData<T>,
+}
+
+// 我们保证：多线程访问通过外部 Mutex 保护，因此手动声明安全
+// SAFETY: 外部调用者必须通过锁保证独占访问
+unsafe impl<T: Send> Send for RingBufPtr<T> {}
+unsafe impl<T: Send> Sync for RingBufPtr<T> {}
+```
+
+> [!WARNING]
+> 手动实现 `Send`/`Sync` 是 `unsafe` 操作，需要程序员自己证明并发安全性。错误的标记会导致数据竞争，而数据竞争是未定义行为（UB）。
+
+### 通过 !Send / !Sync 阻止跨线程使用
+
+使用 `PhantomData<*mut T>` 或 `PhantomData<Rc<()>>` 让类型变为 `!Send`:
+
+```rust
+use std::marker::PhantomData;
+
+// 仅用于单线程的句柄（如 OpenGL 上下文）
+struct GlContext {
+    id: u32,
+    // *mut () 不是 Send，自动使 GlContext 也不是 Send
+    _not_send: PhantomData<*mut ()>,
+}
+
+impl GlContext {
+    fn new() -> Self { GlContext { id: 1, _not_send: PhantomData } }
+    fn draw(&self) { println!("在当前线程绘制 GL"); }
+}
+
+fn main() {
+    let ctx = GlContext::new();
+    ctx.draw();
+
+    // ❌ 以下代码编译报错：GlContext 不是 Send
+    // std::thread::spawn(move || ctx.draw());
+}
+```

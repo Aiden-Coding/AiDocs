@@ -255,3 +255,233 @@ fn process_packet() {
 
 - **`T: Deserialize<'de>`**：说明 `T` 可以从生命周期为 `'de` 的输入源中反序列化，且 `T` 可以借用输入数据，其生命周期最长与 `'de` 相同。
 - **`T: for<'de> Deserialize<'de>`**：说明 `T` 能够从**任意**生命周期的输入源中反序列化（不依赖于借用输入源的数据，通常是自身拥有所有权的数据结构，如包含 `String` 字段）。
+
+---
+
+## 4. Newtype 模式的完整实践
+
+Newtype 通过单字段元组结构体包装已有类型，在零运行时开销下实现以下目标。
+
+### 4.1 为外部类型实现外部 trait（绕过孤儿规则）
+
+```rust
+use std::fmt;
+
+// 目标：为 Vec<String> 实现 Display，但两者都不在本 crate
+struct Wrapper(Vec<String>);
+
+impl fmt::Display for Wrapper {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "[{}]", self.0.join(", "))
+    }
+}
+
+fn main() {
+    let w = Wrapper(vec!["hello".to_string(), "world".to_string()]);
+    println!("{}", w); // [hello, world]
+}
+```
+
+### 4.2 透传内部方法（Deref 委托）
+
+包装类型通过实现 `Deref` 自动暴露内部类型的所有方法：
+
+```rust
+use std::ops::Deref;
+
+struct Meters(f64);
+
+impl Deref for Meters {
+    type Target = f64;
+    fn deref(&self) -> &f64 { &self.0 }
+}
+
+impl Meters {
+    fn new(v: f64) -> Self { Meters(v) }
+    // Newtype 自有方法
+    fn to_feet(&self) -> f64 { self.0 * 3.28084 }
+}
+
+fn main() {
+    let m = Meters::new(10.0);
+    // 透过 Deref 可以直接调用 f64 的方法
+    println!("{:.2}", m.sqrt()); // sqrt 来自 f64，自动 Deref
+    println!("{:.2} ft", m.to_feet()); // 自有方法
+}
+```
+
+### 4.3 类型安全的 ID 系统
+
+```rust
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+struct UserId(u64);
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+struct OrderId(u64);
+
+impl UserId {
+    fn new(id: u64) -> Self { UserId(id) }
+    fn value(self) -> u64 { self.0 }
+}
+
+impl OrderId {
+    fn new(id: u64) -> Self { OrderId(id) }
+    fn value(self) -> u64 { self.0 }
+}
+
+fn get_user(id: UserId) -> String {
+    format!("User#{}", id.value())
+}
+
+fn main() {
+    let uid = UserId::new(42);
+    let oid = OrderId::new(42);
+
+    println!("{}", get_user(uid));
+    // get_user(oid); // ❌ 编译报错：类型不匹配，防止 ID 混用
+}
+```
+
+---
+
+## 5. 策略模式（Strategy Pattern）
+
+Rust 中策略模式通过 trait 对象或泛型实现，运行时或编译时选择算法。
+
+### 5.1 泛型策略（零成本，编译期确定）
+
+```rust
+trait Sorter {
+    fn sort(&self, data: &mut Vec<i32>);
+}
+
+struct BubbleSort;
+struct QuickSort;
+
+impl Sorter for BubbleSort {
+    fn sort(&self, data: &mut Vec<i32>) {
+        let n = data.len();
+        for i in 0..n {
+            for j in 0..n - i - 1 {
+                if data[j] > data[j + 1] {
+                    data.swap(j, j + 1);
+                }
+            }
+        }
+    }
+}
+
+impl Sorter for QuickSort {
+    fn sort(&self, data: &mut Vec<i32>) {
+        data.sort_unstable(); // 简化实现
+    }
+}
+
+// 泛型上下文：编译期单态化，零运行时开销
+struct Context<S: Sorter> {
+    sorter: S,
+}
+
+impl<S: Sorter> Context<S> {
+    fn new(sorter: S) -> Self { Context { sorter } }
+    fn execute(&self, data: &mut Vec<i32>) { self.sorter.sort(data); }
+}
+
+fn main() {
+    let mut data = vec![3, 1, 4, 1, 5, 9, 2, 6];
+
+    let ctx = Context::new(QuickSort);
+    ctx.execute(&mut data);
+    println!("{:?}", data);
+}
+```
+
+### 5.2 动态策略（运行时切换）
+
+```rust
+trait Compressor: Send + Sync {
+    fn compress(&self, data: &[u8]) -> Vec<u8>;
+    fn name(&self) -> &str;
+}
+
+struct GzipCompressor;
+struct ZstdCompressor;
+
+impl Compressor for GzipCompressor {
+    fn compress(&self, data: &[u8]) -> Vec<u8> { data.to_vec() } // 简化
+    fn name(&self) -> &str { "gzip" }
+}
+
+impl Compressor for ZstdCompressor {
+    fn compress(&self, data: &[u8]) -> Vec<u8> { data.to_vec() }
+    fn name(&self) -> &str { "zstd" }
+}
+
+struct Pipeline {
+    compressor: Box<dyn Compressor>,
+}
+
+impl Pipeline {
+    fn new(compressor: Box<dyn Compressor>) -> Self { Pipeline { compressor } }
+
+    // 运行时替换策略
+    fn set_compressor(&mut self, c: Box<dyn Compressor>) { self.compressor = c; }
+
+    fn run(&self, data: &[u8]) -> Vec<u8> {
+        println!("使用 {} 压缩 {} 字节", self.compressor.name(), data.len());
+        self.compressor.compress(data)
+    }
+}
+
+fn main() {
+    let mut pipeline = Pipeline::new(Box::new(GzipCompressor));
+    pipeline.run(b"hello world");
+
+    // 运行时切换算法
+    pipeline.set_compressor(Box::new(ZstdCompressor));
+    pipeline.run(b"hello world");
+}
+```
+
+---
+
+## 6. 观察者模式（Observer Pattern）
+
+利用闭包和 trait 对象实现事件订阅/发布：
+
+```rust
+type Handler<E> = Box<dyn Fn(&E) + Send + Sync>;
+
+struct EventBus<E> {
+    handlers: Vec<Handler<E>>,
+}
+
+impl<E> EventBus<E> {
+    fn new() -> Self { EventBus { handlers: vec![] } }
+
+    fn subscribe(&mut self, handler: impl Fn(&E) + Send + Sync + 'static) {
+        self.handlers.push(Box::new(handler));
+    }
+
+    fn publish(&self, event: &E) {
+        for handler in &self.handlers {
+            handler(event);
+        }
+    }
+}
+
+#[derive(Debug)]
+struct UserRegistered { username: String, email: String }
+
+fn main() {
+    let mut bus: EventBus<UserRegistered> = EventBus::new();
+
+    bus.subscribe(|e| println!("📧 发送欢迎邮件到 {}", e.email));
+    bus.subscribe(|e| println!("📊 记录注册日志: {}", e.username));
+    bus.subscribe(|e| println!("🎁 发放新手礼包给 {}", e.username));
+
+    bus.publish(&UserRegistered {
+        username: "alice".to_string(),
+        email: "alice@example.com".to_string(),
+    });
+}
+```

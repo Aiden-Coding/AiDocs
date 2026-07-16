@@ -723,3 +723,126 @@ fn main() {
     println!("失败: {:?}", errors);
 }
 ```
+
+---
+
+## panic hook 与 `catch_unwind`
+
+### 1. 自定义 panic hook
+
+`std::panic::set_hook` 允许在程序 panic 前执行自定义逻辑（如记录日志、发送告警）：
+
+```rust
+use std::panic;
+
+fn main() {
+    // 注册自定义 panic hook
+    panic::set_hook(Box::new(|panic_info| {
+        // 获取 panic 消息
+        let message = if let Some(s) = panic_info.payload().downcast_ref::<&str>() {
+            *s
+        } else if let Some(s) = panic_info.payload().downcast_ref::<String>() {
+            s.as_str()
+        } else {
+            "未知 panic"
+        };
+
+        // 获取发生位置
+        if let Some(location) = panic_info.location() {
+            eprintln!("[PANIC] {} at {}:{}", message, location.file(), location.line());
+        } else {
+            eprintln!("[PANIC] {}", message);
+        }
+
+        // 在这里可以：写入日志文件、发送告警通知、保存崩溃报告
+    }));
+
+    panic!("something went wrong"); // 触发自定义 hook
+}
+```
+
+恢复默认 hook：
+
+```rust
+let _ = std::panic::take_hook(); // 取出当前 hook 并恢复默认
+```
+
+### 2. `catch_unwind`：捕获 panic
+
+`std::panic::catch_unwind` 捕获闭包内发生的 panic，防止整个程序崩溃。主要用于：
+- **线程池**：防止一个任务 panic 导致 Worker 线程退出
+- **FFI 边界**：防止 Rust panic 跨越 FFI 边界（未定义行为）
+- **测试框架**：隔离测试用例的 panic
+
+```rust
+use std::panic;
+
+fn risky_operation(x: i32) -> i32 {
+    if x == 0 { panic!("除数不能为零！") }
+    100 / x
+}
+
+fn main() {
+    // 正常情况
+    let result = panic::catch_unwind(|| risky_operation(5));
+    println!("5: {:?}", result); // Ok(20)
+
+    // panic 被捕获，不会终止程序
+    let result = panic::catch_unwind(|| risky_operation(0));
+    match result {
+        Ok(val)  => println!("结果: {}", val),
+        Err(err) => {
+            // 提取 panic 消息
+            let msg = err.downcast_ref::<&str>()
+                .copied()
+                .or_else(|| err.downcast_ref::<String>().map(|s| s.as_str()))
+                .unwrap_or("unknown panic");
+            println!("捕获到 panic: {}", msg);
+        }
+    }
+
+    println!("程序继续运行"); // ✅
+}
+```
+
+### 3. 线程池中的 panic 隔离
+
+```rust
+use std::panic;
+use std::sync::mpsc;
+
+fn execute_task(task: impl FnOnce() -> i32 + panic::UnwindSafe) -> Result<i32, String> {
+    panic::catch_unwind(task)
+        .map_err(|e| {
+            e.downcast_ref::<&str>()
+                .map(|s| s.to_string())
+                .unwrap_or_else(|| "任务 panic".to_string())
+        })
+}
+
+fn main() {
+    let tasks: Vec<Box<dyn Fn() -> i32 + Send + panic::UnwindSafe>> = vec![
+        Box::new(|| 1 + 1),
+        Box::new(|| panic!("任务 B 崩溃了")),
+        Box::new(|| 3 * 10),
+    ];
+
+    for (i, task) in tasks.into_iter().enumerate() {
+        match execute_task(task) {
+            Ok(result) => println!("任务 {}: 成功 = {}", i, result),
+            Err(msg)   => println!("任务 {}: 失败 = {}", i, msg),
+        }
+    }
+    // 任务 0: 成功 = 2
+    // 任务 1: 失败 = 任务 B 崩溃了
+    // 任务 2: 成功 = 30
+}
+```
+
+> [!WARNING]
+> `catch_unwind` **不是** 通用的错误处理机制。它不能捕获：
+> - `panic = "abort"` 模式下的 panic（直接终止进程）
+> - 栈溢出（stack overflow）
+> - 信号（SIGABRT 等）
+>
+> 正常的业务逻辑错误应使用 `Result<T, E>`，`catch_unwind` 只用于防御性的 panic 边界隔离。

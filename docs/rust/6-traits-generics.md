@@ -1016,3 +1016,168 @@ struct IterMut<'a, T> {
 | `PhantomData<*const T>` | 持有裸指针 | 对 T 协变 |
 | `PhantomData<*mut T>` | 持有可变裸指针 | 对 T 不变 |
 | `PhantomData<fn(T)>` | 函数参数 | 对 T 逆变 |
+
+---
+
+## `impl Trait` 语法：参数位置 vs 返回位置
+
+`impl Trait` 是泛型约束的语法糖，但在不同位置有微妙区别。
+
+### 参数位置的 `impl Trait`（匿名泛型）
+
+```rust
+// 以下两种写法完全等价（编译期单态化，零开销）
+fn notify_v1(item: &impl Summary) { println!("{}", item.summarize()); }
+fn notify_v2<T: Summary>(item: &T)  { println!("{}", item.summarize()); }
+
+// 区别：impl Trait 不能约束两个参数必须是同一类型
+fn must_same<T: Summary>(a: &T, b: &T) { } // a 和 b 必须相同类型
+fn may_differ(a: &impl Summary, b: &impl Summary) { } // 可以是不同类型
+```
+
+### 返回位置的 `impl Trait`（不透明类型）
+
+```rust
+// 返回一个实现了 Iterator 的类型，调用方不知道具体类型
+fn evens_up_to(n: u32) -> impl Iterator<Item = u32> {
+    (0..n).filter(|x| x % 2 == 0)
+}
+
+// 关键限制：所有分支必须返回同一具体类型
+fn make_adder(x: i32) -> impl Fn(i32) -> i32 {
+    move |y| x + y // 只有一种闭包类型，合法
+}
+
+// ❌ 不同分支返回不同类型，必须改用 Box<dyn Trait>
+// fn choose(flag: bool) -> impl Fn(i32) -> i32 {
+//     if flag { |x| x + 1 } else { |x| x * 2 } // 两种不同闭包类型！
+// }
+
+// ✅ 改用 Box<dyn Fn>
+fn choose(flag: bool) -> Box<dyn Fn(i32) -> i32> {
+    if flag { Box::new(|x| x + 1) } else { Box::new(|x| x * 2) }
+}
+```
+
+---
+
+## 默认泛型参数
+
+泛型参数可以指定默认类型，调用方不传则使用默认：
+
+```rust
+use std::ops::Add;
+
+// RHS 默认为 Self，表示两个相同类型相加
+// 这正是标准库 Add trait 的定义方式
+trait MyAdd<RHS = Self> {
+    type Output;
+    fn add(self, rhs: RHS) -> Self::Output;
+}
+
+// 自定义：Point + 向量偏移 = 新 Point
+#[derive(Debug)]
+struct Point { x: f64, y: f64 }
+struct Offset { dx: f64, dy: f64 }
+
+impl Add<Offset> for Point {   // RHS 不是默认的 Self，而是 Offset
+    type Output = Point;
+    fn add(self, rhs: Offset) -> Point {
+        Point { x: self.x + rhs.dx, y: self.y + rhs.dy }
+    }
+}
+
+impl Add for Point {           // RHS 使用默认值 Self = Point
+    type Output = Point;
+    fn add(self, rhs: Point) -> Point {
+        Point { x: self.x + rhs.x, y: self.y + rhs.y }
+    }
+}
+
+fn main() {
+    let p = Point { x: 1.0, y: 2.0 };
+    let q = Point { x: 3.0, y: 4.0 };
+    let o = Offset { dx: 0.5, dy: 0.5 };
+
+    println!("{:?}", p + q);  // Point { x: 4.0, y: 6.0 }
+    let p2 = Point { x: 1.0, y: 2.0 };
+    println!("{:?}", p2 + o); // Point { x: 1.5, y: 2.5 }
+}
+```
+
+---
+
+## 完全限定语法：消除方法歧义
+
+当一个类型实现了多个 trait，且这些 trait 有同名方法时，需要用**完全限定语法**明确调用哪一个：
+
+```rust
+trait Pilot { fn fly(&self); }
+trait Wizard { fn fly(&self); }
+
+struct Human;
+
+impl Pilot for Human {
+    fn fly(&self) { println!("机长: 起飞！"); }
+}
+
+impl Wizard for Human {
+    fn fly(&self) { println!("巫师: 扫帚起飞！"); }
+}
+
+impl Human {
+    fn fly(&self) { println!("人类: 我在跳！"); }
+}
+
+fn main() {
+    let h = Human;
+    h.fly();                   // 调用 Human 自身的方法：人类
+    Pilot::fly(&h);            // 调用 Pilot 的 fly
+    Wizard::fly(&h);           // 调用 Wizard 的 fly
+
+    // 关联函数（无 self）必须使用完全限定语法
+    trait Animal { fn name() -> String; }
+    struct Dog;
+    impl Animal for Dog { fn name() -> String { "Dog".to_string() } }
+    impl Dog { fn name() -> String { "Spot".to_string() } }
+
+    println!("{}", Dog::name());               // Spot（Dog 自身）
+    println!("{}", <Dog as Animal>::name());   // Dog（Animal 的实现）
+}
+```
+
+---
+
+## 复杂 `where` 约束
+
+`where` 子句支持任意复杂的约束组合，包括关联类型约束：
+
+```rust
+use std::fmt::{Debug, Display};
+
+// 多重约束 + 关联类型约束
+fn print_all<T>(items: &[T])
+where
+    T: Display + Debug + PartialOrd,
+{
+    let mut sorted: Vec<&T> = items.iter().collect();
+    sorted.sort_by(|a, b| a.partial_cmp(b).unwrap());
+    for item in sorted {
+        println!("Display: {}, Debug: {:?}", item, item);
+    }
+}
+
+// 约束关联类型
+fn sum_iter<I>(iter: I) -> I::Item
+where
+    I: Iterator,
+    I::Item: std::ops::Add<Output = I::Item> + Default,
+{
+    iter.fold(I::Item::default(), |acc, x| acc + x)
+}
+
+fn main() {
+    print_all(&[3.14, 1.41, 2.71]);
+    println!("sum = {}", sum_iter([1, 2, 3, 4, 5].iter().copied()));
+}
+```

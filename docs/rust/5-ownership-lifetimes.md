@@ -724,3 +724,139 @@ fn main() {
     println!("Config still available: {:?}", cfg); // ✅
 }
 ```
+
+---
+
+## Copy Trait 完整讲解
+
+### Copy 的语义
+
+实现了 `Copy` 的类型在赋值或传参时**按位复制**，原变量不失效。这是 `Clone` 的轻量特例：`Copy` 是隐式的、廉价的位拷贝；`Clone` 是显式的、可能昂贵的深拷贝。
+
+```rust
+// 实现 Copy 的类型：赋值后两个变量都可用
+let x: i32 = 5;
+let y = x;     // 按位复制，x 仍然有效
+println!("{} {}", x, y);
+
+// 未实现 Copy 的类型：赋值发生移动
+let s1 = String::from("hello");
+let s2 = s1;   // 移动，s1 失效
+// println!("{}", s1); // ❌ 编译错误
+```
+
+### 哪些类型实现了 Copy
+
+**自动实现 Copy 的类型：**
+
+| 类别 | 示例 |
+| :--- | :--- |
+| 所有整数类型 | `i8`, `u64`, `isize`, `usize` … |
+| 浮点类型 | `f32`, `f64` |
+| 布尔类型 | `bool` |
+| 字符类型 | `char` |
+| 仅含 Copy 字段的元组 | `(i32, f64)` |
+| 固定大小数组（元素 Copy） | `[u8; 4]` |
+| 共享引用 | `&T`（任意 T） |
+| 裸指针 | `*const T`, `*mut T` |
+
+**不能实现 Copy 的类型（持有堆资源）：**
+- `String`、`Vec<T>`、`Box<T>`、`Rc<T>`、`Arc<T>`
+- 任何实现了 `Drop` 的类型（`Copy` 与 `Drop` 互斥）
+- 含有上述类型字段的结构体/枚举
+
+### 为自定义类型派生 Copy
+
+```rust
+// 所有字段都是 Copy → 可以 derive Copy
+#[derive(Debug, Clone, Copy)]
+struct Point { x: f64, y: f64 }
+
+#[derive(Debug, Clone, Copy)]
+enum Direction { North, South, East, West }
+
+fn translate(p: Point, dx: f64, dy: f64) -> Point {
+    Point { x: p.x + dx, y: p.y + dy }  // p 被 Copy，仍可继续使用
+}
+
+fn main() {
+    let p = Point { x: 1.0, y: 2.0 };
+    let q = translate(p, 3.0, 4.0); // p 被复制，不是移动
+    println!("原始: {:?}", p);       // ✅ p 仍然可用
+    println!("新点: {:?}", q);
+}
+```
+
+### Copy 与 Clone 的关系
+
+```rust
+// Copy 是 Clone 的子 trait：实现 Copy 必须同时实现 Clone
+// Clone 可以显式调用，Copy 是隐式的
+
+#[derive(Clone, Copy)]
+struct Pair(i32, i32);
+
+fn main() {
+    let a = Pair(1, 2);
+    let b = a;        // 隐式 Copy（a 仍有效）
+    let c = a.clone();// 显式 Clone（效果等同，但语义上更明确）
+    println!("{} {} {}", a.0, b.0, c.0);
+}
+```
+
+> [!TIP]
+> 设计准则：
+> - 轻量的值类型（坐标、颜色、标志位）→ 派生 `Copy`
+> - 持有资源（文件句柄、网络连接、堆内存）→ 不实现 `Copy`，通过引用或 `Arc` 共享
+
+---
+
+## 所有权与多返回值
+
+Rust 惯用模式：通过返回元组同时归还所有权和计算结果，避免不必要的克隆。
+
+```rust
+fn first_word(s: String) -> (String, usize) {
+    let bytes = s.as_bytes();
+    for (i, &item) in bytes.iter().enumerate() {
+        if item == b' ' {
+            return (s, i); // 归还所有权 + 返回索引
+        }
+    }
+    let len = s.len();
+    (s, len) // 归还所有权 + 返回全长
+}
+
+fn main() {
+    let s = String::from("hello world");
+    let (s, word_end) = first_word(s); // 解构拿回所有权
+    println!("第一个单词结束位置: {}", word_end);
+    println!("字符串仍然可用: {}", s);
+}
+```
+
+更惯用的方式是使用引用，但多返回值在某些场景（FFI、所有权转换链）仍然有用：
+
+```rust
+// 所有权转换链：加工后归还
+fn to_uppercase(mut s: String) -> String {
+    s = s.to_uppercase();
+    s // 归还加工后的所有权
+}
+
+// 条件性消费：成功则消费，失败则归还
+fn try_parse(s: String) -> Result<i32, String> {
+    match s.parse::<i32>() {
+        Ok(n)  => Ok(n),
+        Err(_) => Err(s), // 解析失败，把字符串还给调用方
+    }
+}
+
+fn main() {
+    let input = String::from("not_a_number");
+    match try_parse(input) {
+        Ok(n)  => println!("解析成功: {}", n),
+        Err(s) => println!("解析失败，字符串归还: {}", s),
+    }
+}
+```

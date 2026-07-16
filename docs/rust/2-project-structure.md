@@ -545,3 +545,158 @@ linker = "aarch64-linux-gnu-gcc"
 | `wasm32-unknown-unknown` | WebAssembly（纯 wasm，无 JS/Node） |
 | `wasm32-wasi` | WebAssembly (WASI 系统调用接口) |
 | `thumbv7em-none-eabihf` | ARM Cortex-M4/M7 嵌入式（无 OS） |
+
+---
+
+## 📦 发布到 crates.io
+
+### 1. 准备发布
+
+发布前需要完善 `Cargo.toml` 的元数据：
+
+```toml
+[package]
+name = "my_crate"
+version = "1.0.0"
+edition = "2021"
+authors = ["Your Name <you@example.com>"]
+description = "A brief description of the crate"
+license = "MIT OR Apache-2.0"           # 推荐双许可
+repository = "https://github.com/you/my_crate"
+homepage = "https://my_crate.rs"
+documentation = "https://docs.rs/my_crate"
+readme = "README.md"
+keywords = ["rust", "example"]          # 最多 5 个
+categories = ["development-tools"]      # crates.io 分类
+exclude = ["tests/fixtures/*", "*.png"] # 排除不需要打包的文件
+```
+
+### 2. 语义化版本（SemVer）
+
+Rust 生态严格遵循 [语义化版本规范](https://semver.org/)：`MAJOR.MINOR.PATCH`
+
+| 版本变更类型 | 规则 | 示例 |
+| :--- | :--- | :--- |
+| PATCH 补丁 | 向后兼容的 bug 修复 | `1.0.0` → `1.0.1` |
+| MINOR 次版本 | 向后兼容的新增功能 | `1.0.0` → `1.1.0` |
+| MAJOR 主版本 | 破坏性变更（Breaking Change） | `1.0.0` → `2.0.0` |
+
+**破坏性变更示例**（需要升级 MAJOR）：
+- 删除或重命名公共 API
+- 修改公共函数签名（参数类型、返回类型）
+- 修改 trait 定义（添加必须实现的方法）
+- 修改 struct/enum 的公共字段
+
+**Cargo 依赖版本说明符**：
+
+```toml
+[dependencies]
+# 兼容 1.x.x，等价于 >=1.0.0, <2.0.0（最常用）
+serde = "1"
+serde = "1.0"
+serde = "^1.0.0"
+
+# 精确版本锁定
+serde = "=1.0.130"
+
+# 兼容通配符（不推荐）
+serde = "*"
+
+# 范围约束
+serde = ">=1.0.0, <1.5.0"
+
+# 预发布版本
+tokio = "1.0.0-beta.1"
+```
+
+### 3. 发布流程
+
+```bash
+# 1. 检查包内容（不实际上传）
+cargo package --list
+
+# 2. 试运行发布（检查但不上传）
+cargo publish --dry-run
+
+# 3. 登录 crates.io（需要 API token）
+cargo login <your-api-token>
+
+# 4. 正式发布
+cargo publish
+
+# 5. 查看发布的 crate
+# https://crates.io/crates/my_crate
+```
+
+> [!IMPORTANT]
+> crates.io 上发布的版本**永远无法删除**（只能 yank）。yank 不会删除代码，只阻止新项目将其作为依赖解析，已锁定该版本的项目不受影响。
+>
+> ```bash
+> cargo yank --version 1.0.1       # yank 指定版本
+> cargo yank --version 1.0.1 --undo # 撤销 yank
+> ```
+
+---
+
+## 🔄 Rust Edition 迁移
+
+Rust 每三年发布一个新 Edition，Edition 之间保持向后兼容，但引入新的语法和语义。
+
+### 当前 Edition
+
+| Edition | 年份 | 主要变化 |
+| :--- | :--- | :--- |
+| 2015 | 2015 | 初版（默认） |
+| 2018 | 2018 | `async/await`、`dyn Trait`、模块路径简化、`use` 改进 |
+| 2021 | 2021 | 闭包捕获精细化、`IntoIterator` for 数组、`or_patterns`、Cargo 解析器 v2 |
+| 2024 | 2024 | `gen` 关键字、`unsafe` 更严格、`let` 链 |
+
+### 在 Cargo.toml 中设置 Edition
+
+```toml
+[package]
+edition = "2021"  # 推荐新项目使用最新 Edition
+```
+
+### 自动迁移工具
+
+```bash
+# 自动将代码迁移到指定 edition
+cargo fix --edition
+
+# 迁移到 2021
+# 1. 修改 Cargo.toml: edition = "2021"
+# 2. 运行自动修复
+cargo fix --edition --allow-dirty
+
+# 验证迁移后无警告
+cargo check
+```
+
+### Edition 2021 核心改进示例
+
+```rust
+// ---- 闭包捕获精细化（Edition 2021）----
+
+struct Config { debug: bool, name: String }
+
+let config = Config { debug: true, name: "app".to_string() };
+
+// 2018: 整个 config 被捕获（即使只用了 config.debug）
+// 2021: 只捕获用到的字段 config.debug，config.name 仍可用
+let check = move || config.debug;
+println!("{}", config.name); // ✅ 2021 下合法，2018 下报错
+
+// ---- 数组的 IntoIterator（Edition 2021）----
+let arr = [1, 2, 3];
+// 2021: 数组直接实现 IntoIterator，产生 i32（不是 &i32）
+for x in arr { println!("{}", x); }
+
+// ---- or_patterns ----
+let n = 3;
+match n {
+    1 | 2 | 3 => println!("小"),  // 2015/2018 已有
+    x @ (4 | 5 | 6) => println!("中: {}", x), // 2021 改进：@ 绑定配合 or 模式
+    _ => println!("大"),
+}
+```
