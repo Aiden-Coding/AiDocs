@@ -9,7 +9,7 @@ sidebar_position: 0
 
 在 Java 面试与高并发生产实战中，集合框架（Java Collections Framework）是承载数据的底层容器基石。理解它们不仅要停留在“如何使用”，更要深入到 JDK 底层源码，透解其数据结构设计、扩容物理代价以及排序和顺序控制机制。
 
-本篇将深度剖析 `ArrayList`、`LinkedList`、`LinkedHashMap` 以及 `TreeMap` 核心源码与底层演进。
+本篇将深度剖析 `ArrayList`、`LinkedList`、`HashMap`、`LinkedHashMap` 以及 `TreeMap` 核心源码与底层演进。
 
 ---
 
@@ -109,9 +109,95 @@ Node<E> node(int index) {
 
 ---
 
-## 三、 LinkedHashMap 核心原理与 LRU 缓存落地
+## 三、 HashMap 核心原理与底层源码剖析
+
+`HashMap` 是 Java 集合框架中最核心的 Key-Value 容器。它在单线程下提供了极高的存取性能。关于其多线程下的并发安全缺陷及 `ConcurrentHashMap`，请参阅 [2-hashmap-concurrenthashmap.md](file:///d:/Documents/GitHub/AiDocs/docs/java/concurrent/2-hashmap-concurrenthashmap.md)。
+
+### 1. 底层数据结构
+
+- **JDK 7**：采用 **数组 + 单向链表** 的结构。
+- **JDK 8**：采用 **数组 + 链表 + 红黑树** 的结构。
+
+```mermaid
+graph TD
+    subgraph HashMap JDK 8 结构
+        Array[Node 数组] --> Bin0[Node 0]
+        Array --> Bin1[Node 1]
+        Array --> Bin2[Node 2: 链表]
+        Array --> Bin3[Node 3: 红黑树]
+        
+        Bin2 --> Bin2_1[Node] --> Bin2_2[Node]
+        Bin3 --> TreeNode1[TreeNode]
+        TreeNode1 --> TreeNode2[TreeNode]
+        TreeNode1 --> TreeNode3[TreeNode]
+    end
+```
+
+### 2. 核心参数与树化阈值
+
+- **默认初始容量（`DEFAULT_INITIAL_CAPACITY`）**：16（必须是 2 的幂）。
+- **最大容量（`MAXIMUM_CAPACITY`）**：$2^{30}$。
+- **默认负载因子（`DEFAULT_LOAD_FACTOR`）**：0.75。平衡了时间与空间成本，过高导致冲突增加，过低导致频繁扩容。
+- **树化阈值（`TREEIFY_THRESHOLD`）**：8。
+- **退树化阈值（`UNTREEIFY_THRESHOLD`）**：6。
+- **最小树化容量（`MIN_TREEIFY_CAPACITY`）**：64。
+
+> **树化阈值与退树化阈值成因分析**
+>
+> 1. **哈希碰撞的概率分布**：根据泊松分布（Poisson Distribution），在负载因子为 0.75 的情况下，同一个桶（Bucket）中冲突节点长度达到 8 的概率仅为 **0.00000006**（约亿分之六）。树化是极小概率事件，旨在防御哈希碰撞拒绝服务攻击（DoS 攻击）。
+> 2. **性能与空间的权衡**：红黑树节点（`TreeNode`）占用的空间是普通链表节点（`Node`）的两倍，且红黑树在自平衡时需要进行旋转变色。当节点数较少时，链表遍历速度并不输于红黑树。
+> 3. **防止频繁震荡**：如果树化和退树化阈值相同（例如都是 8），当节点数在 8 附近反复增删时，会导致红黑树和链表频繁相互转换，极度消耗系统性能。设置 6 作为退树化阈值提供了缓冲区。
+
+### 3. 扰动函数设计与哈希冲突优化
+
+在获取 Key 的 HashCode 后，HashMap 并不会直接使用，而是通过扰动函数进行二次哈希运算：
+
+```java
+static final int hash(Object key) {
+    int h;
+    return (key == null) ? 0 : (h = key.hashCode()) ^ (h >>> 16);
+}
+```
+
+它将 key 的 `hashCode` 高 16 位与低 16 位进行**异或（^）运算**。
+
+**设计原因**：
+计算数组下标采用 `(n - 1) & hash`。由于数组初始容量 `n` 较小（默认 16），`n - 1` 的二进制高位均为 0，做与运算时，只有 `hashCode` 的低位参与了路由计算。
+通过扰动函数将高 16 位与低 16 位进行混合，把高位传输到低位，即使在数组容量较小时，也能充分利用高位信息，减少哈希碰撞。
+
+### 4. 容量为 2 的幂次方的原因
+
+1. **位运算代替取模，提升吞吐量**：
+   当容量 $n$ 是 2 的幂次方时，取模运算 `hash % n` 可以等价地替换为位运算 `(n - 1) & hash`。位运算的执行效率远高于除法取模运算。
+2. **减少哈希碰撞，空间分布更均匀**：
+   如果 $n$ 是 2 的幂次方，则 $n-1$ 的二进制表示低位全是 1（例如 $16-1 = 15$，二进制为 `1111`）。此时进行 `&` 运算，结果完全取决于 `hash` 的低四位值，每个桶都能被均匀散列。
+   如果 $n$ 不是 2 的幂（例如 15，$n-1 = 14$，二进制为 `1110`），那么与运算结果的最后一位永远是 0。这意味着所有奇数下标的桶（如 1, 3, 5...）都无法存放数据，造成了空间极大浪费，且冲突概率翻倍。
+
+### 5. 扩容机制与高低链表分流
+
+当元素总量达到阈值（`threshold = capacity * loadFactor`）时，触发扩容，每次扩容为原容量的 **2 倍**。
+
+- **JDK 7 头插法隐患**：JDK 7 采用头插法，在多线程并发扩容迁移时会导致链表逆序，从而可能产生**环形链表死循环**。
+- **JDK 8 高低链表优化**：JDK 8 废弃了头插法，改用**尾插法**。在扩容迁移时，通过判断 `(e.hash & oldCap) == 0` 将节点分流：
+  - 如果为 `0`：说明旧容量的高位对应 hash 位是 0，新索引位置依然在 **原索引**。
+  - 如果不为 `0`：说明旧容量的高位对应 hash 位是 1，新索引位置变更为 **原索引 + oldCap**。
+
+```mermaid
+graph TD
+    e_hash["计算 e.hash & oldCap"] --> check{"结果是否为 0?"}
+    check -- 是 --> low["放入低位链表 loHead -> loTail<br/>新索引 = 原索引"]
+    check -- 否 --> high["放入高位链表 hiHead -> hiTail<br/>新索引 = 原索引 + oldCap"]
+```
+
+这避免了重新计算哈希值，高低链表只需要维持原相对顺序并整体迁移，效率极高。
+
+---
+
+## 四、 LinkedHashMap 核心原理与 LRU 缓存落地
 
 `LinkedHashMap` 继承自 `HashMap`，它在 `HashMap` 极其优秀的高吞吐哈希结构基础上，为所有 Entry 节点额外维护了一套**物理双向链表**。该设计能完好保存元素的**插入顺序**（Insertion Order）或**访问顺序**（Access Order）。
+
+关于 `LinkedHashMap` 在多线程下的使用以及并发缓存，请参阅 [2-hashmap-concurrenthashmap.md](file:///d:/Documents/GitHub/AiDocs/docs/java/concurrent/2-hashmap-concurrenthashmap.md)。
 
 ### 1. 物理结构示意图
 
@@ -210,7 +296,7 @@ public class LocalLRUCache<K, V> extends LinkedHashMap<K, V> {
 
 ---
 
-## 四、 TreeMap 红黑树强自排序机制剖析
+## 五、 TreeMap 红黑树强自排序机制剖析
 
 `TreeMap` 的底层是一个**红黑树（Red-Black Tree）**。它不依赖哈希计算，而是通过节点间的键值比较来决定在树中的位置，这使得其内部所有键值对在任何时刻都处于**严格排序状态**。
 
