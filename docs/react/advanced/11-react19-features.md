@@ -253,4 +253,39 @@ function Component() {
     </div>
   );
 }
+
+### 4) 自定义元素 (Custom Elements / Web Components) 的完美支持
+
+在 React 19 之前，React 与原生 Web Components 的结合一直存在痛点：
+1.  **Properties 与 Attributes 的路由混乱**：React 会把绑定在自定义元素上的所有 Props 统一通过 `setAttribute` 设置为 HTML Attribute。对于那些只能通过 Property 接收的非字符串复杂对象（如 arrays 或 objects），这会导致绑定失效。
+2.  **自定义事件监听困难**：无法像订阅普通事件那样通过 `onEventName` 来订阅自定义元素派发的 Custom Event，必须手动通过 `useRef` 在 DOM 上调用 `addEventListener`。
+
+**React 19 彻底通过了 [Custom Elements Everywhere](https://custom-elements-everywhere.com/) 测试，实现 100% 兼容**：
+*   **智能绑定**：React 19 会在运行时自动检测：如果对应的 Key 存在于自定义元素的 DOM Property 中，则将其直接绑定为 Property；否则，才回退到 `setAttribute`。
+*   **原生事件代理支持**：现在可以直接在 JSX 中以 `onEvent` 形式监听 Custom Elements 发出的原生自定义事件。
+
+```tsx
+// 1. 假设注册了一个 Web Component 自定义元素
+// class MyUserCard extends HTMLElement { ... }
+// customElements.define('my-user-card', MyUserCard);
+
+// 2. React 19 中可以直接开箱即用：
+function App() {
+  const handleUserClick = (e: Event) => {
+    // 捕获自定义元素派发的 CustomEvent
+    console.log('捕获到自定义卡片点击事件：', (e as CustomEvent).detail);
+  };
+
+  return (
+    <div>
+      {/* 1. info 直接通过 Property 传给自定义元素，而非 attribute */}
+      {/* 2. 直接使用 onUserClick 绑定自定义事件 */}
+      <my-user-card 
+        info={{ name: '李四', role: '工程师' }} 
+        onUserClick={handleUserClick} 
+      />
+    </div>
+  );
+}
+```
 ```

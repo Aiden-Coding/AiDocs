@@ -1,4 +1,4 @@
-﻿---
+---
 title: React 19 现代化开发体系
 hide_title: true
 sidebar_label: 介绍 & 路线图
@@ -179,7 +179,7 @@ function BatchingDemo() {
 
 ### 2.1 常用 Hooks 深度解析
 
-- [常用 Hooks 深度解析](basic/5-hooks.md)：深入掌握 `useState` 惰性初始化、`useEffect` 副作用及清理函数、`useRef` 跨周期共享引用、`useContext` 全局上下文等常用 Hooks。
+- [常用 Hooks 深度解析](basic/5-hooks.md)：深入掌握 `useState` 惰性初始化、`useEffect`（含 `StrictMode` 开发环境双击行为与清理函数）、`useRef`（含 `useImperativeHandle` 限定暴露）、`useContext`、`useId`、以及 `useSyncExternalStore` 和 `useInsertionEffect` 等进阶 Hooks。
 
 #### 💡 核心示例：useEffect 清理函数与 useRef 操作 DOM
 
@@ -216,7 +216,7 @@ function TimerAndInput() {
 
 ### 2.2 组件设计模式
 
-- [组件设计模式与最佳实践](basic/6-component-patterns.md)：复合组件模式、Render Props、高阶组件 (HOC)、受控与非受控组件、组件组合等企业级组件设计范式。
+- [组件设计模式与最佳实践](basic/6-component-patterns.md)：复合组件模式、Render Props、高阶组件 (HOC)、受控与非受控组件、ErrorBoundary（错误边界）模式、Portal（传送门）模式等企业级组件设计范式。
 
 #### 💡 核心示例：复合组件模式 (Compound Components)
 
@@ -846,14 +846,20 @@ State 与交互
 ```text
 Hooks 体系
   ├─ useEffect 副作用与依赖项
-  ├─ useRef 跨渲染周期
+  ├─ StrictMode 开发环境双重渲染
+  ├─ useRef 与 useImperativeHandle 进阶控制
   ├─ useContext 全局状态
+  ├─ useId 稳定标识符
+  ├─ useSyncExternalStore 外部状态订阅
+  ├─ useInsertionEffect 样式注入
   └─ 自定义 Hooks 逻辑复用
 
 组件架构
   ├─ 复合组件模式
   ├─ HOC 与 Render Props
   ├─ 受控与非受控组件
+  ├─ Error Boundary 错误边界
+  ├─ Portal 传送门机制
   └─ 状态提升
 
 状态管理

@@ -78,6 +78,29 @@ function UserProfile({ userId }) {
 - **空依赖项数组 `[]`**：Effect 只会在组件挂载（Mount）时执行一次，清理函数只在卸载时执行。
 - **有依赖项**：当依赖项列表中的任何值发生改变时，React 都会先执行上一次 Effect 的清理函数，然后执行当前周期的 Effect。
 
+#### ⚠️ 进阶：开发环境下的双重渲染与 StrictMode
+
+在 React 18+ 的开发环境（Development Mode）下，如果组件包裹在 `<React.StrictMode>` 中，你会发现 `useEffect` 的挂载与销毁逻辑会**执行两次**（Mount -> Unmount -> Mount）。
+
+**为什么 React 要这样做？**
+这是 React 故意引入的设计，目的是为了帮助开发者**提前发现并修复副作用清理不当导致的 Bug**。例如：
+1. 定时器没有在清理函数中 `clearInterval`。
+2. 全局事件监听没有在清理函数中 `removeEventListener`。
+3. 网络请求可能发生竞态问题（未做 cancel 或 `isMounted` 标记）。
+
+**如何应对？**
+你不应该尝试“关闭”双重渲染，而应当确保你的副作用是**幂等的**，即它的挂载与清理是配对的。每次挂载后必须在清理函数中将副作用恢复如初：
+
+```tsx
+useEffect(() => {
+  const handleScroll = () => console.log(window.scrollY);
+  window.addEventListener('scroll', handleScroll);
+
+  // 必须提供清理函数，否则开发环境下会绑定两个监听器导致内存泄漏
+  return () => window.removeEventListener('scroll', handleScroll);
+}, []);
+```
+
 ### 3) useRef：跨渲染周期的共享引用
 
 `useRef` 返回一个可变的 ref 对象，其 `.current` 属性被初始化为传入的参数。它有两个核心用途：
@@ -105,6 +128,56 @@ function UserProfile({ userId }) {
    // 即使 timerRef.current 被赋值，组件也不会重新渲染
    ```
 
+3. **搭配 `useImperativeHandle` 限制暴露子组件方法**：
+
+   在 React 19 中，`ref` 会像普通的 prop 一样直接传递给子组件（无需 `forwardRef` 包装）。默认情况下，如果把 `ref` 绑定给子组件的原生 DOM，父组件将拥有该 DOM 的全部操作权限。
+
+   如果我们想**限制暴露的权限**，或者在函数式子组件中**向父组件暴露自定义的实例方法**，必须配合 `useImperativeHandle`：
+
+   ```tsx
+   import { useRef, useImperativeHandle } from 'react';
+
+   interface FancyInputRef {
+     focusAndClear: () => void;
+   }
+
+   // 子组件（React 19 风格：直接接收 ref 属性）
+   function FancyInput({ label, ref }: { label: string; ref: React.Ref<FancyInputRef> }) {
+     const inputRef = useRef<HTMLInputElement>(null);
+
+     // 限制父组件通过 ref 能访问到的成员
+     useImperativeHandle(ref, () => ({
+       focusAndClear: () => {
+         inputRef.current?.focus();
+         if (inputRef.current) {
+           inputRef.current.value = '';
+         }
+       }
+     }), []); // 依赖项数组
+
+     return (
+       <label>
+         {label}
+         <input ref={inputRef} type="text" />
+       </label>
+     );
+   }
+
+   // 父组件使用
+   function Parent() {
+     const fancyInputRef = useRef<FancyInputRef>(null);
+
+     return (
+       <div>
+         <FancyInput label="机密输入框" ref={fancyInputRef} />
+         <button onClick={() => fancyInputRef.current?.focusAndClear()}>
+           聚焦并清空
+         </button>
+       </div>
+     );
+   }
+   ```
+
 ### 4) useContext：无感知的全局上下文
 
 `useContext` 用于跨越组件层级直接读取祖先组件共享的 Context 数据，避免了“Props Drill（层层透传）”。
@@ -130,6 +203,98 @@ function ThemeButton() {
   // 直接消费 Context，跨越了 Toolbar 组件的层级
   const theme = useContext(ThemeContext);
   return <button className={`button--${theme}`}>当前主题: {theme}</button>;
+}
+```
+
+### 5) useId：稳定唯一的标识符
+
+`useId` 是 React 18 引入的 Hook，用于生成在服务端渲染（SSR）和客户端激活（Hydration）之间保持绝对稳定、唯一的 ID。
+
+- **痛点**：在传统开发中，如果直接使用 `Math.random()` 来生成元素的 ID，在服务端渲染出的 HTML 与客户端重新渲染（Hydration）时的 ID 极大概率不一致，从而导致 **Hydration Mismatch（注水失败）** 报错。
+- **应用场景**：为表单控件关联 `<label>` 与 `<input>` 的 `id`/`htmlFor` 属性，或者为无障碍辅助功能（ARIA）配置关联 ID。
+
+```tsx
+import { useId } from 'react';
+
+function LoginForm() {
+  // 生成唯一的 ID 前缀，例如 ":r0:"
+  const usernameId = useId();
+  const passwordId = useId();
+
+  return (
+    <form>
+      <div>
+        <label htmlFor={usernameId}>用户名：</label>
+        <input id={usernameId} type="text" />
+      </div>
+      <div>
+        <label htmlFor={passwordId}>密码：</label>
+        <input id={passwordId} type="password" />
+      </div>
+    </form>
+  );
+}
+```
+
+### 6) 库级底层 Hooks：useSyncExternalStore 与 useInsertionEffect
+
+这两个 Hook 主要面向**库（Libraries）开发者**，在日常业务开发中较少直接使用，但在现代 React 渲染引擎中起着关键支撑作用。
+
+#### useSyncExternalStore：订阅外部数据源
+
+在 Concurrent Mode（并发模式）下，React 可能会暂停、中断或恢复组件的渲染。如果在此期间外部非 React 的状态源（如 Redux store、Zustand、window 属性）发生变化，不同的组件可能会读取到不一致的数据，产生 **Tearing（屏幕撕裂）** 现象。
+
+`useSyncExternalStore` 强制要求在读取外部数据时保持同步，彻底规避了撕裂风险：
+
+```tsx
+import { useSyncExternalStore } from 'react';
+
+// 订阅浏览器在线状态示例
+function OnlineStatus() {
+  const isOnline = useSyncExternalStore(
+    // 1. subscribe：订阅函数，当数据改变时调用 callback 触发组件重渲染
+    (callback) => {
+      window.addEventListener('online', callback);
+      window.addEventListener('offline', callback);
+      return () => {
+        window.removeEventListener('online', callback);
+        window.removeEventListener('offline', callback);
+      };
+    },
+    // 2. getSnapshot：获取当前状态快照的函数
+    () => navigator.onLine,
+    // 3. getServerSnapshot：(可选) 服务端渲染时获取状态的函数
+    () => true
+  );
+
+  return <h1>当前网络状态：{isOnline ? '🟢 在线' : '🔴 离线'}</h1>;
+}
+```
+
+#### useInsertionEffect：注入动态 CSS
+
+`useInsertionEffect` 的调用时机在 **DOM 突变（Mutations）之前**。它比 `useLayoutEffect` 执行得还要早。
+
+- **作用**：主要用于 CSS-in-JS 库（如 Styled Components、Emotion）在组件渲染时动态向文档中插入 `<style>` 标签。
+- **为什么不用 useEffect/useLayoutEffect？**：如果在 `useLayoutEffect` 中动态注入样式，由于 DOM 已经生成，浏览器将被迫进行一次额外的**重排与重绘（Reflow & Repaint）**，导致严重的性能损耗。在 DOM 突变前注入则可以规避此问题。
+
+```tsx
+import { useInsertionEffect } from 'react';
+
+function StyledButton({ children }) {
+  useInsertionEffect(() => {
+    // 在这里动态插入样式表
+    const styleRule = `.dynamic-btn { background: hotpink; color: white; }`;
+    const styleNode = document.createElement('style');
+    styleNode.innerHTML = styleRule;
+    document.head.appendChild(styleNode);
+    
+    return () => {
+      document.head.removeChild(styleNode);
+    };
+  }, []); // 仅在挂载时运行
+
+  return <button className="dynamic-btn">{children}</button>;
 }
 ```
 
@@ -674,12 +839,16 @@ function ResponsiveComponent() {
 | Hook | 用途 | 注意事项 |
 | ------ | ------ | --------- |
 | **useState** | 声明组件状态 | 使用函数式更新避免闭包陷阱 |
-| **useEffect** | 处理副作用 | 正确设置依赖项，记得清理 |
+| **useEffect** | 处理副作用（含 StrictMode 下的开发环境双重渲染调试） | 正确设置依赖项，记得清理 |
 | **useRef** | DOM引用或持久化变量 | 修改不触发重渲染 |
 | **useContext** | 跨组件消费Context | 避免过度使用导致性能问题 |
 | **useMemo** | 缓存计算结果 | 只在性能优化时使用 |
 | **useCallback** | 缓存函数引用 | 配合 React.memo 使用 |
 | **useLayoutEffect** | 同步DOM操作 | 会阻塞渲染，谨慎使用 |
+| **useImperativeHandle** | 自定义暴露给父组件的 ref 属性/方法 | 配合子组件的 ref 属性使用 |
+| **useId** | 生成 SSR 安全的稳定唯一 ID | 避免 Hydration Mismatch |
+| **useSyncExternalStore** | 订阅外部非 React 状态源 | 解决并发模式下的屏幕“撕裂”问题 |
+| **useInsertionEffect** | 动态注入 CSS 样式表 | 仅供 CSS-in-JS 库在 DOM 突变前使用 |
 
 ---
 

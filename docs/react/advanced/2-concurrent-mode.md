@@ -94,36 +94,53 @@ sequenceDiagram
 
 ---
 
-## 4. 并发 API：startTransition 与 useDeferredValue
+## 4. 并发 API：useTransition / startTransition 与 useDeferredValue
 
-并发模式的底层原理为我们提供了两个可以显著提升页面流畅度的 API：
+并发模式的底层原理为我们提供了几个可以显著提升页面流畅度的 API：
 
-### 1) startTransition 的应用与原理解析
+### 1) startTransition 与 useTransition 的应用与原理解析
 
-`startTransition` 用来告诉 React，某个状态更新是一个**“非紧急的过渡任务”**。React 会将该更新标记为 `TransitionLane`。
+在 React 18+ 中，非紧急更新的过渡任务可以通过两种方式开启：
+- **`startTransition` 函数**：直接导入的独立函数。当你在非 React 组件树内部（例如在第三方状态管理器订阅中，或普通的 utility 函数里）想要触发过渡更新时使用。
+- **`useTransition` Hook**：在 React 函数组件内使用的首选 Hook，它不仅包含 `startTransition`，还能够智能返回过渡任务的执行状态。
+
+#### 💡 核心示例：useTransition 捕获加载状态
+
+`useTransition` 返回一个包含两个成员的数组：
+1. `isPending`：布尔值，指示过渡更新的 Promise 或任务是否还在挂起、计算中。
+2. `startTransition`：用于启动过渡任务的函数包装器。
 
 ```tsx
-import { useState, startTransition } from 'react';
+import { useState, useTransition } from 'react';
 
-function SearchWidget() {
-  const [keyword, setKeyword] = useState('');
-  const [list, setList] = useState<string[]>([]);
+function TabContainer() {
+  const [tab, setTab] = useState('about');
+  // isPending 会在非紧急更新渲染计算期间自动置为 true
+  const [isPending, startTransition] = useTransition();
 
-  const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
-    // 紧急更新：让输入框文字立刻发生变化，避免键盘输入卡顿
-    setKeyword(e.target.value);
-
-    // 非紧急更新：如果过滤大数据耗时太长，允许被随时打断，保证用户输入响应
+  const selectTab = (nextTab: string) => {
+    // 启动非紧急更新
     startTransition(() => {
-      const filtered = performExpensiveFilter(e.target.value);
-      setList(filtered);
+      setTab(nextTab);
     });
   };
 
   return (
     <div>
-      <input type="text" value={keyword} onChange={handleSearch} />
-      <ul>{list.map((item, i) => <li key={i}>{item}</li>)}</ul>
+      <div className="tab-buttons">
+        <button onClick={() => selectTab('about')}>关于</button>
+        <button onClick={() => selectTab('posts')}>
+          博客文章 (内含上万个 DOM 节点的重渲染)
+        </button>
+      </div>
+      
+      {/* 渲染 Pending 提示，避免页面完全假死且没有任何交互反馈 */}
+      {isPending && <div className="loading-spinner">正在渲染大数据视图中...</div>}
+      
+      <div style={{ opacity: isPending ? 0.6 : 1 }}>
+        {tab === 'about' && <AboutTab />}
+        {tab === 'posts' && <ExpensivePostsTab />}
+      </div>
     </div>
   );
 }
