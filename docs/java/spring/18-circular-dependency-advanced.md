@@ -6,36 +6,103 @@ sidebar_label: 循环依赖深度剖析
 
 ## Spring 循环依赖深度进阶解析
 
-在基础篇中我们了解了三级缓存的概念。本篇将深入源码细节，探讨 Spring 解决循环依赖的边界条件：为什么构造器注入不行？为什么 `@Async` 会导致循环依赖失效？
+三级缓存解决的是 **单例 + setter/字段注入** 的循环依赖。本篇讲清边界：构造器为何不行、AOP 为何要三级、`@Async` 为何炸、以及生产上如何拆环。
+
+基础生命周期见 [Bean 生命周期](0-bean-lifecycle.md)、[AOP 与三级缓存](1-ioc-aop.md)、[代理链路](17-aop-proxy-chain.md)。
 
 ---
 
-## 一、 为什么构造器注入不支持循环依赖？
+## 一、三级缓存分别存什么
 
-Spring 解决循环依赖的核心前提是：**允许对象在属性注入之前，先将一个“半成品”（只有引用地址，未填充属性）暴露出去。**
+| 缓存 | 结构 | 内容 |
+| :--- | :--- | :--- |
+| 一级 `singletonObjects` | Map | 成品 Bean |
+| 二级 `earlySingletonObjects` | Map | 早期暴露对象（可能已是代理） |
+| 三级 `singletonFactories` | Map | `ObjectFactory`，延迟生成早期引用 |
 
-### 1. 实例化 vs 属性赋值
-- **属性注入**（Setter 或 `@Autowired`）：Spring 先调用构造函数实例化 $A$，此时 $A$ 的引用已经存在，可以存入三级缓存，再进行属性注入。
-- **构造器注入**：在实例化 $A$ 的过程中，就需要传入 $B$。此时 $A$ 还没有完成实例化，也就无法将自己作为半成品暴露给 $B$。
+```mermaid
+flowchart TD
+    A[createBean 实例化] --> B[放入三级 ObjectFactory]
+    B --> C[populateBean 注入属性]
+    C --> D[initializeBean]
+    D --> E[升入一级成品]
+```
 
-### 2. 数学模型表示
-如果在构造阶段 $A$ 依赖 $B$ ($A \xrightarrow{ctor} B$) 且 $B$ 依赖 $A$ ($B \xrightarrow{ctor} A$)，则形成了一个不可满足的死循环：
-$$
-\text{Instantiate}(A) \implies \text{need}(B) \implies \text{Instantiate}(B) \implies \text{need}(A) \implies \dots
-$$
+暴露早期引用时机：实例化后、属性注入前，调用 `addSingletonFactory`。
 
 ---
 
-## 二、 三级缓存代码级执行逻辑
+## 二、setter 循环如何走通
 
-位于 `DefaultSingletonBeanRegistry` 中的核心获取逻辑：
+场景：A 依赖 B，B 依赖 A（字段/`@Autowired`）。
+
+```text
+1. 创建 A 原对象，A 进三级缓存
+2. 填充 A 时要 B → 创建 B
+3. B 进三级；填充 B 时要 A → getSingleton(A)
+4. 从三级 ObjectFactory.getObject() 得到 A 早期引用（可触发提前 AOP）
+5. 早期 A 放二级；B 注入早期 A，B 完成进一级
+6. A 继续注入已完成的 B，A 初始化后进一级
+```
+
+核心前提：**先有堆上的空壳对象，再填属性**。
+
+---
+
+## 三、构造器循环为什么不行
+
+```java
+@Service
+public class A {
+    public A(B b) { }
+}
+@Service
+public class B {
+    public B(A a) { }
+}
+```
+
+创建 A 必须先有 B，创建 B 必须先有 A → 无“半成品引用”可暴露窗口。
+
+数学表达：
+
+$$
+\text{new } A \Rightarrow B \Rightarrow \text{new } B \Rightarrow A \Rightarrow \cdots
+$$
+
+**Spring 默认不支持构造器循环依赖**，启动直接报 `BeanCurrentlyInCreationException`。
+
+可选出路：
+
+1. 改为 setter/字段注入（仍建议重构）。
+2. `@Lazy` 构造参数：注入懒代理，推迟取真实 Bean。
+3. 消除循环：提取第三服务 C。
+
+---
+
+## 四、为何是三级而不是两级
+
+若只有“早期原对象”二级缓存：
+
+1. B 注入了 **原始 A**。
+2. A 初始化时 AOP 生成 **代理 A'** 放入一级。
+3. B 手里仍是原始 A → **事务/鉴权失效**。
+
+三级缓存把“是否需要代理”推迟到 `ObjectFactory.getObject()`：
+
+- 若需代理，早期暴露的就是 **A'**。
+- B 与最终容器拿到的是同一代理引用。
+
+这是 `@Transactional` 等标准 AOP 能与循环依赖共存的关键。
+
+---
+
+## 五、源码级 getSingleton
 
 ```java
 protected Object getSingleton(String beanName, boolean allowEarlyReference) {
-    // 1. 尝试从一级缓存获取（成品）
     Object singletonObject = this.singletonObjects.get(beanName);
     if (singletonObject == null && isSingletonCurrentlyInCreation(beanName)) {
-        // 2. 尝试从二级缓存获取（半成品）
         singletonObject = this.earlySingletonObjects.get(beanName);
         if (singletonObject == null && allowEarlyReference) {
             synchronized (this.singletonObjects) {
@@ -43,12 +110,9 @@ protected Object getSingleton(String beanName, boolean allowEarlyReference) {
                 if (singletonObject == null) {
                     singletonObject = this.earlySingletonObjects.get(beanName);
                     if (singletonObject == null) {
-                        // 3. 从三级缓存获取 ObjectFactory
                         ObjectFactory<?> singletonFactory = this.singletonFactories.get(beanName);
                         if (singletonFactory != null) {
-                            // 执行 getObject()，如果是 AOP 代理则在此处生成
                             singletonObject = singletonFactory.getObject();
-                            // 升级到二级缓存，并移除三级缓存
                             this.earlySingletonObjects.put(beanName, singletonObject);
                             this.singletonFactories.remove(beanName);
                         }
@@ -61,30 +125,95 @@ protected Object getSingleton(String beanName, boolean allowEarlyReference) {
 }
 ```
 
----
-
-## 三、 `@Async` 导致的循环依赖崩溃
-
-这是一个在生产环境下极易触发的经典线上问题。
-
-### 1. 现象
-如果 $A$ 和 $B$ 循环依赖，且 $A$ 的某个方法标注了 `@Async`，启动时会报错：
-`Bean with name 'A' has been injected into other beans... but has been wrapped which means that other beans do not use the final version of the bean.`
-
-### 2. 崩溃原因
-- **AOP 代理时机**：普通的 AOP 代理（如 `@Transactional`）是由 `AnnotationAwareAspectJAutoProxyCreator` 实现的，它支持在三级缓存调用时提前生成代理。
-- **`@Async` 代理时机**：`@Async` 是由 `AsyncAnnotationBeanPostProcessor` 实现的。它**不属于**常规 AOP 体系，不会在三级缓存的 `getObject()` 中被调用。
-- **结果**：
-  1. $B$ 注入了 $A$ 的原始对象（或者早期的普通代理对象）。
-  2. $A$ 本身在初始化完成（`initializeBean`）阶段，又被 `@Async` 处理器包装成了一个新的代理对象。
-  3. Spring 检查发现注入给 $B$ 的 $A$ 与最终容器里的 $A$ **不是同一个对象**，为了防止逻辑错误，强制抛出异常。
-
-### 3. 黄金避坑方案
-- **方法一**：使用 `@Lazy` 注解。在 $B$ 注入 $A$ 时加上 `@Lazy`，这样 $B$ 注入的是一个 $A$ 的代理占位符，直到真正使用时才会去容器取 $A$，避开了循环依赖的即时校验。
-- **方法二**：重构代码。循环依赖通常意味着职责划分不清晰，尝试将公共逻辑提取到三级 Service 中。
+流程：一级 → 二级 →（允许早期引用时）三级工厂 → 升二级。
 
 ---
 
-## 四、 总结
+## 六、`@Async` 为何导致循环依赖失败
 
-三级缓存是 Spring 为了兼容 **Bean 生命周期原则**（代理应在最后阶段生成）与 **循环依赖**（需提前生成代理）之间的精妙权衡。深入理解这一机制，不仅有助于排查启动报错，更能让我们在设计微服务时对组件的隔离性有更深体会。
+### 1. 报错特征
+
+```text
+Bean with name 'a' has been injected into other beans [...]
+but has been wrapped since it was injected
+```
+
+### 2. 原因
+
+| 代理类型 | 处理器 | 能否在三级缓存提前创建 |
+| :--- | :--- | :--- |
+| 事务等常规 AOP | `AnnotationAwareAspectJAutoProxyCreator`（SmartInstantiationAware BPP） | 能 |
+| `@Async` | `AsyncAnnotationBeanPostProcessor` | **不能**（初始化后再包一层） |
+
+结果：
+
+1. B 注入了早期 A（原对象或普通 AOP 代理）。
+2. A 初始化末尾又被 `@Async` 包成新代理 A''。
+3. Spring 发现“注入出去的引用 ≠ 最终单例”，为防错直接失败。
+
+### 3. 处理
+
+1. **`@Lazy` 注入** 打断即时解析。
+2. **消除循环**（首选）。
+3. 异步门面独立 Bean，避免与循环图纠缠。
+4. 不用 `@Async`，改为显式线程池 `execute`。
+
+---
+
+## 七、其他边界与坑
+
+| 场景 | 结果 |
+| :--- | :--- |
+| prototype 循环 | 不支持三级缓存那套 |
+| `@Lookup` / Provider | 可推迟依赖获取 |
+| 构造器 + `@Lazy` | 可以启动，但是懒代理 |
+| 字段循环 + 双方 `@Transactional` | 一般 OK（标准 AOP） |
+| 依赖依赖 `@Configuration` 全 CGLIB | 偶发顺序问题，保持配置类无业务循环 |
+
+Spring Boot 2.6+ 默认 **`spring.main.allow-circular-references=false`** 时可直接禁止循环依赖，强制暴露设计问题。需要时显式：
+
+```yaml
+spring:
+  main:
+    allow-circular-references: true
+```
+
+更推荐修代码而不是开开关。
+
+---
+
+## 八、重构手法（生产）
+
+```mermaid
+flowchart LR
+    A[OrderService] --> C[OrderHelper]
+    B[PayService] --> C
+```
+
+1. **下沉公共逻辑**到无环依赖的第三组件。
+2. **事件解耦**：`ApplicationEvent` / MQ，异步最终一致。
+3. **接口隔离**：A 依赖 `BApi` 抽象，实现侧再组装。
+4. **按领域拆模块**，避免 Service 网状互调。
+
+循环依赖往往是**模块边界不清**的味道，不只是 Spring 技巧题。
+
+---
+
+## 九、面试口述模板
+
+1. 三级缓存是什么、各存什么。
+2. setter 循环六步时序。
+3. 构造器为何不行。
+4. 三级为了 AOP 早期代理与最终一致。
+5. `@Async` 反例与 `@Lazy`/重构。
+6. Boot 2.6 默认不允许循环。
+
+---
+
+## 十、总结
+
+- 循环依赖解决方案有严格前提：单例、非构造器、代理生命周期可提前。
+- `@Async`、prototype、构造器注入是经典雷区。
+- 工程上：**拆环 > `@Lazy` > 打开 allow-circular-references`**。
+
+结合 [代理链路](17-aop-proxy-chain.md) 可完整回答“注入的到底是原对象还是代理”。

@@ -88,9 +88,15 @@ MyBatis 底层通过拦截器链机制（`InterceptorChain`）实现了完美的
 package docs.java.persistence.mybatis;
 
 import org.apache.ibatis.executor.statement.StatementHandler;
+import org.apache.ibatis.mapping.BoundSql;
 import org.apache.ibatis.plugin.*;
+import org.apache.ibatis.reflection.MetaObject;
+import org.apache.ibatis.reflection.SystemMetaObject;
+
 import java.sql.Connection;
 import java.util.Properties;
+
+// TenantContext 为项目内 ThreadLocal 工具类，示例：从登录态取租户 ID
 
 /**
  * MyBatis 高性能拦截器核心模板
@@ -115,19 +121,34 @@ public class MyBatisTenantAndSecureInterceptor implements Interceptor {
     public Object intercept(Invocation invocation) throws Throwable {
         // 1. 获取拦截的目标组件：即 StatementHandler 底层编译执行器
         StatementHandler statementHandler = (StatementHandler) invocation.getTarget();
-        
-        // 2. 利用 MetaObject 工具反射获取原始 SQL 表达式
-        // MetaObject metaObject = SystemMetaObject.forObject(statementHandler);
-        // String originSql = (String) metaObject.getValue("delegate.boundSql.sql");
-        
-        // --- 双剑合璧一：多租户条件动态装配拼装逻辑（占位） ---
-        // TODO: 获取当前 Session/ThreadLocal 中的 TenantID 
-        // TODO: 解析 originSql，若没有 tenant_id 条件对其进行动态 SQL 语法拼接改写
-        
-        // --- 双剑合璧二：敏感数据单行动态加密注入（占位） ---
-        // TODO: 利用 ParameterHandler 对传入中包含 @Encrypted 注解标注的入参实施拦截并提前通过 AES 加密
 
-        // 3. 执行责任链上的下一个拦截切片逻辑，保证 MyBatis 数据链路连贯
+        // 2. 利用 MetaObject 反射拿到 BoundSql（多层代理时需按实际路径调整）
+        MetaObject metaObject = SystemMetaObject.forObject(statementHandler);
+        BoundSql boundSql = (BoundSql) metaObject.getValue("delegate.boundSql");
+        String originSql = boundSql.getSql();
+
+        // --- 双剑合璧一：多租户条件动态装配 ---
+        // 租户 ID 必须来自服务端上下文，禁止信任客户端入参
+        String tenantId = TenantContext.getTenantId();
+        if (tenantId != null && !originSql.toLowerCase().contains("tenant_id")) {
+            // 生产请用 JSqlParser 结构化改写；此处演示语义
+            String rewritten = originSql.replaceFirst(
+                "(?i)(where)",
+                "$1 tenant_id = '" + tenantId + "' AND "
+            );
+            if (rewritten.equals(originSql)) {
+                rewritten = originSql + " WHERE tenant_id = '" + tenantId + "'";
+            }
+            // 注意：tenantId 应改为 #{} 参数绑定，切勿直接拼接不可信字符串
+            metaObject.setValue("delegate.boundSql.sql", rewritten);
+        }
+
+        // --- 双剑合璧二：敏感字段加密 ---
+        // 更完整的做法是单独拦截 ParameterHandler#setParameters：
+        // 遍历 parameterMappings，对标注 @Encrypted 的字段在 setParameter 前 AES 加密。
+        // prepare 阶段只负责 SQL 形态，参数加密与 SQL 改写解耦更清晰。
+
+        // 3. 执行责任链上下一环
         return invocation.proceed();
     }
 

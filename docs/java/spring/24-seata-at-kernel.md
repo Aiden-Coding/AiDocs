@@ -6,97 +6,187 @@ sidebar_label: Seata AT 事务内核
 
 ## Seata AT 模式无锁化两阶段提交原理
 
-在微服务架构下，由于数据库被物理拆分，保障跨服务的一致性需要引入分布式事务。Seata AT 模式以其**对业务零侵入、低门槛**的优势成为生产环境中最常用的方案。本篇将深度透解 Seata AT 模式底层的两阶段提交、自动脏写检测防交叉冲突、以及全局锁的无锁化判定原理。
+微服务拆库后，本地 ACID 无法覆盖跨服务写操作。Seata **AT 模式**以 DataSource 代理 + UndoLog 实现**业务低侵入**的分布式事务。本篇聚焦 AT 内核：TC/TM/RM、两阶段、全局锁与脏写检测。
+
+实战注解与模式对比见 [Seata 分布式事务全解](25-seata-distributed-transaction.md)。
 
 ---
 
-## 一、 Seata AT 核心架构：TC、TM 与 RM
+## 一、三大角色
 
-分布式事务的稳定运行依赖于三个核心组件之间的协同流转：
+| 角色 | 全称 | 职责 |
+| :--- | :--- | :--- |
+| **TM** | Transaction Manager | 开启/提交/回滚**全局事务**（通常是发起方服务） |
+| **RM** | Resource Manager | 管理**分支事务**、注册分支、上报状态、执行二阶段 |
+| **TC** | Transaction Coordinator | Seata Server：存全局/分支状态，驱动二阶段 |
 
-- **`Transaction Manager (TM)`**：全局事务管理器。负责定义全局事务的边界，发起全局提交（Global Commit）或全局回滚（Global Rollback）的指令。
-- **`Resource Manager (RM)`**：资源管理器。控制分支事务，管理分支向 `TC` 的注册、执行状态报告，并执行本地事务的提交与回滚。
-- **`Transaction Coordinator (TC)`**：事务协调器（即 Seata 服务端）。维护全局事务和分支事务的状态，驱动全局事务的两阶段提交与回滚。
+```mermaid
+flowchart LR
+    TM -->|begin/commit/rollback| TC
+    RM1[RM 订单库] -->|register/branch report| TC
+    RM2[RM 库存库] -->|register/branch report| TC
+    RM1 --> DB1[(order DB)]
+    RM2 --> DB2[(stock DB)]
+```
+
+全局事务 ID：`XID`。分支事务 ID：`branchId`。跨服务调用需把 `XID` 写入 RPC 上下文（Seata 对 Feign/Dubbo 有拦截器自动透传）。
 
 ---
 
-## 二、 AT 模式的两阶段执行模型
+## 二、AT 模式本质
 
-AT 模式通过数据代理（`DataSourceProxy`）无感知地重写了 JDBC 的两阶段行为。
+AT = **自动补偿的改进 2PC**：
 
-### 一阶段：执行业务 SQL 并在本地提交
+1. 一阶段：本地事务**直接提交**业务数据 + UndoLog（不是传统 2PC 一直悬着 XA）。
+2. 二阶段成功：异步删 UndoLog，几乎无业务开销。
+3. 二阶段失败：用 Before Image 生成反向 SQL 补偿。
 
-在第一阶段，Seata 代理了业务执行：
-1.  **解析 SQL**：解析业务要执行的 SQL（如 `UPDATE`），获取其更新前后的原始镜像数据。
-2.  **构建 Undo Log**：
-    - 查询前置镜像（**Before Image**）：保存修改前的值。
-    - 执行业务 SQL 操作。
-    - 查询后置镜像（**After Image**）：保存修改后的值。
-3.  **本地回滚日志打包**：将 Before/After 镜像和一阶段 SQL 的元数据序列化组成一条 `UndoLog` 数据。
-4.  **注册分支与锁申请**：在本地事务提交前，RM 向 TC 注册分支事务，并**申请该条记录的全局锁（Global Lock）**。
-5.  **本地原子提交**：在同一个物理数据库事务中，将持久业务修改和 `UndoLog` **同时原子提交**到本地数据库。
+代价：依赖关系型数据库、可解析 SQL、主键/唯一键清晰；隔离靠**全局锁**补强。
+
+---
+
+## 三、一阶段：执行业务并提交本地事务
+
+`DataSourceProxy` / `ConnectionProxy` 拦截 JDBC：
 
 ```mermaid
 sequenceDiagram
     autonumber
-    participant App as 业务微服务
-    participant DP as Seata DataSourceProxy
-    participant TC as Seata TC 服务端
-    participant DB as 本地数据库
+    participant Biz as 业务线程
+    participant Proxy as DataSourceProxy
+    participant TC as TC
+    participant DB as 本地 DB
 
-    App->>DP: 执行持久业务修改 (UPDATE)
-    DP->>DB: 1. SELECT 提取 Before Image
-    DP->>DB: 2. 执行核心业务 SQL 修改
-    DP->>DB: 3. SELECT 提取 After Image
-    DP->>TC: 4. 向 TC 注册分支，并申请本行主键的“全局锁”
-    TC-->>DP: 5. 获得全局锁
-    DP->>DB: 6. INSERT 将 UndoLog 连同业务事务原子提交
-    DB-->>DP: 一阶段本地 commit 成功
+    Biz->>Proxy: UPDATE ...
+    Proxy->>DB: SELECT 行锁范围 → Before Image
+    Proxy->>DB: 执行业务 SQL
+    Proxy->>DB: SELECT → After Image
+    Proxy->>TC: 注册分支 + 申请全局锁
+    TC-->>Proxy: 成功
+    Proxy->>DB: 同事务写入 undo_log + commit
 ```
 
-### 二阶段：无锁极速提交与平滑回滚
+### 关键步骤拆解
 
-根据一阶段全局事务的执行结果，TC 发起二阶段决策：
+1. **SQL 解析**：识别表、条件、更新列（支持常见 DML；复杂 SQL 可能解析失败）。
+2. **Before Image**：按主键把变更前行数据查出来。
+3. **执行业务 SQL**。
+4. **After Image**：再查变更后镜像。
+5. **向 TC 注册分支并抢全局锁**（按行主键维度）。
+6. **本地原子提交**：业务行变更 + `undo_log` 同事务 commit。
 
-- **场景 A：全局提交（Global Commit）**：
-  若其它服务均无异常，TM 发起全局提交。TC 通知 RM 异步清理该事务产生的 `UndoLog` 和全局锁内存。由于一阶段本地事务已经提交成功，**二阶段无需任何阻塞，极速完成且没有任何额外锁开销**。
+`undo_log` 典型字段语义：
 
-- **场景 B：全局回滚（Global Rollback）**：
-  若一阶段发生异常，TM 触发全局回滚。
-  1.  **启动回源**：RM 接收到 TC 的 rollback 指令，根据分支 ID 找到对应的 `UndoLog`。
-  2.  **数据校对（脏写防御算法）**：
-      - 重新查询数据库该记录的当前实时数据（**Current Image**）。
-      - 比对 $\text{Current Image}$ 是否等于一阶段生成的 $\text{After Image}$。
-      - 如果不等于，说明在中间某个时段，此行记录被未受 Seata 事务控制的外部非标准 SQL（或直调 SQL）修改了，发生**脏写（Dirty Write）**。此时 Seata 触发高能报警，暂停自动回滚，等待人工介入。
-  3.  **回滚应用**：如果等于，说明未发生脏写。RM 根据 $\text{Before Image}$ 生成 `UPDATE` 还原语句并执行，在本地事务中一并清除 `UndoLog`，完成原样回滚。
+| 字段 | 含义 |
+| :--- | :--- |
+| `xid` / `branch_id` | 关联全局与分支 |
+| `rollback_info` | 序列化的前后镜像与元数据 |
+| `log_status` | 正常 / 防悬挂等状态 |
+| `log_created` | 清理与排查用 |
 
-$$
-\text{No Dirty Write} \iff \text{Current Image} = \text{After Image}
-$$
-
----
-
-## 三、 读写一致性与无锁化全局锁原理
-
-在全局事务未完全提交期间，其他业务操作或读请求可能会尝试抢占该数据。为了保证事务隔离性且尽可能降低锁阻塞的影响，Seata 提出了双层锁控制模型：
-
-1.  **本地锁（Local Lock）**：各节点物理数据库底层的行锁（如 InnoDB 的排他锁 `X-Lock`）。其生命周期极短，仅在一阶段本地事务提交前持有，释放速度极快。
-2.  **全局锁（Global Lock）**：TC 服务端维护的信息。作用于当一个 Seata 事务未完全走完时，防止其他 Seata 事务改写该行记录。
-
-### 防交叉写冲突策略
-当事务 A（Seata 管理）和 事务 B（Seata 管理）尝试修改同一行数据：
-- 事务 A 首先抢占本地锁，并在提交前获得了全局锁。
-- 事务 B 随后也获取了本地锁尝试修改。由于 A 的全局事务未完，A 依然持有全局锁。
-- 事务 B 提交前向 TC 申请全局锁失败，此时 B 会**不断自旋等待全局锁释放**，但在此期间 B **必须持有自己的本地锁不释放**。
-- 如果 A 回滚（或 A 异步释放），B 获得全局锁，B 本地提交。这保障了两个分布式事务之间的强制排他写。
+一阶段结束时：**本地数据已对其他非全局事务可见**（读已提交视角），但其他 AT 事务写同行为被全局锁挡住。
 
 ---
 
-## 四、 总结
+## 四、二阶段：提交 vs 回滚
 
-Seata AT 模式将繁重的“隔离逻辑”转移到了 **代理 DataSource** 中，采用：
-- **一阶段强写本地元镜像**
-- **二阶段异步无锁极速异步清障**
-- **读/写全局锁自旋机制防交叉冲突**
+### 1. 全局提交（快乐路径）
 
-从而在降低侵入性的同时，兼顾了分布式在云原生架构下的卓越事务吞吐能力。
+```text
+TM commit → TC 记 Global Committed → 异步通知 RM 删 undo_log、释全局锁
+```
+
+业务数据一阶段已落地，二阶段**不必再改业务行**，故 AT 提交极快。
+
+### 2. 全局回滚
+
+```mermaid
+sequenceDiagram
+    participant TC
+    participant RM
+    participant DB
+
+    TC->>RM: Branch Rollback
+    RM->>DB: 读 undo_log
+    RM->>DB: 查 Current Image
+    alt Current == After Image
+        RM->>DB: 用 Before Image 生成回滚 SQL 并执行
+        RM->>DB: 删除 undo_log
+        RM-->>TC: 回滚成功
+    else 脏写
+        RM-->>TC: 失败/告警，需人工
+    end
+```
+
+脏写判定：
+
+$$
+\text{安全回滚} \iff \text{Current Image} = \text{After Image}
+$$
+
+若中途有**未走 Seata** 的 SQL 改了同行，Current ≠ After，自动回滚会覆盖第三方写入 → Seata **拒绝自动回滚并告警**。
+
+---
+
+## 五、双层锁：本地锁 + 全局锁
+
+| 锁 | 持有者 | 生命周期 | 作用 |
+| :--- | :--- | :--- | :--- |
+| 本地行锁 | DB（InnoDB X 锁） | 仅一阶段本地事务内 | 保护本地提交原子性 |
+| 全局锁 | TC 内存/存储 | 全局事务结束前 | 防止其他 AT 事务交叉写 |
+
+### 写写冲突时序
+
+1. 事务 A 一阶段拿到行 R 的全局锁并本地 commit。
+2. 事务 B 也要改 R：本地可执行 SQL，但**提交前申请全局锁失败**。
+3. B 进入**全局锁重试等待**（可配重试次数与间隔）；等待期间可能长时间占着本地锁 → 注意超时与热点行。
+4. A 全局提交/回滚后释放全局锁，B 才能继续。
+
+### 与隔离级别
+
+- AT 默认近似 **读未提交/读已提交** 混合观感：一阶段已提交对普通读可见。
+- 若要全局读已提交，可对查询加 `@GlobalLock` 或 `SELECT FOR UPDATE` 走代理校验全局锁（有性能成本）。
+
+---
+
+## 六、UndoLog 与回滚 SQL 生成
+
+回滚不是简单“反向业务 API”，而是根据镜像生成：
+
+- `UPDATE` 回滚：`SET col=before WHERE pk=? AND col=after...`（带后镜像条件做乐观校验）
+- `INSERT` 回滚：`DELETE WHERE pk=?`
+- `DELETE` 回滚：`INSERT` 回补 Before Image
+
+这也解释了为何表需要**主键**、为何禁止无主键大更新。
+
+---
+
+## 七、性能与可用性要点
+
+1. **TC 集群 + 共享存储**（DB/Redis/Raft 模式按版本选型），禁止单机 TC 无持久化上生产。
+2. **undo_log 表**与业务库同库（同库同事务提交）；定期清理残留（正常由二阶段删）。
+3. **热点商品行**全局锁竞争会放大 RT，考虑库存分段、TCC、或最终一致性。
+4. **跨服务必须传 XID**，否则下游变本地事务，全局回滚管不到。
+5. **超时**：全局事务超时后 TC 会驱动回滚；业务要能接受补偿窗口。
+
+---
+
+## 八、与 XA / TCC 内核对比（精简）
+
+| | AT | XA | TCC |
+| :--- | :--- | :--- | :--- |
+| 一阶段 | 本地已提交 + UndoLog | 分支 prepare 未提交 | Try 预留资源 |
+| 二阶段成功 | 删日志 | commit | Confirm |
+| 二阶段失败 | 镜像补偿 | rollback | Cancel |
+| 侵入 | 低 | 低（但资源占用高） | 高 |
+| 长事务 | 全局锁压力 | 连接/锁占用严重 | 设计得好更合适 |
+
+---
+
+## 九、总结
+
+- AT 内核 = **代理数据源 + 前后镜像 + 全局锁 + 二阶段异步清理/补偿**。
+- 提交快在“一阶段已落地”；安全在“脏写检测 + 全局锁”。
+- 用 AT 前先确认：SQL 可解析、有主键、能接受全局锁语义。
+
+落地注解、TCC 对照与避坑清单见 [Seata 全解](25-seata-distributed-transaction.md)。

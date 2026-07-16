@@ -6,79 +6,193 @@ sidebar_label: Sentinel 限流算法内核
 
 ## Sentinel 滑动窗口与高性能限流算法深度内核
 
-在高并发分布式系统中，流量防护与弹性隔离是系统的“防弹衣”。Sentinel 作为流量防卫兵，其底层高吞吐的数据统计与平滑限流算法极具工业美学。本篇将深度解析 Sentinel 的核心指标统计器 **`LeapArray`（滑动窗口）** 以及限流算法的数理推导。
+Sentinel 能在高 QPS 下做实时限流/熔断，核心不在规则 UI，而在 **无锁滑动窗口统计（LeapArray）** 与多种流量整形算法。本篇拆内核；场景与集成见 [Sentinel 流量治理](27-sentinel-governance.md)。
 
 ---
 
-## 一、 滑动窗口统计：`LeapArray` 环形物理设计
+## 一、为什么需要滑动窗口
 
-在高并发场景下做限流，每秒会有数万甚至数百万请求通过，若每次都用加锁（如原子计数器）或直接全量扫描内存，将产生巨大的 CPU 额外损耗。Sentinel 创新性地设计了基于**无锁环形数组（Circular Array）**的滑动窗口结构。
+固定窗口（每秒清零计数）有**临界突发**：
 
-### 1. 内存模型与空间换时间
+```text
+窗口 1: 在 0.9s~1.0s 来 100 次
+窗口 2: 在 1.0s~1.1s 再来 100 次
+阈值 100/s → 实际 0.2s 内 200 次
+```
 
-Sentinel 用一个固定大小的数组成员来模拟滚动的窗口，从而避免数组扩容或物理移动：
+滑动窗口把时间切成多个 **sample bucket**，统计最近一个完整区间，平滑边界误差。
+
+---
+
+## 二、LeapArray 环形结构
 
 ```mermaid
-graph LR
-    subgraph "LeapArray (WindowWrap)"
-        W0[Window 0<br/>[0s - 0.5s]] --> W1[Window 1<br/>[0.5s - 1.0s]]
-        W1 --> W2[Window 2<br/>[1.0s - 1.5s]]
-        W2 --> W0
+flowchart LR
+    subgraph LeapArray
+      B0[Bucket0]
+      B1[Bucket1]
+      B2[Bucket2]
+      B3[Bucket3]
+      B0 --> B1 --> B2 --> B3 --> B0
     end
 ```
 
-- **`sampleCount`（样本窗口数）**：例如 $2$ 个窗口。
-- **`intervalInMs`（总统计周期）**：例如 $1000\text{ ms}$。
-- 每个窗口的宽度：
-  $$
-  \text{windowLength} = \frac{\text{intervalInMs}}{\text{sampleCount}} = 500\text{ ms}
-  $$
+参数：
 
-### 2. 窗口定位与旧窗口重置
+| 参数 | 含义 | 例 |
+| :--- | :--- | :--- |
+| `intervalInMs` | 统计总时长 | 1000 ms |
+| `sampleCount` | 桶个数 | 2 |
+| `windowLength` | 单桶宽度 | `interval/sampleCount = 500ms` |
 
-当请求进入时，如何定位当前时间需要落入哪个窗口，且在跨越总周期后如何做到不清理历史内存直接重写？
+桶内指标（`MetricBucket`）通常包含：通过数、拒绝数、异常数、RT 总和、并发占位等，用 **LongAdder** 类结构累加，减少多线程写冲突。
 
-1.  **定位索引 (Index)**：
-    $$
-    \text{idx} = \left( \frac{\text{currentTime}}{\text{windowLength}} \right) \bmod \text{sampleCount}
-    $$
-2.  **定位窗口开始时间 (Start Time)**：
-    $$
-    \text{windowStart} = \text{currentTime} - \left( \text{currentTime} \bmod \text{windowLength} \right)
-    $$
-3.  **无锁并发复用判断**：
-    由于可能有并发线程同时访问相同的槽位，Sentinel 结合了 **CAS**（无锁对比交换）来实现窗口替换：
-    - 若槽位为空：利用 CAS 放入新的 `WindowWrap`。
-    - 若槽位已有值，且其开始时间与 $\text{windowStart}$ 相同：说明是当前的滑动窗口，直接进行指标累加。
-    - 若槽位已有值，且其开始时间更早：说明时钟已经转过一轮，此窗口属于过去。此时利用 CAS 重置（Reset）指标缓存，并更新开始时间为 $\text{windowStart}$。
+### 1. 定位当前桶
 
----
+$$
+\text{idx} = \left\lfloor \frac{t}{\text{windowLength}} \right\rfloor \bmod \text{sampleCount}
+$$
 
-## 二、 经典限流算法硬核对比
+$$
+\text{windowStart} = t - (t \bmod \text{windowLength})
+$$
 
-根据流量的不同整形诉求，限流器底层对应了不同的控制流算法。
+### 2. CAS 复用与重置
 
-### 1. 漏桶算法 (Leaky Bucket)
+并发下同一槽位三种情况：
 
-- **几何模型**：水（请求）以不确定速度流入桶内，桶底部有固定漏孔以恒定速率流出。当落入速度大于流出速度且水桶满时，多余的水直接溢出。
-- **数学表达式（恒定输出）**：
-  $$
-  Q_{\text{out}}(t) = \text{Constant}
-  $$
-- **适用场景**：平滑突发流量、强制流量匀速排队，适用于对下游调用频率有严格频率边界控制的核心系统。
+| 槽位状态 | 动作 |
+| :--- | :--- |
+| 空 | CAS 放入新 `WindowWrap` |
+| 已有且 `start == windowStart` | 当前桶，直接累加 |
+| 已有且 `start` 更旧 | 时间轮转过一轮，CAS **reset** 指标并更新 start |
 
-### 2. 令牌桶算法 (Token Bucket)
+无全局大锁、无数组搬移，靠环形覆盖实现“滑动”。
 
-- **几何模型**：以恒定速率 $r$ 往桶内放入代币（令牌），桶容量上限为 $b$。请求进入必须消耗一个令牌方能执行，否则被降级。
-- **数学表达式（允许突发）**：在 $t$ 时间内，系统允许的最大并发写入峰值为：
-  $$
-  M = b + r \cdot t
-  $$
-- **适用场景**：保护敏感核心资源、支持一定程度的突发大流量（Busty Traffic）。
+### 3. 汇总 QPS / RT
+
+对所有“仍在 interval 内”的桶求和：
+
+$$
+\text{QPS} \approx \frac{\sum pass}{\text{intervalInSec}}
+$$
+
+$$
+\text{avgRT} \approx \frac{\sum \text{rtTotal}}{\sum \text{success}}
+$$
+
+熔断慢调用比例、异常比例都建立在这套统计上。
 
 ---
 
-## 三、 总结
+## 三、经典限流算法
 
-- **`LeapArray`** 极大压榨了数据统计在高并发多核环境内的 CPU 占有。
-- 限流策略应根据业务下游资源承载力按需选择：强调整形且可容忍延迟排队的，使用**漏桶算法**；强调瞬时抗压力和用户流畅体验的，采用**令牌桶算法**。
+### 1. 漏桶（Leaky Bucket）
+
+- 请求进入队列（桶），以**恒定速率**流出。
+- 桶满则拒绝或阻塞。
+- 输出平滑，能整形尖刺；不能很好利用空闲时的突发额度。
+
+```text
+入: 不定速 → [Bucket] → 出: 恒定 r
+```
+
+### 2. 令牌桶（Token Bucket）
+
+- 以速率 \(r\) 放令牌，桶容量 \(b\)。
+- 请求取到令牌才通过。
+- 允许突发：短时间最多约 \(b\) 个请求，长期平均 \(r\)。
+
+$$
+M(t) \leq b + r \cdot t
+$$
+
+Gateway `RequestRateLimiter`、Guava `RateLimiter` 都是令牌桶族。
+
+### 3. 滑动窗口计数（Sentinel 常用）
+
+- 直接基于 LeapArray 的 pass 计数与阈值比较。
+- 实现简单、与统计同源，规则热更新方便。
+
+### 4. 温控 / 匀速排队（Sentinel WarmUp & Pace）
+
+- **WarmUp**：冷启动时阈值从低到高爬升，保护缓存未热系统。
+- **匀速排队**：超阈值请求在队列等待到“令牌时刻”，平滑对下游的调用（类似漏桶出流）。
+
+---
+
+## 四、Sentinel 流控效果选项（与算法映射）
+
+| controlBehavior | 行为 | 算法直觉 |
+| :--- | :--- | :--- |
+| `Reject` 快速失败 | 超阈值直接抛 `BlockException` | 硬阈值 |
+| `WarmUp` | 冷启动爬坡 | 令牌/阈值渐进 |
+| `Waiting` 匀速排队 | 等待间隔发放 | 漏桶出流 |
+| `WarmUp + 排队` | 组合 | 冷启动 + 整形 |
+
+规则字段直觉：
+
+- `count`：阈值（QPS 或并发线程数）
+- `grade`：QPS vs 线程数
+- `strategy`：直接 / 关联 / 链路
+- `clusterMode`：是否集群限流
+
+---
+
+## 五、并发线程数限流 vs QPS 限流
+
+| 维度 | QPS | 线程数 |
+| :--- | :--- | :--- |
+| 度量 | 单位时间通过次数 | 正在执行的占用 |
+| 慢调用 | 仍可能大量排队进系统 | 更能保护线程池打满 |
+| 适用 | 入口防刷 | 保护慢依赖、防堆积 |
+
+慢接口更适合 **线程数阈值** + 熔断慢调用比例双保险。
+
+---
+
+## 六、集群限流简述
+
+单机限流在多副本下阈值会放大（每实例 100 QPS × N）。集群限流：
+
+1. Token Server 集中发令牌；或
+2. 各实例上报统计由控制面汇总。
+
+代价：网络依赖与单点风险；核心入口可做，普通接口单机限流 + 网关限流往往够用。
+
+---
+
+## 七、性能注意
+
+1. 统计路径必须无锁或细粒度 CAS，禁止每请求写 DB/Redis 做计数（网关 Redis 限流是另一层）。
+2. `sampleCount` 越大边界越平滑，内存与汇总成本略增。
+3. 规则匹配应 O(1)/低复杂度；热点参数用特化结构（LRU 参数表）。
+4. 不要在 `BlockException` 处理里再做重逻辑。
+
+---
+
+## 八、与 Slot 链的关系
+
+```text
+SphU.entry
+  → NodeSelectorSlot
+  → ClusterBuilderSlot
+  → StatisticSlot      ← LeapArray 记账
+  → FlowSlot           ← 限流算法判定
+  → DegradeSlot        ← 熔断
+  → ...
+  → 业务
+  → exit 更新 RT
+```
+
+`StatisticSlot` 负责进出记账；`FlowSlot` 读统计做 allow/deny。算法内核与责任链插槽解耦，便于扩展。
+
+---
+
+## 九、总结
+
+- **LeapArray**：环形桶 + CAS 重置 = 高并发滑动窗口。
+- **令牌桶**偏突发，**漏桶**偏平滑，**硬阈值计数**最直观。
+- 选算法先看保护对象：入口 QPS、线程池、冷启动还是下游匀速。
+
+规则配置、熔断场景与 Nacos 持久化见 [Sentinel 流量治理](27-sentinel-governance.md)。

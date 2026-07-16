@@ -1,138 +1,178 @@
-﻿---
-title: Java 鏍稿績鎶€鏈煡璇嗕綋绯?
+---
+title: Java 核心技术知识体系
 hide_title: true
-sidebar_label: 浠嬬粛 & 璺嚎鍥?
+sidebar_label: 介绍 & 路线图
 sidebar_position: 0
 slug: /java/
 ---
 
-## Java 鏍稿績鎶€鏈煡璇嗕綋绯?
+## Java 核心技术知识体系
 
-娆㈣繋鏉ュ埌 Java 娣卞害鎺㈢储涔嬫梾銆傛湰浣撶郴鏃ㄥ湪涓鸿拷姹傛瀬鑷存€ц兘銆佹复鏈涙礊瀵熷簳灞傚師鐞嗙殑宸ョ▼甯堟彁渚涗竴濂?**绯荤粺鍖栥€佹簮鐮佺骇** 鐨勭煡璇嗗浘璋便€?
+欢迎来到 Java 深度探索之旅。本体系旨在为追求极致性能、渴望洞察底层原理的工程师提供一套 **系统化、源码级** 的知识图谱。
 
 ---
 
-## 馃椇锔?宸ョ▼甯堣繘闃惰矾绾垮浘
+## 工程师进阶路线图
 
 ```mermaid
 mindmap
-  root((Java 涓撳鎴愰暱涔嬭矾))
-    鏍稿績鍩虹煶
-      Java 鍩虹涓庡鍣?
-      JUC 骞跺彂缂栫▼
-      JVM 铏氭嫙鏈烘帰绱?
-    妗嗘灦鐢熸€?
-      Spring 娣卞害瑙ｆ瀽
-      Spring Boot 鑷姩瑁呴厤
-      鎸佷箙灞備笌杩炴帴姹?
-    鎬ц兘鏋佸
-      Netty 缃戠粶寮曟搸
-      Disruptor 鏃犻攣鏋舵瀯
-      JDK 21 铏氭嫙绾跨▼
-    鐢熶骇瀹炴垬
-      绾夸笂鎺掗殰鑹烘湳
-      JVM 璋冧紭妯℃澘
-      鍒嗗竷寮忛攣涓庣紦瀛?
+  root((Java 专家成长之路))
+    核心基石
+      Java 基础与容器
+      JUC 并发编程
+      JVM 虚拟机探索
+    框架生态
+      Spring 深度解析
+      Spring Boot 自动装配
+      持久层与连接池
+    微服务治理
+      Spring Cloud 全家桶
+      Dubbo / Gateway / Nacos
+      Seata / Sentinel / Security
+    性能极境
+      Netty 网络引擎
+      Disruptor 无锁架构
+      JDK 21 虚拟线程
+    生产实战
+      线上排障艺术
+      JVM 调优模板
+      分布式锁与缓存
 ```
 
 ---
 
-## 绗竴闃舵:鏍稿績鍩虹煶涓庡簳灞傚師鐞?(Core Foundation)
+## 第一阶段：核心基石与底层原理 (Core Foundation)
 
-娣卞叆瑙ｆ瀽 Java 璇█鏈€寮曚互涓哄偛鐨勫苟鍙戞ā鍨嬩笌鍐呭瓨鏈哄埗銆?
+深入解析 Java 语言最引以为傲的并发模型与内存机制。
 
-### 1.1 Java 鍩虹涓庡鍣?(Basic & Collections)
+### 1.1 Java 基础与容器 (Basic & Collections)
 
-- [Java 鏍稿績鍩虹煶:Object 鏂规硶銆佸紓甯搞€佸弽灏勩€佹硾鍨嬩笌 SPI](basic/1-java-core-fundamentals.md):鍓栨瀽 `Object` 鍏ぇ濂戠害銆佸紓甯镐綋绯汇€佸弽灏勪笌 `MethodHandle`銆佹硾鍨嬫摝闄や笌妗ユ帴鏂规硶銆佹敞瑙ｄ笌 SPI 鎵╁睍銆?
-- [Java 鍩虹涓庨泦鍚堟牳蹇冮潰璇曠湡棰榏(basic/3-interview-basic.md):娣卞叆搴曞眰鍓栨瀽 `String` 涓嶅彲鍙樻€с€乣HashMap` 涓?`ConcurrentHashMap` 鎵╁婕旇繘鏈哄埗銆?
-- [Java 闆嗗悎妗嗘灦搴曞眰婧愮爜娣卞墫](basic/0-collection-framework.md):鎺㈢┒ `ArrayList`銆乣LinkedList` 鐗╃悊缁撴瀯,娣卞害瑙ｆ瀽 `LinkedHashMap` 鏋勭瓚 LRU 鍙?`TreeMap` 绾㈤粦鏍戞棆杞钩琛°€?
-- [Java 鏂扮壒鎬ф紨杩涗笌鏍稿績搴曞眰鍘熺悊](basic/2-java8-21-features.md):鍓栨瀽 Lambda `invokedynamic`銆丼tream 鎯版€ф眰鍊间笌 JDK 21 铏氭嫙绾跨▼ Carrier 璋冨害鏈哄埗銆?
+- [Java 集合框架底层源码深剖](basic/0-collection-framework.md)：探究 `ArrayList`、`LinkedList` 物理结构，深度解析 `LinkedHashMap` 构筑 LRU 及 `TreeMap` 红黑树旋转平衡。
+- [Java 核心基石：Object 方法、异常、反射、泛型与 SPI](basic/1-java-core-fundamentals.md)：剖析 `Object` 六大契约、异常体系、反射与 `MethodHandle`、泛型擦除与桥接方法、注解与 SPI 扩展。
+- [Java 新特性演进与核心底层原理](basic/2-java8-21-features.md)：剖析 Lambda `invokedynamic`、Stream 惰性求值与 JDK 21 虚拟线程 Carrier 调度机制。
+- [Java 基础与集合核心面试真题](basic/3-interview-basic.md)：深入底层剖析 `String` 不可变性、`HashMap` 与 `ConcurrentHashMap` 扩容演进机制。
 
-### 1.2 JUC 楂樺苟鍙戞繁搴﹀疄璺?(Concurrency)
+### 1.2 JUC 高并发深度实践 (Concurrency)
 
-- [JMM 鍐呭瓨妯″瀷涓?happens-before 鍘熺悊](concurrent/0-jmm-memory-model.md):鍥捐В MESI 涓庡唴瀛樺睆闅?鎺ㄥ volatile 鍙岄噸璇箟涓?happens-before 鍏ぇ瑙勫垯銆?
-- [AQS 鏈哄埗涓庢樉寮忛攣瀹炵幇](concurrent/1-aqs-locks.md):娣卞叆 AQS `state` 鍙橀噺涓庡弻鍚?CLH 闃熷垪,瀵规瘮鍏钩涓庨潪鍏钩閿併€?
-- [HashMap 涓?ConcurrentHashMap 婧愮爜](concurrent/2-hashmap-concurrenthashmap.md):浠?JDK 7 鍒?8 鐨勬紨杩?閫忔瀽妗堕攣涓?CAS銆?
-- [ThreadLocal 涓?CAS 鏍稿績瑙ｆ瀽](concurrent/3-threadlocal-cas.md):鍥捐В鍐呭瓨娉勬紡鎴愬洜鍙?`LongAdder` 鍒嗘鐑偣浼樺寲銆?
-- [绾跨▼姹?ThreadPoolExecutor 鍏ㄨВ](concurrent/4-threadpool.md):鎺屾彙 `ctl` 浣嶈繍绠椾笌鍔ㄦ€佽皟浼樻€濊矾銆?
-- [CompletableFuture 寮傛缂栨帓涓庡簳灞傚師鐞哴(concurrent/5-completable-future.md):鍥炶皟閾俱€丆ompletion 鏍堜笌 `tryFire` 妯″瀷,鐢熶骇绾ф湇鍔¤仛鍚堢綉鍏冲疄鎴樸€?
-- [骞跺彂瀹瑰櫒涓庡悓姝ュ伐鍏锋簮鐮佺簿鏋怾(concurrent/6-concurrent-collections-sync.md):`CountDownLatch`銆乣CyclicBarrier`銆乣Semaphore`銆丆OW 闆嗗悎涓庢棤閿侀槦鍒楀叏鏅姣斻€?
+- [JMM 内存模型与 happens-before 原理](concurrent/0-jmm-memory-model.md)：图解 MESI 与内存屏障，推导 volatile 双重语义与 happens-before 八大规则。
+- [AQS 机制与显式锁实现](concurrent/1-aqs-locks.md)：深入 AQS `state` 变量与双向 CLH 队列，对比公平与非公平锁。
+- [HashMap 与 ConcurrentHashMap 源码](concurrent/2-hashmap-concurrenthashmap.md)：从 JDK 7 到 8 的演进，透析桶锁与 CAS。
+- [ThreadLocal 与 CAS 核心解析](concurrent/3-threadlocal-cas.md)：图解内存泄漏成因及 `LongAdder` 分段热点优化。
+- [线程池 ThreadPoolExecutor 全解](concurrent/4-threadpool.md)：掌握 `ctl` 位运算与动态调优思路。
+- [CompletableFuture 异步编排与底层原理](concurrent/5-completable-future.md)：回调链、Completion 栈与 `tryFire` 模型，生产级服务聚合网关实战。
+- [并发容器与同步工具源码精析](concurrent/6-concurrent-collections-sync.md)：`CountDownLatch`、`CyclicBarrier`、`Semaphore`、COW 集合与无锁队列全景对比。
+- [JDK 21 虚拟线程详解](concurrent/7-virtual-threads.md)：解密运行在用户态的轻量协程模型。
+- [Disruptor 无锁环形队列](concurrent/8-disruptor.md)：LMAX 架构下的预分配与零 GC 机制。
+- [CPU Cache Line 伪共享调优](concurrent/9-cache-line-sharing.md)：使用 `@Contended` 消除 MESI 协议竞争。
+- [JUC 并发编程面试真题](concurrent/10-interview-concurrent.md)：AQS、线程池、并发容器与虚拟线程高频考点复盘。
 
-### 1.3 JVM 铏氭嫙鏈哄唴鏍?(Virtual Machine)
+### 1.3 JVM 虚拟机内核 (Virtual Machine)
 
-- [鍐呭瓨妯″瀷涓庡瀮鍦惧洖鏀?(GC)](jvm/0-memory-gc.md):浠庝笁鑹叉爣璁板埌 ZGC 鏌撹壊鎸囬拡銆佽灞忛殰鎶€鏈€?
-- [绫诲姞杞戒綋绯讳笌瀛楄妭鐮佸己鍖朷(jvm/1-classloader-bytecode.md):瑙ｆ瀯鍙屼翰濮旀淳妯″瀷鍙?Java Agent 鍔ㄦ€佹彃妗╁師鐞嗐€?
-- [JIT 杩涢樁涔嬮€冮€稿垎鏋怾(jvm/2-escape-analysis.md):瑙ｅ瘑鏍囬噺鏇挎崲涓庨攣娑堥櫎銆?
-
----
-
-## 绗簩闃舵:浼佷笟绾ф鏋舵繁搴﹀墫鏋?(Framework Ecosystem)
-
-涓嶄粎浠呮槸浣跨敤,鏇磋鎺屾彙 Spring 瀹囧畽鐨勮繍鍔ㄨ寰嬨€?
-
-### 2.1 Spring 鏍稿績鍏ㄦ櫙
-
-- [IoC 瀹瑰櫒涓?Bean 鐢熷懡鍛ㄦ湡](spring/0-bean-lifecycle.md):浠庡疄渚嬪寲鍒伴攢姣佺殑 $4$ 闃舵鍏ㄦ祦绋嬨€?
-- [AOP 鍔ㄦ€佷唬鐞嗕笌閾惧紡璋冪敤](spring/1-ioc-aop.md):瑙ｅ瘑涓轰粈涔堝彧鏈変笁绾х紦瀛樿兘瑙ｅ喅 AOP 寰幆渚濊禆銆?
-- [BeanDefinition 涓庡鍣ㄥ垵濮嬪寲](spring/2-beandefinition-internals.md):鎺㈢储 Spring 濡備綍鎰熺煡寮€鍙戣€呭畾涔夌殑 Bean 涓庨厤缃被 CGLIB 澧炲己鍘熺悊銆?
-- [Context Refresh 鍒锋柊娴佺▼](spring/3-spring-context-refresh.md):娣卞害鎷嗚В Spring 瀹瑰櫒鍚姩鐨?$12$ 涓牳蹇冩楠や笌鍚庣疆澶勭悊鍣ㄦ墽琛岄『搴忋€?
-- [澹版槑寮忎簨鍔℃満鍒朵笌澶辨晥鍦烘櫙](spring/4-transaction.md):浠?`TransactionInterceptor` 璋冪敤閾惧埌 ThreadLocal 杩炴帴缁戝畾,杩樺師 $12$ 绉嶅け鏁堟牴鍥犮€?
-- [Spring 甯哥敤娉ㄨВ鍙婂叾搴曞眰鍘熺悊瑙ｆ瀽](spring/5-annotations.md):鍓栨瀽 `@Autowired`銆乣@Resource` 涓?`@Configuration` 鐨勮閰嶆敞鍏ラ摼璺€?
-- [Spring 甯哥敤璁捐妯″紡婧愮爜绾ф繁搴﹁В鏋怾(spring/6-design-patterns.md):鎺㈢┒宸ュ巶銆佸崟渚嬨€佷唬鐞嗐€佹ā鏉挎柟娉曚笌瑙傚療鑰呮ā寮忕瓑鍦?Spring 婧愮爜涓殑钀藉湴銆?
-- [Spring 浜嬩欢椹卞姩鏈哄埗涓庝笟鍔¤В鑰(spring/7-spring-events.md):瑙ｅ瘑浜嬩欢鍙戝竷骞挎挱鍣ㄥ師鐞嗕笌浜嬪姟鍚屾鍣?`@TransactionalEventListener` 鐨?Phase 闃舵銆?
-
-### 2.2 Spring MVC 璇锋眰澶勭悊妯″瀷
-
-- [Spring MVC 宸ヤ綔娴佽璁(spring/8-springmvc-principles.md):鐞嗚В `DispatcherServlet` 涓?`HandlerMapping` 鐨勫崗浣溿€?
-- [Spring MVC 楂樼骇寮哄寲鐗规€(spring/9-springmvc-advanced.md):鎷︽埅鍣ㄣ€佽繃婊ゅ櫒涓庡弬鏁拌В鏋愬櫒娣卞害瀹氬埗銆?
-
-### 2.3 Spring Boot 涓庡井鏈嶅姟搴曞骇
-
-- [Spring Boot 鍚姩鍘熺悊涓庤嚜鍔ㄨ閰峕(spring/10-springboot-core.md):瑙ｆ瀯 `@EnableAutoConfiguration` 涓?`spring.factories`銆?
-- [Spring Boot 鏍稿績鍐呴儴鏈哄埗](spring/11-springboot-internals.md):`Environment` 鐜鎶借薄涓庣洃鍚櫒妯″紡銆?
-- [Spring Boot 鎵╁睍鏈哄埗涓?SPI 鍘熺悊](spring/12-springboot-extension.md):瑙ｆ瀽 Spring SPI 宸ュ巶鍔犺浇鍣ㄣ€佽嚜瀹氫箟 Starter 娴佺▼鍙婄敓鍛藉懆鏈熸墿灞曠偣銆?
-- [Spring Boot FatJar 杩愯鏈哄埗](spring/13-springboot-fatjar.md):瑙ｅ瘑濡備綍閫氳繃 `JarLauncher` 鍔犺浇宓屽 Jar銆?
-- [Spring Boot 楂樼骇鎵╁睍涓庤皟浼榏(spring/14-springboot-advanced.md):鑷畾涔?Starter 涓?Endpoint 鐩戞帶銆?
-- [Spring 鐢熸€佹紨杩涗笌 Spring Cloud 缁撳悎](spring/15-springboot-springcloud.md):浠?Boot 鍒板垎甯冨紡寰湇鍔℃灦鏋勩€?
-
-### 2.4 鎸佷箙灞傘€佽繛鎺ユ睜涓庣紦瀛?(Persistence & Cache)
-
-- [MyBatis 鎸佷箙灞傚師鐞嗕笌 HikariCP 杩炴帴姹燷(persistence/0-mybatis-hikaricp.md):HikariCP 鏃犻攣鍖?`LocalBag` 瀹瑰櫒涓?MyBatis 鎻掍欢璐ｄ换閾俱€?
-- [Spring Cache 缂撳瓨鎶借薄涓庡０鏄庡紡缂撳瓨鍘熺悊](spring/16-spring-cache.md):鍓栨瀽 AOP 缂撳瓨鎷︽埅鍣ㄣ€丼pEL 閿敓鎴愪互鍙婂嚮绌?绌块€?闆穿鐨勭敓浜х骇闃叉姢銆?
+- [内存模型与垃圾回收 (GC)](jvm/0-memory-gc.md)：从三色标记到 ZGC 染色指针、读屏障技术。
+- [类加载体系与字节码强化](jvm/1-classloader-bytecode.md)：解构双亲委派模型及 Java Agent 动态插桩原理。
+- [JIT 进阶之逃逸分析](jvm/2-escape-analysis.md)：解密标量替换与锁消除。
+- [性能诊断与在线排障艺术](jvm/3-tuning-tools.md)：Arthas 实战与 MAT 内存泄露追踪。
+- [线上故障深度复盘记录](jvm/4-prod-troubleshooting-cases.md)：四大经典 OOM 与 CPU 100% 根因分析。
+- [JVM 启动参数黄金配置模板](jvm/5-prod-practice.md)：在生产环境配置 G1/ZGC。
+- [JVM 虚拟机面试真题](jvm/6-interview-jvm.md)：GC、类加载、调优与故障排查高频考点。
 
 ---
 
-## 绗笁闃舵:楂樻€ц兘璁＄畻涓庨€氫俊 (Performance)
+## 第二阶段：企业级框架深度剖析 (Framework Ecosystem)
 
-鍦ㄥ井绉掔骇绔炰簤涓?鎺㈢储 Linux 搴曞眰涓庣‖浠剁紦瀛樼殑鏋侀檺銆?
+不仅仅是使用，更要掌握 Spring 宇宙的运动规律。
 
-- [JDK NIO 鏍稿績涓変欢濂?Channel銆丅uffer 涓?Selector](network/0-jdk-nio-fundamentals.md):Buffer 鐘舵€佹満銆丆hannel 闈為樆濉炪€丼elector 澶氳矾澶嶇敤涓?Reactor 闆忓舰銆?
-- [Netty 楂樻€ц兘缃戠粶缂栫▼搴曞骇](network/1-netty-io.md):Epoll 绌鸿疆璇?Bug 瑙勯伩涓庡爢澶栧唴瀛橀浂鎷疯礉銆?
-- [Netty 闆舵嫹璐濅笌 ByteBuf 鍐呭瓨绠＄悊](network/2-netty-zero-copy-buf.md):娣卞害鎷嗚В鐩存帴鍐呭瓨銆丆ompositeByteBuf銆佸熀浜?Jemalloc 鎬濇兂鐨?PoolArena 鍐呭瓨鍒嗛厤浣撶郴鍙婅櫄寮曠敤娉勬紡妫€娴嬨€?
-- [JDK 21 铏氭嫙绾跨▼璇﹁В](concurrent/7-virtual-threads.md):瑙ｅ瘑杩愯鍦ㄧ敤鎴锋€佺殑杞婚噺鍗忕▼妯″瀷銆?
-- [Disruptor 鏃犻攣鐜舰闃熷垪](concurrent/8-disruptor.md):LMAX 鏋舵瀯涓嬬殑棰勫垎閰嶄笌闆?GC 鏈哄埗銆?
-- [CPU Cache Line 浼叡浜皟浼榏(concurrent/9-cache-line-sharing.md):浣跨敤 `@Contended` 娑堥櫎 MESI 鍗忚绔炰簤銆?
+### 2.1 Spring 核心全景
+
+- [IoC 容器与 Bean 生命周期](spring/0-bean-lifecycle.md)：从实例化到销毁的 4 阶段全流程。
+- [AOP 动态代理与链式调用](spring/1-ioc-aop.md)：解密为什么只有三级缓存能解决 AOP 循环依赖。
+- [BeanDefinition 与容器初始化](spring/2-beandefinition-internals.md)：探索 Spring 如何感知开发者定义的 Bean 与配置类 CGLIB 增强原理。
+- [Context Refresh 刷新流程](spring/3-spring-context-refresh.md)：深度拆解 Spring 容器启动的 12 个核心步骤与后置处理器执行顺序。
+- [声明式事务机制与失效场景](spring/4-transaction.md)：从 `TransactionInterceptor` 调用链到 ThreadLocal 连接绑定，还原 12 种失效根因。
+- [Spring 常用注解及其底层原理解析](spring/5-annotations.md)：剖析 `@Autowired`、`@Resource` 与 `@Configuration` 的装配注入链路。
+- [Spring 常用设计模式源码级深度解析](spring/6-design-patterns.md)：探究工厂、单例、代理、模板方法与观察者模式等在 Spring 源码中的落地。
+- [Spring 事件驱动机制与业务解耦](spring/7-spring-events.md)：解密事件发布广播器原理与事务同步器 `@TransactionalEventListener` 的 Phase 阶段。
+- [Spring AOP 代理选择与切面链路](spring/17-aop-proxy-chain.md)：JDK/CGLIB 代理选型、切面链构建与执行顺序。
+- [Spring 循环依赖深度进阶](spring/18-circular-dependency-advanced.md)：构造器注入边界、`@Async` 导致循环依赖崩溃的根因与避坑。
+- [Spring 核心扩展点与 SPI](spring/20-extension-points-spi.md)：`BeanPostProcessor`、`BeanFactoryPostProcessor` 与 `SpringFactoriesLoader`。
+
+### 2.2 Spring MVC 请求处理模型
+
+- [Spring MVC 工作流设计](spring/8-springmvc-principles.md)：理解 `DispatcherServlet` 与 `HandlerMapping` 的协作。
+- [Spring MVC 高级强化特性](spring/9-springmvc-advanced.md)：拦截器、过滤器与参数解析器深度定制。
+- [Spring MVC 执行流程与远程调用](spring/22-mvc-remote-call.md)：`RestTemplate`、Feign 动态代理与负载均衡调用链路。
+
+### 2.3 Spring Boot 与自动装配
+
+- [Spring Boot 启动原理与自动装配](spring/10-springboot-core.md)：解构 `@EnableAutoConfiguration` 与 `spring.factories`。
+- [Spring Boot 核心内部机制](spring/11-springboot-internals.md)：`Environment` 环境抽象与监听器模式。
+- [Spring Boot 扩展机制与 SPI 原理](spring/12-springboot-extension.md)：解析 Spring SPI 工厂加载器、自定义 Starter 流程及生命周期扩展点。
+- [Spring Boot FatJar 运行机制](spring/13-springboot-fatjar.md)：解密如何通过 `JarLauncher` 加载嵌套 Jar。
+- [Spring Boot 高级扩展与调优](spring/14-springboot-advanced.md)：自定义 Starter 与 Endpoint 监控。
+- [Spring Boot 条件装配与自动配置内核](spring/29-springboot-conditional-autoconfig.md)：`@Conditional` 家族与 `AutoConfigurationImportSelector`。
+- [Spring Cache 缓存抽象与声明式缓存原理](spring/16-spring-cache.md)：剖析 AOP 缓存拦截器、SpEL 键生成以及击穿/穿透/雪崩的生产级防护。
+- [Spring Security 安全架构与过滤器链](spring/28-spring-security-architecture.md)：`SecurityFilterChain`、认证授权流程与 CSRF/JWT 避坑。
+
+### 2.4 Spring Cloud 微服务与中间件
+
+- [Spring Boot 生态演进与 Spring Cloud 结合](spring/15-springboot-springcloud.md)：从 Boot 到分布式微服务架构。
+- [Spring Cloud 微服务起步](spring/30-springcloud-quickstart.md)：架构演进与全家桶协同实战。
+- [Dubbo 核心架构与高性能 RPC](spring/19-dubbo-rpc-kernel.md)：10 层架构、自适应 SPI 与 Netty 异步双工通信。
+- [Spring Cloud Gateway 流量入口](spring/21-gateway-advanced.md)：Route / Predicate / Filter 与令牌桶限流。
+- [Nacos 动态配置管理与多租户隔离](spring/23-nacos-config-advanced.md)：配置推送、命名空间隔离与热更新。
+- [Seata AT 模式内核](spring/24-seata-at-kernel.md)：无锁化两阶段提交原理。
+- [Seata 分布式事务全解](spring/25-seata-distributed-transaction.md)：AT 模式深度剖析与实战。
+- [Sentinel 滑动窗口与限流算法](spring/26-sentinel-algorithm-core.md)：`LeapArray` 与高性能限流内核。
+- [Sentinel 流量治理与故障容错](spring/27-sentinel-governance.md)：熔断、降级与系统自适应保护。
+- [Spring 框架生态面试真题](spring/31-interview-spring.md)：IoC、AOP、事务、Boot 与微服务高频考点。
+
+### 2.5 持久层与连接池 (Persistence)
+
+- [MyBatis 持久层原理与 HikariCP 连接池](persistence/0-mybatis-hikaricp.md)：HikariCP 无锁化 `LocalBag` 容器与 MyBatis 插件责任链。
+- [MyBatis 核心组件与 SQL 执行全流程](persistence/1-mybatis-core-flow.md)：从 `SqlSessionFactory` 到 `ResultSet` 映射的完整链路。
+- [MyBatis 插件原理与二级缓存](persistence/2-mybatis-cache-plugin.md)：拦截器责任链、一二级缓存与 Redis 集成。
+- [MyBatis 与连接池面试真题](persistence/3-interview-mybatis.md)：Executor、缓存、插件与 HikariCP 高频考点。
 
 ---
 
-## 绗洓闃舵:鐢熶骇绾у疄鎴樹笌闈㈣瘯澶嶇洏 (Workshop)
+## 第三阶段：高性能计算与通信 (Performance)
 
-- [鎬ц兘璇婃柇涓庡湪绾挎帓闅滆壓鏈痌(jvm/3-tuning-tools.md):Arthas 瀹炴垬涓?MAT 鍐呭瓨娉勯湶杩借釜銆?
-- [绾夸笂鏁呴殰娣卞害澶嶇洏璁板綍](jvm/4-prod-troubleshooting-cases.md):鍥涘ぇ缁忓吀 OOM 涓?CPU $100\%$ 鏍瑰洜鍒嗘瀽銆?
-- [JVM 鍚姩鍙傛暟榛勯噾閰嶇疆妯℃澘](jvm/5-prod-practice.md):鍦ㄧ敓浜х幆澧冮厤缃?G1/ZGC銆?
+在微秒级竞争中，探索 Linux 底层与硬件缓存的极限。
 
-- **鏍稿績闈㈣瘯鐪熼涓庡簳灞傚師鐞嗕笓棰?*
-
-  - [Java 鍩虹涓庨泦鍚堥潰璇曠湡棰榏(basic/3-interview-basic.md)
-  - [JUC 骞跺彂缂栫▼闈㈣瘯鐪熼](concurrent/10-interview-concurrent.md)
-  - [JVM 铏氭嫙鏈洪潰璇曠湡棰榏(jvm/6-interview-jvm.md)
-  - [Spring 妗嗘灦鐢熸€侀潰璇曠湡棰榏(spring/31-interview-spring.md)
-  - [MySQL 鍏崇郴鍨嬫暟鎹簱闈㈣瘯鐪熼](../database/mysql/7-interview-mysql.md)
-  - [Redis 楂樻€ц兘缂撳瓨闈㈣瘯鐪熼](../cache/redis/6-interview-redis.md)
+- [JDK NIO 核心三件套：Channel、Buffer 与 Selector](network/0-jdk-nio-fundamentals.md)：Buffer 状态机、Channel 非阻塞、Selector 多路复用与 Reactor 雏形。
+- [Netty 高性能网络编程底座](network/1-netty-io.md)：Epoll 空轮询 Bug 规避与堆外内存零拷贝。
+- [Netty 零拷贝与 ByteBuf 内存管理](network/2-netty-zero-copy-buf.md)：深度拆解直接内存、CompositeByteBuf、基于 Jemalloc 思想的 PoolArena 内存分配体系及虚引用泄漏检测。
+- [Netty 快速起步](network/3-netty-quickstart.md)：从 Hello World 走进高性能网络编程。
+- [Netty 协议编解码实战](network/4-netty-codec-practice.md)：粘包拆包、长度域协议与序列化选型。
+- [Netty 心跳保活与断线重连](network/5-netty-heartbeat.md)：IdleStateHandler 与客户端重连策略。
+- [Netty HTTP 与 WebSocket](network/6-netty-http-websocket.md)：HTTP 服务与长连接实战。
+- [Netty 简易 RPC 框架实战](network/7-netty-rpc-practice.md)：编解码 + 心跳 + 异步调用组装完整 RPC。
+- [Netty 与 NIO 面试真题](network/8-interview-netty.md)：Reactor、ByteBuf、粘包拆包与 RPC 高频考点。
 
 ---
 
-## 鍒嗗竷寮忚仈鍔ㄦ帹鑽?
+## 第四阶段：生产级实战与面试复盘 (Workshop)
 
-- **鍒嗗竷寮忛攣瀹炵幇**:鍏宠仈瀛︿範 [鍒嗗竷寮?ZooKeeper 閿乚(../distributed/system/lock-zookeeper.md)銆?
-- **鍒嗗竷寮忕紦瀛?*:鍏宠仈瀛︿範 [Redis 楂樺苟鍙戝満鏅痌(../cache/redis/4-scenarios.md)銆?
+- [性能诊断与在线排障艺术](jvm/3-tuning-tools.md)：Arthas 实战与 MAT 内存泄露追踪。
+- [线上故障深度复盘记录](jvm/4-prod-troubleshooting-cases.md)：四大经典 OOM 与 CPU 100% 根因分析。
+- [JVM 启动参数黄金配置模板](jvm/5-prod-practice.md)：在生产环境配置 G1/ZGC。
+
+**核心面试真题与底层原理专题**
+
+- [Java 基础与集合面试真题](basic/3-interview-basic.md)
+- [JUC 并发编程面试真题](concurrent/10-interview-concurrent.md)
+- [JVM 虚拟机面试真题](jvm/6-interview-jvm.md)
+- [Spring 框架生态面试真题](spring/31-interview-spring.md)
+- [MyBatis 与连接池面试真题](persistence/3-interview-mybatis.md)
+- [Netty 与 NIO 面试真题](network/8-interview-netty.md)
+- [MySQL 关系型数据库面试真题](../database/mysql/7-interview-mysql.md)
+- [Redis 高性能缓存面试真题](../cache/redis/6-interview-redis.md)
+
+---
+
+## 分布式联动推荐
+
+- **分布式锁实现**：关联学习 [分布式 ZooKeeper 锁](../distributed/system/1-lock-zookeeper.md)。
+- **分布式缓存**：关联学习 [Redis 高并发场景](../cache/redis/4-scenarios.md)。
+- **分布式事务**：关联学习 [Seata 分布式事务全解](spring/25-seata-distributed-transaction.md)。
+- **流量治理**：关联学习 [Sentinel 流量治理](spring/27-sentinel-governance.md)。
