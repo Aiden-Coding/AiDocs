@@ -477,3 +477,71 @@ pub fn add(a: i32, b: i32) -> i32 {
 
 > [!NOTE]
 > **下一步建议**：掌握了项目的组织与分层设计后，请继续阅读 [所有权与生命周期核心](5-ownership-lifetimes.md)，深入了解 Rust 在处理复杂模块架构时的内存所有权与生命周期治理。
+
+---
+
+## 🌍 交叉编译 (Cross-Compilation)
+
+交叉编译允许在一台机器上为另一种目标平台（如在 macOS 上编译 Linux ARM 二进制）生成可执行文件。
+
+### 1. 添加目标三元组
+
+```bash
+# 查看所有可用目标
+rustup target list
+
+# 添加目标（例如：Linux x86_64 静态链接 musl）
+rustup target add x86_64-unknown-linux-musl
+
+# 添加 ARM64 目标（树莓派、Apple Silicon、手机芯片等）
+rustup target add aarch64-unknown-linux-gnu
+
+# 添加 WebAssembly 目标
+rustup target add wasm32-unknown-unknown
+```
+
+### 2. 编译到指定目标
+
+```bash
+cargo build --target x86_64-unknown-linux-musl --release
+```
+
+输出文件位于 `target/x86_64-unknown-linux-musl/release/` 目录。
+
+### 3. 使用 cross 工具（推荐）
+
+[cross](https://github.com/cross-rs/cross) 通过 Docker 自动处理链接器和系统库，大幅简化跨平台编译：
+
+```bash
+cargo install cross
+cross build --target aarch64-unknown-linux-gnu --release
+```
+
+### 4. 配置 `.cargo/config.toml`
+
+在项目根目录创建 `.cargo/config.toml` 以固定目标和链接器：
+
+```toml
+[build]
+target = "x86_64-unknown-linux-musl"  # 设置默认编译目标
+
+[target.x86_64-unknown-linux-musl]
+linker = "x86_64-linux-musl-gcc"      # 指定交叉编译器链接器
+
+[target.aarch64-unknown-linux-gnu]
+linker = "aarch64-linux-gnu-gcc"
+```
+
+### 5. 常用目标三元组速查
+
+| 目标三元组 | 说明 |
+| :--- | :--- |
+| `x86_64-unknown-linux-gnu` | Linux x86_64（glibc 动态链接） |
+| `x86_64-unknown-linux-musl` | Linux x86_64（musl 静态链接，无外部依赖） |
+| `aarch64-unknown-linux-gnu` | Linux ARM64 |
+| `x86_64-pc-windows-msvc` | Windows x64 (MSVC 工具链) |
+| `x86_64-apple-darwin` | macOS x86_64 |
+| `aarch64-apple-darwin` | macOS ARM64 (Apple Silicon) |
+| `wasm32-unknown-unknown` | WebAssembly（纯 wasm，无 JS/Node） |
+| `wasm32-wasi` | WebAssembly (WASI 系统调用接口) |
+| `thumbv7em-none-eabihf` | ARM Cortex-M4/M7 嵌入式（无 OS） |

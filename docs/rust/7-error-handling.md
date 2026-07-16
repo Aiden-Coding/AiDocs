@@ -599,3 +599,127 @@ fn main() {
 
 > [!TIP]
 > **下一步**：掌握了错误处理后，继续学习 [标准库集合与 I/O](8.1-std-collections-io.md)，了解 Rust 标准库提供的常用数据结构和文件操作。
+
+---
+
+## Never 类型 (`!`) 与错误处理
+
+Rust 的**发散类型 `!`（Never Type）**表示一个函数或表达式永远不会正常返回。它在错误处理中有重要用途。
+
+### panic! 的类型是 `!`
+
+`panic!` 宏的类型是 `!`，因此可以出现在任何需要某种类型值的地方（`!` 可强制转换为任意类型）：
+
+```rust
+fn get_value(map: &std::collections::HashMap<&str, i32>, key: &str) -> i32 {
+    match map.get(key) {
+        Some(&v) => v,
+        None => panic!("Key '{}' not found", key), // ! 类型，编译通过
+    }
+}
+```
+
+### `!` 配合 `loop` 实现无限运行的服务
+
+```rust
+// 返回 ! 表示该函数永不返回（例如服务主循环）
+fn server_loop() -> ! {
+    loop {
+        // 处理请求...
+        println!("处理请求中...");
+    }
+}
+```
+
+### `continue` 与 `break` 的类型也是 `!`
+
+这使得如下模式成为可能：
+
+```rust
+fn parse_positive(s: &str) -> u32 {
+    let n: u32 = loop {
+        match s.parse() {
+            Ok(n) if n > 0 => break n,   // break 携带值，类型为 u32
+            _ => continue,               // continue 类型为 !，不影响 break 的类型推导
+        }
+    };
+    n
+}
+```
+
+---
+
+## 提前返回模式与错误边界
+
+在大型应用中，通常将"应用层错误"与"域层错误"分开处理：
+
+```rust
+use thiserror::Error;
+use anyhow::{Context, Result, bail, ensure};
+
+// 域层错误：精确描述业务规则失败
+#[derive(Error, Debug)]
+enum DomainError {
+    #[error("用户年龄 {age} 不满足最低要求 {min}")]
+    AgeTooLow { age: u8, min: u8 },
+    #[error("用户名 '{0}' 包含非法字符")]
+    InvalidUsername(String),
+}
+
+fn validate_user(name: &str, age: u8) -> Result<(), DomainError> {
+    // ensure! 宏：条件不满足时返回指定错误（等同于 if !cond { return Err(...) }）
+    if name.chars().any(|c| !c.is_alphanumeric()) {
+        return Err(DomainError::InvalidUsername(name.to_string()));
+    }
+    if age < 18 {
+        return Err(DomainError::AgeTooLow { age, min: 18 });
+    }
+    Ok(())
+}
+
+// 应用层：使用 anyhow 统一包装，附加上下文
+fn register_user(name: &str, age: u8) -> Result<String> {
+    validate_user(name, age)
+        .context(format!("注册用户 '{}' 失败", name))?;
+    
+    Ok(format!("用户 {} 注册成功", name))
+}
+
+fn main() {
+    match register_user("alice123", 17) {
+        Ok(msg) => println!("{}", msg),
+        Err(e) => {
+            eprintln!("错误: {}", e);
+            // anyhow 支持打印完整的错误链
+            eprintln!("错误链:\n{:?}", e);
+        }
+    }
+}
+```
+
+### 迭代 Result：partition_map 与 partition
+
+当处理一批操作结果时，常见模式是将成功与失败分离：
+
+```rust
+fn main() {
+    let strings = vec!["1", "2", "abc", "4", "xyz"];
+
+    // 方法1：collect 进 Result<Vec<_>, _>，遇到第一个错误即早停
+    let all_or_nothing: Result<Vec<i32>, _> = strings.iter()
+        .map(|s| s.parse::<i32>())
+        .collect();
+    println!("全部成功或第一个错误: {:?}", all_or_nothing);
+
+    // 方法2：partition 分离成功与失败
+    let (oks, errs): (Vec<_>, Vec<_>) = strings.iter()
+        .map(|s| s.parse::<i32>())
+        .partition(Result::is_ok);
+
+    let values: Vec<i32> = oks.into_iter().map(Result::unwrap).collect();
+    let errors: Vec<_> = errs.into_iter().map(Result::unwrap_err).collect();
+
+    println!("成功: {:?}", values);
+    println!("失败: {:?}", errors);
+}
+```

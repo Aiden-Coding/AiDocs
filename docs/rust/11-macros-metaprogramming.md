@@ -240,3 +240,100 @@ cargo expand path::to::my_module
 ---
 
 > **工程师格言**：宏是赋予开发者构建领域特定生态的尚方宝剑，但也容易造成阅读困局与超长编译时长。在决定引入过程宏之前，优先审视传统的 Trait 和泛型以及闭包，能否已足以解决当前问题。
+
+---
+
+## 🔴 测试过程宏：trybuild
+
+过程宏最难测试的部分是**编译错误**——确保非法用法能产生清晰的编译错误信息。[trybuild](https://github.com/dtolnay/trybuild) 专为此设计：
+
+```toml
+[dev-dependencies]
+trybuild = "1"
+```
+
+测试结构：
+
+```text
+tests/
+├── compile_fail/
+│   └── wrong_derive.rs    # 预期编译失败的测试用例
+├── pass/
+│   └── correct_derive.rs  # 预期编译通过的测试用例
+└── tests.rs
+```
+
+`tests/tests.rs`：
+
+```rust
+#[test]
+fn ui_tests() {
+    let t = trybuild::TestCases::new();
+    t.pass("tests/pass/*.rs");
+    t.compile_fail("tests/compile_fail/*.rs");
+}
+```
+
+`tests/compile_fail/wrong_derive.rs`（故意写错的用例）：
+
+```rust
+// 预期编译失败：对没有字段的类型使用了 Hello derive
+use my_macro::Hello;
+
+#[derive(Hello)]
+struct Empty; // 这应当产生编译错误
+```
+
+trybuild 会自动对比实际的编译错误与保存的 `.stderr` 快照文件，确保错误信息符合预期且稳定。
+
+---
+
+## 🔴 syn 进阶：解析字段级属性
+
+在自定义 Derive 宏中，经常需要读取结构体字段上的自定义属性（如 `#[my_attr(rename = "foo")]`）。
+
+```rust
+use proc_macro::TokenStream;
+use quote::quote;
+use syn::{parse_macro_input, DeriveInput, Fields, Lit, Meta, NestedMeta};
+
+// 假设我们实现一个 Builder 宏，支持 #[builder(default = "...")]
+#[proc_macro_derive(Builder, attributes(builder))]
+pub fn builder_derive(input: TokenStream) -> TokenStream {
+    let ast = parse_macro_input!(input as DeriveInput);
+    let name = &ast.ident;
+    
+    // 遍历结构体字段
+    if let syn::Data::Struct(ref data) = ast.data {
+        if let Fields::Named(ref fields) = data.fields {
+            for field in &fields.named {
+                let field_name = field.ident.as_ref().unwrap();
+                
+                // 寻找 #[builder(...)] 属性
+                for attr in &field.attrs {
+                    if attr.path.is_ident("builder") {
+                        // 解析属性内容
+                        if let Ok(Meta::List(meta_list)) = attr.parse_meta() {
+                            for nested in &meta_list.nested {
+                                if let NestedMeta::Meta(Meta::NameValue(nv)) = nested {
+                                    if nv.path.is_ident("default") {
+                                        if let Lit::Str(ref s) = nv.lit {
+                                            eprintln!(
+                                                "字段 {} 的默认值: {}",
+                                                field_name, s.value()
+                                            );
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+    
+    // 生成代码...
+    quote! { impl #name {} }.into()
+}
+```

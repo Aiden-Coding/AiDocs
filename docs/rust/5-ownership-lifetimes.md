@@ -641,3 +641,86 @@ fn main() {
 
 > [!TIP]
 > **下一步**：掌握了所有权和生命周期后，请继续学习 [特征与泛型](6-traits-generics.md)，了解 Rust 的类型系统和抽象能力。
+
+---
+
+## 非词法生命周期 (NLL - Non-Lexical Lifetimes)
+
+Rust 2018 Edition 引入了**非词法生命周期（Non-Lexical Lifetimes，NLL）**。在此之前，借用的生命周期总是延续到其所在词法作用域（花括号）结束。NLL 使编译器更智能，借用的实际存活时间精确缩短到**最后一次使用的位置**。
+
+```rust
+fn main() {
+    let mut data = vec![1, 2, 3];
+
+    // 在 NLL 之前，r 的生命周期延续到整个 main 函数，下面的 data.push 会报错
+    let r = &data[0];
+    println!("first: {}", r);
+    // r 在这里最后一次被使用，NLL 让借用在此结束
+
+    data.push(4); // ✅ NLL 下合法：r 的借用已经"逻辑结束"
+    println!("data: {:?}", data);
+}
+```
+
+在更早的 Rust 版本（Rust 2015 Edition + Lexical Lifetimes）中，上述代码会产生编译错误，因为 `r` 的借用在词法上直到函数末尾。NLL 让借用检查更加精确和人性化。
+
+---
+
+## 部分移动 (Partial Moves)
+
+结构体中的各字段可以**单独移动**，被称为**部分移动（Partial Move）**。发生部分移动后，原结构体不能再被整体使用，但未被移动的字段仍然可以独立访问。
+
+```rust
+#[derive(Debug)]
+struct User {
+    name: String,
+    age: u32,
+}
+
+fn main() {
+    let user = User {
+        name: String::from("Alice"),
+        age: 30,
+    };
+
+    // 将 name 字段从 user 中部分移动出来
+    let name = user.name; // user.name 的所有权被移出
+
+    // ❌ 不能再整体使用 user（因为 name 字段已被移走）
+    // println!("{:?}", user);
+
+    // ✅ 但可以访问未被移动的字段
+    println!("age: {}", user.age);
+    println!("name: {}", name);
+}
+```
+
+### 在 match 中使用 ref 阻止移动
+
+当在 `match` 中匹配一个拥有所有权的值，但又不想转移所有权时，使用 `ref` 关键字进行引用绑定：
+
+```rust
+#[derive(Debug)]
+struct Config {
+    host: String,
+    port: u16,
+}
+
+fn describe_config(config: &Config) {
+    match config {
+        Config { host: ref h, port: p } => {
+            // h 是 &String，p 是 &u16（值类型会自动 Copy）
+            println!("Connecting to {}:{}", h, p);
+        }
+    }
+}
+
+fn main() {
+    let cfg = Config {
+        host: String::from("localhost"),
+        port: 8080,
+    };
+    describe_config(&cfg);
+    println!("Config still available: {:?}", cfg); // ✅
+}
+```

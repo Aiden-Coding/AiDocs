@@ -677,3 +677,120 @@ mod tests {
 
 > [!TIP]
 > **下一步**：掌握了测试后，继续学习 [宏与元编程](11-macros-metaprogramming.md)，了解如何使用宏来减少重复代码。
+
+---
+
+## 属性测试 (Property-Based Testing)
+
+属性测试通过**随机生成大量输入数据**来验证代码的不变性（invariants），而不是只测试少数手工构造的用例。
+
+### 使用 proptest
+
+```toml
+[dev-dependencies]
+proptest = "1"
+```
+
+```rust
+#[cfg(test)]
+mod prop_tests {
+    use proptest::prelude::*;
+
+    fn reverse<T: Clone>(v: &[T]) -> Vec<T> {
+        let mut result = v.to_vec();
+        result.reverse();
+        result
+    }
+
+    proptest! {
+        // 对任意 Vec<i32>，反转两次应等于原始值
+        #[test]
+        fn reverse_twice_is_identity(v in prop::collection::vec(any::<i32>(), 0..100)) {
+            let twice_reversed = reverse(&reverse(&v));
+            prop_assert_eq!(v, twice_reversed);
+        }
+
+        // 反转不改变长度
+        #[test]
+        fn reverse_preserves_length(v in prop::collection::vec(any::<i32>(), 0..100)) {
+            prop_assert_eq!(v.len(), reverse(&v).len());
+        }
+
+        // 对任意有效字符串，parse 后再 to_string 应还原
+        #[test]
+        fn integer_roundtrip(n in any::<i32>()) {
+            let s = n.to_string();
+            let parsed: i32 = s.parse().unwrap();
+            prop_assert_eq!(n, parsed);
+        }
+    }
+}
+```
+
+运行：`cargo test`。proptest 自动生成数百个随机用例，并在发现失败时输出最小化的反例。
+
+---
+
+## 模糊测试 (Fuzzing)
+
+模糊测试（Fuzzing）通过**自动变异输入**发现程序崩溃、panic 或安全漏洞。
+
+### cargo-fuzz 快速上手
+
+```bash
+cargo install cargo-fuzz
+cargo fuzz init                    # 初始化 fuzz 目录
+cargo fuzz add my_fuzz_target      # 创建新的 fuzz 目标
+```
+
+`fuzz/fuzz_targets/my_fuzz_target.rs`：
+
+```rust
+#![no_main]
+use libfuzzer_sys::fuzz_target;
+
+fuzz_target!(|data: &[u8]| {
+    // 用任意字节序列测试你的解析函数
+    if let Ok(s) = std::str::from_utf8(data) {
+        // 测试你的函数不会 panic
+        let _ = s.parse::<u64>();
+    }
+});
+```
+
+运行 fuzzer（需要 nightly Rust）：
+
+```bash
+cargo +nightly fuzz run my_fuzz_target
+```
+
+---
+
+## 测试覆盖率
+
+### 使用 cargo-tarpaulin（Linux）
+
+```bash
+cargo install cargo-tarpaulin
+cargo tarpaulin --out Html
+```
+
+### 使用 llvm-cov（跨平台，推荐）
+
+```bash
+cargo install cargo-llvm-cov
+cargo llvm-cov                     # 终端输出覆盖率报告
+cargo llvm-cov --html              # 生成 HTML 报告
+cargo llvm-cov --lcov --output-path lcov.info  # 生成 lcov 格式（兼容 CI）
+```
+
+示例输出：
+```
+Filename                   Regions  Missed  Cover   Lines  Missed  Cover
+src/lib.rs                      12       1  91.67%      35       1  97.14%
+src/parser.rs                   28       3  89.29%      81       5  93.83%
+TOTAL                           40       4  90.00%     116       6  94.83%
+```
+
+> [!TIP]
+> 覆盖率目标建议：核心业务逻辑 ≥ 80%；安全关键路径 ≥ 95%。不要盲目追求 100%，边界分支和错误路径的覆盖质量比数字更重要。

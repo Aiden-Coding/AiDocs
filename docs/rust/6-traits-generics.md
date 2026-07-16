@@ -725,3 +725,151 @@ fn main() {
 
 > [!TIP]
 > **下一步**：掌握了特征和泛型后，继续学习 [错误处理](7-error-handling.md)，了解如何优雅地处理程序中的错误。
+
+---
+
+## 泛型关联类型 (GAT - Generic Associated Types)
+
+Rust 1.65 稳定了**泛型关联类型（Generic Associated Types，GAT）**。GAT 允许在 trait 的关联类型上添加泛型参数（包括生命周期），解决了之前无法在 trait 中表达带生命周期关联类型的限制。
+
+### 经典用例：带生命周期的迭代器
+
+```rust
+// GAT 允许关联类型携带生命周期参数
+trait LendingIterator {
+    type Item<'a> where Self: 'a; // 关联类型带有生命周期参数 'a
+
+    fn next<'a>(&'a mut self) -> Option<Self::Item<'a>>;
+}
+
+// 一个逐行借用文件内容的迭代器（不复制字符串）
+struct LineReader {
+    lines: Vec<String>,
+    index: usize,
+}
+
+impl LendingIterator for LineReader {
+    type Item<'a> = &'a str where Self: 'a;
+
+    fn next<'a>(&'a mut self) -> Option<Self::Item<'a>> {
+        if self.index < self.lines.len() {
+            let line = &self.lines[self.index];
+            self.index += 1;
+            Some(line)
+        } else {
+            None
+        }
+    }
+}
+
+fn main() {
+    let mut reader = LineReader {
+        lines: vec!["hello".to_string(), "world".to_string()],
+        index: 0,
+    };
+    while let Some(line) = reader.next() {
+        println!("{}", line);
+    }
+}
+```
+
+---
+
+## 孤儿规则 (Orphan Rule) 与 Newtype 模式
+
+### 孤儿规则
+
+Rust 的**孤儿规则（Orphan Rule）**规定：要为类型 `T` 实现 trait `Tr`，则 `T` 或 `Tr` 中**至少有一个**必须在当前 crate 中定义。这防止了不同 crate 之间对同一类型的 trait 实现产生冲突。
+
+```rust
+// ❌ 不允许：为外部类型实现外部 trait
+// impl std::fmt::Display for Vec<i32> { ... }
+// Display 和 Vec 都不属于当前 crate，违反孤儿规则。
+
+// ✅ 允许：为自定义类型实现外部 trait
+struct Wrapper(Vec<i32>);
+
+impl std::fmt::Display for Wrapper {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        write!(f, "[{}]", self.0.iter().map(|x| x.to_string()).collect::<Vec<_>>().join(", "))
+    }
+}
+
+fn main() {
+    let w = Wrapper(vec![1, 2, 3]);
+    println!("{}", w); // [1, 2, 3]
+}
+```
+
+### Newtype 模式
+
+**Newtype 模式**（如上面的 `Wrapper`）是绕过孤儿规则的标准做法，同时还带来额外好处：
+- 为已有类型实现外部 trait（绕过孤儿规则）。
+- 隐藏内部实现细节，暴露更清晰的公开 API。
+- 利用类型系统区分语义相同但含义不同的值（如 `Meters` vs `Feet`）。
+
+```rust
+// 用 Newtype 区分单位，防止混用
+struct Meters(f64);
+struct Feet(f64);
+
+impl Meters {
+    fn to_feet(&self) -> Feet {
+        Feet(self.0 * 3.28084)
+    }
+}
+
+fn build_wall(height: Meters) {
+    println!("墙高 {} 米", height.0);
+}
+
+fn main() {
+    let height = Meters(2.5);
+    let height_in_feet = height.to_feet();
+
+    build_wall(Meters(2.5));
+    // build_wall(height_in_feet); // ❌ 编译报错：类型不匹配，防止单位混用
+}
+```
+
+---
+
+## 父 Trait 与 Supertrait
+
+如果一个 trait 的实现依赖于另一个 trait 的功能，可以通过 **supertrait** 表达这种依赖：
+
+```rust
+use std::fmt;
+
+// OutlinePrint 要求实现者必须同时实现 fmt::Display
+trait OutlinePrint: fmt::Display {
+    fn outline_print(&self) {
+        // 可以直接使用 Display 的功能，因为 supertrait 约束保证了它存在
+        let output = self.to_string();
+        let len = output.len();
+        println!("{}", "*".repeat(len + 4));
+        println!("* {} *", output);
+        println!("{}", "*".repeat(len + 4));
+    }
+}
+
+struct Point {
+    x: i32,
+    y: i32,
+}
+
+// 先实现 Display（supertrait 要求）
+impl fmt::Display for Point {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "({}, {})", self.x, self.y)
+    }
+}
+
+// 再实现 OutlinePrint
+impl OutlinePrint for Point {}
+
+fn main() {
+    let p = Point { x: 1, y: 3 };
+    p.outline_print();
+}
+```

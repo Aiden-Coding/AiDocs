@@ -753,3 +753,160 @@ fn main() {
 
 > [!TIP]
 > **下一步**：掌握了并发编程后，继续学习 [异步编程](8-async-under-the-hood.md)，了解 Rust 的异步运行时和 Future。
+
+---
+
+## 条件变量 (Condvar)
+
+`Condvar`（条件变量）允许线程在某个条件满足之前**高效地阻塞等待**，而不是忙等（spinning）。它总是与 `Mutex` 配合使用。
+
+```rust
+use std::sync::{Arc, Mutex, Condvar};
+use std::thread;
+
+fn main() {
+    let pair = Arc::new((Mutex::new(false), Condvar::new()));
+    let pair_clone = Arc::clone(&pair);
+
+    // 工作线程：完成任务后通知主线程
+    thread::spawn(move || {
+        let (lock, cvar) = &*pair_clone;
+        let mut started = lock.lock().unwrap();
+        println!("工作线程：开始处理...");
+        thread::sleep(std::time::Duration::from_millis(100));
+        *started = true; // 修改条件
+        cvar.notify_one(); // 唤醒等待的线程
+        println!("工作线程：已通知主线程");
+    });
+
+    // 主线程：等待条件满足
+    let (lock, cvar) = &*pair;
+    let mut started = lock.lock().unwrap();
+    while !*started {
+        // wait 会原子地释放锁并进入睡眠，被唤醒后重新获取锁
+        started = cvar.wait(started).unwrap();
+    }
+    println!("主线程：收到通知，条件已满足！");
+}
+```
+
+### 使用 `wait_timeout` 防止永久阻塞
+
+```rust
+use std::sync::{Arc, Mutex, Condvar};
+use std::time::Duration;
+
+fn main() {
+    let pair = Arc::new((Mutex::new(false), Condvar::new()));
+    let (lock, cvar) = &*pair;
+
+    let guard = lock.lock().unwrap();
+    let (guard, timeout_result) = cvar.wait_timeout(guard, Duration::from_secs(2)).unwrap();
+
+    if timeout_result.timed_out() {
+        println!("等待超时，条件未满足");
+    } else {
+        println!("条件已满足: {}", *guard);
+    }
+}
+```
+
+---
+
+## Barrier（屏障同步）
+
+`Barrier` 让多个线程在某个时间点**同步等待**，直到所有线程都到达屏障后才继续执行。常用于并行计算的阶段性同步。
+
+```rust
+use std::sync::{Arc, Barrier};
+use std::thread;
+
+fn main() {
+    let n = 4;
+    let barrier = Arc::new(Barrier::new(n));
+    let mut handles = vec![];
+
+    for i in 0..n {
+        let b = Arc::clone(&barrier);
+        handles.push(thread::spawn(move || {
+            println!("线程 {} 完成第一阶段", i);
+            b.wait(); // 所有线程都到达这里后才继续
+            println!("线程 {} 开始第二阶段", i);
+        }));
+    }
+
+    for h in handles { h.join().unwrap(); }
+}
+```
+
+---
+
+## Scoped Threads（作用域线程）
+
+标准库（Rust 1.63+）提供了 `thread::scope`，允许创建**借用当前栈帧变量**的线程（无需 `Arc` 或 `'static` 约束）：
+
+```rust
+use std::thread;
+
+fn main() {
+    let data = vec![1, 2, 3, 4, 5];
+    let mut results = vec![0; 5];
+
+    thread::scope(|s| {
+        // 可以直接借用 data（非 'static），因为 scope 保证所有线程在 scope 结束前完成
+        s.spawn(|| {
+            println!("读取 data: {:?}", &data);
+        });
+
+        // 可变借用 results
+        s.spawn(|| {
+            for (i, r) in results.iter_mut().enumerate() {
+                *r = i as i32 * 2;
+            }
+        });
+    }); // scope 结束时，所有子线程自动 join
+
+    println!("results: {:?}", results);
+}
+```
+
+> [!TIP]
+> `thread::scope` 相比 `thread::spawn` + `Arc` 的方案更简洁、性能更好，在不需要把线程活过当前函数的场景下，优先使用 scoped threads。
+
+---
+
+## Rayon：数据并行
+
+[Rayon](https://github.com/rayon-rs/rayon) 是 Rust 生态中最流行的数据并行库，只需将 `.iter()` 改为 `.par_iter()` 即可将串行迭代器变为并行：
+
+```toml
+[dependencies]
+rayon = "1"
+```
+
+```rust
+use rayon::prelude::*;
+
+fn main() {
+    let numbers: Vec<i64> = (1..=1_000_000).collect();
+
+    // 并行求和：Rayon 自动拆分任务到多个 CPU 核心
+    let sum: i64 = numbers.par_iter().sum();
+    println!("并行求和: {}", sum);
+
+    // 并行 map + filter + collect
+    let evens_squared: Vec<i64> = numbers.par_iter()
+        .filter(|&&x| x % 2 == 0)
+        .map(|&x| x * x)
+        .collect();
+
+    println!("偶数平方数量: {}", evens_squared.len());
+
+    // 并行排序
+    let mut data: Vec<i32> = (0..100).rev().collect();
+    data.par_sort();
+    println!("并行排序后首个元素: {}", data[0]);
+}
+```
+
+Rayon 内部使用**工作窃取（Work Stealing）**调度器，自动平衡各 CPU 核心的负载。

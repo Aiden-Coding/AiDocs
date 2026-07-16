@@ -277,3 +277,145 @@ fn main() {
     println!("High performance allocator mimalloc initialized successfully!");
 }
 ```
+
+---
+
+## 🟡 弱引用：打破循环引用
+
+`Rc<T>` 和 `Arc<T>` 的引用计数只有降到 0 时才会释放内存。如果两个对象互相持有对方的 `Rc`，就会产生**循环引用（Reference Cycle）**，导致内存永远无法回收（内存泄漏）。
+
+解决方案是使用**弱引用（Weak Reference）**：`Rc::downgrade` / `Arc::downgrade`。弱引用**不增加强引用计数**，不阻止对象被释放。使用弱引用时，需要先调用 `.upgrade()` 升级为 `Option<Rc<T>>`，若对象已被释放则返回 `None`。
+
+```rust
+use std::rc::{Rc, Weak};
+use std::cell::RefCell;
+
+#[derive(Debug)]
+struct Node {
+    value: i32,
+    // 子节点用强引用（拥有所有权）
+    children: Vec<Rc<RefCell<Node>>>,
+    // 父节点用弱引用（避免循环引用）
+    parent: Option<Weak<RefCell<Node>>>,
+}
+
+fn main() {
+    let root = Rc::new(RefCell::new(Node {
+        value: 1,
+        children: vec![],
+        parent: None,
+    }));
+
+    let child = Rc::new(RefCell::new(Node {
+        value: 2,
+        children: vec![],
+        // 子节点通过弱引用指向父节点
+        parent: Some(Rc::downgrade(&root)),
+    }));
+
+    root.borrow_mut().children.push(Rc::clone(&child));
+
+    // 访问父节点：通过 upgrade() 尝试获取
+    if let Some(parent_weak) = &child.borrow().parent {
+        match parent_weak.upgrade() {
+            Some(parent) => println!("父节点值: {}", parent.borrow().value),
+            None => println!("父节点已被释放"),
+        }
+    }
+
+    // 强引用计数：root=1, child=2（root 的 children 持有一份）
+    println!("root 强引用数: {}", Rc::strong_count(&root)); // 1
+    println!("child 强引用数: {}", Rc::strong_count(&child)); // 2
+    println!("root 弱引用数: {}", Rc::weak_count(&root));   // 1 (child.parent)
+}
+```
+
+多线程场景下使用 `Arc::downgrade` 与 `Arc::upgrade`，API 完全相同。
+
+---
+
+## 🟡 延迟初始化：OnceCell / OnceLock / LazyLock
+
+标准库（自 Rust 1.70+）提供了三个用于延迟初始化（Lazy Initialization）的类型，避免全局可变静态变量的 `unsafe` 问题：
+
+### 1. `OnceCell<T>` — 单线程延迟初始化
+
+`OnceCell` 只能被写入一次，之后始终返回同一个值。适合单线程场景：
+
+```rust
+use std::cell::OnceCell;
+
+struct Config {
+    database_url: OnceCell<String>,
+}
+
+impl Config {
+    fn new() -> Self {
+        Config { database_url: OnceCell::new() }
+    }
+
+    fn database_url(&self) -> &str {
+        self.database_url.get_or_init(|| {
+            std::env::var("DATABASE_URL")
+                .unwrap_or_else(|_| "postgres://localhost/dev".to_string())
+        })
+    }
+}
+
+fn main() {
+    let cfg = Config::new();
+    println!("{}", cfg.database_url()); // 首次调用：初始化
+    println!("{}", cfg.database_url()); // 后续调用：直接返回缓存值
+}
+```
+
+### 2. `OnceLock<T>` — 多线程安全的延迟初始化
+
+`OnceLock` 是 `OnceCell` 的线程安全版本（实现了 `Sync`），适合全局单例：
+
+```rust
+use std::sync::OnceLock;
+
+static INSTANCE: OnceLock<String> = OnceLock::new();
+
+fn get_config() -> &'static str {
+    INSTANCE.get_or_init(|| {
+        println!("首次初始化！");
+        "production_config".to_string()
+    })
+}
+
+fn main() {
+    // 多线程并发调用，初始化只发生一次
+    let handles: Vec<_> = (0..4).map(|_| {
+        std::thread::spawn(|| println!("config: {}", get_config()))
+    }).collect();
+
+    for h in handles { h.join().unwrap(); }
+}
+```
+
+### 3. `LazyLock<T>` — 自动延迟初始化（推荐）
+
+`LazyLock` 是 `OnceLock` + 闭包的组合，是最简洁的全局延迟初始化方案：
+
+```rust
+use std::sync::LazyLock;
+use std::collections::HashMap;
+
+// 全局只读配置表，仅在第一次访问时初始化
+static SETTINGS: LazyLock<HashMap<&str, &str>> = LazyLock::new(|| {
+    let mut m = HashMap::new();
+    m.insert("host", "localhost");
+    m.insert("port", "8080");
+    m
+});
+
+fn main() {
+    println!("host: {}", SETTINGS["host"]);
+    println!("port: {}", SETTINGS["port"]);
+}
+```
+
+> [!TIP]
+> 选择指南：`OnceCell` 用于结构体字段单线程场景，`OnceLock` 用于全局静态变量多线程场景，`LazyLock` 是 `OnceLock` 的语法糖，优先选用。

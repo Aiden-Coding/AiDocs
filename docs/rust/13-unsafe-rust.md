@@ -282,3 +282,167 @@ cargo +nightly miri test
 ```
 
 Miri 会实时检测并报告诸如内存泄漏、别名冲突、使用未初始化内存及越界访问等安全隐患。
+
+---
+
+## 🔴 内联汇编 (Inline Assembly)
+
+Rust 通过 `asm!` 宏（Rust 1.59 稳定）支持内联汇编，用于极致性能优化或访问处理器特殊指令。
+
+```rust
+use std::arch::asm;
+
+fn main() {
+    // 示例 1：读取 x86-64 的 TSC（时间戳计数器）
+    #[cfg(target_arch = "x86_64")]
+    let tsc: u64 = unsafe {
+        let lo: u32;
+        let hi: u32;
+        asm!(
+            "rdtsc",
+            out("eax") lo,
+            out("edx") hi,
+            options(nomem, nostack)
+        );
+        ((hi as u64) << 32) | (lo as u64)
+    };
+    
+    #[cfg(target_arch = "x86_64")]
+    println!("TSC: {}", tsc);
+
+    // 示例 2：原子交换操作（x86-64 xchg 指令）
+    #[cfg(target_arch = "x86_64")]
+    unsafe {
+        let mut x: u64 = 10;
+        let y: u64 = 20;
+        asm!(
+            "xchg {0}, {1}",
+            inout(reg) x,
+            in(reg) y,
+            options(pure, nomem, nostack)
+        );
+        println!("交换后 x = {}", x); // 20
+    }
+}
+```
+
+### `asm!` 关键语法要素
+
+| 操作数类型 | 说明 |
+| :--- | :--- |
+| `in(reg) expr` | 输入操作数，值来自表达式 |
+| `out(reg) var` | 输出操作数，结果写入变量 |
+| `inout(reg) var` | 输入输出操作数 |
+| `lateout(reg) var` | 延迟输出（不与输入操作数共享寄存器） |
+| `const expr` | 编译期常量操作数 |
+| `options(nomem)` | 告知编译器此汇编不读写内存，允许更激进优化 |
+| `options(nostack)` | 告知编译器此汇编不修改栈指针 |
+| `options(pure)` | 无副作用，相同输入产生相同输出 |
+
+> [!WARNING]
+> 内联汇编直接操作 CPU 寄存器，不当使用会导致难以调试的崩溃。除非有充分的性能分析证明必要性，否则优先使用 `std::sync::atomic` 或 SIMD intrinsics 替代。
+
+---
+
+## 🔴 no_std 与嵌入式 Rust
+
+`no_std` 是 Rust 在嵌入式/裸机（bare-metal）环境中运行的模式——不链接标准库（`std`），只使用核心库（`core`）和可选的 `alloc`。
+
+### 启用 no_std
+
+在 `lib.rs` 或 `main.rs` 顶部添加属性：
+
+```rust
+#![no_std]  // 不链接标准库
+#![no_main] // 不使用 Rust 默认的 main 入口（裸机需要自定义）
+
+use core::panic::PanicInfo;
+
+// 必须提供自定义的 panic 处理函数
+#[panic_handler]
+fn panic(_info: &PanicInfo) -> ! {
+    loop {} // 裸机通常进入无限循环
+}
+
+// 裸机入口：链接器符号 _start
+#[no_mangle]
+pub extern "C" fn _start() -> ! {
+    // 初始化硬件...
+    loop {}
+}
+```
+
+### no_std 下可用与不可用的模块
+
+| 可用（来自 `core`） | 需要 `alloc` | 不可用（需要 OS） |
+| :--- | :--- | :--- |
+| 基础类型、切片、引用 | `Vec`, `String`, `Box` | 文件 I/O、网络、线程 |
+| `Option`, `Result`, `Iterator` | `Rc`, `Arc` | `std::sync::Mutex` |
+| 原子类型、浮点运算 | 自定义 `alloc` 分配器 | 环境变量、进程管理 |
+| `fmt::Write` | `BTreeMap`, `HashMap`（需要 alloc） | 动态链接库加载 |
+
+### 使用 alloc crate 启用堆分配
+
+如果目标平台有内存分配器，可以使用 `alloc` crate：
+
+```rust
+#![no_std]
+extern crate alloc;
+
+use alloc::vec::Vec;
+use alloc::string::String;
+
+// 必须提供全局分配器
+use linked_list_allocator::LockedHeap;
+
+#[global_allocator]
+static ALLOCATOR: LockedHeap = LockedHeap::empty();
+```
+
+---
+
+## 🔴 实现自定义全局分配器 (GlobalAlloc)
+
+通过实现 `GlobalAlloc` trait，可以完全接管 Rust 程序的内存分配。这是理解内存管理底层的重要实践：
+
+```rust
+use std::alloc::{GlobalAlloc, Layout, System};
+use std::sync::atomic::{AtomicUsize, Ordering};
+
+// 带统计功能的包装分配器
+struct TrackingAllocator {
+    allocated: AtomicUsize,
+    deallocated: AtomicUsize,
+}
+
+unsafe impl GlobalAlloc for TrackingAllocator {
+    unsafe fn alloc(&self, layout: Layout) -> *mut u8 {
+        let ptr = System.alloc(layout);
+        if !ptr.is_null() {
+            self.allocated.fetch_add(layout.size(), Ordering::Relaxed);
+        }
+        ptr
+    }
+
+    unsafe fn dealloc(&self, ptr: *mut u8, layout: Layout) {
+        System.dealloc(ptr, layout);
+        self.deallocated.fetch_add(layout.size(), Ordering::Relaxed);
+    }
+}
+
+#[global_allocator]
+static ALLOCATOR: TrackingAllocator = TrackingAllocator {
+    allocated: AtomicUsize::new(0),
+    deallocated: AtomicUsize::new(0),
+};
+
+fn main() {
+    let _v: Vec<i32> = (0..1000).collect(); // 触发分配
+    
+    let alloc = ALLOCATOR.allocated.load(Ordering::Relaxed);
+    let dealloc = ALLOCATOR.deallocated.load(Ordering::Relaxed);
+    println!("已分配: {} 字节", alloc);
+    println!("已释放: {} 字节", dealloc);
+    println!("当前使用: {} 字节", alloc - dealloc);
+}
+```

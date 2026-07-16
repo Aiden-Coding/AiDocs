@@ -283,3 +283,131 @@ fn collect_demo() -> Result<Vec<i32>, std::num::ParseIntError> {
 ### 2. 定制高级内部迭代器 (IntoIterator 规范)
 
 你可以为自定义类型实现 `IntoIterator`。这不仅允许你的类型可被直接应用在 `for _ in _` 语法糖中，并且为你打开了整个 `Iterator` 链式组合的世界。
+
+---
+
+## 🟡 扩展迭代器组合器
+
+### 1. `chain` — 串联两个迭代器
+
+```rust
+fn main() {
+    let a = [1, 2, 3];
+    let b = [4, 5, 6];
+    let combined: Vec<i32> = a.iter().chain(b.iter()).copied().collect();
+    println!("{:?}", combined); // [1, 2, 3, 4, 5, 6]
+}
+```
+
+### 2. `zip` — 将两个迭代器逐元素配对
+
+```rust
+fn main() {
+    let names = ["Alice", "Bob", "Carol"];
+    let scores = [95, 80, 88];
+    let paired: Vec<_> = names.iter().zip(scores.iter()).collect();
+    for (name, score) in &paired {
+        println!("{}: {}", name, score);
+    }
+}
+```
+
+### 3. `flatten` — 展平嵌套迭代器
+
+```rust
+fn main() {
+    let nested = vec![vec![1, 2], vec![3, 4], vec![5]];
+    let flat: Vec<i32> = nested.into_iter().flatten().collect();
+    println!("{:?}", flat); // [1, 2, 3, 4, 5]
+}
+```
+
+### 4. `scan` — 带状态的累加转换
+
+`scan` 类似 `fold`，但每一步都产出中间值，而不仅仅是最终结果：
+
+```rust
+fn main() {
+    // 计算运行前缀和
+    let running_sum: Vec<i32> = (1..=5)
+        .scan(0, |acc, x| {
+            *acc += x;
+            Some(*acc)
+        })
+        .collect();
+    println!("{:?}", running_sum); // [1, 3, 6, 10, 15]
+}
+```
+
+### 5. `peekable` — 向前窥视下一个元素
+
+```rust
+fn main() {
+    let mut iter = [1, 2, 3].iter().peekable();
+
+    // 查看下一个元素而不消费它
+    if let Some(&&next) = iter.peek() {
+        println!("下一个是: {}", next); // 1
+    }
+
+    // 元素仍然存在
+    println!("消费: {}", iter.next().unwrap()); // 1
+    println!("消费: {}", iter.next().unwrap()); // 2
+}
+```
+
+---
+
+## 🟡 为自定义类型实现 IntoIterator
+
+要让你的自定义集合类型支持 `for` 循环，只需实现 `IntoIterator`：
+
+```rust
+struct Fibonacci {
+    curr: u64,
+    next: u64,
+}
+
+impl Fibonacci {
+    fn new() -> Self {
+        Fibonacci { curr: 0, next: 1 }
+    }
+}
+
+// 实现 Iterator — 定义 next() 逻辑
+impl Iterator for Fibonacci {
+    type Item = u64;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        let result = self.curr;
+        let new_next = self.curr + self.next;
+        self.curr = self.next;
+        self.next = new_next;
+        Some(result)
+    }
+}
+
+// 实现 IntoIterator — 让自定义类型直接在 for 循环中使用
+struct FibSequence(usize); // 包含要产出多少项
+
+impl IntoIterator for FibSequence {
+    type Item = u64;
+    type IntoIter = std::iter::Take<Fibonacci>;
+
+    fn into_iter(self) -> Self::IntoIter {
+        Fibonacci::new().take(self.0)
+    }
+}
+
+fn main() {
+    // 直接使用 for 循环
+    for fib in FibSequence(8) {
+        print!("{} ", fib);
+    }
+    println!(); // 0 1 1 2 3 5 8 13
+
+    // 享用完整的迭代器组合链
+    let sum: u64 = FibSequence(10).into_iter().sum();
+    println!("前 10 项斐波那契数之和: {}", sum); // 88
+}
+```

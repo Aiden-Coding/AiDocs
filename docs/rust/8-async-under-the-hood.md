@@ -349,3 +349,184 @@ impl Stream for CounterStream {
 1. **手写自定义 `Future`**：例如需要手动实现流量控制、自定义超时逻辑或底层轮询协议时。
 2. **在 `async` 上下文中复用流（Streams）或多个 Future**：例如使用 `tokio::select!` 或 `futures::stream::StreamExt` 轮询时，必须先使用 `tokio::pin!` 将它们 Pin 在栈上。
 3. **实现复杂的零拷贝（Zero-copy）网络协议栈**。
+
+---
+
+## 9. Trait 中的异步函数 (AFIT)
+
+Rust 1.75 稳定了**在 trait 中直接使用 `async fn`（AFIT, Async Functions In Traits）**，无需再依赖 `async-trait` 宏：
+
+```rust
+// Rust 1.75+：直接在 trait 中写 async fn
+trait DataLoader {
+    async fn load(&self, id: u64) -> Option<String>;
+    async fn save(&self, id: u64, data: String) -> bool;
+}
+
+struct MemoryLoader {
+    store: std::sync::Mutex<std::collections::HashMap<u64, String>>,
+}
+
+impl DataLoader for MemoryLoader {
+    async fn load(&self, id: u64) -> Option<String> {
+        // 模拟异步 IO 延迟
+        tokio::time::sleep(std::time::Duration::from_millis(1)).await;
+        self.store.lock().unwrap().get(&id).cloned()
+    }
+
+    async fn save(&self, id: u64, data: String) -> bool {
+        self.store.lock().unwrap().insert(id, data);
+        true
+    }
+}
+```
+
+> [!NOTE]
+> AFIT 在 trait 对象（`dyn DataLoader`）场景下尚有限制（返回的 Future 类型不确定大小），此时仍需使用 `async-trait` crate 或手动装箱（`Box<dyn Future<...>>`）。
+
+---
+
+## 10. `tokio::select!` — 同时等待多个 Future
+
+`select!` 宏允许同时等待多个 Future，并在**第一个完成的 Future** 就绪时立即响应，其他未完成的 Future 会被丢弃：
+
+```rust
+use tokio::time::{sleep, Duration};
+
+async fn fetch_fast() -> &'static str { "快速响应" }
+async fn fetch_slow() -> &'static str { "慢速响应" }
+
+#[tokio::main]
+async fn main() {
+    // 竞争执行：返回先完成的那个
+    let result = tokio::select! {
+        r = fetch_fast() => format!("赢家: {}", r),
+        r = fetch_slow() => format!("赢家: {}", r),
+    };
+    println!("{}", result);
+
+    // 实战：超时控制
+    let work = async {
+        sleep(Duration::from_millis(200)).await;
+        "计算完成"
+    };
+
+    tokio::select! {
+        result = work => println!("结果: {}", result),
+        _ = sleep(Duration::from_millis(100)) => println!("超时！"),
+    }
+}
+```
+
+### select! 与取消安全性
+
+`select!` 会在某个分支完成后取消其他分支的 Future。这要求被取消的 Future 在任意 `.await` 点被取消时，不会留下不一致的状态。`tokio::sync::mpsc::Receiver::recv()` 等方法都被设计为**取消安全（cancellation-safe）**的。
+
+```rust
+use tokio::sync::mpsc;
+
+#[tokio::main]
+async fn main() {
+    let (tx, mut rx) = mpsc::channel::<i32>(10);
+    
+    tokio::spawn(async move {
+        for i in 0..5 {
+            tx.send(i).await.unwrap();
+            tokio::time::sleep(Duration::from_millis(50)).await;
+        }
+    });
+
+    loop {
+        tokio::select! {
+            Some(msg) = rx.recv() => {
+                println!("收到消息: {}", msg);
+            },
+            _ = tokio::time::sleep(Duration::from_millis(80)) => {
+                println!("80ms 内无消息，轮询超时");
+                break;
+            }
+        }
+    }
+}
+
+use tokio::time::Duration;
+```
+
+---
+
+## 11. `JoinSet` — 管理一组并发任务
+
+`JoinSet`（Tokio 1.21+）用于动态地spawn和等待一组异步任务：
+
+```rust
+use tokio::task::JoinSet;
+
+#[tokio::main]
+async fn main() {
+    let mut set = JoinSet::new();
+
+    // 动态 spawn 任务
+    for i in 0..5 {
+        set.spawn(async move {
+            tokio::time::sleep(tokio::time::Duration::from_millis(i * 10)).await;
+            i * 2
+        });
+    }
+
+    // 收集所有结果（任务完成顺序不定）
+    let mut results = vec![];
+    while let Some(result) = set.join_next().await {
+        match result {
+            Ok(value) => results.push(value),
+            Err(e) => eprintln!("任务 panic: {}", e),
+        }
+    }
+
+    results.sort();
+    println!("所有任务结果: {:?}", results); // [0, 2, 4, 6, 8]
+}
+```
+
+---
+
+## 12. `spawn_blocking` — 在异步中运行阻塞操作
+
+Tokio 的异步任务在线程池上运行，**在异步上下文中执行阻塞操作**（如 CPU 密集计算、同步 I/O）会阻塞整个线程，影响其他任务的调度。`spawn_blocking` 将阻塞操作转移到专用的阻塞线程池：
+
+```rust
+use tokio::task;
+
+async fn process_request(data: Vec<u8>) -> String {
+    // 将 CPU 密集的哈希计算转移到阻塞线程池，不阻塞异步运行时
+    let hash = task::spawn_blocking(move || {
+        // 模拟耗时的 CPU 操作
+        let mut result = 0u64;
+        for byte in &data {
+            result = result.wrapping_add(*byte as u64).wrapping_mul(31);
+        }
+        format!("hash={:016x}", result)
+    })
+    .await
+    .expect("阻塞任务 panic");
+
+    hash
+}
+
+#[tokio::main]
+async fn main() {
+    // 同时处理多个请求，阻塞操作互不干扰
+    let handles: Vec<_> = (0..3u8)
+        .map(|i| {
+            let data = vec![i; 1000];
+            tokio::spawn(process_request(data))
+        })
+        .collect();
+
+    for h in handles {
+        println!("{}", h.await.unwrap());
+    }
+}
+```
+
+> [!TIP]
+> 规则：在 `async` 函数中，任何单次执行超过 **~100μs** 的同步操作都应该考虑用 `spawn_blocking` 包裹，以避免阻塞 Tokio 的工作线程。
