@@ -794,3 +794,225 @@ TOTAL                           40       4  90.00%     116       6  94.83%
 
 > [!TIP]
 > 覆盖率目标建议：核心业务逻辑 ≥ 80%；安全关键路径 ≥ 95%。不要盲目追求 100%，边界分支和错误路径的覆盖质量比数字更重要。
+
+---
+
+## 测试最佳实践
+
+### 1. 测试夹具（Fixture）与 Setup/Teardown
+
+Rust 没有内置的 `@Before/@After` 注解，但可以通过辅助函数和 `Drop` 实现相同效果：
+
+```rust
+use std::path::{Path, PathBuf};
+use std::fs;
+
+// 测试夹具：创建临时目录，Drop 时自动清理
+struct TempDir(PathBuf);
+
+impl TempDir {
+    fn new(name: &str) -> Self {
+        let path = std::env::temp_dir().join(name);
+        fs::create_dir_all(&path).expect("创建临时目录失败");
+        TempDir(path)
+    }
+
+    fn path(&self) -> &Path { &self.0 }
+}
+
+impl Drop for TempDir {
+    fn drop(&mut self) {
+        let _ = fs::remove_dir_all(&self.0); // 测试结束时自动清理
+    }
+}
+
+// 数据库连接夹具（模拟）
+struct TestDb { name: String }
+
+impl TestDb {
+    fn new() -> Self {
+        let db = TestDb { name: "test_db".to_string() };
+        // setup：建表、插入种子数据
+        println!("[setup] 初始化测试数据库: {}", db.name);
+        db
+    }
+
+    fn insert(&self, key: &str, value: i32) { /* ... */ }
+    fn get(&self, key: &str) -> Option<i32> { Some(42) }
+}
+
+impl Drop for TestDb {
+    fn drop(&mut self) {
+        // teardown：清理测试数据
+        println!("[teardown] 清理数据库: {}", self.name);
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    // 每个测试独立创建/销毁夹具，隔离副作用
+    #[test]
+    fn test_file_operations() {
+        let dir = TempDir::new("test_file_ops");
+        let file = dir.path().join("hello.txt");
+
+        fs::write(&file, "hello").unwrap();
+        let content = fs::read_to_string(&file).unwrap();
+        assert_eq!(content, "hello");
+        // dir 在此处 Drop，临时目录自动删除
+    }
+
+    #[test]
+    fn test_db_insert_and_get() {
+        let db = TestDb::new();
+        db.insert("key", 42);
+        assert_eq!(db.get("key"), Some(42));
+        // db Drop 时自动 teardown
+    }
+}
+```
+
+### 2. 共享的测试辅助代码（`tests/common/mod.rs`）
+
+```rust
+// tests/common/mod.rs
+pub struct TestContext {
+    pub base_url: String,
+    pub client: String, // 模拟 HTTP 客户端
+}
+
+impl TestContext {
+    pub fn new() -> Self {
+        TestContext {
+            base_url: "http://localhost:8080".to_string(),
+            client: "mock_client".to_string(),
+        }
+    }
+
+    pub fn get(&self, path: &str) -> String {
+        format!("GET {}{}", self.base_url, path)
+    }
+}
+
+// tests/api_test.rs
+mod common;
+
+#[test]
+fn test_health_endpoint() {
+    let ctx = common::TestContext::new();
+    let resp = ctx.get("/health");
+    assert!(resp.contains("/health"));
+}
+```
+
+### 3. 参数化测试（无第三方库）
+
+Rust 标准库没有内置参数化测试，但可以用宏或循环实现：
+
+```rust
+#[cfg(test)]
+mod tests {
+    // 方法一：宏展开生成多个测试
+    macro_rules! test_parse {
+        ($name:ident, $input:expr, $expected:expr) => {
+            #[test]
+            fn $name() {
+                let result: Result<i32, _> = $input.parse();
+                assert_eq!(result.ok(), $expected);
+            }
+        };
+    }
+
+    test_parse!(parse_valid_42,   "42",   Some(42));
+    test_parse!(parse_valid_neg,  "-10",  Some(-10));
+    test_parse!(parse_invalid,    "abc",  None);
+    test_parse!(parse_empty,      "",     None);
+
+    // 方法二：单个测试内循环（适合数据驱动）
+    #[test]
+    fn test_is_even_cases() {
+        let cases = [
+            (0,  true),
+            (1,  false),
+            (2,  true),
+            (-4, true),
+            (-3, false),
+        ];
+        for (input, expected) in cases {
+            assert_eq!(input % 2 == 0, expected,
+                "is_even({}) 应为 {}", input, expected);
+        }
+    }
+}
+```
+
+### 4. 测试隔离：避免测试间共享可变状态
+
+```rust
+use std::sync::Mutex;
+
+// 全局共享状态（测试间可能互相干扰）
+static COUNTER: Mutex<i32> = Mutex::new(0);
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    // ❌ 不推荐：并行测试会竞争同一个全局变量
+    // #[test]
+    // fn bad_test() { *COUNTER.lock().unwrap() += 1; }
+
+    // ✅ 推荐：每个测试使用本地状态，不依赖全局
+    #[test]
+    fn good_test_a() {
+        let mut local = 0i32;
+        local += 1;
+        assert_eq!(local, 1);
+    }
+
+    // 如果必须测试全局状态，串行执行（加 serial 标注或用 --test-threads=1）
+    #[test]
+    #[ignore = "需要串行运行: cargo test -- --test-threads=1"]
+    fn test_global_counter() {
+        let mut c = COUNTER.lock().unwrap();
+        *c = 0;
+        *c += 1;
+        assert_eq!(*c, 1);
+    }
+}
+```
+
+### 5. 测试输出与 `println!` 调试
+
+```rust
+#[cfg(test)]
+mod tests {
+    #[test]
+    fn test_with_debug_output() {
+        let data = vec![1, 2, 3];
+        // 默认测试通过时 println! 被捕获，不显示
+        // 用 `cargo test -- --show-output` 查看
+        println!("调试数据: {:?}", data);
+        assert_eq!(data.len(), 3);
+    }
+
+    #[test]
+    fn test_failure_shows_output() {
+        let x = 42;
+        println!("x 的值是: {}", x); // 失败时自动显示
+        // assert_eq!(x, 99); // 取消注释查看效果
+    }
+}
+```
+
+> [!TIP]
+> 测试命令速查：
+> ```bash
+> cargo test                        # 运行所有测试（并行）
+> cargo test -- --test-threads=1    # 串行运行（隔离全局状态）
+> cargo test -- --show-output       # 显示通过测试的 println! 输出
+> cargo test test_name -- --nocapture  # 实时显示输出
+> cargo test -- --ignored           # 只运行 #[ignore] 的测试
+> ```

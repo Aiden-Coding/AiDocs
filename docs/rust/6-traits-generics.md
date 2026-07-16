@@ -1181,3 +1181,143 @@ fn main() {
     println!("sum = {}", sum_iter([1, 2, 3, 4, 5].iter().copied()));
 }
 ```
+
+---
+
+## 格式化 Trait：`Display`、`Debug`、`Write` 完整实现
+
+### 1. 自定义 `Display`（面向用户输出）
+
+```rust
+use std::fmt;
+
+struct Color { r: u8, g: u8, b: u8 }
+struct Matrix([[f64; 2]; 2]);
+
+impl fmt::Display for Color {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "#{:02X}{:02X}{:02X}", self.r, self.g, self.b)
+    }
+}
+
+impl fmt::Display for Matrix {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "[ {:.2}  {:.2} ]\n[ {:.2}  {:.2} ]",
+            self.0[0][0], self.0[0][1],
+            self.0[1][0], self.0[1][1])
+    }
+}
+
+fn main() {
+    let c = Color { r: 255, g: 128, b: 0 };
+    println!("{}", c); // #FF8000
+
+    let m = Matrix([[1.0, 2.5], [3.0, 0.5]]);
+    println!("{}", m);
+}
+```
+
+### 2. 自定义 `Debug`（面向开发者调试）
+
+通常直接 `#[derive(Debug)]`，但需要自定义格式时手动实现：
+
+```rust
+use std::fmt;
+
+struct Sensitive { username: String, password: String }
+
+// 自定义 Debug：隐藏敏感字段
+impl fmt::Debug for Sensitive {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_struct("Sensitive")
+            .field("username", &self.username)
+            .field("password", &"[REDACTED]") // 隐藏密码
+            .finish()
+    }
+}
+
+struct VecWrapper(Vec<i32>);
+
+// 使用 Debug 辅助方法构建输出
+impl fmt::Debug for VecWrapper {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        // alternate 模式（{:#?}）自动缩进
+        if f.alternate() {
+            write!(f, "VecWrapper(len={}) {:#?}", self.0.len(), self.0)
+        } else {
+            write!(f, "VecWrapper(len={}) {:?}", self.0.len(), self.0)
+        }
+    }
+}
+
+fn main() {
+    let s = Sensitive { username: "alice".to_string(), password: "s3cret".to_string() };
+    println!("{:?}", s);  // Sensitive { username: "alice", password: "[REDACTED]" }
+
+    let v = VecWrapper(vec![1, 2, 3]);
+    println!("{:?}",  v); // 紧凑格式
+    println!("{:#?}", v); // 缩进格式
+}
+```
+
+### 3. 格式化参数：精度、宽度、填充
+
+```rust
+fn main() {
+    // 宽度与对齐
+    println!("{:10}",   "left");   // "left      "（默认左对齐字符串）
+    println!("{:>10}",  "right");  // "     right"（右对齐）
+    println!("{:^10}",  "center"); // "  center  "（居中）
+    println!("{:*^10}", "fill");   // "***fill***"（自定义填充字符）
+
+    // 数字格式化
+    println!("{:08.3}", 3.14159); // "0003.142"（宽度8，3位小数，补零）
+    println!("{:+}",    42);      // "+42"（强制显示符号）
+    println!("{:#010x}", 255);    // "0x000000ff"（十六进制加前缀）
+    println!("{:#010b}", 42);     // "0b00101010"（二进制加前缀）
+    println!("{:e}",    1234567.0); // "1.234567e6"（科学计数法）
+
+    // 动态宽度/精度（用 $ 引用参数）
+    let width = 10;
+    let precision = 3;
+    println!("{:>width$.precision$}", 3.14159, width=width, precision=precision);
+    // "     3.142"
+
+    // 命名参数
+    println!("{value:.prec$}", value=3.14159, prec=2); // "3.14"
+}
+```
+
+### 4. 实现 `fmt::Write`（向字符串缓冲区写入）
+
+`fmt::Write` 让你能对任意类型使用 `write!` 宏：
+
+```rust
+use std::fmt::Write;
+
+struct HtmlBuilder { buf: String }
+
+impl HtmlBuilder {
+    fn new() -> Self { HtmlBuilder { buf: String::new() } }
+    fn build(self) -> String { self.buf }
+}
+
+impl fmt::Write for HtmlBuilder {
+    fn write_str(&mut self, s: &str) -> fmt::Result {
+        self.buf.push_str(s);
+        Ok(())
+    }
+}
+
+fn main() {
+    let mut html = HtmlBuilder::new();
+    write!(html, "<h1>{}</h1>", "Hello").unwrap();
+    write!(html, "<p>{}</p>", "World").unwrap();
+    println!("{}", html.build()); // <h1>Hello</h1><p>World</p>
+
+    // String 本身实现了 fmt::Write
+    let mut s = String::new();
+    write!(s, "Hello, {}! 你好 {}", "Rust", 2024).unwrap();
+    println!("{}", s);
+}
+```

@@ -860,3 +860,107 @@ fn main() {
     }
 }
 ```
+
+---
+
+## `Rc<RefCell<T>>`：内部可变性与共享所有权
+
+当需要**多个所有者**且在运行时**可变**同一份数据时，组合使用 `Rc<RefCell<T>>`（单线程）或 `Arc<Mutex<T>>`（多线程）。
+
+### 核心模式
+
+```rust
+use std::rc::Rc;
+use std::cell::RefCell;
+
+#[derive(Debug)]
+struct Node {
+    value: i32,
+    children: Vec<Rc<RefCell<Node>>>,
+}
+
+impl Node {
+    fn new(value: i32) -> Rc<RefCell<Self>> {
+        Rc::new(RefCell::new(Node { value, children: vec![] }))
+    }
+}
+
+fn main() {
+    // 多个变量共享同一个节点的所有权
+    let root  = Node::new(1);
+    let child = Node::new(2);
+
+    // 通过 borrow_mut() 修改共享数据
+    root.borrow_mut().children.push(Rc::clone(&child));
+
+    // 通过 borrow() 读取
+    println!("根节点值: {}", root.borrow().value);
+    println!("子节点数: {}", root.borrow().children.len());
+
+    // child 同时被 root 和外部共享
+    child.borrow_mut().value = 99;
+    println!("修改后子节点: {}", root.borrow().children[0].borrow().value); // 99
+
+    println!("root 强引用数: {}", Rc::strong_count(&root));   // 1
+    println!("child 强引用数: {}", Rc::strong_count(&child)); // 2
+}
+```
+
+### 常见用法：共享的可变配置
+
+```rust
+use std::rc::Rc;
+use std::cell::RefCell;
+
+type SharedConfig = Rc<RefCell<Config>>;
+
+#[derive(Debug)]
+struct Config {
+    debug: bool,
+    log_level: String,
+}
+
+struct ServiceA { config: SharedConfig }
+struct ServiceB { config: SharedConfig }
+
+impl ServiceA {
+    fn run(&self) {
+        let cfg = self.config.borrow();
+        println!("A: debug={}, level={}", cfg.debug, cfg.log_level);
+    }
+}
+
+impl ServiceB {
+    fn update_level(&self, level: &str) {
+        self.config.borrow_mut().log_level = level.to_string();
+        println!("B: 已更新日志级别为 {}", level);
+    }
+}
+
+fn main() {
+    let config = Rc::new(RefCell::new(Config {
+        debug: true,
+        log_level: "info".to_string(),
+    }));
+
+    let a = ServiceA { config: Rc::clone(&config) };
+    let b = ServiceB { config: Rc::clone(&config) };
+
+    a.run();          // A: debug=true, level=info
+    b.update_level("warn");
+    a.run();          // A: debug=true, level=warn（看到 B 的修改）
+}
+```
+
+### `Rc<RefCell<T>>` vs `Arc<Mutex<T>>`
+
+| 特性 | `Rc<RefCell<T>>` | `Arc<Mutex<T>>` |
+| :--- | :--- | :--- |
+| 线程安全 | ❌ 单线程 | ✅ 多线程 |
+| 借用检查 | 运行时 panic | 阻塞等待锁 |
+| 性能开销 | 低（无原子操作） | 略高（原子计数+锁） |
+| 死锁风险 | 无锁，但有 `BorrowError` | 有死锁风险 |
+| 适用场景 | 树/图结构、单线程共享状态 | 多线程共享数据 |
+
+> [!WARNING]
+> `RefCell` 的 `borrow()` 和 `borrow_mut()` 在运行时执行借用规则：同时调用两个 `borrow_mut()` 会 `panic!`。在复杂逻辑中应尽量缩小 borrow 的作用域，避免跨函数持有 `Ref`/`RefMut`。

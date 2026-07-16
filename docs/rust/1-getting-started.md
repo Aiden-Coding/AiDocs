@@ -1158,3 +1158,134 @@ fn main() {
     println!("等待数量: {}", pending_count); // 2
 }
 ```
+
+---
+
+## 🔁 Range 类型与循环全貌
+
+### 1. Range 类型
+
+Rust 的范围表达式产生 `Range`、`RangeInclusive` 等类型，它们同时实现了 `Iterator`：
+
+```rust
+fn main() {
+    // 半开范围 [start, end)
+    let r1 = 0..5;           // Range<i32>
+    // 闭合范围 [start, end]
+    let r2 = 0..=5;          // RangeInclusive<i32>
+    // 仅起始
+    let r3 = 3..;            // RangeFrom<i32>
+    // 仅结束（半开）
+    let r4: std::ops::RangeTo<i32> = ..5;
+    // 仅结束（闭合）
+    let r5: std::ops::RangeToInclusive<i32> = ..=5;
+    // 全范围
+    let r6 = ..;             // RangeFull
+
+    // 范围可直接用于迭代
+    let sum: i32 = (1..=100).sum();
+    println!("1+2+...+100 = {}", sum); // 5050
+
+    // 范围用于切片索引
+    let s = [1, 2, 3, 4, 5];
+    println!("{:?}", &s[1..4]); // [2, 3, 4]
+    println!("{:?}", &s[..=2]); // [1, 2, 3]
+    println!("{:?}", &s[2..]);  // [3, 4, 5]
+
+    // 范围的 contains 方法
+    let valid_port = 1024..=65535u16;
+    println!("8080 是合法端口: {}", valid_port.contains(&8080));
+    println!("80 是合法端口: {}", valid_port.contains(&80));
+
+    // 范围用于 step_by
+    let evens: Vec<i32> = (0..20).step_by(2).collect();
+    println!("偶数: {:?}", evens); // [0, 2, 4, ..., 18]
+}
+```
+
+### 2. `for`、`while`、`loop` 完整对比
+
+```rust
+fn main() {
+    // --- for：迭代器语法糖（最常用）---
+    // for x in iter  等价于  let mut it = iter.into_iter(); loop { match it.next() { Some(x) => ..., None => break } }
+
+    // 迭代集合
+    let v = vec![10, 20, 30];
+    for x in &v         { println!("借用: {}", x); }
+    for x in &mut v.clone() { print!("{} ", x); } println!();
+    for x in v.clone()  { println!("消费: {}", x); }
+
+    // 带索引
+    for (i, val) in v.iter().enumerate() {
+        println!("[{}] = {}", i, val);
+    }
+
+    // 迭代范围（最常见用法）
+    for i in 0..5 { print!("{} ", i); } println!();
+
+    // --- while：条件循环 ---
+    let mut n = 0;
+    while n < 5 {
+        print!("{} ", n);
+        n += 1;
+    }
+    println!();
+
+    // while let：模式匹配循环
+    let mut stack = vec![1, 2, 3];
+    while let Some(top) = stack.pop() {
+        println!("弹出: {}", top);
+    }
+
+    // --- loop：无限循环（可返回值）---
+    let mut counter = 0;
+    let result = loop {
+        counter += 1;
+        if counter == 10 { break counter * 2; } // 返回 20
+    };
+    println!("loop 返回值: {}", result);
+
+    // loop + 标签：跳出外层
+    'outer: for x in 0..5 {
+        for y in 0..5 {
+            if x + y == 6 { break 'outer; }
+            print!("({},{}) ", x, y);
+        }
+    }
+    println!();
+}
+```
+
+| 关键字 | 典型用途 | 有返回值 | 能用 `break 值` |
+| :--- | :--- | :---: | :---: |
+| `for` | 迭代集合/范围 | ❌ | ❌ |
+| `while` | 条件循环 | ❌ | ❌ |
+| `while let` | 模式匹配循环 | ❌ | ❌ |
+| `loop` | 无限循环/重试 | ✅ | ✅ |
+
+### 3. 迭代控制：`continue`、`break`、`return`
+
+```rust
+fn first_negative(nums: &[i32]) -> Option<i32> {
+    for &n in nums {
+        if n == 0  { continue; }       // 跳过本次，继续下一轮
+        if n < 0   { return Some(n); } // 提前从函数返回
+    }
+    None
+}
+
+fn main() {
+    // break 带标签跳出指定层
+    'search: for i in 0..10 {
+        for j in 0..10 {
+            if i * j > 50 {
+                println!("找到: i={} j={}", i, j);
+                break 'search; // 直接跳出外层 for
+            }
+        }
+    }
+
+    println!("{:?}", first_negative(&[1, 2, -3, 4])); // Some(-3)
+}
+```

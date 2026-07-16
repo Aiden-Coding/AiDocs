@@ -530,3 +530,126 @@ async fn main() {
 
 > [!TIP]
 > 规则：在 `async` 函数中，任何单次执行超过 **~100μs** 的同步操作都应该考虑用 `spawn_blocking` 包裹，以避免阻塞 Tokio 的工作线程。
+
+---
+
+## 0. async/await 入门基础（初学者友好）
+
+> [!NOTE]
+> 本节为快速入门，适合第一次接触 Rust 异步的读者。后续章节深入底层原理。
+
+### 什么是异步编程
+
+同步代码执行 I/O 时**阻塞当前线程**等待结果。异步代码遇到 I/O 时**暂时让出线程**，让其他任务继续执行，I/O 完成后再恢复。
+
+```
+同步：  任务A──[等待I/O]──继续 | 任务B排队等待
+异步：  任务A──[让出]──── 任务B执行 ──── 任务A继续
+```
+
+### 最简单的 async/await
+
+```toml
+# Cargo.toml
+[dependencies]
+tokio = { version = "1", features = ["full"] }
+```
+
+```rust
+// 用 async fn 声明异步函数——返回 Future 而不是直接值
+async fn fetch_data(id: u32) -> String {
+    // tokio::time::sleep 模拟异步 I/O（不阻塞线程）
+    tokio::time::sleep(std::time::Duration::from_millis(100)).await;
+    format!("数据#{}", id)
+}
+
+// #[tokio::main] 宏：创建 Tokio 运行时并驱动 async main
+#[tokio::main]
+async fn main() {
+    // .await：暂停当前任务，等待 Future 完成
+    let data = fetch_data(42).await;
+    println!("{}", data); // 数据#42
+}
+```
+
+### 并发执行多个任务
+
+```rust
+use tokio::time::{sleep, Duration};
+
+async fn task(name: &str, ms: u64) -> String {
+    sleep(Duration::from_millis(ms)).await;
+    format!("{}({}ms)", name, ms)
+}
+
+#[tokio::main]
+async fn main() {
+    // 串行：总耗时 = 200ms + 100ms = 300ms
+    let a = task("A", 200).await;
+    let b = task("B", 100).await;
+    println!("串行: {}, {}", a, b);
+
+    // 并发：总耗时 ≈ max(200ms, 100ms) = 200ms
+    let (a, b) = tokio::join!(
+        task("A", 200),
+        task("B", 100),
+    );
+    println!("并发: {}, {}", a, b);
+
+    // spawn：后台任务，立即返回句柄
+    let handle = tokio::spawn(async {
+        sleep(Duration::from_millis(50)).await;
+        "后台任务完成"
+    });
+    println!("主任务继续...");
+    println!("{}", handle.await.unwrap());
+}
+```
+
+### 异步函数返回 Future
+
+```rust
+use std::future::Future;
+
+// async fn 的等价手写形式（理解 Future 本质）
+async fn add(a: i32, b: i32) -> i32 { a + b }
+
+// 等价于：
+fn add_explicit(a: i32, b: i32) -> impl Future<Output = i32> {
+    async move { a + b }
+}
+
+#[tokio::main]
+async fn main() {
+    // 调用 async fn 不立即执行，返回一个 Future
+    let future = add(3, 4); // 此刻什么都没执行
+    let result = future.await; // 现在才执行
+    println!("3 + 4 = {}", result); // 7
+}
+```
+
+### 异步错误处理
+
+```rust
+use tokio::fs;
+
+async fn read_config(path: &str) -> Result<String, std::io::Error> {
+    let content = fs::read_to_string(path).await?; // ? 在 async 中正常工作
+    Ok(content)
+}
+
+#[tokio::main]
+async fn main() {
+    match read_config("config.toml").await {
+        Ok(content) => println!("配置内容: {}", content),
+        Err(e)      => eprintln!("读取失败: {}", e),
+    }
+}
+```
+
+> [!TIP]
+> **核心规则记忆**：
+> - `async fn` → 返回 `Future`，不立即执行
+> - `.await` → 等待 `Future` 完成，期间**不阻塞线程**（让出执行权）
+> - `tokio::spawn` → 后台并发任务（像 `thread::spawn` 但更轻量）
+> - `tokio::join!` → 并发等待多个 Future（最常用的并发原语）

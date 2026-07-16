@@ -600,3 +600,100 @@ fn main() {
 | :--- | :---: | :---: | :--- |
 | `mem::forget(v)` | ❌（所有权转移） | ❌ | 简单的 FFI 所有权转移 |
 | `ManuallyDrop::new(v)` | ✅ | ✅（unsafe） | union、自定义容器、FFI |
+
+---
+
+## 🟡 `std::mem` 模块常用工具函数
+
+`std::mem` 模块提供了一组底层内存操作工具，在性能敏感代码和 unsafe 场景中频繁使用。
+
+```rust
+use std::mem;
+
+fn main() {
+    // ── size_of / size_of_val ──────────────────────────────
+    // 编译期获取类型的字节大小
+    println!("bool:   {} 字节", mem::size_of::<bool>());   // 1
+    println!("i32:    {} 字节", mem::size_of::<i32>());    // 4
+    println!("f64:    {} 字节", mem::size_of::<f64>());    // 8
+    println!("&str:   {} 字节", mem::size_of::<&str>());   // 16（胖指针）
+    println!("String: {} 字节", mem::size_of::<String>()); // 24（ptr+len+cap）
+
+    // 运行时获取值的字节大小（对 DST 有用）
+    let s = String::from("hello");
+    println!("s 本身: {} 字节", mem::size_of_val(&s));  // 24（栈上的 String 头部）
+
+    // ── align_of ──────────────────────────────────────────
+    // 类型的内存对齐要求（字节）
+    println!("u8  对齐: {}", mem::align_of::<u8>());   // 1
+    println!("u32 对齐: {}", mem::align_of::<u32>());  // 4
+    println!("u64 对齐: {}", mem::align_of::<u64>());  // 8
+
+    // ── swap ──────────────────────────────────────────────
+    // 原地交换两个可变变量的值（O(1) 无拷贝，编译器优化为寄存器交换）
+    let mut a = String::from("hello");
+    let mut b = String::from("world");
+    mem::swap(&mut a, &mut b);
+    println!("a={}, b={}", a, b); // a=world, b=hello
+
+    // ── replace ───────────────────────────────────────────
+    // 用新值替换变量，返回旧值（等价于 swap + 写入新值）
+    let mut current = String::from("old");
+    let old = mem::replace(&mut current, String::from("new"));
+    println!("旧值: {}, 当前: {}", old, current); // 旧值: old, 当前: new
+
+    // ── take ──────────────────────────────────────────────
+    // 取出值并用 Default::default() 替换（要求类型实现 Default）
+    let mut opt: Option<String> = Some(String::from("data"));
+    let taken = mem::take(&mut opt);
+    println!("取出: {:?}, 剩余: {:?}", taken, opt); // Some("data"), None
+
+    let mut vec = vec![1, 2, 3];
+    let drained = mem::take(&mut vec);
+    println!("取出: {:?}, 剩余: {:?}", drained, vec); // [1,2,3], []
+
+    // ── drop ──────────────────────────────────────────────
+    // 提前释放资源（等价于让变量提前离开作用域）
+    let lock = std::sync::Mutex::new(0);
+    {
+        let _guard = lock.lock().unwrap();
+        println!("持有锁");
+        mem::drop(_guard); // 提前释放锁，比等待作用域结束更明确
+    }
+    println!("锁已释放");
+}
+```
+
+### 实用场景：`replace` 实现状态机转换
+
+```rust
+use std::mem;
+
+#[derive(Debug)]
+enum State { Idle, Running { task: String }, Done(String) }
+
+struct Machine { state: State }
+
+impl Machine {
+    fn start(&mut self, task: &str) {
+        // 取出当前状态并替换为新状态，无需克隆
+        let old = mem::replace(&mut self.state, State::Running {
+            task: task.to_string(),
+        });
+        println!("从 {:?} 转换到 Running", old);
+    }
+
+    fn finish(&mut self) {
+        if let State::Running { task } = mem::replace(&mut self.state, State::Done(String::new())) {
+            self.state = State::Done(format!("完成: {}", task));
+        }
+    }
+}
+
+fn main() {
+    let mut m = Machine { state: State::Idle };
+    m.start("数据处理");
+    m.finish();
+    println!("{:?}", m.state);
+}
+```
