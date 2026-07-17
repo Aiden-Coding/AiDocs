@@ -26,7 +26,10 @@ sidebar_position: 12
 <span class="filename">文件名：src/main.rs</span>
 
 ```rust
-{{#rustdoc_include ../listings/ch03-common-programming-concepts/no-listing-24-comments-end-of-line/src/main.rs}}
+fn main() {
+    let lucky_number = 7; // I’m feeling lucky today
+}
+
 ```
 
 不过下面的这种格式会更常见，将注释放到需要解释的代码上面的单独行：
@@ -34,7 +37,11 @@ sidebar_position: 12
 <span class="filename">文件名：src/main.rs</span>
 
 ```rust
-{{#rustdoc_include ../listings/ch03-common-programming-concepts/no-listing-25-comments-above-line/src/main.rs}}
+fn main() {
+    // I’m feeling lucky today
+    let lucky_number = 7;
+}
+
 ```
 
 Rust 还具有另一种注释，即文档注释，我们将在第 14 章的 “将 crate 发布到 Crates.io” 章节中进行讨论。

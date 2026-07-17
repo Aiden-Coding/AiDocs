@@ -16,7 +16,16 @@ sidebar_position: 13
 <span class="filename">文件名: src/main.rs</span>
 
 ```rust
-{{#rustdoc_include ../listings/ch03-common-programming-concepts/no-listing-26-if-true/src/main.rs}}
+fn main() {
+    let number = 3;
+
+    if number < 5 {
+        println!("condition was true");
+    } else {
+        println!("condition was false");
+    }
+}
+
 ```
 
 所有的 `if` 表达式都以 `if` 关键字开头，其后跟一个条件。在这个例子中，条件检查变量 `number` 的值是否小于 5。在条件为真时希望执行的代码块位于紧跟条件之后的大括号中。`if` 表达式中与条件关联的代码块有时被叫做**分支**（*arm*），就像第 2 章[“比较猜测的数字和秘密数字”][comparing-the-guess-to-the-secret-number]<!-- ignore -->部分中讨论到的 `match` 表达式中的分支一样。
@@ -26,19 +35,29 @@ sidebar_position: 13
 尝试运行代码，应该能看到如下输出：
 
 ```console
-{{#include ../listings/ch03-common-programming-concepts/no-listing-26-if-true/output.txt}}
+$ cargo run
+   Compiling branches v0.1.0 (file:///projects/branches)
+    Finished dev [unoptimized + debuginfo] target(s) in 0.31s
+     Running `target/debug/branches`
+condition was true
+
 ```
 
 尝试改变 `number` 的值使条件为 `false` 时看看会发生什么：
 
 ```rust,ignore
-{{#rustdoc_include ../listings/ch03-common-programming-concepts/no-listing-27-if-false/src/main.rs:here}}
+    let number = 7;
 ```
 
 再次运行程序并查看输出：
 
 ```console
-{{#include ../listings/ch03-common-programming-concepts/no-listing-27-if-false/output.txt}}
+$ cargo run
+   Compiling branches v0.1.0 (file:///projects/branches)
+    Finished dev [unoptimized + debuginfo] target(s) in 0.31s
+     Running `target/debug/branches`
+condition was false
+
 ```
 
 另外值得注意的是代码中的条件**必须**是 `bool` 值。如果条件不是 `bool` 值，我们将得到一个错误。例如，尝试运行以下代码：
@@ -46,13 +65,30 @@ sidebar_position: 13
 <span class="filename">文件名: src/main.rs</span>
 
 ```rust,ignore,does_not_compile
-{{#rustdoc_include ../listings/ch03-common-programming-concepts/no-listing-28-if-condition-must-be-bool/src/main.rs}}
+fn main() {
+    let number = 3;
+
+    if number {
+        println!("number was three");
+    }
+}
+
 ```
 
 这里 `if` 条件的值是 `3`，Rust 抛出了一个错误：
 
 ```console
-{{#include ../listings/ch03-common-programming-concepts/no-listing-28-if-condition-must-be-bool/output.txt}}
+$ cargo run
+   Compiling branches v0.1.0 (file:///projects/branches)
+error[E0308]: mismatched types
+ --> src/main.rs:4:8
+  |
+4 |     if number {
+  |        ^^^^^^ expected `bool`, found integer
+
+For more information about this error, try `rustc --explain E0308`.
+error: could not compile `branches` due to previous error
+
 ```
 
 这个错误表明 Rust 期望一个 `bool` 却得到了一个整数。不像 Ruby 或 JavaScript 这样的语言，Rust 并不会尝试自动地将非布尔值转换为布尔值。你必须自始至终显式地使用布尔值作为 `if` 的条件。例如，如果想要 `if` 代码块只在一个数字不等于 `0` 时执行，可以把 `if` 表达式修改成下面这样：
@@ -60,7 +96,14 @@ sidebar_position: 13
 <span class="filename">文件名: src/main.rs</span>
 
 ```rust
-{{#rustdoc_include ../listings/ch03-common-programming-concepts/no-listing-29-if-not-equal-0/src/main.rs}}
+fn main() {
+    let number = 3;
+
+    if number != 0 {
+        println!("number was something other than zero");
+    }
+}
+
 ```
 
 运行代码会打印出 `number was something other than zero`。
@@ -72,13 +115,31 @@ sidebar_position: 13
 <span class="filename">文件名: src/main.rs</span>
 
 ```rust
-{{#rustdoc_include ../listings/ch03-common-programming-concepts/no-listing-30-else-if/src/main.rs}}
+fn main() {
+    let number = 6;
+
+    if number % 4 == 0 {
+        println!("number is divisible by 4");
+    } else if number % 3 == 0 {
+        println!("number is divisible by 3");
+    } else if number % 2 == 0 {
+        println!("number is divisible by 2");
+    } else {
+        println!("number is not divisible by 4, 3, or 2");
+    }
+}
+
 ```
 
 这个程序有 4 个可能的执行路径。运行后应该能看到如下输出：
 
 ```console
-{{#include ../listings/ch03-common-programming-concepts/no-listing-30-else-if/output.txt}}
+$ cargo run
+   Compiling branches v0.1.0 (file:///projects/branches)
+    Finished dev [unoptimized + debuginfo] target(s) in 0.31s
+     Running `target/debug/branches`
+number is divisible by 3
+
 ```
 
 当执行这个程序时，它按顺序检查每个 `if` 表达式并执行第一个条件为真的代码块。注意即使 6 可以被 2 整除，也不会输出 `number is divisible by 2`，更不会输出 `else` 块中的 `number is not divisible by 4, 3, or 2`。原因是 Rust 只会执行第一个条件为真的代码块，并且一旦它找到一个以后，甚至都不会检查剩下的条件了。
@@ -92,7 +153,13 @@ sidebar_position: 13
 <span class="filename">文件名: src/main.rs</span>
 
 ```rust
-{{#rustdoc_include ../listings/ch03-common-programming-concepts/listing-03-02/src/main.rs}}
+fn main() {
+    let condition = true;
+    let number = if condition { 5 } else { 6 };
+
+    println!("The value of number is: {}", number);
+}
+
 ```
 
 <span class="caption">示例 3-2：将 `if` 表达式的返回值赋给一个变量</span>
@@ -100,7 +167,12 @@ sidebar_position: 13
 `number` 变量将会绑定到表示 `if` 表达式结果的值上。运行这段代码看看会出现什么：
 
 ```console
-{{#include ../listings/ch03-common-programming-concepts/listing-03-02/output.txt}}
+$ cargo run
+   Compiling branches v0.1.0 (file:///projects/branches)
+    Finished dev [unoptimized + debuginfo] target(s) in 0.30s
+     Running `target/debug/branches`
+The value of number is: 5
+
 ```
 
 记住，代码块的值是其最后一个表达式的值，而数字本身就是一个表达式。在这个例子中，整个 `if` 表达式的值取决于哪个代码块被执行。这意味着 `if` 的每个分支的可能的返回值都必须是相同类型；在示例 3-2 中，`if` 分支和 `else` 分支的结果都是 `i32` 整型。如果它们的类型不匹配，如下面这个例子，则会产生一个错误：
@@ -108,13 +180,32 @@ sidebar_position: 13
 <span class="filename">文件名: src/main.rs</span>
 
 ```rust,ignore,does_not_compile
-{{#rustdoc_include ../listings/ch03-common-programming-concepts/no-listing-31-arms-must-return-same-type/src/main.rs}}
+fn main() {
+    let condition = true;
+
+    let number = if condition { 5 } else { "six" };
+
+    println!("The value of number is: {}", number);
+}
+
 ```
 
 当编译这段代码时，会得到一个错误。`if` 和 `else` 分支的值类型是不相容的，同时 Rust 也准确地指出在程序中的何处发现的这个问题：
 
 ```console
-{{#include ../listings/ch03-common-programming-concepts/no-listing-31-arms-must-return-same-type/output.txt}}
+$ cargo run
+   Compiling branches v0.1.0 (file:///projects/branches)
+error[E0308]: `if` and `else` have incompatible types
+ --> src/main.rs:4:44
+  |
+4 |     let number = if condition { 5 } else { "six" };
+  |                                 -          ^^^^^ expected integer, found `&str`
+  |                                 |
+  |                                 expected because of this
+
+For more information about this error, try `rustc --explain E0308`.
+error: could not compile `branches` due to previous error
+
 ```
 
 `if` 代码块中的表达式返回一个整数，而 `else` 代码块中的表达式返回一个字符串。这不可行，因为变量必须只有一个类型。Rust 需要在编译时就确切地知道 `number` 变量的类型，这样它就可以在编译时验证在每处使用的 `number` 变量的类型是有效的。若 `number` 的类型仅在运行时确定，则 Rust 将无法做到这一点；而且若编译器必须跟踪任意变量的多种假设类型，则编译器会变得更复杂，并且对代码的保证也会减少。
@@ -134,7 +225,12 @@ Rust 有三种循环：`loop`、`while` 和 `for`。我们每一个都试试。
 <span class="filename">文件名: src/main.rs</span>
 
 ```rust,ignore
-{{#rustdoc_include ../listings/ch03-common-programming-concepts/no-listing-32-loop/src/main.rs}}
+fn main() {
+    loop {
+        println!("again!");
+    }
+}
+
 ```
 
 当运行这个程序时，我们会看到连续的反复打印 `again!`，直到我们手动停止程序。大部分终端都支持一个快捷键 <span class="keystroke">ctrl-c</span> 来终止一个陷入无限循环的程序。尝试一下：
@@ -166,13 +262,47 @@ again!
 如果存在嵌套循环，`break` 和 `continue` 应用于此时最内层的循环。你可以选择在一个循环上指定一个**循环标签**（*loop label*），然后将标签与 `break` 或 `continue` 一起使用，使这些关键字应用于已标记的循环而不是最内层的循环。下面是一个包含两个嵌套循环的示例：
 
 ```rust
-{{#rustdoc_include ../listings/ch03-common-programming-concepts/no-listing-32-5-loop-labels/src/main.rs}}
+fn main() {
+    let mut count = 0;
+    'counting_up: loop {
+        println!("count = {}", count);
+        let mut remaining = 10;
+
+        loop {
+            println!("remaining = {}", remaining);
+            if remaining == 9 {
+                break;
+            }
+            if count == 2 {
+                break 'counting_up;
+            }
+            remaining -= 1;
+        }
+
+        count += 1;
+    }
+    println!("End count = {}", count);
+}
+
 ```
 
 外层循环有一个标签 `counting_up`，它将从 0 数到 2。没有标签的内部循环从 10 向下数到 9。第一个没有指定标签的 `break` 将只退出内层循环。`break 'counting_up;` 语句将退出外层循环。这个代码打印:
 
 ```console
-{{#rustdoc_include ../listings/ch03-common-programming-concepts/no-listing-32-5-loop-labels/output.txt}}
+$ cargo run
+   Compiling loops v0.1.0 (file:///projects/loops)
+    Finished dev [unoptimized + debuginfo] target(s) in 0.58s
+     Running `target/debug/loops`
+count = 0
+remaining = 10
+remaining = 9
+count = 1
+remaining = 10
+remaining = 9
+count = 2
+remaining = 10
+End count = 2
+
 ```
 
 #### 从循环返回
@@ -180,7 +310,20 @@ again!
 `loop` 的一个用例是重试可能会失败的操作，比如检查线程是否完成了任务。然而你可能会需要将操作的结果从循环中传递给其它的代码。为此，你可以在用于停止循环的 `break` 表达式添加你想要返回的值；该值将从循环中返回，以便您可以使用它，如下所示：
 
 ```rust
-{{#rustdoc_include ../listings/ch03-common-programming-concepts/no-listing-33-return-value-from-loop/src/main.rs}}
+fn main() {
+    let mut counter = 0;
+
+    let result = loop {
+        counter += 1;
+
+        if counter == 10 {
+            break counter * 2;
+        }
+    };
+
+    println!("The result is {}", result);
+}
+
 ```
 
 在循环之前，我们声明了一个名为 `counter` 的变量并初始化为 `0`。接着声明了一个名为 `result` 来存放循环的返回值。在循环的每一次迭代中，我们将 `counter` 变量加 `1`，接着检查计数是否等于 `10`。当相等时，使用 `break` 关键字返回值 `counter * 2`。循环之后，我们通过分号结束赋值给 `result` 的语句。最后打印出 `result` 的值，也就是 20。
@@ -192,7 +335,18 @@ again!
 <span class="filename">文件名: src/main.rs</span>
 
 ```rust
-{{#rustdoc_include ../listings/ch03-common-programming-concepts/listing-03-03/src/main.rs}}
+fn main() {
+    let mut number = 3;
+
+    while number != 0 {
+        println!("{}!", number);
+
+        number -= 1;
+    }
+
+    println!("LIFTOFF!!!");
+}
+
 ```
 
 <span class="caption">示例 3-3: 当条件为真时，使用 `while` 循环运行代码</span>
@@ -206,7 +360,17 @@ again!
 <span class="filename">文件名: src/main.rs</span>
 
 ```rust
-{{#rustdoc_include ../listings/ch03-common-programming-concepts/listing-03-04/src/main.rs}}
+fn main() {
+    let a = [10, 20, 30, 40, 50];
+    let mut index = 0;
+
+    while index < 5 {
+        println!("the value is: {}", a[index]);
+
+        index += 1;
+    }
+}
+
 ```
 
 <span class="caption">示例 3-4：使用 `while` 循环遍历集合中的元素</span>
@@ -214,7 +378,16 @@ again!
 在这里，代码对数组中的元素进行计数。它从索引 `0` 开始，并接着循环直到遇到数组的最后一个索引（即 `index < 5` 不再为真时）。运行这段代码会打印出数组中的每一个元素：
 
 ```console
-{{#include ../listings/ch03-common-programming-concepts/listing-03-04/output.txt}}
+$ cargo run
+   Compiling loops v0.1.0 (file:///projects/loops)
+    Finished dev [unoptimized + debuginfo] target(s) in 0.32s
+     Running `target/debug/loops`
+the value is: 10
+the value is: 20
+the value is: 30
+the value is: 40
+the value is: 50
+
 ```
 
 数组中的 5 个元素全部都如期被打印出来。尽管 `index` 在某一时刻会到达值 `5`，不过循环在其尝试从数组获取第 6 个值（会越界）之前就停止了。
@@ -226,7 +399,14 @@ again!
 <span class="filename">文件名: src/main.rs</span>
 
 ```rust
-{{#rustdoc_include ../listings/ch03-common-programming-concepts/listing-03-05/src/main.rs}}
+fn main() {
+    let a = [10, 20, 30, 40, 50];
+
+    for element in a {
+        println!("the value is: {}", element);
+    }
+}
+
 ```
 
 <span class="caption">示例 3-5：使用 `for` 循环遍历集合中的元素</span>
@@ -242,7 +422,13 @@ again!
 <span class="filename">文件名: src/main.rs</span>
 
 ```rust
-{{#rustdoc_include ../listings/ch03-common-programming-concepts/no-listing-34-for-range/src/main.rs}}
+fn main() {
+    for number in (1..4).rev() {
+        println!("{}!", number);
+    }
+    println!("LIFTOFF!!!");
+}
+
 ```
 
 这段代码更好一些，不是吗？

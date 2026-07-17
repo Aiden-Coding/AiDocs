@@ -26,7 +26,18 @@ $ cd hello
 <span class="filename">文件名: src/main.rs</span>
 
 ```rust,no_run
-{{#rustdoc_include ../listings/ch20-web-server/listing-20-01/src/main.rs}}
+use std::net::TcpListener;
+
+fn main() {
+    let listener = TcpListener::bind("127.0.0.1:7878").unwrap();
+
+    for stream in listener.incoming() {
+        let stream = stream.unwrap();
+
+        println!("Connection established!");
+    }
+}
+
 ```
 
 <span class="caption">示例 20-1: 监听传入的流并在接收到流时打印信息</span>
@@ -63,7 +74,28 @@ Connection established!
 <span class="filename">文件名: src/main.rs</span>
 
 ```rust,no_run
-{{#rustdoc_include ../listings/ch20-web-server/listing-20-02/src/main.rs}}
+use std::io::prelude::*;
+use std::net::TcpListener;
+use std::net::TcpStream;
+
+fn main() {
+    let listener = TcpListener::bind("127.0.0.1:7878").unwrap();
+
+    for stream in listener.incoming() {
+        let stream = stream.unwrap();
+
+        handle_connection(stream);
+    }
+}
+
+fn handle_connection(mut stream: TcpStream) {
+    let mut buffer = [0; 1024];
+
+    stream.read(&mut buffer).unwrap();
+
+    println!("Request: {}", String::from_utf8_lossy(&buffer[..]));
+}
+
 ```
 
 <span class="caption">示例 20-2: 读取 `TcpStream` 并打印数据</span>
@@ -146,7 +178,16 @@ HTTP/1.1 200 OK\r\n\r\n
 <span class="filename">文件名: src/main.rs</span>
 
 ```rust,no_run
-{{#rustdoc_include ../listings/ch20-web-server/listing-20-03/src/main.rs:here}}
+fn handle_connection(mut stream: TcpStream) {
+    let mut buffer = [0; 1024];
+
+    stream.read(&mut buffer).unwrap();
+
+    let response = "HTTP/1.1 200 OK\r\n\r\n";
+
+    stream.write(response.as_bytes()).unwrap();
+    stream.flush().unwrap();
+}
 ```
 
 <span class="caption">示例 20-3: 将一个微型成功 HTTP 响应写入流</span>
@@ -164,7 +205,18 @@ HTTP/1.1 200 OK\r\n\r\n
 <span class="filename">文件名: hello.html</span>
 
 ```html
-{{#include ../listings/ch20-web-server/listing-20-04/hello.html}}
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>Hello!</title>
+  </head>
+  <body>
+    <h1>Hello!</h1>
+    <p>Hi from Rust</p>
+  </body>
+</html>
+
 ```
 
 <span class="caption">示例 20-4: 一个简单的 HTML 文件用来作为响应</span>
@@ -174,7 +226,9 @@ HTTP/1.1 200 OK\r\n\r\n
 <span class="filename">文件名: src/main.rs</span>
 
 ```rust,no_run
-{{#rustdoc_include ../listings/ch20-web-server/listing-20-05/src/main.rs:here}}
+use std::fs;
+// --snip--
+
 ```
 
 <span class="caption">示例 20-5: 将 *hello.html* 的内容作为响应 body 发送</span>
@@ -194,7 +248,29 @@ HTTP/1.1 200 OK\r\n\r\n
 <span class="filename">文件名: src/main.rs</span>
 
 ```rust,no_run
-{{#rustdoc_include ../listings/ch20-web-server/listing-20-06/src/main.rs:here}}
+// --snip--
+
+fn handle_connection(mut stream: TcpStream) {
+    let mut buffer = [0; 1024];
+    stream.read(&mut buffer).unwrap();
+
+    let get = b"GET / HTTP/1.1\r\n";
+
+    if buffer.starts_with(get) {
+        let contents = fs::read_to_string("hello.html").unwrap();
+
+        let response = format!(
+            "HTTP/1.1 200 OK\r\nContent-Length: {}\r\n\r\n{}",
+            contents.len(),
+            contents
+        );
+
+        stream.write(response.as_bytes()).unwrap();
+        stream.flush().unwrap();
+    } else {
+        // 其他请求
+    }
+}
 ```
 
 <span class="caption">示例 20-6: 匹配请求并区别处理 */* 请求与其他请求</span>
@@ -210,7 +286,21 @@ HTTP/1.1 200 OK\r\n\r\n
 <span class="filename">文件名: src/main.rs</span>
 
 ```rust,no_run
-{{#rustdoc_include ../listings/ch20-web-server/listing-20-07/src/main.rs:here}}
+    // --snip--
+    } else {
+        let status_line = "HTTP/1.1 404 NOT FOUND";
+        let contents = fs::read_to_string("404.html").unwrap();
+
+        let response = format!(
+            "{}\r\nContent-Length: {}\r\n\r\n{}",
+            status_line,
+            contents.len(),
+            contents
+        );
+
+        stream.write(response.as_bytes()).unwrap();
+        stream.flush().unwrap();
+    }
 ```
 
 <span class="caption">示例 20-7: 对于任何不是 */* 的请求返回 `404` 状态码的响应和错误页面</span>
@@ -220,7 +310,18 @@ HTTP/1.1 200 OK\r\n\r\n
 <span class="filename">文件名: 404.html</span>
 
 ```html
-{{#include ../listings/ch20-web-server/listing-20-08/404.html}}
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>Hello!</title>
+  </head>
+  <body>
+    <h1>Oops!</h1>
+    <p>Sorry, I don't know what you're asking for.</p>
+  </body>
+</html>
+
 ```
 
 <span class="caption">示例 20-8: 任何 404 响应所返回错误页面内容样例</span>
@@ -234,7 +335,11 @@ HTTP/1.1 200 OK\r\n\r\n
 <span class="filename">文件名: src/main.rs</span>
 
 ```rust,no_run
-{{#rustdoc_include ../listings/ch20-web-server/listing-20-09/src/main.rs:here}}
+// --snip--
+
+fn handle_connection(mut stream: TcpStream) {
+    // --snip--
+
 ```
 
 <span class="caption">示例 20-9: 重构使得 `if` 和 `else` 块中只包含两个情况所不同的代码</span>

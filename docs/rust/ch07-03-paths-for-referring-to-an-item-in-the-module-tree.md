@@ -19,7 +19,20 @@ sidebar_position: 29
 <span class="filename">文件名: src/lib.rs</span>
 
 ```rust,ignore,does_not_compile
-{{#rustdoc_include ../listings/ch07-managing-growing-projects/listing-07-03/src/lib.rs}}
+mod front_of_house {
+    mod hosting {
+        fn add_to_waitlist() {}
+    }
+}
+
+pub fn eat_at_restaurant() {
+    // 绝对路径
+    crate::front_of_house::hosting::add_to_waitlist();
+
+    // 相对路径
+    front_of_house::hosting::add_to_waitlist();
+}
+
 ```
 
 <span class="caption">示例 7-3: 使用绝对路径和相对路径来调用 `add_to_waitlist` 函数</span>
@@ -35,7 +48,35 @@ sidebar_position: 29
 让我们试着编译一下示例 7-3，并查明为何不能编译！示例 7-4 展示了这个错误。
 
 ```console
-{{#include ../listings/ch07-managing-growing-projects/listing-07-03/output.txt}}
+$ cargo build
+   Compiling restaurant v0.1.0 (file:///projects/restaurant)
+error[E0603]: module `hosting` is private
+ --> src/lib.rs:9:28
+  |
+9 |     crate::front_of_house::hosting::add_to_waitlist();
+  |                            ^^^^^^^ private module
+  |
+note: the module `hosting` is defined here
+ --> src/lib.rs:2:5
+  |
+2 |     mod hosting {
+  |     ^^^^^^^^^^^
+
+error[E0603]: module `hosting` is private
+  --> src/lib.rs:12:21
+   |
+12 |     front_of_house::hosting::add_to_waitlist();
+   |                     ^^^^^^^ private module
+   |
+note: the module `hosting` is defined here
+  --> src/lib.rs:2:5
+   |
+2  |     mod hosting {
+   |     ^^^^^^^^^^^
+
+For more information about this error, try `rustc --explain E0603`.
+error: could not compile `restaurant` due to 2 previous errors
+
 ```
 
 <span class="caption">示例 7-4: 构建示例 7-3 出现的编译器错误</span>
@@ -55,7 +96,20 @@ Rust 选择以这种方式来实现模块系统功能，因此默认隐藏内部
 <span class="filename">文件名: src/lib.rs</span>
 
 ```rust,ignore,does_not_compile
-{{#rustdoc_include ../listings/ch07-managing-growing-projects/listing-07-05/src/lib.rs}}
+mod front_of_house {
+    pub mod hosting {
+        fn add_to_waitlist() {}
+    }
+}
+
+pub fn eat_at_restaurant() {
+    // 绝对路径
+    crate::front_of_house::hosting::add_to_waitlist();
+
+    // 相对路径
+    front_of_house::hosting::add_to_waitlist();
+}
+
 ```
 
 <span class="caption">示例 7-5: 使用 `pub` 关键字声明 `hosting` 模块使其可在 `eat_at_restaurant` 使用</span>
@@ -63,7 +117,35 @@ Rust 选择以这种方式来实现模块系统功能，因此默认隐藏内部
 不幸的是，示例 7-5 的代码编译仍然有错误，如示例 7-6 所示。
 
 ```console
-{{#include ../listings/ch07-managing-growing-projects/listing-07-05/output.txt}}
+$ cargo build
+   Compiling restaurant v0.1.0 (file:///projects/restaurant)
+error[E0603]: function `add_to_waitlist` is private
+ --> src/lib.rs:9:37
+  |
+9 |     crate::front_of_house::hosting::add_to_waitlist();
+  |                                     ^^^^^^^^^^^^^^^ private function
+  |
+note: the function `add_to_waitlist` is defined here
+ --> src/lib.rs:3:9
+  |
+3 |         fn add_to_waitlist() {}
+  |         ^^^^^^^^^^^^^^^^^^^^
+
+error[E0603]: function `add_to_waitlist` is private
+  --> src/lib.rs:12:30
+   |
+12 |     front_of_house::hosting::add_to_waitlist();
+   |                              ^^^^^^^^^^^^^^^ private function
+   |
+note: the function `add_to_waitlist` is defined here
+  --> src/lib.rs:3:9
+   |
+3  |         fn add_to_waitlist() {}
+   |         ^^^^^^^^^^^^^^^^^^^^
+
+For more information about this error, try `rustc --explain E0603`.
+error: could not compile `restaurant` due to 2 previous errors
+
 ```
 
 <span class="caption">示例 7-6: 构建示例 7-5 出现的编译器错误</span>
@@ -77,7 +159,20 @@ Rust 选择以这种方式来实现模块系统功能，因此默认隐藏内部
 <span class="filename">文件名: src/lib.rs</span>
 
 ```rust,noplayground,test_harness
-{{#rustdoc_include ../listings/ch07-managing-growing-projects/listing-07-07/src/lib.rs}}
+mod front_of_house {
+    pub mod hosting {
+        pub fn add_to_waitlist() {}
+    }
+}
+
+pub fn eat_at_restaurant() {
+    // 绝对路径
+    crate::front_of_house::hosting::add_to_waitlist();
+
+    // 相对路径
+    front_of_house::hosting::add_to_waitlist();
+}
+
 ```
 
 <span class="caption">示例 7-7: 为 `mod hosting`
@@ -99,7 +194,17 @@ Rust 选择以这种方式来实现模块系统功能，因此默认隐藏内部
 <span class="filename">文件名: src/lib.rs</span>
 
 ```rust,noplayground,test_harness
-{{#rustdoc_include ../listings/ch07-managing-growing-projects/listing-07-08/src/lib.rs}}
+fn serve_order() {}
+
+mod back_of_house {
+    fn fix_incorrect_order() {
+        cook_order();
+        super::serve_order();
+    }
+
+    fn cook_order() {}
+}
+
 ```
 
 <span class="caption">示例 7-8: 使用以 `super` 开头的相对路径从父目录开始调用函数</span>
@@ -113,7 +218,34 @@ Rust 选择以这种方式来实现模块系统功能，因此默认隐藏内部
 <span class="filename">文件名: src/lib.rs</span>
 
 ```rust,noplayground
-{{#rustdoc_include ../listings/ch07-managing-growing-projects/listing-07-09/src/lib.rs}}
+mod back_of_house {
+    pub struct Breakfast {
+        pub toast: String,
+        seasonal_fruit: String,
+    }
+
+    impl Breakfast {
+        pub fn summer(toast: &str) -> Breakfast {
+            Breakfast {
+                toast: String::from(toast),
+                seasonal_fruit: String::from("peaches"),
+            }
+        }
+    }
+}
+
+pub fn eat_at_restaurant() {
+    // 在夏天点一份黑麦面包作为早餐
+    let mut meal = back_of_house::Breakfast::summer("Rye");
+    // 更改我们想要的面包
+    meal.toast = String::from("Wheat");
+    println!("I'd like {} toast please", meal.toast);
+
+    // 如果取消下一行的注释，将会导致编译失败；我们不被允许
+    // 看到或更改随餐搭配的季节水果
+    // meal.seasonal_fruit = String::from("blueberries");
+}
+
 ```
 
 <span class="caption">示例 7-9: 带有公有和私有字段的结构体</span>
@@ -127,7 +259,18 @@ Rust 选择以这种方式来实现模块系统功能，因此默认隐藏内部
 <span class="filename">文件名: src/lib.rs</span>
 
 ```rust,noplayground
-{{#rustdoc_include ../listings/ch07-managing-growing-projects/listing-07-10/src/lib.rs}}
+mod back_of_house {
+    pub enum Appetizer {
+        Soup,
+        Salad,
+    }
+}
+
+pub fn eat_at_restaurant() {
+    let order1 = back_of_house::Appetizer::Soup;
+    let order2 = back_of_house::Appetizer::Salad;
+}
+
 ```
 
 <span class="caption">示例 7-10: 设计公有枚举，使其所有成员公有</span>

@@ -14,13 +14,35 @@ sidebar_position: 9
 <span class="filename">文件名：src/main.rs</span>
 
 ```rust,ignore,does_not_compile
-{{#rustdoc_include ../listings/ch03-common-programming-concepts/no-listing-01-variables-are-immutable/src/main.rs}}
+fn main() {
+    let x = 5;
+    println!("The value of x is: {}", x);
+    x = 6;
+    println!("The value of x is: {}", x);
+}
+
 ```
 
 保存文件，并使用 `cargo run` 运行程序。你将会收到一条错误信息，输出如下所示：
 
 ```console
-{{#include ../listings/ch03-common-programming-concepts/no-listing-01-variables-are-immutable/output.txt}}
+$ cargo run
+   Compiling variables v0.1.0 (file:///projects/variables)
+error[E0384]: cannot assign twice to immutable variable `x`
+ --> src/main.rs:4:5
+  |
+2 |     let x = 5;
+  |         -
+  |         |
+  |         first assignment to `x`
+  |         help: consider making this binding mutable: `mut x`
+3 |     println!("The value of x is: {}", x);
+4 |     x = 6;
+  |     ^^^^^ cannot assign twice to immutable variable
+
+For more information about this error, try `rustc --explain E0384`.
+error: could not compile `variables` due to previous error
+
 ```
 
 这个例子展示了编译器如何帮助你查找程序中的错误。编译器错误可能令人沮丧，但它们也只是表明你的程序做你想做的事情并不安全；并**不**意味着你不是一个好开发者！有经验的 Rustacean（Rust 开发者） 依然会遇到编译错误。
@@ -36,13 +58,25 @@ sidebar_position: 9
 <span class="filename">文件名：src/main.rs</span>
 
 ```rust
-{{#rustdoc_include ../listings/ch03-common-programming-concepts/no-listing-02-adding-mut/src/main.rs}}
+fn main() {
+    let mut x = 5;
+    println!("The value of x is: {}", x);
+    x = 6;
+    println!("The value of x is: {}", x);
+}
+
 ```
 
 运行程序将得到下面结果：
 
 ```console
-{{#include ../listings/ch03-common-programming-concepts/no-listing-02-adding-mut/output.txt}}
+$ cargo run
+   Compiling variables v0.1.0 (file:///projects/variables)
+    Finished dev [unoptimized + debuginfo] target(s) in 0.30s
+     Running `target/debug/variables`
+The value of x is: 5
+The value of x is: 6
+
 ```
 
 加上 `mut` 后，我们就可以将 `x` 绑定的值从 `5` 改成 `6`。除了预防 bug 外，还有很多权衡要取舍。例如，在使用大型数据结构的情形下，在同一位置更改实例可能比复制并返回新分配的实例要更快。使用较小的数据结构时，通常创建新的实例并以更具函数式编程的风格来编写程序，可能会更容易理解，所以值得以较低的性能开销来确保代码清晰。
@@ -76,13 +110,31 @@ const THREE_HOURS_IN_SECONDS: u32 = 60 * 60 * 3;
 <span class="filename">文件名：src/main.rs</span>
 
 ```rust
-{{#rustdoc_include ../listings/ch03-common-programming-concepts/no-listing-03-shadowing/src/main.rs}}
+fn main() {
+    let x = 5;
+
+    let x = x + 1;
+
+    {
+        let x = x * 2;
+        println!("The value of x in the inner scope is: {}", x);
+    }
+
+    println!("The value of x is: {}", x);
+}
+
 ```
 
 这个程序首先将数值 `5` 绑定到 `x`。然后通过重复使用 `let x =` 来遮蔽之前的 `x`，并取原来的值加上 `1`，所以 `x` 的值变成了 `6`。在内部作用域内，第三个 `let` 语句同样遮蔽前面的 `x`，取之前的值并乘上 `2`，得到的 `x` 值为 `12`。当该作用域结束时，内部遮蔽结束并且 `x` 恢复成 `6`。当运行此程序，将输出以下内容：
 
 ```console
-{{#include ../listings/ch03-common-programming-concepts/no-listing-03-shadowing/output.txt}}
+$ cargo run
+   Compiling variables v0.1.0 (file:///projects/variables)
+    Finished dev [unoptimized + debuginfo] target(s) in 0.31s
+     Running `target/debug/variables`
+The value of x in the inner scope is: 12
+The value of x is: 6
+
 ```
 
 遮蔽和将变量标记为 `mut` 的方式不同，因为除非我们再次使用 `let` 关键字，否则若是我们不小心尝试重新赋值给这个变量，我们将得到一个编译错误。通过使用 `let`，我们可以对一个值进行一些转换，但在这些转换完成后，变量将是不可变的。
@@ -90,19 +142,33 @@ const THREE_HOURS_IN_SECONDS: u32 = 60 * 60 * 3;
 `mut` 和遮蔽之间的另一个区别是，因为我们在再次使用 `let` 关键字时有效地创建了一个新的变量，所以我们可以改变值的类型，但重复使用相同的名称。例如，假设我们程序要求用户输入空格字符来显示他们想要的空格数目，但我们实际上想要将该输入存储为一个数字：
 
 ```rust
-{{#rustdoc_include ../listings/ch03-common-programming-concepts/no-listing-04-shadowing-can-change-types/src/main.rs:here}}
+    let spaces = "   ";
+    let spaces = spaces.len();
 ```
 
 第一个 `spaces` 变量是一个字符串类型，第二个 `spaces` 变量是一个数字类型。所以变量遮蔽可以让我们不必给出不同的名称，如 `spaces_str` 和 `spaces_num`，相反我们可以重复使用更简单的 `spaces` 变量名。然而，如果我们对此尝试使用 `mut`，如下所示，我们将得到一个编译期错误：
 
 ```rust,ignore,does_not_compile
-{{#rustdoc_include ../listings/ch03-common-programming-concepts/no-listing-05-mut-cant-change-types/src/main.rs:here}}
+    let mut spaces = "   ";
+    spaces = spaces.len();
 ```
 
 该错误表明我们不允许更改变量的类型：
 
 ```console
-{{#include ../listings/ch03-common-programming-concepts/no-listing-05-mut-cant-change-types/output.txt}}
+$ cargo run
+   Compiling variables v0.1.0 (file:///projects/variables)
+error[E0308]: mismatched types
+ --> src/main.rs:3:14
+  |
+2 |     let mut spaces = "   ";
+  |                      ----- expected due to this value
+3 |     spaces = spaces.len();
+  |              ^^^^^^^^^^^^ expected `&str`, found `usize`
+
+For more information about this error, try `rustc --explain E0308`.
+error: could not compile `variables` due to previous error
+
 ```
 
 现在我们已经探讨了变量是如何工作的，接下来我们学习更多的数据类型。
