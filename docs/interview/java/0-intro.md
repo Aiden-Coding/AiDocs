@@ -3,7 +3,7 @@ title: 2026 Java 后端面试与新特性考点突击指南
 hide_title: true
 sidebar_label: 0. 前言与总览
 sidebar_position: 0
-slug: /java/interview/intro
+slug: /interview/java/intro
 ---
 
 # 2026 Java 后端核心考点突击指南

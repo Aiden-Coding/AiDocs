@@ -92,8 +92,8 @@ const config: Config = {
           label: '体系介绍',
         },
         {
-          type: 'doc',
-          docId: 'java/interview/intro',
+          type: 'docSidebar',
+          sidebarId: 'interviewSidebar',
           position: 'left',
           label: '2026 面试突击',
         },
