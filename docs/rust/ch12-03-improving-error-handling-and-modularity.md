@@ -17,7 +17,7 @@ sidebar_position: 51
 
 让我们通过重构项目来解决这些问题。
 
-### 二进制项目的关注分离
+### 二进制项目的关注分离 {#separation-of-concerns-for-binary-projects}
 
 `main` 函数负责多个任务的组织问题在许多二进制项目中很常见。所以 Rust 社区开发出一类在 `main` 函数开始变得庞大时进行二进制程序的关注分离的指导性过程。这些过程有如下步骤：
 
@@ -443,10 +443,10 @@ fn main() {
 
 让我们利用这些新创建的模块的优势来进行一些在旧代码中难以展开的工作，这些工作在新代码中非常容易实现，那就是：编写测试！
 
-[the-static-lifetime]: ch10-03-lifetime-syntax.html#the-static-lifetime
-[ch13]: ch13-00-functional-features.html
-[ch9-custom-types]: ch09-03-to-panic-or-not-to-panic.html#creating-custom-types-for-validation
-[ch9-error-guidelines]: ch09-03-to-panic-or-not-to-panic.html#guidelines-for-error-handling
-[ch9-result]: ch09-02-recoverable-errors-with-result.html
-[ch17]: ch17-00-oop.html
-[ch9-question-mark]: ch09-02-recoverable-errors-with-result.html#a-shortcut-for-propagating-errors-the--operator
+[the-static-lifetime]: ch10-03-lifetime-syntax#the-static-lifetime
+[ch13]: ch13-00-functional-features
+[ch9-custom-types]: ch09-03-to-panic-or-not-to-panic#创建自定义类型进行有效性验证
+[ch9-error-guidelines]: ch09-03-to-panic-or-not-to-panic#错误处理指导原则
+[ch9-result]: ch09-02-recoverable-errors-with-result
+[ch17]: ch17-00-oop
+[ch9-question-mark]: ch09-02-recoverable-errors-with-result#传播错误的简写-运算符

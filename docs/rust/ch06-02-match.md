@@ -26,7 +26,8 @@ fn value_in_cents(coin: Coin) -> u8 {
         Coin::Dime => 10,
         Coin::Quarter => 25,
     }
-}
+}
+
 ```
 
 <span class="caption">示例 6-3：一个枚举和一个以枚举成员作为模式的 `match` 表达式</span>
@@ -52,7 +53,8 @@ fn value_in_cents(coin: Coin) -> u8 {
         Coin::Dime => 10,
         Coin::Quarter => 25,
     }
-}
+}
+
 ```
 
 ### 绑定值的模式
@@ -74,7 +76,8 @@ enum Coin {
     Nickel,
     Dime,
     Quarter(UsState),
-}
+}
+
 ```
 
 <span class="caption">示例 6-4：`Quarter` 成员也存放了一个 `UsState` 值的 `Coin` 枚举</span>
@@ -94,7 +97,8 @@ fn value_in_cents(coin: Coin) -> u8 {
             25
         }
     }
-}
+}
+
 ```
 
 如果调用 `value_in_cents(Coin::Quarter(UsState::Alaska))`，`coin` 将是 `Coin::Quarter(UsState::Alaska)`。当将值与每个分支相比较时，没有分支会匹配，直到遇到 `Coin::Quarter(state)`。这时，`state` 绑定的将会是值 `UsState::Alaska`。接着就可以在 `println!` 表达式中使用这个绑定了，像这样就可以获取 `Coin` 枚举的 `Quarter` 成员中内部的州的值。
@@ -121,7 +125,8 @@ fn value_in_cents(coin: Coin) -> u8 {
 
     let five = Some(5);
     let six = plus_one(five);
-    let none = plus_one(None);
+    let none = plus_one(None);
+
 ```
 
 <span class="caption">示例 6-5：一个在 `Option<i32>` 上使用 `match` 表达式的函数</span>
@@ -131,13 +136,15 @@ fn value_in_cents(coin: Coin) -> u8 {
 让我们更仔细地检查 `plus_one` 的第一行操作。当调用 `plus_one(five)` 时，`plus_one` 函数体中的 `x` 将会是值 `Some(5)`。接着将其与每个分支比较。
 
 ```rust,ignore
-            None => None,
+            None => None,
+
 ```
 
 值 `Some(5)` 并不匹配模式 `None`，所以继续进行下一个分支。
 
 ```rust,ignore
-            Some(i) => Some(i + 1),
+            Some(i) => Some(i + 1),
+
 ```
 
 `Some(5)` 与 `Some(i)` 匹配吗？当然匹配！它们是相同的成员。`i` 绑定了 `Some` 中包含的值，所以 `i` 的值是 `5`。接着匹配分支的代码被执行，所以我们将 `i` 的值加一并返回一个含有值 `6` 的新 `Some`。
@@ -145,7 +152,8 @@ fn value_in_cents(coin: Coin) -> u8 {
 接着考虑下示例 6-5 中 `plus_one` 的第二个调用，这里 `x` 是 `None`。我们进入 `match` 并与第一个分支相比较。
 
 ```rust,ignore
-            None => None,
+            None => None,
+
 ```
 
 匹配上了！这里没有值来加一，所以程序结束并返回 `=>` 右侧的值 `None`，因为第一个分支就匹配到了，其他的分支将不再比较。
@@ -161,7 +169,8 @@ fn value_in_cents(coin: Coin) -> u8 {
         match x {
             Some(i) => Some(i + 1),
         }
-    }
+    }
+
 ```
 
 我们没有处理 `None` 的情况，所以这些代码会造成一个 bug。幸运的是，这是一个 Rust 知道如何处理的 bug。如果尝试编译这段代码，会得到这个错误：
@@ -199,7 +208,8 @@ Rust 知道我们没有覆盖所有可能的情况甚至知道哪些模式被忘
 
     fn add_fancy_hat() {}
     fn remove_fancy_hat() {}
-    fn move_player(num_spaces: u8) {}
+    fn move_player(num_spaces: u8) {}
+
 ```
 
 对于前两个分支，匹配模式是字面值 3 和 7，最后一个分支则涵盖了所有其他可能的值，模式是我们命名为 `other` 的一个变量。`other` 分支的代码通过将其传递给 `move_player` 函数来使用这个变量。
@@ -220,7 +230,8 @@ Rust 还提供了一个模式，当我们不想使用通配模式获取的值时
 
     fn add_fancy_hat() {}
     fn remove_fancy_hat() {}
-    fn reroll() {}
+    fn reroll() {}
+
 ```
 
 这个例子也满足穷举性要求，因为我们在最后一个分支中明确地忽略了其他的值。我们没有忘记处理任何东西。
@@ -236,12 +247,13 @@ Rust 还提供了一个模式，当我们不想使用通配模式获取的值时
     }
 
     fn add_fancy_hat() {}
-    fn remove_fancy_hat() {}
+    fn remove_fancy_hat() {}
+
 ```
 
 在这里，我们明确告诉 Rust 我们不会使用与前面模式不匹配的值，并且这种情况下我们不想运行任何代码。
 
 我们将在[第 18 章][ch18-00-patterns]<!-- ignore -->中介绍更多关于模式和匹配的内容。现在，让我们继续讨论 `if let` 语法，这在 `match` 表达式有点啰嗦的情况下很有用。
 
-[tuples]: ch03-02-data-types.html#元组类型
-[ch18-00-patterns]: ch18-00-patterns.html
+[tuples]: ch03-02-data-types#元组类型
+[ch18-00-patterns]: ch18-00-patterns

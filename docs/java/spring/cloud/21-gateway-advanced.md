@@ -8,7 +8,7 @@ sidebar_label: Gateway 统一网关
 
 在微服务架构中，**网关**是系统统一入口：路由、负载均衡、鉴权、限流、灰度与审计都集中在这里。Spring Cloud Gateway 基于 **WebFlux + Project Reactor**，用非阻塞模型扛高并发接入。
 
-相关阅读：[微服务起步](30-springcloud-quickstart.md)、[Sentinel 治理](27-sentinel-governance.md)、[Security 架构](28-spring-security-architecture.md)、[Feign 远程调用](22-mvc-remote-call.md)。
+相关阅读：[微服务起步](30-springcloud-quickstart.md)、[Sentinel 治理](27-sentinel-governance.md)、[Security 架构](../boot/28-spring-security-architecture.md)、[Feign 远程调用](../mvc/22-mvc-remote-call.md)。
 
 ---
 

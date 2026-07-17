@@ -7,7 +7,7 @@ sidebar_position: 100
 
 ## MyBatis 与 HikariCP 核心面试真题
 
-本专栏面向中高级 Java 工程师，覆盖 MyBatis 执行链路、缓存、插件与 HikariCP 连接池等高频考点。建议先阅读 [执行流程](1-mybatis-core-flow.md)、[插件与缓存](2-mybatis-cache-plugin.md)、[HikariCP 原理](0-mybatis-hikaricp.md)。
+本专栏面向中高级 Java 工程师，覆盖 MyBatis 执行链路、缓存、插件与 HikariCP 连接池等高频考点。建议先阅读 [执行流程](../../java/persistence/1-mybatis-core-flow.md)、[插件与缓存](../../java/persistence/2-mybatis-cache-plugin.md)、[HikariCP 原理](../../java/persistence/0-mybatis-hikaricp.md)。
 
 ---
 

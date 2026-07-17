@@ -8,7 +8,7 @@ sidebar_label: Sentinel 流量治理
 
 微服务中任一依赖变慢都可能耗尽线程池引发雪崩。**Sentinel** 以“资源”为切面，提供流控、熔断、热点、系统保护与集群限流。算法内核见 [滑动窗口与限流算法](26-sentinel-algorithm-core.md)。
 
-相关：[Gateway 限流](21-gateway-advanced.md)、[Nacos 配置](23-nacos-config-advanced.md)、[Feign 调用](22-mvc-remote-call.md)。
+相关：[Gateway 限流](21-gateway-advanced.md)、[Nacos 配置](23-nacos-config-advanced.md)、[Feign 调用](../mvc/22-mvc-remote-call.md)。
 
 ---
 

@@ -8,7 +8,7 @@ sidebar_label: 核心扩展点与 SPI
 
 Spring 的强大之处在于扩展性。无论是 Spring Boot 自动装配，还是 MyBatis、Sentinel、Nacos 等中间件集成，都落在一组稳定的**容器扩展接口**与 **SPI 加载机制**上。
 
-相关阅读：[Bean 生命周期](0-bean-lifecycle.md)、[BeanDefinition](2-beandefinition-internals.md)、[Boot 扩展](12-springboot-extension.md)、[条件装配](29-springboot-conditional-autoconfig.md)。
+相关阅读：[Bean 生命周期](0-bean-lifecycle.md)、[BeanDefinition](2-beandefinition-internals.md)、[Boot 扩展](../boot/12-springboot-extension.md)、[条件装配](../boot/29-springboot-conditional-autoconfig.md)。
 
 ---
 

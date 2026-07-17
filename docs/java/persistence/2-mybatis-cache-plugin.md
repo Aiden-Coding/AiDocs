@@ -8,7 +8,7 @@ sidebar_label: 插件原理与二级缓存
 
 MyBatis 的扩展性主要体现在 **插件（Interceptor）**，性能优化则依赖 **一级 / 二级缓存**。本篇从源码结构讲清拦截点、代理包裹顺序、缓存读写时机与生产避坑。
 
-相关阅读：[SQL 执行全流程](1-mybatis-core-flow.md)、[HikariCP 与生产规约](0-mybatis-hikaricp.md)、[Spring Cache](../spring/16-spring-cache.md)。
+相关阅读：[SQL 执行全流程](1-mybatis-core-flow.md)、[HikariCP 与生产规约](0-mybatis-hikaricp.md)、[Spring Cache](../spring/boot/16-spring-cache.md)。
 
 ---
 

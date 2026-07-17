@@ -8,7 +8,7 @@ sidebar_label: Dubbo 架构与 RPC 原理
 
 Dubbo 是高性能 Java RPC 框架：接口级代理、自适应 SPI、Cluster 容错与 Netty 异步通信是其内核。本篇覆盖分层架构、SPI、调用链、负载均衡与线程模型。
 
-相关：[Netty RPC 实战](../../network/7-netty-rpc-practice.md)、[Netty 面试](../../../interview/java/8-interview-netty.md)、[Feign HTTP 调用](22-mvc-remote-call.md)。
+相关：[Netty RPC 实战](../../network/7-netty-rpc-practice.md)、[Netty 面试](../../../interview/java/8-interview-netty.md)、[Feign HTTP 调用](../mvc/22-mvc-remote-call.md)。
 
 ---
 
@@ -164,7 +164,7 @@ public class TraceFilter implements Filter {
 | 超时 | 定时扫描 FUTURES，防泄漏 |
 | 线程 | IO 线程禁业务；线程池派发提供方服务调用 |
 
-与 [Netty 手写 RPC](../network/7-netty-rpc-practice.md) 同构，Dubbo 是工程化加强版。
+与 [Netty 手写 RPC](../../network/7-netty-rpc-practice.md) 同构，Dubbo 是工程化加强版。
 
 ---
 
@@ -238,4 +238,4 @@ private ProductService productService;
 - Cluster/Filter/LB 构成治理面；Netty + requestId 构成性能面。
 - 选型：内网高性能 Java 互调用 Dubbo；对外 HTTP 用 Gateway/Feign。
 
-HTTP 声明式调用对照见 [MVC 与远程调用](22-mvc-remote-call.md)。
+HTTP 声明式调用对照见 [MVC 与远程调用](../mvc/22-mvc-remote-call.md)。

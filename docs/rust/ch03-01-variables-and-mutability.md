@@ -143,14 +143,16 @@ The value of x is: 6
 
 ```rust
     let spaces = "   ";
-    let spaces = spaces.len();
+    let spaces = spaces.len();
+
 ```
 
 第一个 `spaces` 变量是一个字符串类型，第二个 `spaces` 变量是一个数字类型。所以变量遮蔽可以让我们不必给出不同的名称，如 `spaces_str` 和 `spaces_num`，相反我们可以重复使用更简单的 `spaces` 变量名。然而，如果我们对此尝试使用 `mut`，如下所示，我们将得到一个编译期错误：
 
 ```rust,ignore,does_not_compile
     let mut spaces = "   ";
-    spaces = spaces.len();
+    spaces = spaces.len();
+
 ```
 
 该错误表明我们不允许更改变量的类型：
@@ -173,7 +175,7 @@ error: could not compile `variables` due to previous error
 
 现在我们已经探讨了变量是如何工作的，接下来我们学习更多的数据类型。
 
-[comparing-the-guess-to-the-secret-number]: ch02-00-guessing-game-tutorial.html#比较猜测的数字和秘密数字
-[data-types]: ch03-02-data-types.html#数据类型
-[storing-values-with-variables]: ch02-00-guessing-game-tutorial.html#使用变量存储值
+[comparing-the-guess-to-the-secret-number]: ch02-00-guessing-game-tutorial#比较猜测的数字和秘密数字
+[data-types]: ch03-02-data-types#数据类型
+[storing-values-with-variables]: ch02-00-guessing-game-tutorial#使用变量存储值
 [const-eval]: https://rustwiki.org/zh-CN/reference/const_eval.html

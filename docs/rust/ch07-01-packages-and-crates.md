@@ -31,5 +31,5 @@ main.rs
 
 接下来让我们来说一说模块系统！
 
-[modules]: ch07-02-defining-modules-to-control-scope-and-privacy.html
-[rand]: ch02-00-guessing-game-tutorial.html#生成一个随机数
+[modules]: ch07-02-defining-modules-to-control-scope-and-privacy
+[rand]: ch02-00-guessing-game-tutorial#生成一个随机数

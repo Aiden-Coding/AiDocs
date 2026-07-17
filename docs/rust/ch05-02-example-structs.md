@@ -26,7 +26,8 @@ fn main() {
 fn area(width: u32, height: u32) -> u32 {
     // ANCHOR_END: here
     width * height
-}
+}
+
 ```
 
 <span class="caption">示例 5-8：通过分别指定长方形的宽和高的变量来计算长方形面积</span>
@@ -47,7 +48,8 @@ The area of the rectangle is 1500 square pixels.
 这些代码的问题突显在 `area` 的签名上：
 
 ```rust,ignore
-fn area(width: u32, height: u32) -> u32 {
+fn area(width: u32, height: u32) -> u32 {
+
 ```
 
 函数 `area` 本应该计算一个长方形的面积，不过函数却有两个参数。这两个参数是相关联的，不过程序本身却没有表现出这一点。将长度和宽度组合在一起将更易懂也更易处理。第 3 章的[“元组类型”][the-tuple-type]<!-- ignore -->章节已经讨论过了一种可行的方法：元组。
@@ -167,7 +169,8 @@ error: could not compile `rectangles` due to previous error
 
 ```console
    = help: the trait `std::fmt::Display` is not implemented for `Rectangle`
-   = note: in format strings you may be able to use `{:?}` (or {:#?} for pretty-print) instead
+   = note: in format strings you may be able to use `{:?}` (or {:#?} for pretty-print) instead
+
 ```
 
 让我们来试试！现在 `println!` 宏调用看起来像 `println!("rect1 is {:?}", rect1);` 这样。在 `{}` 中加入 `:?` 指示符告诉 `println!` 我们想要使用叫做 `Debug` 的输出格式。`Debug` 是一个 trait，它允许我们以一种对开发者有帮助的方式打印结构体，以便当我们调试代码时能看到它的值。
@@ -194,7 +197,8 @@ error: could not compile `rectangles` due to previous error
 
 ```text
    = help: the trait `Debug` is not implemented for `Rectangle`
-   = note: add `#[derive(Debug)]` to `Rectangle` or manually `impl Debug for Rectangle`
+   = note: add `#[derive(Debug)]` to `Rectangle` or manually `impl Debug for Rectangle`
+
 ```
 
 Rust **确实**包含了打印出调试信息的功能，不过我们必须为结构体显式选择这个功能。为此，在结构体定义之前加上外部属性 `#[derive(Debug)]`，如示例 5-12 所示：
@@ -292,9 +296,9 @@ $ cargo run
 
 我们的 `area` 函数非常特殊，它只计算长方形的面积。如果这个行为与 `Rectangle` 结构体再结合得更紧密一些就更好了，因为它不能用于其他类型。现在让我们看看如何继续重构这些代码，来将 `area` 函数协调进 `Rectangle` 类型定义的 `area` **方法**中。
 
-[the-tuple-type]: ch03-02-data-types.html#元组类型
+[the-tuple-type]: ch03-02-data-types#元组类型
 [app-c]: appendix-03-derivable-traits.md
 [println]: https://rustwiki.org/zh-CN/std/macro.println.html
 [dbg]: https://rustwiki.org/zh-CN/std/macro.dbg.html
-[err]: ch12-06-writing-to-stderr-instead-of-stdout.html
+[err]: ch12-06-writing-to-stderr-instead-of-stdout
 [attributes]: https://rustwiki.org/zh-CN/reference/attributes.html

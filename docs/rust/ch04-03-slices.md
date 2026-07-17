@@ -36,7 +36,8 @@ fn first_word(s: &String) -> usize {
 
     s.len()
     // ANCHOR_END: inside_for
-}
+}
+
 ```
 
 <span class="caption">示例 4-7：`first_word` 函数返回 `String` 参数的一个字节索引值</span>
@@ -44,13 +45,15 @@ fn first_word(s: &String) -> usize {
 因为需要逐个元素的检查 `String` 中的值是否为空格，需要用 `as_bytes` 方法将 `String` 转化为字节数组：
 
 ```rust,ignore
-    let bytes = s.as_bytes();
+    let bytes = s.as_bytes();
+
 ```
 
 接下来，使用 `iter` 方法在字节数组上创建一个迭代器：
 
 ```rust,ignore
-    for (i, &item) in bytes.iter().enumerate() {
+    for (i, &item) in bytes.iter().enumerate() {
+
 ```
 
 我们将在[第 13 章][ch13]<!-- ignore -->详细讨论迭代器。现在，只需知道 `iter` 方法返回集合中的每一个元素，而 `enumerate` 包装了 `iter` 的结果，将这些元素作为元组的一部分来返回。`enumerate` 返回的元组中，第一个元素是索引，第二个元素是集合中元素的引用。这比我们自己计算索引要方便一些。
@@ -65,7 +68,8 @@ fn first_word(s: &String) -> usize {
         }
     }
 
-    s.len()
+    s.len()
+
 ```
 
 现在有了一个找到字符串中第一个单词结尾索引的方法，不过这有一个问题。我们返回了一个独立的 `usize`，不过它只在 `&String` 的上下文中才是一个有意义的数字。换句话说，因为它是一个与 `String` 相分离的值，无法保证将来它仍然有效。考虑一下示例 4-8 中使用了示例 4-7 中 `first_word` 函数的程序。
@@ -82,7 +86,8 @@ fn main() {
 
     // word 在此处的值仍然是 5，
     // 但是没有更多的字符串让我们可以有效地应用数值 5。word 的值现在完全无效！
-}
+}
+
 ```
 
 <span class="caption">示例 4-8：存储 `first_word` 函数调用的返回值并接着改变 `String` 的内容</span>
@@ -107,7 +112,8 @@ fn second_word(s: &String) -> (usize, usize) {
     let s = String::from("hello world");
 
     let hello = &s[0..5];
-    let world = &s[6..11];
+    let world = &s[6..11];
+
 ```
 
 这类似于引用整个 `String` 不过带有额外的 `[0..5]` 部分。它不是对整个 `String` 的引用，而是对部分 `String` 的引用。
@@ -168,7 +174,8 @@ fn first_word(s: &String) -> &str {
     }
 
     &s[..]
-}
+}
+
 ```
 
 我们使用跟示例 4-7 相同的方式获取单词结尾的索引，通过寻找第一个出现的空格。当找到一个空格，我们返回一个字符串 slice，它使用字符串的开始和空格的索引作为开始和结束的索引。
@@ -194,7 +201,8 @@ fn main() {
     s.clear(); // error!
 
     println!("the first word is: {}", word);
-}
+}
+
 ```
 
 这里是编译错误：
@@ -242,7 +250,8 @@ fn first_word(s: &String) -> &str {
 而更有经验的 Rustacean 会编写出示例 4-9 中的签名，因为它使得可以对 `String` 值和 `&str` 值使用相同的函数：
 
 ```rust,ignore
-fn first_word(s: &str) -> &str {
+fn first_word(s: &str) -> &str {
+
 ```
 
 <span class="caption">示例 4-9: 通过将 `s` 参数的类型改为字符串 slice 来改进 `first_word` 函数</span>
@@ -271,7 +280,8 @@ fn main() {
     // 因为字符串字面值**就是**字符串 slice，
     // 这样写也可以，即不使用 slice 语法！
     let word = first_word(my_string_literal);
-}
+}
+
 ```
 
 ### 其他类型的 slice
@@ -298,7 +308,7 @@ let slice = &a[1..3];
 
 所有权系统影响了 Rust 中很多其他部分的工作方式，所以我们还会继续讲到这些概念，这将贯穿本书的余下内容。让我们开始第 5 章，来看看如何将多份数据组合进一个 `struct` 中。
 
-[ch13]: ch13-02-iterators.html
-[ch6]: ch06-02-match.html#patterns-that-bind-to-values
-[strings]: ch08-02-strings.html#使用字符串存储-utf-8-编码的文本
-[deref-coercions]: ch15-02-deref.html#函数和方法的隐式解引用强制转换
+[ch13]: ch13-02-iterators
+[ch6]: ch06-02-match#绑定值的模式
+[strings]: ch08-02-strings#使用字符串存储-utf-8-编码的文本
+[deref-coercions]: ch15-02-deref#函数和方法的隐式解引用强制转换

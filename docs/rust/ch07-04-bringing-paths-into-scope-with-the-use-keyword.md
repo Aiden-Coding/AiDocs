@@ -263,5 +263,5 @@ use std::collections::*;
 
 glob 运算符经常用于测试模块 `tests` 中，这时会将所有内容引入作用域；我们将在第 11 章 [“如何编写测试”][writing-tests]<!-- ignore --> 部分讲解。glob 运算符有时也用于 prelude 模式；查看 [标准库中的文档](https://rustwiki.org/zh-CN/std/prelude/index.html#other-preludes) 了解这个模式的更多细节。
 
-[rand]: ch02-00-guessing-game-tutorial.html#生成一个随机数
-[writing-tests]: ch11-01-writing-tests.html#如何编写测试
+[rand]: ch02-00-guessing-game-tutorial#生成一个随机数
+[writing-tests]: ch11-01-writing-tests#如何编写测试

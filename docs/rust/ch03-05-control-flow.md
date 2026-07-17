@@ -46,7 +46,8 @@ condition was true
 尝试改变 `number` 的值使条件为 `false` 时看看会发生什么：
 
 ```rust,ignore
-    let number = 7;
+    let number = 7;
+
 ```
 
 再次运行程序并查看输出：
@@ -443,5 +444,5 @@ fn main() {
 
 当你准备好继续前进时，我们将讨论一个其他语言中**并不**常见的概念：所有权（ownership）。
 
-[comparing-the-guess-to-the-secret-number]: ch02-00-guessing-game-tutorial.html#比较猜测的数字和秘密数字
-[quitting-after-a-correct-guess]: ch02-00-guessing-game-tutorial.html#猜测正确后退出
+[comparing-the-guess-to-the-secret-number]: ch02-00-guessing-game-tutorial#比较猜测的数字和秘密数字
+[quitting-after-a-correct-guess]: ch02-00-guessing-game-tutorial#猜测正确后退出

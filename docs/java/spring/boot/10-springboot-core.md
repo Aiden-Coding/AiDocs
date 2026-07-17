@@ -80,7 +80,7 @@ sequenceDiagram
 
 ## 二、 自动装配的生命周期与初始化时机
 
-在 [15-springboot-springcloud.md](15-springboot-springcloud.md) 中，我们学习了自动装配的核心入口 `@EnableAutoConfiguration`。本节深入剖析它在 **IoC 容器启动过程中的加载与初始化时机**。
+在 [../cloud/15-springboot-springcloud.md](../cloud/15-springboot-springcloud.md) 中，我们学习了自动装配的核心入口 `@EnableAutoConfiguration`。本节深入剖析它在 **IoC 容器启动过程中的加载与初始化时机**。
 
 ### 1. 自动装配在 `refreshContext` 的何处触发？
 

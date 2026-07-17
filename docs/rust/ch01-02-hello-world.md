@@ -141,4 +141,4 @@ $ ./main # or .\main.exe on Windows
 
 使用 `rustc` 编译对简单的程序可以轻松胜任，但随着项目的增长，你将会想要管理项目中所有相关内容，并想让其他用户和项目能够容易共享你的代码。接下来，我们将引入 Cargo 工具，这将帮助你学会编写真实开发环境的 Rust 程序。
 
-[troubleshooting]: ch01-01-installation.html#troubleshooting
+[troubleshooting]: ch01-01-installation#疑难解答

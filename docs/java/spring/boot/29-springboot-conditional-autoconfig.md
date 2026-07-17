@@ -8,7 +8,7 @@ sidebar_label: 条件装配与自动配置
 
 Spring Boot “约定优于配置”的工程实现 = **候选自动配置类列表** + **`@Conditional` 过滤** + **`@Configuration` 注册 Bean**。本篇把条件体系、导入选择器、Starter 结构与排障一次讲清。
 
-相关：[Boot 启动](10-springboot-core.md)、[扩展机制](12-springboot-extension.md)、[SPI 扩展点](20-extension-points-spi.md)。
+相关：[Boot 启动](10-springboot-core.md)、[扩展机制](12-springboot-extension.md)、[SPI 扩展点](../core/20-extension-points-spi.md)。
 
 ---
 

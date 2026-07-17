@@ -96,7 +96,7 @@ fn main() {
 
 正如第 16 章讲到的，`thread::spawn` 会创建一个新线程并在其中运行闭包中的代码。如果运行这段代码并在在浏览器中加载 */sleep*，接着在另两个浏览器标签页中加载 */*，确实会发现 */* 请求不必等待 */sleep* 结束。不过正如之前提到的，这最终会使系统崩溃因为我们无限制的创建新线程。
 
-#### 为有限数量的线程创建一个类似的接口
+#### 为有限数量的线程创建一个类似的接口 {#creating-a-similar-interface-for-a-finite-number-of-threads}
 
 我们期望线程池以类似且熟悉的方式工作，以便从线程切换到线程池并不会对使用该 API 的代码做出较大的修改。示例 20-12 展示我们希望用来替换 `thread::spawn` 的 `ThreadPool` 结构体的假想接口：
 
@@ -221,7 +221,7 @@ error[E0599]: no method named `execute` found for type `hello::ThreadPool` in th
 
 现在有了一个警告和一个错误。暂时先忽略警告，发生错误是因为并没有 `ThreadPool` 上的 `execute` 方法。回忆 [“为有限数量的线程创建一个类似的接口”](#creating-a-similar-interface-for-a-finite-number-of-threads)  部分我们决定线程池应该有与 `thread::spawn` 类似的接口，同时我们将实现 `execute` 函数来获取传递的闭包并将其传递给池中的空闲线程执行。
 
-我们会在 `ThreadPool` 上定义 `execute` 函数来获取一个闭包参数。回忆第 13 章的 [“使用带有泛型和 `Fn` trait 的闭包”][storing-closures-using-generic-parameters-and-the-fn-traits] 部分，闭包作为参数时可以使用三个不同的 trait：`Fn`、`FnMut` 和 `FnOnce`。我们需要决定这里应该使用哪种闭包。最终需要实现的类似于标准库的 `thread::spawn`，所以我们可以观察 `thread::spawn` 的签名在其参数中使用了何种 bound。查看文档会发现：
+我们会在 `ThreadPool` 上定义 `execute` 函数来获取一个闭包参数。回忆第 13 章的 [“使用带有泛型和 `Fn` trait 的闭包”][使用带有泛型和-fn-trait-的闭包] 部分，闭包作为参数时可以使用三个不同的 trait：`Fn`、`FnMut` 和 `FnOnce`。我们需要决定这里应该使用哪种闭包。最终需要实现的类似于标准库的 `thread::spawn`，所以我们可以观察 `thread::spawn` 的签名在其参数中使用了何种 bound。查看文档会发现：
 
 ```rust,ignore
 pub fn spawn<F, T>(f: F) -> JoinHandle<T>
@@ -794,7 +794,7 @@ impl Worker {
 相反通过使用 `loop` 并在循环块之内而不是之外获取锁和任务，`lock` 方法返回的 `MutexGuard` 在 `let job` 语句结束之后立刻就被丢弃了。这确保了 `recv` 调用过程中持有锁，而在 `job()` 调用前锁就被释放了，这就允许并发处理多个请求了。
 
 [creating-type-synonyms-with-type-aliases]:
-ch19-04-advanced-types.html#creating-type-synonyms-with-type-aliases
-[integer-types]: ch03-02-data-types.html#integer-types
-[storing-closures-using-generic-parameters-and-the-fn-traits]:
-ch13-01-closures.html#storing-closures-using-generic-parameters-and-the-fn-traits
+ch19-04-advanced-types#类型别名用来创建类型同义词
+[integer-types]: ch03-02-data-types#整数类型
+[使用带有泛型和-fn-trait-的闭包]:
+ch13-01-closures#使用带有泛型和-fn-trait-的闭包

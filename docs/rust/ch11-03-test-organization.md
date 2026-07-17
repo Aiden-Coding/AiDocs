@@ -217,4 +217,4 @@ Rust 的测试功能提供了一个确保即使你改变了函数的实现方式
 让我们将本章和其他之前章节所学的知识组合起来，在下一章一起编写一个项目！
 
 [separating-modules-into-files]:
-ch07-05-separating-modules-into-different-files.html
+ch07-05-separating-modules-into-different-files

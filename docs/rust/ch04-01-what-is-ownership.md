@@ -56,7 +56,8 @@ let s = "hello";
         let s = "hello";   // 从此处起，s 开始有效
 
         // 使用 s
-    }                      // 此作用域已结束，s 不再有效
+    }                      // 此作用域已结束，s 不再有效
+
 ```
 
 <span class="caption">示例 4-1：一个变量和其有效的作用域</span>
@@ -89,7 +90,8 @@ let s = String::from("hello");
 
     s.push_str(", world!"); // push_str() 在字符串后追加字面值
 
-    println!("{}", s); // 将打印 `hello, world!`
+    println!("{}", s); // 将打印 `hello, world!`
+
 ```
 
 那么这里有什么区别呢？为什么 `String` 可变而字面量却不行呢？区别在于两个类型对内存的处理上。
@@ -115,7 +117,8 @@ Rust 采取了一个不同的策略：内存在拥有它的变量离开作用域
 
         // 使用 s
     }                                  // 此作用域已结束，
-                                       // s 不再有效
+                                       // s 不再有效
+
 ```
 
 这是一个将 `String` 需要的内存返回给分配器的很自然的位置：当 `s` 离开作用域的时候。当变量离开作用域，Rust 为我们调用一个特殊的函数。这个函数叫做 [`drop`][drop]<!-- ignore -->，在这里 `String` 的作者可以放置释放内存的代码。Rust 在结尾的 `}` 处自动调用 `drop`。
@@ -130,7 +133,8 @@ Rust 采取了一个不同的策略：内存在拥有它的变量离开作用域
 
 ```rust
     let x = 5;
-    let y = x;
+    let y = x;
+
 ```
 
 <span class="caption">示例 4-2：将变量 `x` 的整数值赋给 `y`</span>
@@ -141,7 +145,8 @@ Rust 采取了一个不同的策略：内存在拥有它的变量离开作用域
 
 ```rust
     let s1 = String::from("hello");
-    let s2 = s1;
+    let s2 = s1;
+
 ```
 
 这看起来与上面的代码非常类似，所以我们可能会假设他们的运行方式也是类似的：也就是说，第二行可能会生成一个 `s1` 的拷贝并绑定到 `s2` 上。不过，事实上并不完全是这样。
@@ -174,7 +179,8 @@ Rust 采取了一个不同的策略：内存在拥有它的变量离开作用域
     let s1 = String::from("hello");
     let s2 = s1;
 
-    println!("{}, world!", s1);
+    println!("{}, world!", s1);
+
 ```
 
 你会得到一个类似如下的错误，因为 Rust 禁止你使用无效的引用。
@@ -218,7 +224,8 @@ error: could not compile `ownership` due to previous error
     let s1 = String::from("hello");
     let s2 = s1.clone();
 
-    println!("s1 = {}, s2 = {}", s1, s2);
+    println!("s1 = {}, s2 = {}", s1, s2);
+
 ```
 
 这段代码能正常运行，并且明确产生图 4-3 中行为，这里堆上的数据 **确实** 被复制了。
@@ -233,7 +240,8 @@ error: could not compile `ownership` due to previous error
     let x = 5;
     let y = x;
 
-    println!("x = {}, y = {}", x, y);
+    println!("x = {}, y = {}", x, y);
+
 ```
 
 但这段代码似乎与我们刚刚学到的内容相矛盾：没有调用 `clone`，不过 `x` 依然有效且没有被移动到 `y` 中。
@@ -351,9 +359,9 @@ fn calculate_length(s: String) -> (String, usize) {
 
 但是这未免有些形式主义，而且这种场景应该很常见。幸运的是，Rust 对此提供了一个功能，叫做 **引用**（*references*）。
 
-[data-types]: ch03-02-data-types.html#数据类型
-[ch8]: ch08-02-strings.html
-[derivable-traits]: appendix-03-derivable-traits.html
-[method-syntax]: ch05-03-method-syntax.html#方法语法
-[paths-module-tree]: ch07-03-paths-for-referring-to-an-item-in-the-module-tree.html
+[data-types]: ch03-02-data-types#数据类型
+[ch8]: ch08-02-strings
+[derivable-traits]: appendix-03-derivable-traits
+[method-syntax]: ch05-03-method-syntax#方法语法
+[paths-module-tree]: ch07-03-paths-for-referring-to-an-item-in-the-module-tree
 [drop]: https://rustwiki.org/zh-CN/std/ops/trait.Drop.html#tymethod.drop

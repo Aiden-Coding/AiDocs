@@ -279,4 +279,4 @@ pub fn eat_at_restaurant() {
 
 还有一种使用 `pub` 的场景我们还没有涉及到，那就是我们最后要讲的模块功能：`use` 关键字。我们将先单独介绍 `use`，然后展示如何结合使用 `pub` 和 `use`。
 
-[pub]: ch07-03-paths-for-referring-to-an-item-in-the-module-tree.html#使用-pub-关键字暴露路径
+[pub]: ch07-03-paths-for-referring-to-an-item-in-the-module-tree#使用-pub-关键字暴露路径

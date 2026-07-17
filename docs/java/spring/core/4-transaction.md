@@ -291,7 +291,7 @@ public void batchInsert(List<Item> items) {
 }
 ```
 
-配合 [CompletableFuture 异步编排与底层原理](../concurrent/5-completable-future.md) 异步发送远程日志,可以做到事务窗口 < 5ms。
+配合 [CompletableFuture 异步编排与底层原理](../../concurrent/5-completable-future.md) 异步发送远程日志,可以做到事务窗口 < 5ms。
 
 ### 5. `readOnly = true` 与索引优化提示
 
@@ -304,7 +304,7 @@ public List<User> list() { return userDao.list(); }
 
 - `DataSource` 下发 `SET TRANSACTION READ ONLY`(部分数据库如 Oracle 尊重;MySQL InnoDB 不强制但作为对开发者的语义约束)。
 - Hibernate 等会话优化:跳过 dirty check 的快照保存。
-- 配合 MyBatis 利用 ThreadLocal 标记路由到只读节点(走从库),结合 [Spring Cache 缓存抽象与声明式缓存原理](16-spring-cache.md) 的二级缓存进一步降低数据库压力。
+- 配合 MyBatis 利用 ThreadLocal 标记路由到只读节点(走从库),结合 [Spring Cache 缓存抽象与声明式缓存原理](../boot/16-spring-cache.md) 的二级缓存进一步降低数据库压力。
 
 ### 6. 编程式事事务:`TransactionTemplate`
 
@@ -331,7 +331,7 @@ Spring Boot 通过 `TransactionAutoConfiguration` 自动装配:
 2. 注册 `TransactionInterceptor` 与 `AnnotationTransactionAttributeSource`,构成基于注解的切面 `BeanFactoryTransactionAttributeSourceAdvisor`。
 3. 当 bean 上有任何 `@Transactional` 标注时,AOP 运行时使用 `ProxyFactory` 生成 JDK 动态代理或 CGLIB 子类代理包裹该 bean。
 
-详见 [Spring Boot 启动原理与自动装配](10-springboot-core.md) 与 [Spring Boot 核心内部机制](11-springboot-internals.md),理解此处即可以把声明式事务接入 Spring Boot 自动装配全景。
+详见 [Spring Boot 启动原理与自动装配](../boot/10-springboot-core.md) 与 [Spring Boot 核心内部机制](../boot/11-springboot-internals.md),理解此处即可以把声明式事务接入 Spring Boot 自动装配全景。
 
 ---
 
@@ -359,5 +359,5 @@ Spring Boot 通过 `TransactionAutoConfiguration` 自动装配:
 
 - [AOP 动态代理与链式调用](1-ioc-aop.md):代理如何包裹 Bean 方法。
 - [Spring 事件驱动机制与业务解耦](7-spring-events.md):`@TransactionalEventListener` 的完整机制。
-- [Juava 编程](../concurrent/5-completable-future.md):异步事务剥离与日志发送模式。
-- [Spring Boot 启动原理与自动装配](10-springboot-core.md):自动装配如何挂载事务管理器这一Bean。
+- [Juava 编程](../../concurrent/5-completable-future.md):异步事务剥离与日志发送模式。
+- [Spring Boot 启动原理与自动装配](../boot/10-springboot-core.md):自动装配如何挂载事务管理器这一Bean。

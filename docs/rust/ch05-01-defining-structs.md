@@ -15,7 +15,8 @@ struct User {
     username: String,
     email: String,
     sign_in_count: u64,
-}
+}
+
 ```
 
 <span class="caption">示例 5-1：`User` 结构体定义</span>
@@ -30,7 +31,8 @@ fn main() {
         active: true,
         sign_in_count: 1,
     };
-}
+}
+
 ```
 
 <span class="caption">示例 5-2：创建 `User` 结构体的实例</span>
@@ -47,7 +49,8 @@ fn main() {
     };
 
     user1.email = String::from("anotheremail@example.com");
-}
+}
+
 ```
 
 <span class="caption">示例 5-3：改变 `User` 实例 `email` 字段的值</span>
@@ -64,7 +67,8 @@ fn build_user(email: String, username: String) -> User {
         active: true,
         sign_in_count: 1,
     }
-}
+}
+
 ```
 
 <span class="caption">示例 5-4：`build_user` 函数获取 email 和用户名并返回 `User` 实例</span>
@@ -83,7 +87,8 @@ fn build_user(email: String, username: String) -> User {
         active: true,
         sign_in_count: 1,
     }
-}
+}
+
 ```
 
 <span class="caption">示例 5-5：`build_user` 函数使用了字段初始化简写语法，因为 `email` 和 `username` 参数与结构体字段同名</span>
@@ -98,7 +103,8 @@ fn build_user(email: String, username: String) -> User {
 
 ```rust
 fn main() {
-    // --snip--
+    // --snip--
+
 ```
 
 <span class="caption">示例 5-6：使用 `user1` 中的一个值创建一个新的 `User` 实例</span>
@@ -107,7 +113,8 @@ fn main() {
 
 ```rust
 fn main() {
-    // --snip--
+    // --snip--
+
 ```
 
 <span class="caption">示例 5-7：使用结构体更新语法为一个 `User` 实例设置一个新的 `email` 值，不过其余值来自 `user1` 变量中实例的字段</span>
@@ -223,6 +230,6 @@ pbcopy < listings/ch05-using-structs-to-structure-related-data/no-listing-02-ref
 paste above
 add `> ` before every line -->
 
-[tuples]: ch03-02-data-types.html#元组类型
-[move]: ch04-01-what-is-ownership.html#变量与数据交互的方式一移动
-[copy]: ch04-01-what-is-ownership.html#变量与数据交互的方式二克隆
+[tuples]: ch03-02-data-types#元组类型
+[move]: ch04-01-what-is-ownership#变量与数据交互的方式一移动
+[copy]: ch04-01-what-is-ownership#变量与数据交互的方式二克隆

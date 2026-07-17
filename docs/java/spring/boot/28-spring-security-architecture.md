@@ -8,7 +8,7 @@ sidebar_label: Security 架构与过滤器链
 
 Spring Security 是高度可定制的认证（Authentication）与授权（Authorization）框架。Servlet 场景下，核心是 **`Filter` 链** + **`SecurityContext`**；资源服务器场景则常与 JWT / OAuth2 结合。
 
-相关阅读：[MVC 流程](8-springmvc-principles.md)、[Gateway 鉴权](21-gateway-advanced.md)、[Boot 自动配置](10-springboot-core.md)。
+相关阅读：[MVC 流程](../mvc/8-springmvc-principles.md)、[Gateway 鉴权](../cloud/21-gateway-advanced.md)、[Boot 自动配置](10-springboot-core.md)。
 
 ---
 

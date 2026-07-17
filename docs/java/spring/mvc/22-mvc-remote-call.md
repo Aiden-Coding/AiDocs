@@ -8,7 +8,7 @@ sidebar_label: Web 执行流程与 HTTP 调用
 
 Spring MVC 的中枢是 `DispatcherServlet`；微服务之间的同步调用则绕不开 `RestTemplate`、`WebClient` 与 **OpenFeign**。本篇把“接入请求”和“发出请求”两条链路放在一起看清抽象共性。
 
-相关阅读：[MVC 核心原理](8-springmvc-principles.md)、[MVC 高级特性](9-springmvc-advanced.md)、[Gateway](21-gateway-advanced.md)、[Dubbo RPC](19-dubbo-rpc-kernel.md)。
+相关阅读：[MVC 核心原理](8-springmvc-principles.md)、[MVC 高级特性](9-springmvc-advanced.md)、[Gateway](../cloud/21-gateway-advanced.md)、[Dubbo RPC](../cloud/19-dubbo-rpc-kernel.md)。
 
 ---
 
@@ -205,4 +205,4 @@ flowchart TD
 
 - 入站：`DispatcherServlet` → Mapping → Adapter → Converter。
 - 出站：RestTemplate 模板方法 / WebClient 响应式 / Feign 接口代理 + 负载均衡。
-- 微服务调用选型：同步简单用 Feign；高并发聚合看 WebClient；私有协议与极致性能看 [Dubbo](19-dubbo-rpc-kernel.md) / [Netty RPC](../network/7-netty-rpc-practice.md)。
+- 微服务调用选型：同步简单用 Feign；高并发聚合看 WebClient；私有协议与极致性能看 [Dubbo](../cloud/19-dubbo-rpc-kernel.md) / [Netty RPC](../../network/7-netty-rpc-practice.md)。

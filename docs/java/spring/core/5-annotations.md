@@ -53,7 +53,7 @@ sidebar_label: 常用注解底层解析
 - **`@Component`**：通用组件注解，可用于任何层级的类。
 - **`@Service`**：标注在业务逻辑层，当前无额外特殊逻辑。
 - **`@Repository`**：标注在数据访问层（DAO）。Spring 会为其自动织入 `PersistenceExceptionTranslationPostProcessor`，将底层数据库抛出的特定异常（如 `SQLException`）统一转化为 Spring 的 `DataAccessException` 体系。
-- **`@Controller`**：标注在控制层。Spring MVC 在启动扫描时，`RequestMappingHandlerMapping` 会通过判断类上是否含有 `@Controller` 或 `@RequestMapping`，来决定是否将其中的方法解析为处理器映射接口（参见 [RequestMappingHandlerMapping 映射原理](./8-springmvc-principles.md#1-url-映射注册流程)）。
+- **`@Controller`**：标注在控制层。Spring MVC 在启动扫描时，`RequestMappingHandlerMapping` 会通过判断类上是否含有 `@Controller` 或 `@RequestMapping`，来决定是否将其中的方法解析为处理器映射接口（参见 [RequestMappingHandlerMapping 映射原理](../mvc/8-springmvc-principles.md#1-url-映射注册流程)）。
 
 ### 2. @Component 与 @Bean 的区别
 
