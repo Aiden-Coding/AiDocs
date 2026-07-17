@@ -95,7 +95,7 @@ const config: Config = {
           type: 'docSidebar',
           sidebarId: 'interviewSidebar',
           position: 'left',
-          label: '2026 面试突击',
+          label: '面试',
         },
         {
           type: 'docSidebar',
