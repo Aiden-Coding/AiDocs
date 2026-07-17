@@ -93,7 +93,7 @@ const config: Config = {
         },
         {
           type: 'doc',
-          docId: 'java/interview/0-intro',
+          docId: 'java/interview/intro',
           position: 'left',
           label: '2026 面试突击',
         },
