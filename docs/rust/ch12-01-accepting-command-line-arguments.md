@@ -1,3 +1,8 @@
+---
+title: "接受命令行参数"
+sidebar_position: 49
+---
+
 ## 接受命令行参数
 
 一如既往使用 `cargo new` 新建一个项目，我们称之为 `minigrep` 以便与可能已经安装在系统上的 `grep` 工具相区别：

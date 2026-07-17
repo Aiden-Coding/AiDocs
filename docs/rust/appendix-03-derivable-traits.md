@@ -1,3 +1,8 @@
+---
+title: "附录 C：可派生的 trait"
+sidebar_position: 99
+---
+
 ## 附录 C：可派生的 trait
 
 在本书的各个部分中，我们讨论了可应用于结构体和枚举定义的 `derive` 属性。`derive` 属性会在使用 `derive` 语法标记的类型上生成对应 trait 的默认实现的代码。

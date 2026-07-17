@@ -1,3 +1,8 @@
+---
+title: "安装"
+sidebar_position: 4
+---
+
 ## 安装
 
 第一步是安装 Rust。我们将通过 `rustup` 来下载 Rust，这是一个管理 Rust 版本和相关工具的命令行工具。这需要互联网连接才能下载。

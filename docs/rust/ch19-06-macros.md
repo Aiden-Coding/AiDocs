@@ -1,3 +1,8 @@
+---
+title: "宏"
+sidebar_position: 91
+---
+
 ## 宏
 
 我们已经在本书中使用过像 `println!` 这样的宏了，不过还没完全探索什么是宏以及它是如何工作的。**宏**（*Macro*）指的是 Rust 中一系列的功能：使用 `macro_rules!` 的 **声明**（*Declarative*）宏，和三种 **过程**（*Procedural*）宏：

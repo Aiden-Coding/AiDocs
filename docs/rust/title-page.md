@@ -1,3 +1,8 @@
+---
+title: "Rust 程序设计语言"
+sidebar_position: 0
+---
+
 # Rust 程序设计语言
 
 *由 Steve Klabnik 和 Carol Nichols，以及来自 Rust 社区贡献者撰写*

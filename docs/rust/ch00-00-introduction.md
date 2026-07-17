@@ -1,3 +1,8 @@
+---
+title: "简介"
+sidebar_position: 2
+---
+
 # 简介
 
 > 注意：本书的版本（英文版）与出版的 [The Rust Programming Language][nsprust] 和电子版的 [No Starch Press][nsp] 一致。

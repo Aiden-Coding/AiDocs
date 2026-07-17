@@ -1,3 +1,8 @@
+---
+title: "Hello, World"
+sidebar_position: 5
+---
+
 ## Hello, World
 
 我们已经安装好了 Rust，接着编写第一个 Rust 程序。按照传统，在学习一门新语言时都会编写一个输出“Hello, world!”（你好，世界）的简单程序，本章我们也是如此。

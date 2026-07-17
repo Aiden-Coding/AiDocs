@@ -1,3 +1,8 @@
+---
+title: "引用与借用"
+sidebar_position: 16
+---
+
 ## 引用与借用
 
 示例 4-5 中的元组代码有这样一个问题：我们必须将 `String` 返回给调用函数，以便在调用 `calculate_length` 后仍能使用 `String`，因为 `String` 被移动到了 `calculate_length` 内。

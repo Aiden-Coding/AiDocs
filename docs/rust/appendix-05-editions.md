@@ -1,3 +1,8 @@
+---
+title: "附录 E：版本"
+sidebar_position: 101
+---
+
 ## 附录 E：版本
 
 早在第 1 章，我们见过 `cargo new` 在 *Cargo.toml* 中增加了一些有关 `edition` 的元数据。本附录将解释其意义！

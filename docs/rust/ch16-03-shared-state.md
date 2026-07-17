@@ -1,3 +1,8 @@
+---
+title: "共享状态并发"
+sidebar_position: 76
+---
+
 ## 共享状态并发
 
 虽然消息传递是一个很好的处理并发的方式，但并不是唯一一个。再一次思考一下 Go 编程语言文档中口号的这一部分：“不要通过共享内存来通讯”（“do not communicate by sharing memory.”）：

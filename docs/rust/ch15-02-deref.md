@@ -1,3 +1,8 @@
+---
+title: "通过 Deref trait 将智能指针当作常规引用处理"
+sidebar_position: 68
+---
+
 ## 通过 `Deref` trait 将智能指针当作常规引用处理
 
 实现 `Deref` trait 允许我们重载 **解引用运算符**（_dereference operator_）`*`（与乘法运算符或通配符相区别）。通过这种方式实现 `Deref` trait 的智能指针可以被当作常规引用来对待，可以编写操作引用的代码并用于智能指针。

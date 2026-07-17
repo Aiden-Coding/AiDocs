@@ -1,3 +1,8 @@
+---
+title: "将 crate 发布到 Crates.io"
+sidebar_position: 62
+---
+
 ## 将 crate 发布到 Crates.io
 
 我们曾经在项目中使用 [crates.io](https://crates.io)<!-- ignore --> 上的包作为依赖，不过你也可以通过发布自己的包来向别人分享代码。[crates.io](https://crates.io)<!-- ignore --> 用来分发包的源代码，所以它主要托管开源代码。

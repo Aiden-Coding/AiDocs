@@ -1,3 +1,8 @@
+---
+title: "进一步认识 Cargo 和 Crates.io"
+sidebar_position: 60
+---
+
 # 进一步认识 Cargo 和 Crates.io
 
 目前为止我们只使用过 Cargo 构建、运行和测试代码这些最基本的功能，不过它还可以做到更多。本章会讨论 Cargo 其他一些更为高级的功能，我们将展示如何：

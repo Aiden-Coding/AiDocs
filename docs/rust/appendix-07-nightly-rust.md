@@ -1,3 +1,8 @@
+---
+title: "附录 G：Rust 是如何开发的与 “Nightly Rust”"
+sidebar_position: 103
+---
+
 ## 附录 G：Rust 是如何开发的与 “Nightly Rust”
 
 本附录介绍 Rust 是如何开发的以及这如何影响作为 Rust 开发者的你。

@@ -1,3 +1,8 @@
+---
+title: "高级 trait"
+sidebar_position: 88
+---
+
 ## 高级 trait
 
 第 10 章 [“trait：定义共享的行为”][traits-defining-shared-behavior]<!-- ignore -->  部分，我们第一次涉及到了 trait，不过就像生命周期一样，我们并没有覆盖一些较为高级的细节。现在我们更加了解 Rust 了，可以深入理解其本质了。
