@@ -159,6 +159,10 @@ mindmap
 - [线上故障深度复盘记录](jvm/4-prod-troubleshooting-cases.md)：四大经典 OOM 与 CPU 100% 根因分析。
 - [JVM 启动参数黄金配置模板](jvm/5-prod-practice.md)：在生产环境配置 G1/ZGC。
 
+### 🚀 2026 特别企划
+
+- **[2026 Java 后端核心考点突击指南](interview/0-intro.md)**：包含 70 道黄金面试题，直击 Java 21-26 新特性、虚拟线程、Spring Boot 4.0、大模型接入及云原生实战。
+
 ### 核心面试真题与底层原理专题
 
 - [Java 基础与集合面试真题](basic/3-interview-basic.md)
