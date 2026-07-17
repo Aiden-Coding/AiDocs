@@ -57,4 +57,4 @@ mindmap
 ## ⚡ 第三阶段：核心场景与面试复盘 (Workshop)
 
 - [Redis 缓存实战与分布式锁](4-scenarios.md)：深度对齐缓存雪崩、热点 Key 探测与分布式锁深度设计。
-- [Redis 核心面试真题复盘](6-interview-redis.md)：收录大厂真实高频考点。
+- [Redis 核心面试真题复盘](../../interview/cache/6-interview-redis.md)：收录大厂真实高频考点。

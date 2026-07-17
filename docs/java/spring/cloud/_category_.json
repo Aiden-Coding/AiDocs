@@ -1,0 +1,8 @@
+{
+  "label": "4.4 Spring Cloud 微服务",
+  "position": 4,
+  "link": {
+    "type": "generated-index",
+    "description": "微服务全家桶：Dubbo RPC、Gateway 流量入口、Nacos 配置、Seata 分布式事务、Sentinel 流量治理。"
+  }
+}

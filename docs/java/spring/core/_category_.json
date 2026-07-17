@@ -1,0 +1,8 @@
+{
+  "label": "4.1 Spring 核心容器",
+  "position": 1,
+  "link": {
+    "type": "generated-index",
+    "description": "IoC 容器、Bean 生命周期、AOP 代理链、事务机制、注解原理、设计模式、事件驱动与扩展点 SPI。"
+  }
+}

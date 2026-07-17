@@ -61,4 +61,4 @@ mindmap
 
 - [MySQL 性能调优与参数调优](./5-optimization.md)：执行计划详解、生产慢查询优化，以及 InnoDB 核心参数（Buffer Pool/Thread/IO）运维调优指南。
 - [MySQL SQL 调优与执行计划](./4-sql-tuning.md)：深入剖析 `EXPLAIN` 解析、索引失效场景与进阶实战技巧。
-- [MySQL 核心面试真题复盘](./7-interview-mysql.md)：高频大厂必考点汇总，包含 MVCC、幻读解决、2PC 必要性、页分裂与双写等硬核剖析。
+- [MySQL 核心面试真题复盘](../../interview/database/7-interview-mysql.md)：高频大厂必考点汇总，包含 MVCC、幻读解决、2PC 必要性、页分裂与双写等硬核剖析。

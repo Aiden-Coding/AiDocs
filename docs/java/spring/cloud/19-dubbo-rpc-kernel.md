@@ -8,7 +8,7 @@ sidebar_label: Dubbo 架构与 RPC 原理
 
 Dubbo 是高性能 Java RPC 框架：接口级代理、自适应 SPI、Cluster 容错与 Netty 异步通信是其内核。本篇覆盖分层架构、SPI、调用链、负载均衡与线程模型。
 
-相关：[Netty RPC 实战](../network/7-netty-rpc-practice.md)、[Netty 面试](../network/8-interview-netty.md)、[Feign HTTP 调用](22-mvc-remote-call.md)。
+相关：[Netty RPC 实战](../../network/7-netty-rpc-practice.md)、[Netty 面试](../../../interview/java/8-interview-netty.md)、[Feign HTTP 调用](22-mvc-remote-call.md)。
 
 ---
 

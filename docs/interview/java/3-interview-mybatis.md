@@ -141,8 +141,8 @@ flowchart LR
 1. 插件拦截 `StatementHandler` 统计执行耗时，打慢 SQL 日志（脱敏）。
 2. 检查是否逻辑分页、N+1、`SELECT *` 大字段。
 3. 核对 HikariCP：活跃连接、等待线程、`leakDetectionThreshold` 是否报泄漏。
-4. 结合 [Arthas / JVM 工具](../jvm/3-tuning-tools.md) 看线程是否堵在 `getConnection`。
-5. 索引与执行计划回到 MySQL 侧（见 [MySQL 面试](../../database/mysql/7-interview-mysql.md)）。
+4. 结合 [Arthas / JVM 工具](../../java/jvm/3-tuning-tools.md) 看线程是否堵在 `getConnection`。
+5. 索引与执行计划回到 MySQL 侧（见 [MySQL 面试](../database/7-interview-mysql.md)）。
 
 ---
 

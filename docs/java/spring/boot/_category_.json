@@ -1,0 +1,8 @@
+{
+  "label": "4.3 Spring Boot",
+  "position": 3,
+  "link": {
+    "type": "generated-index",
+    "description": "自动装配内核、条件装配、FatJar 运行机制、扩展点 SPI、缓存抽象与 Spring Security 安全架构。"
+  }
+}

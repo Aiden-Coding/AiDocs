@@ -50,7 +50,7 @@ mindmap
 - [Java 集合框架底层源码深剖](basic/0-collection-framework.md)：探究 `ArrayList`、`LinkedList` 物理结构，深度解析 `LinkedHashMap` 构筑 LRU 及 `TreeMap` 红黑树旋转平衡。
 - [Java 核心基石：Object 方法、异常、反射、泛型与 SPI](basic/1-java-core-fundamentals.md)：剖析 `Object` 六大契约、异常体系、反射与 `MethodHandle`、泛型擦除与桥接方法、注解与 SPI 扩展。
 - [Java 新特性演进与核心底层原理](basic/2-java8-21-features.md)：剖析 Lambda `invokedynamic`、Stream 惰性求值与 JDK 21 虚拟线程 Carrier 调度机制。
-- [Java 基础与集合核心面试真题](basic/3-interview-basic.md)：深入底层剖析 `String` 不可变性、`HashMap` 与 `ConcurrentHashMap` 扩容演进机制。
+- [Java 基础与集合核心面试真题](../interview/java/3-interview-basic.md)：深入底层剖析 `String` 不可变性、`HashMap` 与 `ConcurrentHashMap` 扩容演进机制。
 - [Java I/O 体系与序列化深剖](basic/4-io-serialization.md)：探究字节流与字符流关系、`BufferedInputStream` 内部缓冲区、装饰器模式应用，以及 Java 原生序列化和第三方协议对比。
 
 ### 1.2 JUC 高并发深度实践 (Concurrency)
@@ -65,7 +65,7 @@ mindmap
 - [JDK 21 虚拟线程详解](concurrent/7-virtual-threads.md)：解密运行在用户态的轻量协程模型。
 - [Disruptor 无锁环形队列](concurrent/8-disruptor.md)：LMAX 架构下的预分配与零 GC 机制。
 - [CPU Cache Line 伪共享调优](concurrent/9-cache-line-sharing.md)：使用 `@Contended` 消除 MESI 协议竞争。
-- [JUC 并发编程面试真题](concurrent/10-interview-concurrent.md)：AQS、线程池、并发容器与虚拟线程高频考点复盘。
+- [JUC 并发编程面试真题](../interview/java/10-interview-concurrent.md)：AQS、线程池、并发容器与虚拟线程高频考点复盘。
 - [ForkJoinPool 与并行流原理](concurrent/11-forkjoin-parallelstream.md)：解密分治法与工作窃取（Work-Stealing）底层机制，拆解全局共享 commonPool 的性能饥饿与并行流线程安全陷阱。
 
 ### 1.3 JVM 虚拟机内核 (Virtual Machine)
@@ -76,7 +76,7 @@ mindmap
 - [性能诊断与在线排障艺术](jvm/3-tuning-tools.md)：Arthas 实战与 MAT 内存泄露追踪。
 - [线上故障深度复盘记录](jvm/4-prod-troubleshooting-cases.md)：四大经典 OOM 与 CPU 100% 根因分析。
 - [JVM 启动参数黄金配置模板](jvm/5-prod-practice.md)：在生产环境配置 G1/ZGC。
-- [JVM 虚拟机面试真题](jvm/6-interview-jvm.md)：GC、类加载、调优与故障排查高频考点。
+- [JVM 虚拟机面试真题](../interview/java/6-interview-jvm.md)：GC、类加载、调优与故障排查高频考点。
 
 ---
 
@@ -86,54 +86,54 @@ mindmap
 
 ### 2.1 Spring 核心全景
 
-- [IoC 容器与 Bean 生命周期](spring/0-bean-lifecycle.md)：从实例化到销毁的 4 阶段全流程。
-- [AOP 动态代理与链式调用](spring/1-ioc-aop.md)：解密为什么只有三级缓存能解决 AOP 循环依赖。
-- [BeanDefinition 与容器初始化](spring/2-beandefinition-internals.md)：探索 Spring 如何感知开发者定义的 Bean 与配置类 CGLIB 增强原理。
-- [Context Refresh 刷新流程](spring/3-spring-context-refresh.md)：深度拆解 Spring 容器启动的 12 个核心步骤与后置处理器执行顺序。
-- [声明式事务机制与失效场景](spring/4-transaction.md)：从 `TransactionInterceptor` 调用链到 ThreadLocal 连接绑定，还原 12 种失效根因。
-- [Spring 常用注解及其底层原理解析](spring/5-annotations.md)：剖析 `@Autowired`、`@Resource` 与 `@Configuration` 的装配注入链路。
-- [Spring 常用设计模式源码级深度解析](spring/6-design-patterns.md)：探究工厂、单例、代理、模板方法与观察者模式等在 Spring 源码中的落地。
-- [Spring 事件驱动机制与业务解耦](spring/7-spring-events.md)：解密事件发布广播器原理与事务同步器 `@TransactionalEventListener` 的 Phase 阶段。
-- [Spring AOP 代理选择与切面链路](spring/17-aop-proxy-chain.md)：JDK/CGLIB 代理选型、切面链构建与执行顺序。
-- [Spring 循环依赖深度进阶](spring/18-circular-dependency-advanced.md)：构造器注入边界、`@Async` 导致循环依赖崩溃的根因与避坑。
-- [Spring 核心扩展点与 SPI](spring/20-extension-points-spi.md)：`BeanPostProcessor`、`BeanFactoryPostProcessor` 与 `SpringFactoriesLoader`。
+- [IoC 容器与 Bean 生命周期](spring/core/0-bean-lifecycle.md)：从实例化到销毁的 4 阶段全流程。
+- [AOP 动态代理与链式调用](spring/core/1-ioc-aop.md)：解密为什么只有三级缓存能解决 AOP 循环依赖。
+- [BeanDefinition 与容器初始化](spring/core/2-beandefinition-internals.md)：探索 Spring 如何感知开发者定义的 Bean 与配置类 CGLIB 增强原理。
+- [Context Refresh 刷新流程](spring/core/3-spring-context-refresh.md)：深度拆解 Spring 容器启动的 12 个核心步骤与后置处理器执行顺序。
+- [声明式事务机制与失效场景](spring/core/4-transaction.md)：从 `TransactionInterceptor` 调用链到 ThreadLocal 连接绑定，还原 12 种失效根因。
+- [Spring 常用注解及其底层原理解析](spring/core/5-annotations.md)：剖析 `@Autowired`、`@Resource` 与 `@Configuration` 的装配注入链路。
+- [Spring 常用设计模式源码级深度解析](spring/core/6-design-patterns.md)：探究工厂、单例、代理、模板方法与观察者模式等在 Spring 源码中的落地。
+- [Spring 事件驱动机制与业务解耦](spring/core/7-spring-events.md)：解密事件发布广播器原理与事务同步器 `@TransactionalEventListener` 的 Phase 阶段。
+- [Spring AOP 代理选择与切面链路](spring/core/17-aop-proxy-chain.md)：JDK/CGLIB 代理选型、切面链构建与执行顺序。
+- [Spring 循环依赖深度进阶](spring/core/18-circular-dependency-advanced.md)：构造器注入边界、`@Async` 导致循环依赖崩溃的根因与避坑。
+- [Spring 核心扩展点与 SPI](spring/core/20-extension-points-spi.md)：`BeanPostProcessor`、`BeanFactoryPostProcessor` 与 `SpringFactoriesLoader`。
 
 ### 2.2 Spring MVC 请求处理模型
 
-- [Spring MVC 工作流设计](spring/8-springmvc-principles.md)：理解 `DispatcherServlet` 与 `HandlerMapping` 的协作。
-- [Spring MVC 高级强化特性](spring/9-springmvc-advanced.md)：拦截器、过滤器与参数解析器深度定制。
-- [Spring MVC 执行流程与远程调用](spring/22-mvc-remote-call.md)：`RestTemplate`、Feign 动态代理与负载均衡调用链路。
+- [Spring MVC 工作流设计](spring/mvc/8-springmvc-principles.md)：理解 `DispatcherServlet` 与 `HandlerMapping` 的协作。
+- [Spring MVC 高级强化特性](spring/mvc/9-springmvc-advanced.md)：拦截器、过滤器与参数解析器深度定制。
+- [Spring MVC 执行流程与远程调用](spring/mvc/22-mvc-remote-call.md)：`RestTemplate`、Feign 动态代理与负载均衡调用链路。
 
 ### 2.3 Spring Boot 与自动装配
 
-- [Spring Boot 启动原理与自动装配](spring/10-springboot-core.md)：解构 `@EnableAutoConfiguration` 与 `spring.factories`。
-- [Spring Boot 核心内部机制](spring/11-springboot-internals.md)：`Environment` 环境抽象与监听器模式。
-- [Spring Boot 扩展机制与 SPI 原理](spring/12-springboot-extension.md)：解析 Spring SPI 工厂加载器、自定义 Starter 流程及生命周期扩展点。
-- [Spring Boot FatJar 运行机制](spring/13-springboot-fatjar.md)：解密如何通过 `JarLauncher` 加载嵌套 Jar。
-- [Spring Boot 高级扩展与调优](spring/14-springboot-advanced.md)：自定义 Starter 与 Endpoint 监控。
-- [Spring Boot 条件装配与自动配置内核](spring/29-springboot-conditional-autoconfig.md)：`@Conditional` 家族与 `AutoConfigurationImportSelector`。
-- [Spring Cache 缓存抽象与声明式缓存原理](spring/16-spring-cache.md)：剖析 AOP 缓存拦截器、SpEL 键生成以及击穿/穿透/雪崩的生产级防护。
-- [Spring Security 安全架构与过滤器链](spring/28-spring-security-architecture.md)：`SecurityFilterChain`、认证授权流程与 CSRF/JWT 避坑。
+- [Spring Boot 启动原理与自动装配](spring/boot/10-springboot-core.md)：解构 `@EnableAutoConfiguration` 与 `spring.factories`。
+- [Spring Boot 核心内部机制](spring/boot/11-springboot-internals.md)：`Environment` 环境抽象与监听器模式。
+- [Spring Boot 扩展机制与 SPI 原理](spring/boot/12-springboot-extension.md)：解析 Spring SPI 工厂加载器、自定义 Starter 流程及生命周期扩展点。
+- [Spring Boot FatJar 运行机制](spring/boot/13-springboot-fatjar.md)：解密如何通过 `JarLauncher` 加载嵌套 Jar。
+- [Spring Boot 高级扩展与调优](spring/boot/14-springboot-advanced.md)：自定义 Starter 与 Endpoint 监控。
+- [Spring Boot 条件装配与自动配置内核](spring/boot/29-springboot-conditional-autoconfig.md)：`@Conditional` 家族与 `AutoConfigurationImportSelector`。
+- [Spring Cache 缓存抽象与声明式缓存原理](spring/boot/16-spring-cache.md)：剖析 AOP 缓存拦截器、SpEL 键生成以及击穿/穿透/雪崩的生产级防护。
+- [Spring Security 安全架构与过滤器链](spring/boot/28-spring-security-architecture.md)：`SecurityFilterChain`、认证授权流程与 CSRF/JWT 避坑。
 
 ### 2.4 Spring Cloud 微服务与中间件
 
-- [Spring Boot 生态演进与 Spring Cloud 结合](spring/15-springboot-springcloud.md)：从 Boot 到分布式微服务架构。
-- [Spring Cloud 微服务起步](spring/30-springcloud-quickstart.md)：架构演进与全家桶协同实战。
-- [Dubbo 核心架构与高性能 RPC](spring/19-dubbo-rpc-kernel.md)：10 层架构、自适应 SPI 与 Netty 异步双工通信。
-- [Spring Cloud Gateway 流量入口](spring/21-gateway-advanced.md)：Route / Predicate / Filter 与令牌桶限流。
-- [Nacos 动态配置管理与多租户隔离](spring/23-nacos-config-advanced.md)：配置推送、命名空间隔离与热更新。
-- [Seata AT 模式内核](spring/24-seata-at-kernel.md)：无锁化两阶段提交原理。
-- [Seata 分布式事务全解](spring/25-seata-distributed-transaction.md)：AT 模式深度剖析与实战。
-- [Sentinel 滑动窗口与限流算法](spring/26-sentinel-algorithm-core.md)：`LeapArray` 与高性能限流内核。
-- [Sentinel 流量治理与故障容错](spring/27-sentinel-governance.md)：熔断、降级与系统自适应保护。
-- [Spring 框架生态面试真题](spring/31-interview-spring.md)：IoC、AOP、事务、Boot 与微服务高频考点。
+- [Spring Boot 生态演进与 Spring Cloud 结合](spring/cloud/15-springboot-springcloud.md)：从 Boot 到分布式微服务架构。
+- [Spring Cloud 微服务起步](spring/cloud/30-springcloud-quickstart.md)：架构演进与全家桶协同实战。
+- [Dubbo 核心架构与高性能 RPC](spring/cloud/19-dubbo-rpc-kernel.md)：10 层架构、自适应 SPI 与 Netty 异步双工通信。
+- [Spring Cloud Gateway 流量入口](spring/cloud/21-gateway-advanced.md)：Route / Predicate / Filter 与令牌桶限流。
+- [Nacos 动态配置管理与多租户隔离](spring/cloud/23-nacos-config-advanced.md)：配置推送、命名空间隔离与热更新。
+- [Seata AT 模式内核](spring/cloud/24-seata-at-kernel.md)：无锁化两阶段提交原理。
+- [Seata 分布式事务全解](spring/cloud/25-seata-distributed-transaction.md)：AT 模式深度剖析与实战。
+- [Sentinel 滑动窗口与限流算法](spring/cloud/26-sentinel-algorithm-core.md)：`LeapArray` 与高性能限流内核。
+- [Sentinel 流量治理与故障容错](spring/cloud/27-sentinel-governance.md)：熔断、降级与系统自适应保护。
+- [Spring 框架生态面试真题](../interview/java/31-interview-spring.md)：IoC、AOP、事务、Boot 与微服务高频考点。
 
 ### 2.5 持久层与连接池 (Persistence)
 
 - [MyBatis 持久层原理与 HikariCP 连接池](persistence/0-mybatis-hikaricp.md)：HikariCP 无锁化 `LocalBag` 容器与 MyBatis 插件责任链。
 - [MyBatis 核心组件与 SQL 执行全流程](persistence/1-mybatis-core-flow.md)：从 `SqlSessionFactory` 到 `ResultSet` 映射的完整链路。
 - [MyBatis 插件原理与二级缓存](persistence/2-mybatis-cache-plugin.md)：拦截器责任链、一二级缓存与 Redis 集成。
-- [MyBatis 与连接池面试真题](persistence/3-interview-mybatis.md)：Executor、缓存、插件与 HikariCP 高频考点。
+- [MyBatis 与连接池面试真题](../interview/java/3-interview-mybatis.md)：Executor、缓存、插件与 HikariCP 高频考点。
 
 ---
 
@@ -149,7 +149,7 @@ mindmap
 - [Netty 心跳保活与断线重连](network/5-netty-heartbeat.md)：IdleStateHandler 与客户端重连策略。
 - [Netty HTTP 与 WebSocket](network/6-netty-http-websocket.md)：HTTP 服务与长连接实战。
 - [Netty 简易 RPC 框架实战](network/7-netty-rpc-practice.md)：编解码 + 心跳 + 异步调用组装完整 RPC。
-- [Netty 与 NIO 面试真题](network/8-interview-netty.md)：Reactor、ByteBuf、粘包拆包与 RPC 高频考点。
+- [Netty 与 NIO 面试真题](../interview/java/8-interview-netty.md)：Reactor、ByteBuf、粘包拆包与 RPC 高频考点。
 
 ---
 
@@ -165,14 +165,14 @@ mindmap
 
 ### 核心面试真题与底层原理专题
 
-- [Java 基础与集合面试真题](basic/3-interview-basic.md)
-- [JUC 并发编程面试真题](concurrent/10-interview-concurrent.md)
-- [JVM 虚拟机面试真题](jvm/6-interview-jvm.md)
-- [Spring 框架生态面试真题](spring/31-interview-spring.md)
-- [MyBatis 与连接池面试真题](persistence/3-interview-mybatis.md)
-- [Netty 与 NIO 面试真题](network/8-interview-netty.md)
-- [MySQL 关系型数据库面试真题](../database/mysql/7-interview-mysql.md)
-- [Redis 高性能缓存面试真题](../cache/redis/6-interview-redis.md)
+- [Java 基础与集合面试真题](../interview/java/3-interview-basic.md)
+- [JUC 并发编程面试真题](../interview/java/10-interview-concurrent.md)
+- [JVM 虚拟机面试真题](../interview/java/6-interview-jvm.md)
+- [Spring 框架生态面试真题](../interview/java/31-interview-spring.md)
+- [MyBatis 与连接池面试真题](../interview/java/3-interview-mybatis.md)
+- [Netty 与 NIO 面试真题](../interview/java/8-interview-netty.md)
+- [MySQL 关系型数据库面试真题](../interview/database/7-interview-mysql.md)
+- [Redis 高性能缓存面试真题](../interview/cache/6-interview-redis.md)
 
 ---
 
@@ -180,5 +180,5 @@ mindmap
 
 - **分布式锁实现**：关联学习 [分布式 ZooKeeper 锁](../distributed/system/1-lock-zookeeper.md)。
 - **分布式缓存**：关联学习 [Redis 高并发场景](../cache/redis/4-scenarios.md)。
-- **分布式事务**：关联学习 [Seata 分布式事务全解](spring/25-seata-distributed-transaction.md)。
-- **流量治理**：关联学习 [Sentinel 流量治理](spring/27-sentinel-governance.md)。
+- **分布式事务**：关联学习 [Seata 分布式事务全解](spring/cloud/25-seata-distributed-transaction.md)。
+- **流量治理**：关联学习 [Sentinel 流量治理](spring/cloud/27-sentinel-governance.md)。

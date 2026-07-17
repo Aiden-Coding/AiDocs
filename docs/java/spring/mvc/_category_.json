@@ -1,0 +1,8 @@
+{
+  "label": "4.2 Spring MVC",
+  "position": 2,
+  "link": {
+    "type": "generated-index",
+    "description": "DispatcherServlet 工作流、拦截器过滤器参数解析器定制，以及 RestTemplate/Feign 远程调用链路。"
+  }
+}

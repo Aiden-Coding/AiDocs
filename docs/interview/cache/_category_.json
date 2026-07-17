@@ -1,0 +1,8 @@
+{
+  "label": "缓存",
+  "position": 3,
+  "link": {
+    "type": "generated-index",
+    "description": "Redis 数据结构、持久化、高可用、集群与缓存击穿/穿透/雪崩高频考点。"
+  }
+}

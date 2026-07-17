@@ -1,0 +1,8 @@
+{
+  "label": "数据库",
+  "position": 2,
+  "link": {
+    "type": "generated-index",
+    "description": "MySQL 索引、事务、锁、MVCC、日志、分库分表等高频面试考点。"
+  }
+}
