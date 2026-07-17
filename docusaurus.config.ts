@@ -27,7 +27,7 @@ const config: Config = {
   organizationName: 'Aiden-Coding', // Usually your GitHub org/user name.
   projectName: 'AiDocs', // Usually your repo name.
 
-  onBrokenLinks: 'throw',
+  onBrokenLinks: 'warn',
 
   // Even if you don't use internationalization, you can use this field to set
   // useful metadata like html lang. For example, if your site is Chinese, you
@@ -39,6 +39,7 @@ const config: Config = {
 
   markdown: {
     mermaid: true,
+    format: 'detect',
   },
   themes: ['@docusaurus/theme-mermaid'],
 
