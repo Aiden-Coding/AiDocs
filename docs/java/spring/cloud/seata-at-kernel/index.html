@@ -1,0 +1,204 @@
+<!doctype html><html lang=zh-Hans dir=ltr class="docs-wrapper plugin-docs plugin-id-default docs-version-current docs-doc-page docs-doc-id-java/spring/cloud/seata-at-kernel" data-has-hydrated=false><head><meta charset=UTF-8><meta name=generator content="Docusaurus v3.10.2"><title data-rh=true>Seata AT 模式无锁化两阶段提交原理 | Ai文档</title><meta data-rh=true name=viewport content="width=device-width, initial-scale=1.0"/><meta data-rh=true name=twitter:card content=summary_large_image /><meta data-rh=true property=og:image content=https://github.com/AiDocs/img/social-card.webp /><meta data-rh=true name=twitter:image content=https://github.com/AiDocs/img/social-card.webp /><meta data-rh=true property=og:url content=https://github.com/AiDocs/docs/java/spring/cloud/seata-at-kernel /><meta data-rh=true property=og:locale content=zh_Hans /><meta data-rh=true name=docusaurus_locale content=zh-Hans /><meta data-rh=true name=docsearch:language content=zh-Hans /><meta data-rh=true name=docusaurus_version content=current /><meta data-rh=true name=docusaurus_tag content=docs-default-current /><meta data-rh=true name=docsearch:version content=current /><meta data-rh=true name=docsearch:docusaurus_tag content=docs-default-current /><meta data-rh=true property=og:title content="Seata AT 模式无锁化两阶段提交原理 | Ai文档"/><meta data-rh=true name=description content="Seata AT 模式无锁化两阶段提交原理"/><meta data-rh=true property=og:description content="Seata AT 模式无锁化两阶段提交原理"/><link data-rh=true rel=icon href=/AiDocs/img/favicon.ico /><link data-rh=true rel=canonical href=https://github.com/AiDocs/docs/java/spring/cloud/seata-at-kernel /><link data-rh=true rel=alternate href=https://github.com/AiDocs/docs/java/spring/cloud/seata-at-kernel hreflang=zh-Hans /><link data-rh=true rel=alternate href=https://github.com/AiDocs/docs/java/spring/cloud/seata-at-kernel hreflang=x-default /><script data-rh=true type=application/ld+json>{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","item":"https://github.com/AiDocs/docs/category/4-spring-核心与生态","name":"4. Spring 核心与生态","position":1},{"@type":"ListItem","item":"https://github.com/AiDocs/docs/category/44-spring-cloud-微服务","name":"4.4 Spring Cloud 微服务","position":2},{"@type":"ListItem","item":"https://github.com/AiDocs/docs/java/spring/cloud/seata-at-kernel","name":"Seata AT 事务内核","position":3}]}</script><link rel=stylesheet href=https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css type=text/css integrity=sha384-n8MVd4RsNIBMW3Zksd/cgGfpkkcg23OqxEnQl9o23PppNwe/eB84kLtyzzN3lft9 crossorigin=anonymous><link rel=stylesheet href=/AiDocs/assets/css/styles.0d18f9a1.css /><script src=/AiDocs/assets/js/runtime~main.dcb2d569.js defer></script><script src=/AiDocs/assets/js/main.193b7064.js defer></script></head><body><svg style="display: none;"><defs>
+<symbol id=theme-svg-external-link viewBox="0 0 24 24"><path fill=currentColor d="M21 13v10h-21v-19h12v2h-10v15h17v-8h2zm3-12h-10.988l4.035 4-6.977 7.07 2.828 2.828 6.977-7.07 4.125 4.172v-11z"/></symbol>
+</defs></svg>
+<script>!function(){var t=function(){try{return new URLSearchParams(window.location.search).get("docusaurus-theme")}catch(t){}}()||function(){try{return window.localStorage.getItem("theme-92a")}catch(t){}}();document.documentElement.setAttribute("data-theme",t||(window.matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light")),document.documentElement.setAttribute("data-theme-choice",t||"system")}(),function(){try{for(var[t,e]of new URLSearchParams(window.location.search).entries())if(t.startsWith("docusaurus-data-")){var a=t.replace("docusaurus-data-","data-");document.documentElement.setAttribute(a,e)}}catch(t){}}()</script><div id=__docusaurus><link rel=preload as=image href=/AiDocs/img/logo.webp /><div role=region aria-label=跳到主要内容><a class=skipToContent_fXgn href=#__docusaurus_skipToContent_fallback>跳到主要内容</a></div><nav aria-label=主导航 class="theme-layout-navbar navbar navbar--fixed-top"><div class=navbar__inner><div class="theme-layout-navbar-left navbar__items"><button aria-label=切换导航栏 aria-expanded=false class="navbar__toggle clean-btn" type=button><svg width=30 height=30 viewBox="0 0 30 30" aria-hidden=true><path stroke=currentColor stroke-linecap=round stroke-miterlimit=10 stroke-width=2 d="M4 7h22M4 15h22M4 23h22"/></svg></button><a class=navbar__brand href=/AiDocs/><div class=navbar__logo><img src=/AiDocs/img/logo.webp alt="Ai文档 Logo" class="themedComponent_mlkZ themedComponent--light_NVdE"/><img src=/AiDocs/img/logo.webp alt="Ai文档 Logo" class="themedComponent_mlkZ themedComponent--dark_xIcU"/></div><b class="navbar__title text--truncate">Ai文档</b></a><a class="navbar__item navbar__link" href=/AiDocs/docs/>体系介绍</a><a class="navbar__item navbar__link" href=/AiDocs/docs/category/java-后端>面试</a><a aria-current=page class="navbar__item navbar__link navbar__link--active" href=/AiDocs/docs/java/>Java</a><a class="navbar__item navbar__link" href=/AiDocs/docs/database/mysql/>数据库</a><a class="navbar__item navbar__link" href=/AiDocs/docs/cache/redis/>缓存</a><a class="navbar__item navbar__link" href=/AiDocs/docs/distributed/system/>分布式</a><a class="navbar__item navbar__link" href=/AiDocs/docs/rust/title-page>Rust</a><a class="navbar__item navbar__link" href=/AiDocs/docs/react/>React</a><a class="navbar__item navbar__link" href=/AiDocs/docs/web-basics/modern-javascript>Web 基础</a></div><div class="theme-layout-navbar-right navbar__items navbar__items--right"><a href=https://github.com/Aiden-Coding/AiDocs target=_blank rel="noopener noreferrer" class="navbar__item navbar__link header-github-link"></a><div class="toggle_vylO colorModeToggle_DEke"><button class="clean-btn toggleButton_gllP toggleButtonDisabled_aARS" type=button disabled title="system mode" aria-label="切换浅色/暗黑模式（当前为system mode）"><svg viewBox="0 0 24 24" width=24 height=24 aria-hidden=true class="toggleIcon_g3eP lightToggleIcon_pyhR"><path fill=currentColor d="M12,9c1.65,0,3,1.35,3,3s-1.35,3-3,3s-3-1.35-3-3S10.35,9,12,9 M12,7c-2.76,0-5,2.24-5,5s2.24,5,5,5s5-2.24,5-5 S14.76,7,12,7L12,7z M2,13l2,0c0.55,0,1-0.45,1-1s-0.45-1-1-1l-2,0c-0.55,0-1,0.45-1,1S1.45,13,2,13z M20,13l2,0c0.55,0,1-0.45,1-1 s-0.45-1-1-1l-2,0c-0.55,0-1,0.45-1,1S19.45,13,20,13z M11,2v2c0,0.55,0.45,1,1,1s1-0.45,1-1V2c0-0.55-0.45-1-1-1S11,1.45,11,2z M11,20v2c0,0.55,0.45,1,1,1s1-0.45,1-1v-2c0-0.55-0.45-1-1-1C11.45,19,11,19.45,11,20z M5.99,4.58c-0.39-0.39-1.03-0.39-1.41,0 c-0.39,0.39-0.39,1.03,0,1.41l1.06,1.06c0.39,0.39,1.03,0.39,1.41,0s0.39-1.03,0-1.41L5.99,4.58z M18.36,16.95 c-0.39-0.39-1.03-0.39-1.41,0c-0.39,0.39-0.39,1.03,0,1.41l1.06,1.06c0.39,0.39,1.03,0.39,1.41,0c0.39-0.39,0.39-1.03,0-1.41 L18.36,16.95z M19.42,5.99c0.39-0.39,0.39-1.03,0-1.41c-0.39-0.39-1.03-0.39-1.41,0l-1.06,1.06c-0.39,0.39-0.39,1.03,0,1.41 s1.03,0.39,1.41,0L19.42,5.99z M7.05,18.36c0.39-0.39,0.39-1.03,0-1.41c-0.39-0.39-1.03-0.39-1.41,0l-1.06,1.06 c-0.39,0.39-0.39,1.03,0,1.41s1.03,0.39,1.41,0L7.05,18.36z"/></svg><svg viewBox="0 0 24 24" width=24 height=24 aria-hidden=true class="toggleIcon_g3eP darkToggleIcon_wfgR"><path fill=currentColor d="M9.37,5.51C9.19,6.15,9.1,6.82,9.1,7.5c0,4.08,3.32,7.4,7.4,7.4c0.68,0,1.35-0.09,1.99-0.27C17.45,17.19,14.93,19,12,19 c-3.86,0-7-3.14-7-7C5,9.07,6.81,6.55,9.37,5.51z M12,3c-4.97,0-9,4.03-9,9s4.03,9,9,9s9-4.03,9-9c0-0.46-0.04-0.92-0.1-1.36 c-0.98,1.37-2.58,2.26-4.4,2.26c-2.98,0-5.4-2.42-5.4-5.4c0-1.81,0.89-3.42,2.26-4.4C12.92,3.04,12.46,3,12,3L12,3z"/></svg><svg viewBox="0 0 24 24" width=24 height=24 aria-hidden=true class="toggleIcon_g3eP systemToggleIcon_QzmC"><path fill=currentColor d="m12 21c4.971 0 9-4.029 9-9s-4.029-9-9-9-9 4.029-9 9 4.029 9 9 9zm4.95-13.95c1.313 1.313 2.05 3.093 2.05 4.95s-0.738 3.637-2.05 4.95c-1.313 1.313-3.093 2.05-4.95 2.05v-14c1.857 0 3.637 0.737 4.95 2.05z"/></svg></button></div><div class=navbarSearchContainer_Bca1></div></div></div><div role=presentation class=navbar-sidebar__backdrop></div></nav><div id=__docusaurus_skipToContent_fallback class="theme-layout-main main-wrapper mainWrapper_z2l0"><div class=docsWrapper_hBAB><button aria-label=回到顶部 class="clean-btn theme-back-to-top-button backToTopButton_sjWU" type=button></button><div class=docRoot_UBD9><aside class="theme-doc-sidebar-container docSidebarContainer_YfHR"><div class=sidebarViewport_aRkj><div class=sidebar_njMd><nav aria-label=文档侧边栏 class="menu thin-scrollbar menu_SIkG"><ul class="theme-doc-sidebar-menu menu__list"><li class="theme-doc-sidebar-item-category theme-doc-sidebar-item-category-level-1 menu__list-item"><div class=menu__list-item-collapsible><a class="categoryLink_byQd menu__link menu__link--sublist menu__link--sublist-caret menu__link--active" role=button aria-expanded=true href=/AiDocs/docs/java/><span class=categoryLinkLabel_W154>Java Core</span></a></div><ul class=menu__list><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class=menu__link tabindex=0 href=/AiDocs/docs/java/><span class=linkLabel_WmDU>介绍 & 路线图</span></a><li class="theme-doc-sidebar-item-category theme-doc-sidebar-item-category-level-2 menu__list-item menu__list-item--collapsed"><div class=menu__list-item-collapsible><a class="categoryLink_byQd menu__link menu__link--sublist" tabindex=0 href=/AiDocs/docs/category/1-java-基础与容器><span class=categoryLinkLabel_W154>1. Java 基础与容器</span></a><button aria-label="展开侧边栏分类 '1. Java 基础与容器'" aria-expanded=false type=button class="clean-btn menu__caret"></button></div><li class="theme-doc-sidebar-item-category theme-doc-sidebar-item-category-level-2 menu__list-item menu__list-item--collapsed"><div class=menu__list-item-collapsible><a class="categoryLink_byQd menu__link menu__link--sublist" tabindex=0 href=/AiDocs/docs/category/2-juc-并发编程><span class=categoryLinkLabel_W154>2. JUC 并发编程</span></a><button aria-label="展开侧边栏分类 '2. JUC 并发编程'" aria-expanded=false type=button class="clean-btn menu__caret"></button></div><li class="theme-doc-sidebar-item-category theme-doc-sidebar-item-category-level-2 menu__list-item menu__list-item--collapsed"><div class=menu__list-item-collapsible><a class="categoryLink_byQd menu__link menu__link--sublist" tabindex=0 href=/AiDocs/docs/category/3-jvm-虚拟机内核><span class=categoryLinkLabel_W154>3. JVM 虚拟机内核</span></a><button aria-label="展开侧边栏分类 '3. JVM 虚拟机内核'" aria-expanded=false type=button class="clean-btn menu__caret"></button></div><li class="theme-doc-sidebar-item-category theme-doc-sidebar-item-category-level-2 menu__list-item"><div class=menu__list-item-collapsible><a class="categoryLink_byQd menu__link menu__link--sublist menu__link--active" tabindex=0 href=/AiDocs/docs/category/4-spring-核心与生态><span class=categoryLinkLabel_W154>4. Spring 核心与生态</span></a><button aria-label="折叠侧边栏分类 '4. Spring 核心与生态'" aria-expanded=true type=button class="clean-btn menu__caret"></button></div><ul class=menu__list><li class="theme-doc-sidebar-item-category theme-doc-sidebar-item-category-level-3 menu__list-item menu__list-item--collapsed"><div class=menu__list-item-collapsible><a class="categoryLink_byQd menu__link menu__link--sublist" tabindex=0 href=/AiDocs/docs/category/41-spring-核心容器><span class=categoryLinkLabel_W154>4.1 Spring 核心容器</span></a><button aria-label="展开侧边栏分类 '4.1 Spring 核心容器'" aria-expanded=false type=button class="clean-btn menu__caret"></button></div><li class="theme-doc-sidebar-item-category theme-doc-sidebar-item-category-level-3 menu__list-item menu__list-item--collapsed"><div class=menu__list-item-collapsible><a class="categoryLink_byQd menu__link menu__link--sublist" tabindex=0 href=/AiDocs/docs/category/42-spring-mvc><span class=categoryLinkLabel_W154>4.2 Spring MVC</span></a><button aria-label="展开侧边栏分类 '4.2 Spring MVC'" aria-expanded=false type=button class="clean-btn menu__caret"></button></div><li class="theme-doc-sidebar-item-category theme-doc-sidebar-item-category-level-3 menu__list-item menu__list-item--collapsed"><div class=menu__list-item-collapsible><a class="categoryLink_byQd menu__link menu__link--sublist" tabindex=0 href=/AiDocs/docs/category/43-spring-boot><span class=categoryLinkLabel_W154>4.3 Spring Boot</span></a><button aria-label="展开侧边栏分类 '4.3 Spring Boot'" aria-expanded=false type=button class="clean-btn menu__caret"></button></div><li class="theme-doc-sidebar-item-category theme-doc-sidebar-item-category-level-3 menu__list-item"><div class=menu__list-item-collapsible><a class="categoryLink_byQd menu__link menu__link--sublist menu__link--active" tabindex=0 href=/AiDocs/docs/category/44-spring-cloud-微服务><span class=categoryLinkLabel_W154>4.4 Spring Cloud 微服务</span></a><button aria-label="折叠侧边栏分类 '4.4 Spring Cloud 微服务'" aria-expanded=true type=button class="clean-btn menu__caret"></button></div><ul class=menu__list><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-4 menu__list-item"><a class=menu__link tabindex=0 href=/AiDocs/docs/java/spring/cloud/springboot-springcloud><span class=linkLabel_WmDU>自动装配与微服务组件</span></a><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-4 menu__list-item"><a class=menu__link tabindex=0 href=/AiDocs/docs/java/spring/cloud/dubbo-rpc-kernel><span class=linkLabel_WmDU>Dubbo 架构与 RPC 原理</span></a><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-4 menu__list-item"><a class=menu__link tabindex=0 href=/AiDocs/docs/java/spring/cloud/gateway-advanced><span class=linkLabel_WmDU>Gateway 统一网关</span></a><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-4 menu__list-item"><a class=menu__link tabindex=0 href=/AiDocs/docs/java/spring/cloud/nacos-config-advanced><span class=linkLabel_WmDU>Nacos 配置中心</span></a><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-4 menu__list-item"><a class="menu__link menu__link--active" aria-current=page tabindex=0 href=/AiDocs/docs/java/spring/cloud/seata-at-kernel><span class=linkLabel_WmDU>Seata AT 事务内核</span></a><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-4 menu__list-item"><a class=menu__link tabindex=0 href=/AiDocs/docs/java/spring/cloud/seata-distributed-transaction><span class=linkLabel_WmDU>Seata 分布式事务</span></a><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-4 menu__list-item"><a class=menu__link tabindex=0 href=/AiDocs/docs/java/spring/cloud/sentinel-algorithm-core><span class=linkLabel_WmDU>Sentinel 限流算法内核</span></a><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-4 menu__list-item"><a class=menu__link tabindex=0 href=/AiDocs/docs/java/spring/cloud/sentinel-governance><span class=linkLabel_WmDU>Sentinel 流量治理</span></a><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-4 menu__list-item"><a class=menu__link tabindex=0 href=/AiDocs/docs/java/spring/cloud/springcloud-quickstart><span class=linkLabel_WmDU>微服务快速入门</span></a></ul></ul><li class="theme-doc-sidebar-item-category theme-doc-sidebar-item-category-level-2 menu__list-item menu__list-item--collapsed"><div class=menu__list-item-collapsible><a class="categoryLink_byQd menu__link menu__link--sublist" tabindex=0 href=/AiDocs/docs/category/5-持久层与连接池><span class=categoryLinkLabel_W154>5. 持久层与连接池</span></a><button aria-label="展开侧边栏分类 '5. 持久层与连接池'" aria-expanded=false type=button class="clean-btn menu__caret"></button></div><li class="theme-doc-sidebar-item-category theme-doc-sidebar-item-category-level-2 menu__list-item menu__list-item--collapsed"><div class=menu__list-item-collapsible><a class="categoryLink_byQd menu__link menu__link--sublist" tabindex=0 href=/AiDocs/docs/category/6-高性能网络通信><span class=categoryLinkLabel_W154>6. 高性能网络通信</span></a><button aria-label="展开侧边栏分类 '6. 高性能网络通信'" aria-expanded=false type=button class="clean-btn menu__caret"></button></div></ul></ul></nav></div></div></aside><main class=docMainContainer_TBSr><div class="container padding-top--md padding-bottom--lg"><div class=row><div class="col docItemCol_VOVn"><div class=docItemContainer_Djhp><article><nav class="theme-doc-breadcrumbs breadcrumbsContainer_Z_bl" aria-label=页面路径><ul class=breadcrumbs><li class=breadcrumbs__item><a aria-label=主页面 class=breadcrumbs__link href=/AiDocs/><svg viewBox="0 0 24 24" class=breadcrumbHomeIcon_YNFT><path d="M10 19v-5h4v5c0 .55.45 1 1 1h3c.55 0 1-.45 1-1v-7h1.7c.46 0 .68-.57.33-.87L12.67 3.6c-.38-.34-.96-.34-1.34 0l-8.36 7.53c-.34.3-.13.87.33.87H5v7c0 .55.45 1 1 1h3c.55 0 1-.45 1-1z" fill=currentColor /></svg></a><li class=breadcrumbs__item><span class=breadcrumbs__link>Java Core</span><li class=breadcrumbs__item><a class=breadcrumbs__link href=/AiDocs/docs/category/4-spring-核心与生态><span>4. Spring 核心与生态</span></a><li class=breadcrumbs__item><a class=breadcrumbs__link href=/AiDocs/docs/category/44-spring-cloud-微服务><span>4.4 Spring Cloud 微服务</span></a><li class="breadcrumbs__item breadcrumbs__item--active"><span class=breadcrumbs__link>Seata AT 事务内核</span></ul></nav><div class="tocCollapsible_ETCw theme-doc-toc-mobile tocMobile_ITEo"><button type=button class="clean-btn tocCollapsibleButton_TO0P">本页总览</button></div><div class="theme-doc-markdown markdown"><h2 class="anchor anchorTargetStickyNavbar_Vzrq" id=seata-at-模式无锁化两阶段提交原理>Seata AT 模式无锁化两阶段提交原理<a href=#seata-at-模式无锁化两阶段提交原理 class=hash-link aria-label="Seata AT 模式无锁化两阶段提交原理的直接链接" title="Seata AT 模式无锁化两阶段提交原理的直接链接" translate=no>​</a></h2>
+<p>微服务拆库后，本地 ACID 无法覆盖跨服务写操作。Seata <strong>AT 模式</strong>以 DataSource 代理 + UndoLog 实现<strong>业务低侵入</strong>的分布式事务。本篇聚焦 AT 内核：TC/TM/RM、两阶段、全局锁与脏写检测。</p>
+<p>实战注解与模式对比见 <a class="" href=/AiDocs/docs/java/spring/cloud/seata-distributed-transaction>Seata 分布式事务全解</a>。</p>
+<hr/>
+<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id=一三大角色>一、三大角色<a href=#一三大角色 class=hash-link aria-label=一、三大角色的直接链接 title=一、三大角色的直接链接 translate=no>​</a></h2>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th style=text-align:left>角色<th style=text-align:left>全称<th style=text-align:left>职责<tbody><tr><td style=text-align:left><strong>TM</strong><td style=text-align:left>Transaction Manager<td style=text-align:left>开启/提交/回滚<strong>全局事务</strong>（通常是发起方服务）<tr><td style=text-align:left><strong>RM</strong><td style=text-align:left>Resource Manager<td style=text-align:left>管理<strong>分支事务</strong>、注册分支、上报状态、执行二阶段<tr><td style=text-align:left><strong>TC</strong><td style=text-align:left>Transaction Coordinator<td style=text-align:left>Seata Server：存全局/分支状态，驱动二阶段</table>
+<!-- -->
+<p>全局事务 ID：<code>XID</code>。分支事务 ID：<code>branchId</code>。跨服务调用需把 <code>XID</code> 写入 RPC 上下文（Seata 对 Feign/Dubbo 有拦截器自动透传）。</p>
+<hr/>
+<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id=二at-模式本质>二、AT 模式本质<a href=#二at-模式本质 class=hash-link aria-label="二、AT 模式本质的直接链接" title="二、AT 模式本质的直接链接" translate=no>​</a></h2>
+<p>AT = <strong>自动补偿的改进 2PC</strong>：</p>
+<ol>
+<li class="">一阶段：本地事务<strong>直接提交</strong>业务数据 + UndoLog（不是传统 2PC 一直悬着 XA）。</li>
+<li class="">二阶段成功：异步删 UndoLog，几乎无业务开销。</li>
+<li class="">二阶段失败：用 Before Image 生成反向 SQL 补偿。</li>
+</ol>
+<p>代价：依赖关系型数据库、可解析 SQL、主键/唯一键清晰；隔离靠<strong>全局锁</strong>补强。</p>
+<hr/>
+<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id=三一阶段执行业务并提交本地事务>三、一阶段：执行业务并提交本地事务<a href=#三一阶段执行业务并提交本地事务 class=hash-link aria-label=三、一阶段：执行业务并提交本地事务的直接链接 title=三、一阶段：执行业务并提交本地事务的直接链接 translate=no>​</a></h2>
+<p><code>DataSourceProxy</code> / <code>ConnectionProxy</code> 拦截 JDBC：</p>
+<!-- -->
+<h3 class="anchor anchorTargetStickyNavbar_Vzrq" id=关键步骤拆解>关键步骤拆解<a href=#关键步骤拆解 class=hash-link aria-label=关键步骤拆解的直接链接 title=关键步骤拆解的直接链接 translate=no>​</a></h3>
+<ol>
+<li class=""><strong>SQL 解析</strong>：识别表、条件、更新列（支持常见 DML；复杂 SQL 可能解析失败）。</li>
+<li class=""><strong>Before Image</strong>：按主键把变更前行数据查出来。</li>
+<li class=""><strong>执行业务 SQL</strong>。</li>
+<li class=""><strong>After Image</strong>：再查变更后镜像。</li>
+<li class=""><strong>向 TC 注册分支并抢全局锁</strong>（按行主键维度）。</li>
+<li class=""><strong>本地原子提交</strong>：业务行变更 + <code>undo_log</code> 同事务 commit。</li>
+</ol>
+<p><code>undo_log</code> 典型字段语义：</p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th style=text-align:left>字段<th style=text-align:left>含义<tbody><tr><td style=text-align:left><code>xid</code> / <code>branch_id</code><td style=text-align:left>关联全局与分支<tr><td style=text-align:left><code>rollback_info</code><td style=text-align:left>序列化的前后镜像与元数据<tr><td style=text-align:left><code>log_status</code><td style=text-align:left>正常 / 防悬挂等状态<tr><td style=text-align:left><code>log_created</code><td style=text-align:left>清理与排查用</table>
+<p>一阶段结束时：<strong>本地数据已对其他非全局事务可见</strong>（读已提交视角），但其他 AT 事务写同行为被全局锁挡住。</p>
+<hr/>
+<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id=四二阶段提交-vs-回滚>四、二阶段：提交 vs 回滚<a href=#四二阶段提交-vs-回滚 class=hash-link aria-label="四、二阶段：提交 vs 回滚的直接链接" title="四、二阶段：提交 vs 回滚的直接链接" translate=no>​</a></h2>
+<h3 class="anchor anchorTargetStickyNavbar_Vzrq" id=1-全局提交快乐路径>1. 全局提交（快乐路径）<a href=#1-全局提交快乐路径 class=hash-link aria-label="1. 全局提交（快乐路径）的直接链接" title="1. 全局提交（快乐路径）的直接链接" translate=no>​</a></h3>
+<div class="language-text codeBlockContainer_Ckt0 theme-code-block" style=--prism-color:#393A34;--prism-background-color:#f6f8fa><div class=codeBlockContent_QJqH><pre tabindex=0 class="prism-code language-text codeBlock_bY9V thin-scrollbar" style=color:#393A34;background-color:#f6f8fa><code class=codeBlockLines_e6Vv><div class=token-line style=color:#393A34><span class="token plain">TM commit → TC 记 Global Committed → 异步通知 RM 删 undo_log、释全局锁</span><br/></div></code></pre></div></div>
+<p>业务数据一阶段已落地，二阶段<strong>不必再改业务行</strong>，故 AT 提交极快。</p>
+<h3 class="anchor anchorTargetStickyNavbar_Vzrq" id=2-全局回滚>2. 全局回滚<a href=#2-全局回滚 class=hash-link aria-label="2. 全局回滚的直接链接" title="2. 全局回滚的直接链接" translate=no>​</a></h3>
+<!-- -->
+<p>脏写判定：</p>
+<span class=katex-display><span class=katex><span class=katex-mathml><math xmlns=http://www.w3.org/1998/Math/MathML display=block><semantics><mrow><mtext>安全回滚</mtext><mtext>  </mtext><mo>⟺</mo><mtext>  </mtext><mtext>Current Image</mtext><mo>=</mo><mtext>After Image</mtext></mrow><annotation encoding=application/x-tex>\text{安全回滚} \iff \text{Current Image} = \text{After Image}</annotation></semantics></math></span><span class=katex-html aria-hidden=true><span class=base><span class=strut style=height:0.7073em;vertical-align:-0.024em></span><span class="mord text"><span class="mord cjk_fallback">安全回滚</span></span><span class=mspace style=margin-right:0.2778em></span><span class=mspace style=margin-right:0.2778em></span><span class=mrel>⟺</span><span class=mspace style=margin-right:0.2778em></span><span class=mspace style=margin-right:0.2778em></span></span><span class=base><span class=strut style=height:0.8778em;vertical-align:-0.1944em></span><span class="mord text"><span class=mord>Current Image</span></span><span class=mspace style=margin-right:0.2778em></span><span class=mrel>=</span><span class=mspace style=margin-right:0.2778em></span></span><span class=base><span class=strut style=height:0.8889em;vertical-align:-0.1944em></span><span class="mord text"><span class=mord>After Image</span></span></span></span></span></span>
+<p>若中途有<strong>未走 Seata</strong> 的 SQL 改了同行，Current ≠ After，自动回滚会覆盖第三方写入 → Seata <strong>拒绝自动回滚并告警</strong>。</p>
+<hr/>
+<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id=五双层锁本地锁--全局锁>五、双层锁：本地锁 + 全局锁<a href=#五双层锁本地锁--全局锁 class=hash-link aria-label="五、双层锁：本地锁 + 全局锁的直接链接" title="五、双层锁：本地锁 + 全局锁的直接链接" translate=no>​</a></h2>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th style=text-align:left>锁<th style=text-align:left>持有者<th style=text-align:left>生命周期<th style=text-align:left>作用<tbody><tr><td style=text-align:left>本地行锁<td style=text-align:left>DB（InnoDB X 锁）<td style=text-align:left>仅一阶段本地事务内<td style=text-align:left>保护本地提交原子性<tr><td style=text-align:left>全局锁<td style=text-align:left>TC 内存/存储<td style=text-align:left>全局事务结束前<td style=text-align:left>防止其他 AT 事务交叉写</table>
+<h3 class="anchor anchorTargetStickyNavbar_Vzrq" id=写写冲突时序>写写冲突时序<a href=#写写冲突时序 class=hash-link aria-label=写写冲突时序的直接链接 title=写写冲突时序的直接链接 translate=no>​</a></h3>
+<ol>
+<li class="">事务 A 一阶段拿到行 R 的全局锁并本地 commit。</li>
+<li class="">事务 B 也要改 R：本地可执行 SQL，但<strong>提交前申请全局锁失败</strong>。</li>
+<li class="">B 进入<strong>全局锁重试等待</strong>（可配重试次数与间隔）；等待期间可能长时间占着本地锁 → 注意超时与热点行。</li>
+<li class="">A 全局提交/回滚后释放全局锁，B 才能继续。</li>
+</ol>
+<h3 class="anchor anchorTargetStickyNavbar_Vzrq" id=与隔离级别>与隔离级别<a href=#与隔离级别 class=hash-link aria-label=与隔离级别的直接链接 title=与隔离级别的直接链接 translate=no>​</a></h3>
+<ul>
+<li class="">AT 默认近似 <strong>读未提交/读已提交</strong> 混合观感：一阶段已提交对普通读可见。</li>
+<li class="">若要全局读已提交，可对查询加 <code>@GlobalLock</code> 或 <code>SELECT FOR UPDATE</code> 走代理校验全局锁（有性能成本）。</li>
+</ul>
+<hr/>
+<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id=六undolog-与回滚-sql-生成>六、UndoLog 与回滚 SQL 生成<a href=#六undolog-与回滚-sql-生成 class=hash-link aria-label="六、UndoLog 与回滚 SQL 生成的直接链接" title="六、UndoLog 与回滚 SQL 生成的直接链接" translate=no>​</a></h2>
+<p>回滚不是简单“反向业务 API”，而是根据镜像生成：</p>
+<ul>
+<li class=""><code>UPDATE</code> 回滚：<code>SET col=before WHERE pk=? AND col=after...</code>（带后镜像条件做乐观校验）</li>
+<li class=""><code>INSERT</code> 回滚：<code>DELETE WHERE pk=?</code></li>
+<li class=""><code>DELETE</code> 回滚：<code>INSERT</code> 回补 Before Image</li>
+</ul>
+<p>这也解释了为何表需要<strong>主键</strong>、为何禁止无主键大更新。</p>
+<hr/>
+<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id=七性能与可用性要点>七、性能与可用性要点<a href=#七性能与可用性要点 class=hash-link aria-label=七、性能与可用性要点的直接链接 title=七、性能与可用性要点的直接链接 translate=no>​</a></h2>
+<ol>
+<li class=""><strong>TC 集群 + 共享存储</strong>（DB/Redis/Raft 模式按版本选型），禁止单机 TC 无持久化上生产。</li>
+<li class=""><strong>undo_log 表</strong>与业务库同库（同库同事务提交）；定期清理残留（正常由二阶段删）。</li>
+<li class=""><strong>热点商品行</strong>全局锁竞争会放大 RT，考虑库存分段、TCC、或最终一致性。</li>
+<li class=""><strong>跨服务必须传 XID</strong>，否则下游变本地事务，全局回滚管不到。</li>
+<li class=""><strong>超时</strong>：全局事务超时后 TC 会驱动回滚；业务要能接受补偿窗口。</li>
+</ol>
+<hr/>
+<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id=八与-xa--tcc-内核对比精简>八、与 XA / TCC 内核对比（精简）<a href=#八与-xa--tcc-内核对比精简 class=hash-link aria-label="八、与 XA / TCC 内核对比（精简）的直接链接" title="八、与 XA / TCC 内核对比（精简）的直接链接" translate=no>​</a></h2>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th style=text-align:left><th style=text-align:left>AT<th style=text-align:left>XA<th style=text-align:left>TCC<tbody><tr><td style=text-align:left>一阶段<td style=text-align:left>本地已提交 + UndoLog<td style=text-align:left>分支 prepare 未提交<td style=text-align:left>Try 预留资源<tr><td style=text-align:left>二阶段成功<td style=text-align:left>删日志<td style=text-align:left>commit<td style=text-align:left>Confirm<tr><td style=text-align:left>二阶段失败<td style=text-align:left>镜像补偿<td style=text-align:left>rollback<td style=text-align:left>Cancel<tr><td style=text-align:left>侵入<td style=text-align:left>低<td style=text-align:left>低（但资源占用高）<td style=text-align:left>高<tr><td style=text-align:left>长事务<td style=text-align:left>全局锁压力<td style=text-align:left>连接/锁占用严重<td style=text-align:left>设计得好更合适</table>
+<hr/>
+<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id=九总结>九、总结<a href=#九总结 class=hash-link aria-label=九、总结的直接链接 title=九、总结的直接链接 translate=no>​</a></h2>
+<ul>
+<li class="">AT 内核 = <strong>代理数据源 + 前后镜像 + 全局锁 + 二阶段异步清理/补偿</strong>。</li>
+<li class="">提交快在“一阶段已落地”；安全在“脏写检测 + 全局锁”。</li>
+<li class="">用 AT 前先确认：SQL 可解析、有主键、能接受全局锁语义。</li>
+</ul>
+<p>落地注解、TCC 对照与避坑清单见 <a class="" href=/AiDocs/docs/java/spring/cloud/seata-distributed-transaction>Seata 全解</a>。</div><footer class="theme-doc-footer docusaurus-mt-lg"><div class="row margin-top--sm theme-doc-footer-edit-meta-row"><div class="col noPrint_WFHX"><a href=https://github.com/Aiden-Coding/AiDocs/tree/main/docs/java/spring/cloud/24-seata-at-kernel.md target=_blank rel="noopener noreferrer" class=theme-edit-this-page><svg fill=currentColor height=20 width=20 viewBox="0 0 40 40" class=iconEdit_Z9Sw aria-hidden=true><g><path d="m34.5 11.7l-3 3.1-6.3-6.3 3.1-3q0.5-0.5 1.2-0.5t1.1 0.5l3.9 3.9q0.5 0.4 0.5 1.1t-0.5 1.2z m-29.5 17.1l18.4-18.5 6.3 6.3-18.4 18.4h-6.3v-6.2z"/></g></svg>编辑此页</a></div><div class="col lastUpdated_JAkA"></div></div></footer></article><nav class="docusaurus-mt-lg pagination-nav" aria-label=文件选项卡><a class="pagination-nav__link pagination-nav__link--prev" href=/AiDocs/docs/java/spring/cloud/nacos-config-advanced><div class=pagination-nav__sublabel>上一页</div><div class=pagination-nav__label>Nacos 配置中心</div></a><a class="pagination-nav__link pagination-nav__link--next" href=/AiDocs/docs/java/spring/cloud/seata-distributed-transaction><div class=pagination-nav__sublabel>下一页</div><div class=pagination-nav__label>Seata 分布式事务</div></a></nav></div></div><div class="col col--3"><div class="tableOfContents_bqdL thin-scrollbar theme-doc-toc-desktop"><ul class="table-of-contents table-of-contents__left-border"><li><a href=#seata-at-模式无锁化两阶段提交原理 class="table-of-contents__link toc-highlight">Seata AT 模式无锁化两阶段提交原理</a><li><a href=#一三大角色 class="table-of-contents__link toc-highlight">一、三大角色</a><li><a href=#二at-模式本质 class="table-of-contents__link toc-highlight">二、AT 模式本质</a><li><a href=#三一阶段执行业务并提交本地事务 class="table-of-contents__link toc-highlight">三、一阶段：执行业务并提交本地事务</a><ul><li><a href=#关键步骤拆解 class="table-of-contents__link toc-highlight">关键步骤拆解</a></ul><li><a href=#四二阶段提交-vs-回滚 class="table-of-contents__link toc-highlight">四、二阶段：提交 vs 回滚</a><ul><li><a href=#1-全局提交快乐路径 class="table-of-contents__link toc-highlight">1. 全局提交（快乐路径）</a><li><a href=#2-全局回滚 class="table-of-contents__link toc-highlight">2. 全局回滚</a></ul><li><a href=#五双层锁本地锁--全局锁 class="table-of-contents__link toc-highlight">五、双层锁：本地锁 + 全局锁</a><ul><li><a href=#写写冲突时序 class="table-of-contents__link toc-highlight">写写冲突时序</a><li><a href=#与隔离级别 class="table-of-contents__link toc-highlight">与隔离级别</a></ul><li><a href=#六undolog-与回滚-sql-生成 class="table-of-contents__link toc-highlight">六、UndoLog 与回滚 SQL 生成</a><li><a href=#七性能与可用性要点 class="table-of-contents__link toc-highlight">七、性能与可用性要点</a><li><a href=#八与-xa--tcc-内核对比精简 class="table-of-contents__link toc-highlight">八、与 XA / TCC 内核对比（精简）</a><li><a href=#九总结 class="table-of-contents__link toc-highlight">九、总结</a></ul></div></div></div></div></main></div></div></div><footer class="theme-layout-footer footer footer--dark"><div class="container container-fluid"><div class="footer__bottom text--center"><div class=footer__copyright>Copyright © 2026 AiDocs 架构知识库. 基于 Docusaurus 驱动.</div></div></div></footer></div></body>
