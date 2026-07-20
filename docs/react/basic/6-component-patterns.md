@@ -560,3 +560,655 @@ function Dashboard() {
   );
 }
 ```
+
+---
+
+## 补充案例：各模式实战强化
+
+---
+
+### 受控组件进阶：多字段表单 + 异步提交
+
+实际项目中受控组件通常要处理多字段、统一提交逻辑和异步校验：
+
+```tsx
+import { useState } from 'react';
+
+interface LoginForm {
+  username: string;
+  password: string;
+}
+interface FieldErrors {
+  username?: string;
+  password?: string;
+}
+
+function LoginFormExample() {
+  const [form, setForm] = useState<LoginForm>({ username: '', password: '' });
+  const [errors, setErrors] = useState<FieldErrors>({});
+  const [submitting, setSubmitting] = useState(false);
+
+  // 通用 change handler，通过 name 属性区分字段
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setForm(prev => ({ ...prev, [name]: value }));
+    setErrors(prev => ({ ...prev, [name]: undefined })); // 输入时清除该字段错误
+  };
+
+  const validate = (): boolean => {
+    const newErrors: FieldErrors = {};
+    if (!form.username.trim()) newErrors.username = '用户名不能为空';
+    if (form.password.length < 8) newErrors.password = '密码至少 8 位';
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!validate()) return;
+    setSubmitting(true);
+    try {
+      await new Promise(r => setTimeout(r, 1000)); // 模拟异步登录
+      alert(`登录成功，欢迎 ${form.username}`);
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  return (
+    <form onSubmit={handleSubmit} noValidate>
+      <div>
+        <label>用户名</label>
+        <input
+          name="username"
+          value={form.username}
+          onChange={handleChange}
+          aria-invalid={!!errors.username}
+        />
+        {errors.username && <span style={{ color: 'red' }}>{errors.username}</span>}
+      </div>
+      <div>
+        <label>密码</label>
+        <input
+          type="password"
+          name="password"
+          value={form.password}
+          onChange={handleChange}
+        />
+        {errors.password && <span style={{ color: 'red' }}>{errors.password}</span>}
+      </div>
+      <button type="submit" disabled={submitting}>
+        {submitting ? '登录中...' : '登录'}
+      </button>
+    </form>
+  );
+}
+```
+
+### 受控 vs 非受控选型速查
+
+| 场景 | 推荐方式 |
+|:---|:---|
+| 即时校验、动态联动（省市联动） | 受控组件 |
+| 仅在提交时读取一次值 | 非受控（`useRef`） |
+| 集成第三方 DOM 库（Chart.js 等） | 非受控（`useRef`） |
+| 需要命令式操作（聚焦、清空） | 非受控 + `useImperativeHandle` |
+| 大型多步骤表单 | `react-hook-form`（非受控优先） |
+
+---
+
+### HOC 进阶：数据加载 HOC
+
+除了权限校验，HOC 也常用于统一封装数据请求逻辑，将"加载中/错误/数据就绪"三态从业务组件中剥离：
+
+```tsx
+import React, { useEffect, useState } from 'react';
+
+interface AsyncState<T> {
+  data: T | null;
+  loading: boolean;
+  error: string | null;
+}
+
+// 接收一个异步获取函数，返回增强后的组件
+function withDataFetching<T, P extends object>(
+  WrappedComponent: React.ComponentType<P & { data: T }>,
+  fetchFn: (props: P) => Promise<T>
+) {
+  function DataFetchingComponent(props: P) {
+    const [state, setState] = useState<AsyncState<T>>({
+      data: null,
+      loading: true,
+      error: null,
+    });
+
+    useEffect(() => {
+      let cancelled = false;
+      setState({ data: null, loading: true, error: null });
+
+      fetchFn(props)
+        .then(data => {
+          if (!cancelled) setState({ data, loading: false, error: null });
+        })
+        .catch(err => {
+          if (!cancelled) setState({ data: null, loading: false, error: err.message });
+        });
+
+      return () => { cancelled = true; }; // 清理：防止组件卸载后更新 state
+    }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+    if (state.loading) return <div className="skeleton">加载中...</div>;
+    if (state.error)   return <div className="error-tip">加载失败：{state.error}</div>;
+    if (!state.data)   return null;
+
+    return <WrappedComponent {...props} data={state.data} />;
+  }
+
+  DataFetchingComponent.displayName =
+    `withDataFetching(${WrappedComponent.displayName ?? WrappedComponent.name})`;
+
+  return DataFetchingComponent;
+}
+
+// ── 使用示例 ──────────────────────────────────────────────────────
+interface User { id: number; name: string; email: string; }
+
+function UserCard({ data }: { data: User }) {
+  return (
+    <div className="user-card">
+      <h3>{data.name}</h3>
+      <p>{data.email}</p>
+    </div>
+  );
+}
+
+// 注入数据获取逻辑，UserCard 完全不感知网络请求
+const UserCardWithData = withDataFetching(
+  UserCard,
+  () => fetch('/api/user/1').then(r => r.json())
+);
+
+function App() {
+  return <UserCardWithData />;
+}
+```
+
+---
+
+### Render Props 进阶：可排序数据列表
+
+将排序逻辑封装在 Render Props 容器中，UI 渲染完全由外部决定：
+
+```tsx
+import { useState, useMemo } from 'react';
+
+type SortOrder = 'asc' | 'desc';
+
+interface SortableListProps<T> {
+  items: T[];
+  sortKey: keyof T;
+  render: (sortedItems: T[], order: SortOrder, toggle: () => void) => React.ReactNode;
+}
+
+function SortableList<T>({ items, sortKey, render }: SortableListProps<T>) {
+  const [order, setOrder] = useState<SortOrder>('asc');
+
+  const sorted = useMemo(() => {
+    return [...items].sort((a, b) => {
+      const va = a[sortKey], vb = b[sortKey];
+      if (va < vb) return order === 'asc' ? -1 : 1;
+      if (va > vb) return order === 'asc' ? 1 : -1;
+      return 0;
+    });
+  }, [items, sortKey, order]);
+
+  const toggle = () => setOrder(o => o === 'asc' ? 'desc' : 'asc');
+
+  return <>{render(sorted, order, toggle)}</>;
+}
+
+// ── 同一数据，两种 UI 展示 ────────────────────────────────────────
+interface Product { id: number; name: string; price: number; }
+
+const products: Product[] = [
+  { id: 1, name: 'MacBook Pro', price: 12999 },
+  { id: 2, name: 'iPad Air',    price: 4799  },
+  { id: 3, name: 'AirPods Pro', price: 1899  },
+];
+
+function ProductPage() {
+  return (
+    <div>
+      {/* 展示 1：卡片网格 */}
+      <SortableList
+        items={products}
+        sortKey="price"
+        render={(sorted, order, toggle) => (
+          <>
+            <button onClick={toggle}>
+              价格 {order === 'asc' ? '↑ 升序' : '↓ 降序'}
+            </button>
+            <div style={{ display: 'flex', gap: 12 }}>
+              {sorted.map(p => (
+                <div key={p.id} className="product-card">
+                  <strong>{p.name}</strong>
+                  <span>¥{p.price}</span>
+                </div>
+              ))}
+            </div>
+          </>
+        )}
+      />
+
+      <hr />
+
+      {/* 展示 2：紧凑表格 */}
+      <SortableList
+        items={products}
+        sortKey="name"
+        render={(sorted, order, toggle) => (
+          <table>
+            <thead>
+              <tr>
+                <th onClick={toggle} style={{ cursor: 'pointer' }}>
+                  名称 {order === 'asc' ? '▲' : '▼'}
+                </th>
+                <th>价格</th>
+              </tr>
+            </thead>
+            <tbody>
+              {sorted.map(p => (
+                <tr key={p.id}>
+                  <td>{p.name}</td>
+                  <td>¥{p.price}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        )}
+      />
+    </div>
+  );
+}
+```
+
+---
+
+### 复合组件进阶：Accordion 手风琴
+
+Accordion（手风琴）是复合组件模式的另一个典型案例，每个 Item 管理自身展开状态，父级 Accordion 可控制是否允许多个同时展开：
+
+```tsx
+import React, { createContext, useContext, useState } from 'react';
+
+interface AccordionCtx {
+  openItems: Set<string>;
+  toggle: (id: string) => void;
+  allowMultiple: boolean;
+}
+
+const AccordionContext = createContext<AccordionCtx | null>(null);
+
+function useAccordion() {
+  const ctx = useContext(AccordionContext);
+  if (!ctx) throw new Error('必须在 <Accordion> 内部使用');
+  return ctx;
+}
+
+// ── 父级容器 ──────────────────────────────────────────────────────
+function Accordion({
+  children,
+  allowMultiple = false,
+  defaultOpen = [],
+}: {
+  children: React.ReactNode;
+  allowMultiple?: boolean;
+  defaultOpen?: string[];
+}) {
+  const [openItems, setOpenItems] = useState<Set<string>>(new Set(defaultOpen));
+
+  const toggle = (id: string) => {
+    setOpenItems(prev => {
+      const next = new Set(prev);
+      if (next.has(id)) {
+        next.delete(id);
+      } else {
+        if (!allowMultiple) next.clear(); // 单开模式：先清空
+        next.add(id);
+      }
+      return next;
+    });
+  };
+
+  return (
+    <AccordionContext.Provider value={{ openItems, toggle, allowMultiple }}>
+      <div className="accordion">{children}</div>
+    </AccordionContext.Provider>
+  );
+}
+
+// ── 子组件：每一项 ────────────────────────────────────────────────
+Accordion.Item = function AccordionItem({
+  id,
+  title,
+  children,
+}: {
+  id: string;
+  title: React.ReactNode;
+  children: React.ReactNode;
+}) {
+  const { openItems, toggle } = useAccordion();
+  const isOpen = openItems.has(id);
+
+  return (
+    <div className={`accordion-item ${isOpen ? 'open' : ''}`}>
+      <button
+        className="accordion-trigger"
+        onClick={() => toggle(id)}
+        aria-expanded={isOpen}
+        aria-controls={`panel-${id}`}
+      >
+        {title}
+        <span aria-hidden>{isOpen ? '▲' : '▼'}</span>
+      </button>
+      <div
+        id={`panel-${id}`}
+        role="region"
+        hidden={!isOpen}
+        className="accordion-panel"
+      >
+        {children}
+      </div>
+    </div>
+  );
+};
+
+// ── 使用示例 ──────────────────────────────────────────────────────
+function FaqPage() {
+  return (
+    <Accordion allowMultiple defaultOpen={['q1']}>
+      <Accordion.Item id="q1" title="React 什么时候会触发重渲染？">
+        当组件的 state 或 props 变化时触发。使用 memo/useMemo/useCallback 可以减少不必要的重渲染。
+      </Accordion.Item>
+      <Accordion.Item id="q2" title="HOC 和自定义 Hook 如何选择？">
+        若需要包装组件（修改渲染树），用 HOC；若只需要复用逻辑，优先用自定义 Hook，更简洁类型安全。
+      </Accordion.Item>
+      <Accordion.Item id="q3" title="Portal 和普通组件有何区别？">
+        Portal 改变 DOM 挂载位置但不改变 React 组件树，事件冒泡仍遵循组件树而非 DOM 树。
+      </Accordion.Item>
+    </Accordion>
+  );
+}
+```
+
+---
+
+### 自定义 Hook 进阶：防抖输入 + 本地存储持久化
+
+两个高频实用 Hook，直接覆盖 HOC/Render Props 中最常见的需求：
+
+```tsx
+import { useEffect, useRef, useState } from 'react';
+
+// ── Hook 1：防抖值 useDebounce ────────────────────────────────────
+function useDebounce<T>(value: T, delay = 300): T {
+  const [debounced, setDebounced] = useState(value);
+
+  useEffect(() => {
+    const timer = setTimeout(() => setDebounced(value), delay);
+    return () => clearTimeout(timer); // 每次 value 变化都清除上次的 timer
+  }, [value, delay]);
+
+  return debounced;
+}
+
+// 使用：搜索框防抖（只有停止输入 300ms 后才真正触发搜索）
+function SearchBox() {
+  const [query, setQuery] = useState('');
+  const debouncedQuery = useDebounce(query, 300);
+
+  useEffect(() => {
+    if (!debouncedQuery) return;
+    console.log('发起搜索请求:', debouncedQuery);
+    // fetch(`/api/search?q=${debouncedQuery}`)
+  }, [debouncedQuery]);
+
+  return (
+    <input
+      value={query}
+      onChange={e => setQuery(e.target.value)}
+      placeholder="输入关键词搜索..."
+    />
+  );
+}
+
+// ── Hook 2：localStorage 持久化 useLocalStorage ───────────────────
+function useLocalStorage<T>(key: string, initialValue: T) {
+  const [stored, setStored] = useState<T>(() => {
+    try {
+      const item = window.localStorage.getItem(key);
+      return item ? (JSON.parse(item) as T) : initialValue;
+    } catch {
+      return initialValue;
+    }
+  });
+
+  const setValue = (value: T | ((prev: T) => T)) => {
+    setStored(prev => {
+      const next = typeof value === 'function' ? (value as (p: T) => T)(prev) : value;
+      try {
+        window.localStorage.setItem(key, JSON.stringify(next));
+      } catch {
+        console.warn(`localStorage.setItem("${key}") 失败`);
+      }
+      return next;
+    });
+  };
+
+  const remove = () => {
+    window.localStorage.removeItem(key);
+    setStored(initialValue);
+  };
+
+  return [stored, setValue, remove] as const;
+}
+
+// 使用：主题设置自动持久化
+function ThemeToggle() {
+  const [theme, setTheme] = useLocalStorage<'light' | 'dark'>('app-theme', 'light');
+
+  return (
+    <button onClick={() => setTheme(t => t === 'light' ? 'dark' : 'light')}>
+      当前主题：{theme === 'light' ? '☀️ 亮色' : '🌙 暗色'}（刷新后保留）
+    </button>
+  );
+}
+
+// ── Hook 3：前一个值 usePrevious ──────────────────────────────────
+function usePrevious<T>(value: T): T | undefined {
+  const ref = useRef<T | undefined>(undefined);
+  useEffect(() => {
+    ref.current = value;
+  }); // 每次渲染后同步，不传依赖数组
+  return ref.current; // 返回上一次渲染时的值
+}
+
+// 使用：显示值的变化方向
+function CounterWithDiff() {
+  const [count, setCount] = useState(0);
+  const prevCount = usePrevious(count);
+
+  const diff = prevCount !== undefined ? count - prevCount : 0;
+  const arrow = diff > 0 ? '↑' : diff < 0 ? '↓' : '';
+
+  return (
+    <div>
+      <p>当前：{count} {arrow} （上一次：{prevCount ?? '—'}）</p>
+      <button onClick={() => setCount(c => c + 1)}>+1</button>
+      <button onClick={() => setCount(c => c - 1)}>-1</button>
+    </div>
+  );
+}
+```
+
+---
+
+### 错误边界进阶：细粒度边界策略
+
+不要只在应用顶层放一个大边界。根据模块独立性分层布置，局部崩溃不影响整体：
+
+```tsx
+import { ErrorBoundary } from 'react-error-boundary';
+
+// ── 可复用的轻量 Fallback ─────────────────────────────────────────
+function InlineFallback({ error, resetErrorBoundary }: {
+  error: Error;
+  resetErrorBoundary: () => void;
+}) {
+  return (
+    <div role="alert" style={{ padding: 12, border: '1px solid #f5c6cb', borderRadius: 4 }}>
+      <p style={{ color: '#721c24' }}>⚠️ 此模块加载失败</p>
+      <code style={{ fontSize: 12 }}>{error.message}</code>
+      <br />
+      <button onClick={resetErrorBoundary} style={{ marginTop: 8 }}>重试</button>
+    </div>
+  );
+}
+
+// ── 按功能模块分层包裹 ────────────────────────────────────────────
+function Dashboard() {
+  return (
+    <div className="dashboard">
+      {/* 推荐模块崩溃不影响主内容 */}
+      <ErrorBoundary FallbackComponent={InlineFallback}>
+        <RecommendationWidget />
+      </ErrorBoundary>
+
+      {/* 核心内容区域有自己的边界 */}
+      <ErrorBoundary
+        FallbackComponent={InlineFallback}
+        onError={(error, info) => {
+          // 上报到监控平台（如 Sentry）
+          console.error('[Sentry]', error, info.componentStack);
+        }}
+      >
+        <MainContentArea />
+      </ErrorBoundary>
+
+      {/* 侧边栏独立边界 */}
+      <ErrorBoundary FallbackComponent={InlineFallback}>
+        <Sidebar />
+      </ErrorBoundary>
+    </div>
+  );
+}
+
+// ── 结合 React.lazy 的异步边界 ────────────────────────────────────
+import React, { Suspense, lazy } from 'react';
+
+const HeavyChart = lazy(() => import('./HeavyChart'));
+
+function AnalyticsPage() {
+  return (
+    // ErrorBoundary 在外捕获 lazy 加载失败
+    // Suspense 在内处理 loading 状态
+    <ErrorBoundary FallbackComponent={InlineFallback}>
+      <Suspense fallback={<div>图表加载中...</div>}>
+        <HeavyChart />
+      </Suspense>
+    </ErrorBoundary>
+  );
+}
+```
+
+---
+
+### Portal 进阶：通用 Tooltip 组件
+
+Tooltip 是 Portal 的另一个高频用例，需要动态计算触发元素的位置后在 `body` 上渲染浮层：
+
+```tsx
+import React, { useRef, useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
+
+interface TooltipProps {
+  content: React.ReactNode;
+  children: React.ReactElement;
+  placement?: 'top' | 'bottom';
+}
+
+function Tooltip({ content, children, placement = 'top' }: TooltipProps) {
+  const triggerRef = useRef<HTMLElement>(null);
+  const [visible, setVisible] = useState(false);
+  const [coords, setCoords] = useState({ top: 0, left: 0 });
+
+  const updatePosition = () => {
+    if (!triggerRef.current) return;
+    const rect = triggerRef.current.getBoundingClientRect();
+    setCoords({
+      top: placement === 'top'
+        ? rect.top + window.scrollY - 8  // 8px 间距
+        : rect.bottom + window.scrollY + 8,
+      left: rect.left + window.scrollX + rect.width / 2,
+    });
+  };
+
+  // 将 ref 注入到子元素
+  const trigger = React.cloneElement(children, {
+    ref: triggerRef,
+    onMouseEnter: () => { updatePosition(); setVisible(true); },
+    onMouseLeave: () => setVisible(false),
+    onFocus:      () => { updatePosition(); setVisible(true); },
+    onBlur:       () => setVisible(false),
+  });
+
+  const tooltip = visible
+    ? createPortal(
+        <div
+          role="tooltip"
+          style={{
+            position: 'absolute',
+            top: coords.top,
+            left: coords.left,
+            transform: placement === 'top'
+              ? 'translate(-50%, -100%)'
+              : 'translate(-50%, 0)',
+            background: 'rgba(0,0,0,0.75)',
+            color: '#fff',
+            padding: '4px 8px',
+            borderRadius: 4,
+            fontSize: 12,
+            whiteSpace: 'nowrap',
+            pointerEvents: 'none',
+            zIndex: 9999,
+          }}
+        >
+          {content}
+        </div>,
+        document.body
+      )
+    : null;
+
+  return (
+    <>
+      {trigger}
+      {tooltip}
+    </>
+  );
+}
+
+// 使用
+function ButtonBar() {
+  return (
+    <div style={{ padding: 40 }}>
+      <Tooltip content="删除此条记录，操作不可撤销" placement="top">
+        <button>删除</button>
+      </Tooltip>
+      {'  '}
+      <Tooltip content="导出为 CSV 格式" placement="bottom">
+        <button>导出</button>
+      </Tooltip>
+    </div>
+  );
+}
+```

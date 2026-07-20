@@ -1,0 +1,8 @@
+{
+  "label": "PostgreSQL 数据库",
+  "position": 2,
+  "link": {
+    "type": "doc",
+    "id": "database/postgresql/readme"
+  }
+}

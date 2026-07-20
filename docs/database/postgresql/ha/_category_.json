@@ -1,0 +1,8 @@
+{
+  "label": "3. 高可用与运维实战",
+  "position": 3,
+  "link": {
+    "type": "generated-index",
+    "description": "流复制、逻辑复制、Patroni 高可用、备份恢复与生产运维实战。"
+  }
+}

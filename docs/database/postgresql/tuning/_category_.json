@@ -1,0 +1,8 @@
+{
+  "label": "2. 查询优化与性能调优",
+  "position": 2,
+  "link": {
+    "type": "generated-index",
+    "description": "执行计划解读、统计信息、查询优化器、索引调优与关键参数配置。"
+  }
+}
