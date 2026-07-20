@@ -1,0 +1,8 @@
+{
+  "label": "4. 性能调优与故障排查",
+  "position": 4,
+  "link": {
+    "type": "generated-index",
+    "description": "CPU/内存/磁盘/网络性能分析、线上故障排查方法论与实战案例。"
+  }
+}

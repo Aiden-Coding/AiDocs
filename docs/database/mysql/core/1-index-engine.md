@@ -166,4 +166,4 @@ MySQL 官方及业界提供了多种成熟的高可用方案：
 
 > [!NOTE]
 > 关于高可用集群的架构组成、Paxos 共识机制、自动化部署及故障切换的详细实战步骤，请参考专属文档：
-> [MySQL 高可用集群架构](./ha-clustering.md)。
+> [MySQL 高可用集群架构](../ha/ha-clustering.md)。

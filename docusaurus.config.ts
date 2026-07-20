@@ -141,6 +141,12 @@ const config: Config = {
           label: 'Web 基础',
         },
         {
+          type: 'docSidebar',
+          sidebarId: 'linuxSidebar',
+          position: 'left',
+          label: 'Linux',
+        },
+        {
           href: 'https://github.com/Aiden-Coding/AiDocs',
           className: 'header-github-link',
           position: 'right',
