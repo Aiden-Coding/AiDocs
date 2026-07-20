@@ -1,0 +1,8 @@
+{
+  "label": "高可用",
+  "position": 3,
+  "link": {
+    "type": "generated-index",
+    "description": "主从复制、MGR 集群与高可用架构方案。"
+  }
+}

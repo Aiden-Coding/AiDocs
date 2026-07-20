@@ -1,0 +1,8 @@
+{
+  "label": "核心机制",
+  "position": 1,
+  "link": {
+    "type": "generated-index",
+    "description": "Flink 架构、State/Checkpoint、背压机制与时间水印原理。"
+  }
+}

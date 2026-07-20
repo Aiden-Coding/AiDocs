@@ -44,37 +44,37 @@ mindmap
 
 ## 🚀 第一阶段：引擎基石与运行时架构 (Runtime)
 
-- [运行时架构与执行图解析](1-architecture.md)：全面解析 Flink 云原生部署模型下 TaskManager/JobMaster 的协调关系，深入探究 Slot 共享与隔离机制，以及从逻辑 StreamGraph 经 JobGraph 到物理 ExecutionGraph 的编译内幕。
+- [运行时架构与执行图解析](core/1-architecture.md)：全面解析 Flink 云原生部署模型下 TaskManager/JobMaster 的协调关系，深入探究 Slot 共享与隔离机制，以及从逻辑 StreamGraph 经 JobGraph 到物理 ExecutionGraph 的编译内幕。
 
 ---
 
 ## 💾 第二阶段：状态后端与一致性快照 (State & Checkpoint)
 
-- [状态管理与一致性快照原理](2-state-checkpoint.md)：深度挖掘 Keyed State & Operator State，解析 Flink 基于 Chandy-Lamport 变体的分布式快照 Barrier 机制底色，并推演出真正的端到端恰好一次（Exactly-Once）语义实现。
+- [状态管理与一致性快照原理](core/2-state-checkpoint.md)：深度挖掘 Keyed State & Operator State，解析 Flink 基于 Chandy-Lamport 变体的分布式快照 Barrier 机制底色，并推演出真正的端到端恰好一次（Exactly-Once）语义实现。
 
 ---
 
 ## ⚡ 第三阶段：反压机制与极速容错 (Backpressure & Unaligned Checkpoint)
 
-- [网络流控、反压机制与非对齐快照](3-backpressure.md)：起底基于 Netty Credit-based 网络层传输机制，并针对反压极端下快照对齐超时的痛点，全面解析 Flink 现代非对齐快照（Unaligned Checkpoint）的极速容错实现思路。
+- [网络流控、反压机制与非对齐快照](core/3-backpressure.md)：起底基于 Netty Credit-based 网络层传输机制，并针对反压极端下快照对齐超时的痛点，全面解析 Flink 现代非对齐快照（Unaligned Checkpoint）的极速容错实现思路。
 
 ---
 
 ## ⏱️ 第四阶段：时间语义与窗口计算 (Time & Window)
 
-- [时间语义与 Watermark 机制](4-time-watermark.md)：深入解析 Event Time、Processing Time，以及用于处理乱序数据的核心控制流屏障 Watermark 生成与传递机制。
-- [窗口机制详解](5-windowing.md)：剖析 Tumbling、Sliding、Session 窗口的切分逻辑，及窗口函数、触发器 (Trigger) 和驱逐器 (Evictor) 架构。
+- [时间语义与 Watermark 机制](core/4-time-watermark.md)：深入解析 Event Time、Processing Time，以及用于处理乱序数据的核心控制流屏障 Watermark 生成与传递机制。
+- [窗口机制详解](advanced/5-windowing.md)：剖析 Tumbling、Sliding、Session 窗口的切分逻辑，及窗口函数、触发器 (Trigger) 和驱逐器 (Evictor) 架构。
 
 ---
 
 ## 📊 第五阶段：SQL 与高可用 (SQL & HA)
 
-- [Flink SQL 与表 API](6-flink-sql.md)：解密动态表 (Dynamic Table)、连续查询 (Continuous Query) 及底层 Calcite 优化器。
-- [HA 高可用机制](7-high-availability.md)：详述基于 ZooKeeper / Kubernetes 的 JobManager 故障选举与恢复机制，确保生产 7x24 不间断。
+- [Flink SQL 与表 API](advanced/6-flink-sql.md)：解密动态表 (Dynamic Table)、连续查询 (Continuous Query) 及底层 Calcite 优化器。
+- [HA 高可用机制](advanced/7-high-availability.md)：详述基于 ZooKeeper / Kubernetes 的 JobManager 故障选举与恢复机制，确保生产 7x24 不间断。
 
 ---
 
 ## 🧩 第六阶段：生态连接器与运维实战 (Connectors & Ops)
 
-- [Connector、CDC 与动态数据源](9-connectors-cdc.md)：说明 Flink 连接器模型、Table DDL 源汇定义，以及基于 Flink CDC 的数据库变更流实时同步架构。
-- [Savepoint、恢复与版本迁移](8-savepoint-recovery.md)：讲解 savepoint 与 checkpoint 的本质差异、手动恢复、版本迁移与无损升级实战。
+- [Connector、CDC 与动态数据源](advanced/9-connectors-cdc.md)：说明 Flink 连接器模型、Table DDL 源汇定义，以及基于 Flink CDC 的数据库变更流实时同步架构。
+- [Savepoint、恢复与版本迁移](advanced/8-savepoint-recovery.md)：讲解 savepoint 与 checkpoint 的本质差异、手动恢复、版本迁移与无损升级实战。

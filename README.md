@@ -43,10 +43,10 @@ hide_title: true
 
 ### 4. MySQL 数据库 (Database MySQL)
 
-- [MySQL B+树索引与 InnoDB 引擎](docs/database/mysql/1-index-engine.md)
-- [MySQL MVCC 机制与锁机制](docs/database/mysql/2-mvcc-locks.md)
-- [MySQL 慢 SQL 优化与分库分表](docs/database/mysql/5-optimization.md)
-- [MySQL 日志系统与主从复制原理](docs/database/mysql/3-logs-replication.md)
+- [MySQL B+树索引与 InnoDB 引擎](docs/database/mysql/core/1-index-engine.md)
+- [MySQL MVCC 机制与锁机制](docs/database/mysql/core/2-mvcc-locks.md)
+- [MySQL 慢 SQL 优化与分库分表](docs/database/mysql/tuning/5-optimization.md)
+- [MySQL 日志系统与主从复制原理](docs/database/mysql/core/3-logs-replication.md)
 
 ### 5. Redis 缓存 (Cache Redis)
 

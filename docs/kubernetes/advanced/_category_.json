@@ -1,0 +1,8 @@
+{
+  "label": "进阶运维",
+  "position": 2,
+  "link": {
+    "type": "generated-index",
+    "description": "高级调度策略、RBAC 安全与生产故障排查。"
+  }
+}

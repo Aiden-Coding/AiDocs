@@ -1,0 +1,8 @@
+{
+  "label": "基础入门",
+  "position": 1,
+  "link": {
+    "type": "generated-index",
+    "description": "K8s 快速上手、集群架构、网络模型与存储体系。"
+  }
+}

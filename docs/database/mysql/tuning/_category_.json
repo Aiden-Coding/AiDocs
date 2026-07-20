@@ -1,0 +1,8 @@
+{
+  "label": "性能调优",
+  "position": 2,
+  "link": {
+    "type": "generated-index",
+    "description": "SQL 调优、执行计划、参数优化与分库分表实战。"
+  }
+}
