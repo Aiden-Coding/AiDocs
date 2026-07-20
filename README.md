@@ -93,3 +93,5 @@ npm run start
 ```bash
 npm run build
 ```
+
+release
