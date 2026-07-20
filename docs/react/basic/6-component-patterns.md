@@ -431,6 +431,8 @@ function SearchBox() {
 **优化版：** 支持立即执行（leading edge）
 
 ```tsx
+import { useEffect, useState, useRef } from 'react';
+
 function useDebounce<T>(value: T, delay = 300, options = { leading: false }): T {
   const [debounced, setDebounced] = useState<T>(value);
   const isLeadingRef = useRef(true);
@@ -516,23 +518,42 @@ function ThemeToggle() {
 
 ```tsx
 function useLocalStorage<T>(key: string, initialValue: T) {
-  const [stored, setStored] = useState<T>(/* ... */);
+  const [stored, setStored] = useState<T>(() => {
+    try {
+      const item = window.localStorage.getItem(key);
+      return item ? (JSON.parse(item) as T) : initialValue;
+    } catch {
+      return initialValue;
+    }
+  });
 
-  // 监听其他标签页的变化
   useEffect(() => {
     const handleStorageChange = (e: StorageEvent) => {
-      if (e.key === key && e.newValue) {
+      if (e.key === key) {
         try {
-          setStored(JSON.parse(e.newValue));
-        } catch {}
+          setStored(e.newValue ? (JSON.parse(e.newValue) as T) : initialValue);
+        } catch {
+          // ignore invalid JSON
+        }
       }
     };
 
     window.addEventListener('storage', handleStorageChange);
     return () => window.removeEventListener('storage', handleStorageChange);
-  }, [key]);
+  }, [key, initialValue]);
 
-  // ... 其他代码
+  const setValue = (value: T | ((prev: T) => T)) => {
+    setStored(prev => {
+      const valueToStore = value instanceof Function ? value(prev) : value;
+      window.localStorage.setItem(key, JSON.stringify(valueToStore));
+      return valueToStore;
+    });
+  };
+
+  const remove = () => {
+    window.localStorage.removeItem(key);
+    setStored(initialValue);
+  };
 
   return [stored, setValue, remove] as const;
 }
@@ -647,12 +668,14 @@ function useFetch<T>(url: string, options?: RequestInit): UseFetchResult<T> {
     return () => {
       abortControllerRef.current?.abort();
     };
-  }, [url, trigger]);
+  }, [url, trigger, options]);
 
   const refetch = () => setTrigger(prev => prev + 1);
 
   return { data, loading, error, refetch };
 }
+
+> 说明：`options` 对象应保持稳定，或在外部 memoize，否则依赖变化会重复触发请求。同样，外部传入的 `url` 和 `options` 都应为可预测值。
 
 // 使用
 function UserProfile({ userId }: { userId: number }) {
@@ -917,21 +940,41 @@ function Parent() {
 
 #### 实用 Hook：`usePortal`
 
-封装 Portal 创建逻辑：
+封装 Portal 创建逻辑，并处理客户端渲染与容器清理：
 
 ```tsx
+import { useEffect, useState } from 'react';
+import { createPortal } from 'react-dom';
+
 function usePortal(id = 'portal-root') {
-  const [container] = useState(() => {
+  const [container, setContainer] = useState<HTMLElement | null>(null);
+
+  useEffect(() => {
+    if (typeof document === 'undefined') return;
+
     let el = document.getElementById(id);
+    let created = false;
+
     if (!el) {
       el = document.createElement('div');
       el.id = id;
       document.body.appendChild(el);
+      created = true;
     }
-    return el;
-  });
 
-  return (node: React.ReactNode) => createPortal(node, container);
+    setContainer(el);
+
+    return () => {
+      if (created && el?.parentNode) {
+        el.parentNode.removeChild(el);
+      }
+    };
+  }, [id]);
+
+  return (node: React.ReactNode) => {
+    if (!container) return null;
+    return createPortal(node, container);
+  };
 }
 
 // 使用：极简 Modal
@@ -940,6 +983,8 @@ function SimpleModal({ isOpen, children }: any) {
   return isOpen ? renderPortal(<div className="modal">{children}</div>) : null;
 }
 ```
+
+> 说明：这种实现确保 `document` 仅在浏览器环境中访问，避免 SSR 报错；如果 Hook 创建了新容器，组件卸载时会自动清理。
 
 ### 4.3 进阶案例：Tooltip 组件
 
@@ -1203,6 +1248,8 @@ const SecuredDashboard = withAuth(Dashboard);
 
 HOC 返回新组件，直接传 ref 只会绑定到外层。需用 `forwardRef` 转发：
 
+> 说明：如果 HOC 包装函数还需要保留静态属性（例如 `defaultProps`、`displayName`、`WrappedComponent`），请结合 `hoist-non-react-statics` 保留静态成员。
+
 ```tsx
 function withLogging<T>(WrappedComponent: React.ComponentType<T>) {
   class LogComponent extends React.Component<T> {
@@ -1289,7 +1336,6 @@ function withDataFetching<T, P extends object>(
   DataComponent.displayName = `withDataFetching(${WrappedComponent.displayName ?? WrappedComponent.name})`;
   return DataComponent;
 }
-}
 
 // 使用示例
 interface User { id: number; name: string; email: string; }
@@ -1340,6 +1386,8 @@ function MouseTracker({ render }: { render: (pos: { x: number; y: number }) => R
 ### 7.2 生产案例：可排序列表
 
 将排序逻辑封装，UI 完全由外部决定：
+
+> 说明：Render Props 本质上是将“逻辑与渲染路径”拆分，但外部传入的渲染函数会在每次父组件渲染时重新创建。对于性能敏感场景，最好用 `useCallback` 或稳定的函数引用，或者直接改为自定义 Hook + children 组件。
 
 ```tsx
 import { useState, useMemo } from 'react';
@@ -1534,7 +1582,7 @@ useMousePosition.displayName = 'useMousePosition';
 
 **性能分析：**
 ```tsx
-import { useStrictMode } from 'react';
+import React from 'react';
 
 // 开发环境启用严格模式检查
 <React.StrictMode>
@@ -1559,25 +1607,30 @@ import { useStrictMode } from 'react';
 
 **useTransition 优化表单：**
 ```tsx
+import { useState, useTransition } from 'react';
+
 function SearchForm() {
   const [isPending, startTransition] = useTransition();
   const [query, setQuery] = useState('');
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setQuery(e.target.value);
+    const nextValue = e.target.value;
+    setQuery(nextValue);
     startTransition(() => {
       // 搜索逻辑，可被新输入中断
-      fetchSearchResults(e.target.value);
+      fetchSearchResults(nextValue);
     });
   };
 
   return (
-    <input
-      value={query}
-      onChange={handleChange}
-      placeholder="输入搜索..."
-    />
-    {isPending && <span>搜索中...</span>}
+    <>
+      <input
+        value={query}
+        onChange={handleChange}
+        placeholder="输入搜索..."
+      />
+      {isPending && <span>搜索中...</span>}
+    </>
   );
 }
 ```
