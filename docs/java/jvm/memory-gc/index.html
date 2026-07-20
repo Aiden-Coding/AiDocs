@@ -1,54 +1,74 @@
-<!doctype html><html lang=zh-Hans dir=ltr class="docs-wrapper plugin-docs plugin-id-default docs-version-current docs-doc-page docs-doc-id-java/jvm/memory-gc" data-has-hydrated=false><head><meta charset=UTF-8><meta name=generator content="Docusaurus v3.10.2"><title data-rh=true>JVM 内存模型与垃圾回收机制 | Ai文档</title><meta data-rh=true name=viewport content="width=device-width, initial-scale=1.0"/><meta data-rh=true name=twitter:card content=summary_large_image /><meta data-rh=true property=og:image content=https://github.com/AiDocs/img/social-card.webp /><meta data-rh=true name=twitter:image content=https://github.com/AiDocs/img/social-card.webp /><meta data-rh=true property=og:url content=https://github.com/AiDocs/docs/java/jvm/memory-gc /><meta data-rh=true property=og:locale content=zh_Hans /><meta data-rh=true name=docusaurus_locale content=zh-Hans /><meta data-rh=true name=docsearch:language content=zh-Hans /><meta data-rh=true name=docusaurus_version content=current /><meta data-rh=true name=docusaurus_tag content=docs-default-current /><meta data-rh=true name=docsearch:version content=current /><meta data-rh=true name=docsearch:docusaurus_tag content=docs-default-current /><meta data-rh=true property=og:title content="JVM 内存模型与垃圾回收机制 | Ai文档"/><meta data-rh=true name=description content="JVM 内存模型与垃圾回收机制"/><meta data-rh=true property=og:description content="JVM 内存模型与垃圾回收机制"/><link data-rh=true rel=icon href=/AiDocs/img/favicon.ico /><link data-rh=true rel=canonical href=https://github.com/AiDocs/docs/java/jvm/memory-gc /><link data-rh=true rel=alternate href=https://github.com/AiDocs/docs/java/jvm/memory-gc hreflang=zh-Hans /><link data-rh=true rel=alternate href=https://github.com/AiDocs/docs/java/jvm/memory-gc hreflang=x-default /><script data-rh=true type=application/ld+json>{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","item":"https://github.com/AiDocs/docs/category/3-jvm-虚拟机内核","name":"3. JVM 虚拟机内核","position":1},{"@type":"ListItem","item":"https://github.com/AiDocs/docs/java/jvm/memory-gc","name":"内存模型与 GC","position":2}]}</script><link rel=stylesheet href=https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css type=text/css integrity=sha384-n8MVd4RsNIBMW3Zksd/cgGfpkkcg23OqxEnQl9o23PppNwe/eB84kLtyzzN3lft9 crossorigin=anonymous><link rel=stylesheet href=/AiDocs/assets/css/styles.0d18f9a1.css /><script src=/AiDocs/assets/js/runtime~main.bd4d2b6c.js defer></script><script src=/AiDocs/assets/js/main.823be56f.js defer></script></head><body><svg style="display: none;"><defs>
+<!doctype html><html lang=zh-Hans dir=ltr class="docs-wrapper plugin-docs plugin-id-default docs-version-current docs-doc-page docs-doc-id-java/jvm/memory-gc" data-has-hydrated=false><head><meta charset=UTF-8><meta name=generator content="Docusaurus v3.10.2"><title data-rh=true>JVM 内存模型与垃圾回收机制 | Ai文档</title><meta data-rh=true name=viewport content="width=device-width, initial-scale=1.0"/><meta data-rh=true name=twitter:card content=summary_large_image /><meta data-rh=true property=og:image content=https://github.com/AiDocs/img/social-card.webp /><meta data-rh=true name=twitter:image content=https://github.com/AiDocs/img/social-card.webp /><meta data-rh=true property=og:url content=https://github.com/AiDocs/docs/java/jvm/memory-gc /><meta data-rh=true property=og:locale content=zh_Hans /><meta data-rh=true name=docusaurus_locale content=zh-Hans /><meta data-rh=true name=docsearch:language content=zh-Hans /><meta data-rh=true name=docusaurus_version content=current /><meta data-rh=true name=docusaurus_tag content=docs-default-current /><meta data-rh=true name=docsearch:version content=current /><meta data-rh=true name=docsearch:docusaurus_tag content=docs-default-current /><meta data-rh=true property=og:title content="JVM 内存模型与垃圾回收机制 | Ai文档"/><meta data-rh=true name=description content="JVM 内存模型与垃圾回收机制"/><meta data-rh=true property=og:description content="JVM 内存模型与垃圾回收机制"/><link data-rh=true rel=icon href=/AiDocs/img/favicon.ico /><link data-rh=true rel=canonical href=https://github.com/AiDocs/docs/java/jvm/memory-gc /><link data-rh=true rel=alternate href=https://github.com/AiDocs/docs/java/jvm/memory-gc hreflang=zh-Hans /><link data-rh=true rel=alternate href=https://github.com/AiDocs/docs/java/jvm/memory-gc hreflang=x-default /><script data-rh=true type=application/ld+json>{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","item":"https://github.com/AiDocs/docs/category/3-jvm-虚拟机内核","name":"3. JVM 虚拟机内核","position":1},{"@type":"ListItem","item":"https://github.com/AiDocs/docs/java/jvm/memory-gc","name":"内存模型与 GC","position":2}]}</script><link rel=stylesheet href=https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css type=text/css integrity=sha384-n8MVd4RsNIBMW3Zksd/cgGfpkkcg23OqxEnQl9o23PppNwe/eB84kLtyzzN3lft9 crossorigin=anonymous><link rel=stylesheet href=/AiDocs/assets/css/styles.3f833245.css /><script src=/AiDocs/assets/js/runtime~main.677c5f32.js defer></script><script src=/AiDocs/assets/js/main.6e1b4d2b.js defer></script></head><body><svg style="display: none;"><defs>
 <symbol id=theme-svg-external-link viewBox="0 0 24 24"><path fill=currentColor d="M21 13v10h-21v-19h12v2h-10v15h17v-8h2zm3-12h-10.988l4.035 4-6.977 7.07 2.828 2.828 6.977-7.07 4.125 4.172v-11z"/></symbol>
 </defs></svg>
-<script>!function(){var t=function(){try{return new URLSearchParams(window.location.search).get("docusaurus-theme")}catch(t){}}()||function(){try{return window.localStorage.getItem("theme-92a")}catch(t){}}();document.documentElement.setAttribute("data-theme",t||(window.matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light")),document.documentElement.setAttribute("data-theme-choice",t||"system")}(),function(){try{for(var[t,e]of new URLSearchParams(window.location.search).entries())if(t.startsWith("docusaurus-data-")){var a=t.replace("docusaurus-data-","data-");document.documentElement.setAttribute(a,e)}}catch(t){}}()</script><div id=__docusaurus><link rel=preload as=image href=/AiDocs/img/logo.webp /><div role=region aria-label=跳到主要内容><a class=skipToContent_fXgn href=#__docusaurus_skipToContent_fallback>跳到主要内容</a></div><nav aria-label=主导航 class="theme-layout-navbar navbar navbar--fixed-top"><div class=navbar__inner><div class="theme-layout-navbar-left navbar__items"><button aria-label=切换导航栏 aria-expanded=false class="navbar__toggle clean-btn" type=button><svg width=30 height=30 viewBox="0 0 30 30" aria-hidden=true><path stroke=currentColor stroke-linecap=round stroke-miterlimit=10 stroke-width=2 d="M4 7h22M4 15h22M4 23h22"/></svg></button><a class=navbar__brand href=/AiDocs/><div class=navbar__logo><img src=/AiDocs/img/logo.webp alt="Ai文档 Logo" class="themedComponent_mlkZ themedComponent--light_NVdE"/><img src=/AiDocs/img/logo.webp alt="Ai文档 Logo" class="themedComponent_mlkZ themedComponent--dark_xIcU"/></div><b class="navbar__title text--truncate">Ai文档</b></a><a class="navbar__item navbar__link" href=/AiDocs/docs/>体系介绍</a><a class="navbar__item navbar__link" href=/AiDocs/docs/category/java-后端>面试</a><a aria-current=page class="navbar__item navbar__link navbar__link--active" href=/AiDocs/docs/java/>Java</a><a class="navbar__item navbar__link" href=/AiDocs/docs/database/mysql/>数据库</a><a class="navbar__item navbar__link" href=/AiDocs/docs/cache/redis/>缓存</a><a class="navbar__item navbar__link" href=/AiDocs/docs/distributed/system/>分布式</a><a class="navbar__item navbar__link" href=/AiDocs/docs/rust/title-page>Rust</a><a class="navbar__item navbar__link" href=/AiDocs/docs/react/>React</a><a class="navbar__item navbar__link" href=/AiDocs/docs/web-basics/modern-javascript>Web 基础</a><a class="navbar__item navbar__link" href=/AiDocs/docs/linux/>Linux</a></div><div class="theme-layout-navbar-right navbar__items navbar__items--right"><a href=https://github.com/Aiden-Coding/AiDocs target=_blank rel="noopener noreferrer" class="navbar__item navbar__link header-github-link"></a><div class="toggle_vylO colorModeToggle_DEke"><button class="clean-btn toggleButton_gllP toggleButtonDisabled_aARS" type=button disabled title="system mode" aria-label="切换浅色/暗黑模式（当前为system mode）"><svg viewBox="0 0 24 24" width=24 height=24 aria-hidden=true class="toggleIcon_g3eP lightToggleIcon_pyhR"><path fill=currentColor d="M12,9c1.65,0,3,1.35,3,3s-1.35,3-3,3s-3-1.35-3-3S10.35,9,12,9 M12,7c-2.76,0-5,2.24-5,5s2.24,5,5,5s5-2.24,5-5 S14.76,7,12,7L12,7z M2,13l2,0c0.55,0,1-0.45,1-1s-0.45-1-1-1l-2,0c-0.55,0-1,0.45-1,1S1.45,13,2,13z M20,13l2,0c0.55,0,1-0.45,1-1 s-0.45-1-1-1l-2,0c-0.55,0-1,0.45-1,1S19.45,13,20,13z M11,2v2c0,0.55,0.45,1,1,1s1-0.45,1-1V2c0-0.55-0.45-1-1-1S11,1.45,11,2z M11,20v2c0,0.55,0.45,1,1,1s1-0.45,1-1v-2c0-0.55-0.45-1-1-1C11.45,19,11,19.45,11,20z M5.99,4.58c-0.39-0.39-1.03-0.39-1.41,0 c-0.39,0.39-0.39,1.03,0,1.41l1.06,1.06c0.39,0.39,1.03,0.39,1.41,0s0.39-1.03,0-1.41L5.99,4.58z M18.36,16.95 c-0.39-0.39-1.03-0.39-1.41,0c-0.39,0.39-0.39,1.03,0,1.41l1.06,1.06c0.39,0.39,1.03,0.39,1.41,0c0.39-0.39,0.39-1.03,0-1.41 L18.36,16.95z M19.42,5.99c0.39-0.39,0.39-1.03,0-1.41c-0.39-0.39-1.03-0.39-1.41,0l-1.06,1.06c-0.39,0.39-0.39,1.03,0,1.41 s1.03,0.39,1.41,0L19.42,5.99z M7.05,18.36c0.39-0.39,0.39-1.03,0-1.41c-0.39-0.39-1.03-0.39-1.41,0l-1.06,1.06 c-0.39,0.39-0.39,1.03,0,1.41s1.03,0.39,1.41,0L7.05,18.36z"/></svg><svg viewBox="0 0 24 24" width=24 height=24 aria-hidden=true class="toggleIcon_g3eP darkToggleIcon_wfgR"><path fill=currentColor d="M9.37,5.51C9.19,6.15,9.1,6.82,9.1,7.5c0,4.08,3.32,7.4,7.4,7.4c0.68,0,1.35-0.09,1.99-0.27C17.45,17.19,14.93,19,12,19 c-3.86,0-7-3.14-7-7C5,9.07,6.81,6.55,9.37,5.51z M12,3c-4.97,0-9,4.03-9,9s4.03,9,9,9s9-4.03,9-9c0-0.46-0.04-0.92-0.1-1.36 c-0.98,1.37-2.58,2.26-4.4,2.26c-2.98,0-5.4-2.42-5.4-5.4c0-1.81,0.89-3.42,2.26-4.4C12.92,3.04,12.46,3,12,3L12,3z"/></svg><svg viewBox="0 0 24 24" width=24 height=24 aria-hidden=true class="toggleIcon_g3eP systemToggleIcon_QzmC"><path fill=currentColor d="m12 21c4.971 0 9-4.029 9-9s-4.029-9-9-9-9 4.029-9 9 4.029 9 9 9zm4.95-13.95c1.313 1.313 2.05 3.093 2.05 4.95s-0.738 3.637-2.05 4.95c-1.313 1.313-3.093 2.05-4.95 2.05v-14c1.857 0 3.637 0.737 4.95 2.05z"/></svg></button></div><div class=navbarSearchContainer_Bca1></div></div></div><div role=presentation class=navbar-sidebar__backdrop></div></nav><div id=__docusaurus_skipToContent_fallback class="theme-layout-main main-wrapper mainWrapper_z2l0"><div class=docsWrapper_hBAB><button aria-label=回到顶部 class="clean-btn theme-back-to-top-button backToTopButton_sjWU" type=button></button><div class=docRoot_UBD9><aside class="theme-doc-sidebar-container docSidebarContainer_YfHR"><div class=sidebarViewport_aRkj><div class=sidebar_njMd><nav aria-label=文档侧边栏 class="menu thin-scrollbar menu_SIkG"><ul class="theme-doc-sidebar-menu menu__list"><li class="theme-doc-sidebar-item-category theme-doc-sidebar-item-category-level-1 menu__list-item"><div class=menu__list-item-collapsible><a class="categoryLink_byQd menu__link menu__link--sublist menu__link--sublist-caret menu__link--active" role=button aria-expanded=true href=/AiDocs/docs/java/><span class=categoryLinkLabel_W154>Java Core</span></a></div><ul class=menu__list><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class=menu__link tabindex=0 href=/AiDocs/docs/java/><span class=linkLabel_WmDU>介绍 & 路线图</span></a><li class="theme-doc-sidebar-item-category theme-doc-sidebar-item-category-level-2 menu__list-item menu__list-item--collapsed"><div class=menu__list-item-collapsible><a class="categoryLink_byQd menu__link menu__link--sublist" tabindex=0 href=/AiDocs/docs/category/1-java-基础与容器><span class=categoryLinkLabel_W154>1. Java 基础与容器</span></a><button aria-label="展开侧边栏分类 '1. Java 基础与容器'" aria-expanded=false type=button class="clean-btn menu__caret"></button></div><li class="theme-doc-sidebar-item-category theme-doc-sidebar-item-category-level-2 menu__list-item menu__list-item--collapsed"><div class=menu__list-item-collapsible><a class="categoryLink_byQd menu__link menu__link--sublist" tabindex=0 href=/AiDocs/docs/category/2-juc-并发编程><span class=categoryLinkLabel_W154>2. JUC 并发编程</span></a><button aria-label="展开侧边栏分类 '2. JUC 并发编程'" aria-expanded=false type=button class="clean-btn menu__caret"></button></div><li class="theme-doc-sidebar-item-category theme-doc-sidebar-item-category-level-2 menu__list-item"><div class=menu__list-item-collapsible><a class="categoryLink_byQd menu__link menu__link--sublist menu__link--active" tabindex=0 href=/AiDocs/docs/category/3-jvm-虚拟机内核><span class=categoryLinkLabel_W154>3. JVM 虚拟机内核</span></a><button aria-label="折叠侧边栏分类 '3. JVM 虚拟机内核'" aria-expanded=true type=button class="clean-btn menu__caret"></button></div><ul class=menu__list><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-3 menu__list-item"><a class="menu__link menu__link--active" aria-current=page tabindex=0 href=/AiDocs/docs/java/jvm/memory-gc><span class=linkLabel_WmDU>内存模型与 GC</span></a><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-3 menu__list-item"><a class=menu__link tabindex=0 href=/AiDocs/docs/java/jvm/classloader-bytecode><span class=linkLabel_WmDU>类加载与字节码</span></a><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-3 menu__list-item"><a class=menu__link tabindex=0 href=/AiDocs/docs/java/jvm/escape-analysis><span class=linkLabel_WmDU>逃逸分析与 JIT 优化</span></a><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-3 menu__list-item"><a class=menu__link tabindex=0 href=/AiDocs/docs/java/jvm/tuning-tools><span class=linkLabel_WmDU>调优实战与工具</span></a><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-3 menu__list-item"><a class=menu__link tabindex=0 href=/AiDocs/docs/java/jvm/prod-troubleshooting-cases><span class=linkLabel_WmDU>生产故障排障案例</span></a><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-3 menu__list-item"><a class=menu__link tabindex=0 href=/AiDocs/docs/java/jvm/prod-practice><span class=linkLabel_WmDU>生产参数与 GC 诊断</span></a></ul><li class="theme-doc-sidebar-item-category theme-doc-sidebar-item-category-level-2 menu__list-item menu__list-item--collapsed"><div class=menu__list-item-collapsible><a class="categoryLink_byQd menu__link menu__link--sublist" tabindex=0 href=/AiDocs/docs/category/4-spring-核心与生态><span class=categoryLinkLabel_W154>4. Spring 核心与生态</span></a><button aria-label="展开侧边栏分类 '4. Spring 核心与生态'" aria-expanded=false type=button class="clean-btn menu__caret"></button></div><li class="theme-doc-sidebar-item-category theme-doc-sidebar-item-category-level-2 menu__list-item menu__list-item--collapsed"><div class=menu__list-item-collapsible><a class="categoryLink_byQd menu__link menu__link--sublist" tabindex=0 href=/AiDocs/docs/category/5-持久层与连接池><span class=categoryLinkLabel_W154>5. 持久层与连接池</span></a><button aria-label="展开侧边栏分类 '5. 持久层与连接池'" aria-expanded=false type=button class="clean-btn menu__caret"></button></div><li class="theme-doc-sidebar-item-category theme-doc-sidebar-item-category-level-2 menu__list-item menu__list-item--collapsed"><div class=menu__list-item-collapsible><a class="categoryLink_byQd menu__link menu__link--sublist" tabindex=0 href=/AiDocs/docs/category/6-高性能网络通信><span class=categoryLinkLabel_W154>6. 高性能网络通信</span></a><button aria-label="展开侧边栏分类 '6. 高性能网络通信'" aria-expanded=false type=button class="clean-btn menu__caret"></button></div></ul></ul></nav></div></div></aside><main class=docMainContainer_TBSr><div class="container padding-top--md padding-bottom--lg"><div class=row><div class="col docItemCol_VOVn"><div class=docItemContainer_Djhp><article><nav class="theme-doc-breadcrumbs breadcrumbsContainer_Z_bl" aria-label=页面路径><ul class=breadcrumbs><li class=breadcrumbs__item><a aria-label=主页面 class=breadcrumbs__link href=/AiDocs/><svg viewBox="0 0 24 24" class=breadcrumbHomeIcon_YNFT><path d="M10 19v-5h4v5c0 .55.45 1 1 1h3c.55 0 1-.45 1-1v-7h1.7c.46 0 .68-.57.33-.87L12.67 3.6c-.38-.34-.96-.34-1.34 0l-8.36 7.53c-.34.3-.13.87.33.87H5v7c0 .55.45 1 1 1h3c.55 0 1-.45 1-1z" fill=currentColor /></svg></a><li class=breadcrumbs__item><span class=breadcrumbs__link>Java Core</span><li class=breadcrumbs__item><a class=breadcrumbs__link href=/AiDocs/docs/category/3-jvm-虚拟机内核><span>3. JVM 虚拟机内核</span></a><li class="breadcrumbs__item breadcrumbs__item--active"><span class=breadcrumbs__link>内存模型与 GC</span></ul></nav><div class="tocCollapsible_ETCw theme-doc-toc-mobile tocMobile_ITEo"><button type=button class="clean-btn tocCollapsibleButton_TO0P">本页总览</button></div><div class="theme-doc-markdown markdown"><h2 class="anchor anchorTargetStickyNavbar_Vzrq" id=jvm-内存模型与垃圾回收机制>JVM 内存模型与垃圾回收机制<a href=#jvm-内存模型与垃圾回收机制 class=hash-link aria-label="JVM 内存模型与垃圾回收机制的直接链接" title="JVM 内存模型与垃圾回收机制的直接链接" translate=no>​</a></h2>
+<script>!function(){var t=function(){try{return new URLSearchParams(window.location.search).get("docusaurus-theme")}catch(t){}}()||function(){try{return window.localStorage.getItem("theme-92a")}catch(t){}}();document.documentElement.setAttribute("data-theme",t||(window.matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light")),document.documentElement.setAttribute("data-theme-choice",t||"system")}(),function(){try{for(var[t,e]of new URLSearchParams(window.location.search).entries())if(t.startsWith("docusaurus-data-")){var a=t.replace("docusaurus-data-","data-");document.documentElement.setAttribute(a,e)}}catch(t){}}()</script><div id=__docusaurus><link rel=preload as=image href=/AiDocs/img/logo.webp /><div role=region aria-label=跳到主要内容><a class=skipToContent_fXgn href=#__docusaurus_skipToContent_fallback>跳到主要内容</a></div><nav aria-label=主导航 class="theme-layout-navbar navbar navbar--fixed-top"><div class=navbar__inner><div class="theme-layout-navbar-left navbar__items"><button aria-label=切换导航栏 aria-expanded=false class="navbar__toggle clean-btn" type=button><svg width=30 height=30 viewBox="0 0 30 30" aria-hidden=true><path stroke=currentColor stroke-linecap=round stroke-miterlimit=10 stroke-width=2 d="M4 7h22M4 15h22M4 23h22"/></svg></button><a class=navbar__brand href=/AiDocs/><div class=navbar__logo><img src=/AiDocs/img/logo.webp alt="Ai文档 Logo" class="themedComponent_mlkZ themedComponent--light_NVdE"/><img src=/AiDocs/img/logo.webp alt="Ai文档 Logo" class="themedComponent_mlkZ themedComponent--dark_xIcU"/></div><b class="navbar__title text--truncate">Ai文档</b></a><a class="navbar__item navbar__link" href=/AiDocs/docs/>体系介绍</a><a class="navbar__item navbar__link" href=/AiDocs/docs/category/java-后端>面试</a><a aria-current=page class="navbar__item navbar__link navbar__link--active" href=/AiDocs/docs/java/>Java</a><a class="navbar__item navbar__link" href=/AiDocs/docs/database/mysql/>数据库</a><a class="navbar__item navbar__link" href=/AiDocs/docs/cache/redis/>缓存</a><a class="navbar__item navbar__link" href=/AiDocs/docs/distributed/system/>分布式</a><a class="navbar__item navbar__link" href=/AiDocs/docs/rust/title-page>Rust</a><a class="navbar__item navbar__link" href=/AiDocs/docs/react/>React</a><a class="navbar__item navbar__link" href=/AiDocs/docs/web-basics/modern-javascript>Web 基础</a><a class="navbar__item navbar__link" href=/AiDocs/docs/linux/>Linux</a></div><div class="theme-layout-navbar-right navbar__items navbar__items--right"><a href=https://github.com/Aiden-Coding/AiDocs target=_blank rel="noopener noreferrer" class="navbar__item navbar__link header-github-link"></a><div class="toggle_vylO colorModeToggle_DEke"><button class="clean-btn toggleButton_gllP toggleButtonDisabled_aARS" type=button disabled title="system mode" aria-label="切换浅色/暗黑模式（当前为system mode）"><svg viewBox="0 0 24 24" width=24 height=24 aria-hidden=true class="toggleIcon_g3eP lightToggleIcon_pyhR"><path fill=currentColor d="M12,9c1.65,0,3,1.35,3,3s-1.35,3-3,3s-3-1.35-3-3S10.35,9,12,9 M12,7c-2.76,0-5,2.24-5,5s2.24,5,5,5s5-2.24,5-5 S14.76,7,12,7L12,7z M2,13l2,0c0.55,0,1-0.45,1-1s-0.45-1-1-1l-2,0c-0.55,0-1,0.45-1,1S1.45,13,2,13z M20,13l2,0c0.55,0,1-0.45,1-1 s-0.45-1-1-1l-2,0c-0.55,0-1,0.45-1,1S19.45,13,20,13z M11,2v2c0,0.55,0.45,1,1,1s1-0.45,1-1V2c0-0.55-0.45-1-1-1S11,1.45,11,2z M11,20v2c0,0.55,0.45,1,1,1s1-0.45,1-1v-2c0-0.55-0.45-1-1-1C11.45,19,11,19.45,11,20z M5.99,4.58c-0.39-0.39-1.03-0.39-1.41,0 c-0.39,0.39-0.39,1.03,0,1.41l1.06,1.06c0.39,0.39,1.03,0.39,1.41,0s0.39-1.03,0-1.41L5.99,4.58z M18.36,16.95 c-0.39-0.39-1.03-0.39-1.41,0c-0.39,0.39-0.39,1.03,0,1.41l1.06,1.06c0.39,0.39,1.03,0.39,1.41,0c0.39-0.39,0.39-1.03,0-1.41 L18.36,16.95z M19.42,5.99c0.39-0.39,0.39-1.03,0-1.41c-0.39-0.39-1.03-0.39-1.41,0l-1.06,1.06c-0.39,0.39-0.39,1.03,0,1.41 s1.03,0.39,1.41,0L19.42,5.99z M7.05,18.36c0.39-0.39,0.39-1.03,0-1.41c-0.39-0.39-1.03-0.39-1.41,0l-1.06,1.06 c-0.39,0.39-0.39,1.03,0,1.41s1.03,0.39,1.41,0L7.05,18.36z"/></svg><svg viewBox="0 0 24 24" width=24 height=24 aria-hidden=true class="toggleIcon_g3eP darkToggleIcon_wfgR"><path fill=currentColor d="M9.37,5.51C9.19,6.15,9.1,6.82,9.1,7.5c0,4.08,3.32,7.4,7.4,7.4c0.68,0,1.35-0.09,1.99-0.27C17.45,17.19,14.93,19,12,19 c-3.86,0-7-3.14-7-7C5,9.07,6.81,6.55,9.37,5.51z M12,3c-4.97,0-9,4.03-9,9s4.03,9,9,9s9-4.03,9-9c0-0.46-0.04-0.92-0.1-1.36 c-0.98,1.37-2.58,2.26-4.4,2.26c-2.98,0-5.4-2.42-5.4-5.4c0-1.81,0.89-3.42,2.26-4.4C12.92,3.04,12.46,3,12,3L12,3z"/></svg><svg viewBox="0 0 24 24" width=24 height=24 aria-hidden=true class="toggleIcon_g3eP systemToggleIcon_QzmC"><path fill=currentColor d="m12 21c4.971 0 9-4.029 9-9s-4.029-9-9-9-9 4.029-9 9 4.029 9 9 9zm4.95-13.95c1.313 1.313 2.05 3.093 2.05 4.95s-0.738 3.637-2.05 4.95c-1.313 1.313-3.093 2.05-4.95 2.05v-14c1.857 0 3.637 0.737 4.95 2.05z"/></svg></button></div><div class=navbarSearchContainer_Bca1></div></div></div><div role=presentation class=navbar-sidebar__backdrop></div></nav><div id=__docusaurus_skipToContent_fallback class="theme-layout-main main-wrapper mainWrapper_z2l0"><div class=docsWrapper_hBAB><button aria-label=回到顶部 class="clean-btn theme-back-to-top-button backToTopButton_sjWU" type=button></button><div class=docRoot_UBD9><aside class="theme-doc-sidebar-container docSidebarContainer_YfHR"><div class=sidebarViewport_aRkj><div class=sidebar_njMd><nav aria-label=文档侧边栏 class="menu thin-scrollbar menu_SIkG"><ul class="theme-doc-sidebar-menu menu__list"><li class="theme-doc-sidebar-item-category theme-doc-sidebar-item-category-level-1 menu__list-item"><div class=menu__list-item-collapsible><a class="categoryLink_byQd menu__link menu__link--sublist menu__link--sublist-caret menu__link--active" role=button aria-expanded=true href=/AiDocs/docs/java/><span class=categoryLinkLabel_W154>Java Core</span></a></div><ul class=menu__list><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class=menu__link tabindex=0 href=/AiDocs/docs/java/><span class=linkLabel_WmDU>介绍 & 路线图</span></a><li class="theme-doc-sidebar-item-category theme-doc-sidebar-item-category-level-2 menu__list-item menu__list-item--collapsed"><div class=menu__list-item-collapsible><a class="categoryLink_byQd menu__link menu__link--sublist" tabindex=0 href=/AiDocs/docs/category/1-java-基础与容器><span class=categoryLinkLabel_W154>1. Java 基础与容器</span></a><button aria-label="展开侧边栏分类 '1. Java 基础与容器'" aria-expanded=false type=button class="clean-btn menu__caret"></button></div><li class="theme-doc-sidebar-item-category theme-doc-sidebar-item-category-level-2 menu__list-item menu__list-item--collapsed"><div class=menu__list-item-collapsible><a class="categoryLink_byQd menu__link menu__link--sublist" tabindex=0 href=/AiDocs/docs/category/2-juc-并发编程><span class=categoryLinkLabel_W154>2. JUC 并发编程</span></a><button aria-label="展开侧边栏分类 '2. JUC 并发编程'" aria-expanded=false type=button class="clean-btn menu__caret"></button></div><li class="theme-doc-sidebar-item-category theme-doc-sidebar-item-category-level-2 menu__list-item"><div class=menu__list-item-collapsible><a class="categoryLink_byQd menu__link menu__link--sublist menu__link--active" tabindex=0 href=/AiDocs/docs/category/3-jvm-虚拟机内核><span class=categoryLinkLabel_W154>3. JVM 虚拟机内核</span></a><button aria-label="折叠侧边栏分类 '3. JVM 虚拟机内核'" aria-expanded=true type=button class="clean-btn menu__caret"></button></div><ul class=menu__list><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-3 menu__list-item"><a class="menu__link menu__link--active" aria-current=page tabindex=0 href=/AiDocs/docs/java/jvm/memory-gc><span class=linkLabel_WmDU>内存模型与 GC</span></a><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-3 menu__list-item"><a class=menu__link tabindex=0 href=/AiDocs/docs/java/jvm/classloader-bytecode><span class=linkLabel_WmDU>类加载与字节码</span></a><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-3 menu__list-item"><a class=menu__link tabindex=0 href=/AiDocs/docs/java/jvm/escape-analysis><span class=linkLabel_WmDU>逃逸分析与 JIT 优化</span></a><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-3 menu__list-item"><a class=menu__link tabindex=0 href=/AiDocs/docs/java/jvm/tuning-tools><span class=linkLabel_WmDU>调优实战与工具</span></a><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-3 menu__list-item"><a class=menu__link tabindex=0 href=/AiDocs/docs/java/jvm/prod-troubleshooting-cases><span class=linkLabel_WmDU>生产故障排障案例</span></a><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-3 menu__list-item"><a class=menu__link tabindex=0 href=/AiDocs/docs/java/jvm/prod-practice><span class=linkLabel_WmDU>生产参数与 GC 诊断</span></a></ul><li class="theme-doc-sidebar-item-category theme-doc-sidebar-item-category-level-2 menu__list-item menu__list-item--collapsed"><div class=menu__list-item-collapsible><a class="categoryLink_byQd menu__link menu__link--sublist" tabindex=0 href=/AiDocs/docs/category/4-spring-核心与生态><span class=categoryLinkLabel_W154>4. Spring 核心与生态</span></a><button aria-label="展开侧边栏分类 '4. Spring 核心与生态'" aria-expanded=false type=button class="clean-btn menu__caret"></button></div><li class="theme-doc-sidebar-item-category theme-doc-sidebar-item-category-level-2 menu__list-item menu__list-item--collapsed"><div class=menu__list-item-collapsible><a class="categoryLink_byQd menu__link menu__link--sublist" tabindex=0 href=/AiDocs/docs/category/5-持久层与连接池><span class=categoryLinkLabel_W154>5. 持久层与连接池</span></a><button aria-label="展开侧边栏分类 '5. 持久层与连接池'" aria-expanded=false type=button class="clean-btn menu__caret"></button></div><li class="theme-doc-sidebar-item-category theme-doc-sidebar-item-category-level-2 menu__list-item menu__list-item--collapsed"><div class=menu__list-item-collapsible><a class="categoryLink_byQd menu__link menu__link--sublist" tabindex=0 href=/AiDocs/docs/category/6-高性能网络通信><span class=categoryLinkLabel_W154>6. 高性能网络通信</span></a><button aria-label="展开侧边栏分类 '6. 高性能网络通信'" aria-expanded=false type=button class="clean-btn menu__caret"></button></div></ul></ul></nav></div></div></aside><main class=docMainContainer_TBSr><div class="container padding-top--md padding-bottom--lg"><div class=row><div class="col docItemCol_VOVn"><div class=docItemContainer_Djhp><article><nav class="theme-doc-breadcrumbs breadcrumbsContainer_Z_bl" aria-label=页面路径><ul class=breadcrumbs><li class=breadcrumbs__item><a aria-label=主页面 class=breadcrumbs__link href=/AiDocs/><svg viewBox="0 0 24 24" class=breadcrumbHomeIcon_YNFT><path d="M10 19v-5h4v5c0 .55.45 1 1 1h3c.55 0 1-.45 1-1v-7h1.7c.46 0 .68-.57.33-.87L12.67 3.6c-.38-.34-.96-.34-1.34 0l-8.36 7.53c-.34.3-.13.87.33.87H5v7c0 .55.45 1 1 1h3c.55 0 1-.45 1-1z" fill=currentColor /></svg></a><li class=breadcrumbs__item><span class=breadcrumbs__link>Java Core</span><li class=breadcrumbs__item><a class=breadcrumbs__link href=/AiDocs/docs/category/3-jvm-虚拟机内核><span>3. JVM 虚拟机内核</span></a><li class="breadcrumbs__item breadcrumbs__item--active"><span class=breadcrumbs__link>内存模型与 GC</span></ul></nav><div class="tocCollapsible_ETCw theme-doc-toc-mobile tocMobile_ITEo"><button type=button class="clean-btn tocCollapsibleButton_TO0P">本页总览</button></div><div class="theme-doc-markdown markdown"><h2 id=jvm-内存模型与垃圾回收机制>JVM 内存模型与垃圾回收机制</h2>
 <p>JVM（Java Virtual Machine）是 Java 程序的运行基石。深入理解 JVM 的运行时数据区划分、虚拟机栈的栈帧交互、堆中对象的内存布局与晋升机制、以及现代垃圾收集器的底层原理，是迈向高级与资深 Java 开发的必经之路。</p>
 <hr/>
-<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id=一-jvm-运行时数据区深度剖析>一、 JVM 运行时数据区深度剖析<a href=#一-jvm-运行时数据区深度剖析 class=hash-link aria-label="一、 JVM 运行时数据区深度剖析的直接链接" title="一、 JVM 运行时数据区深度剖析的直接链接" translate=no>​</a></h2>
+<h2 id=一-jvm-运行时数据区深度剖析>一、 JVM 运行时数据区深度剖析</h2>
 <p>根据 JVM 规范，JVM 在运行 Java 程序时会将其管理的内存划分为若干个不同的运行时数据区域（Runtime Data Area）：</p>
-<!-- -->
-<h3 class="anchor anchorTargetStickyNavbar_Vzrq" id=1-程序计数器program-counter-register>1. 程序计数器（Program Counter Register）<a href=#1-程序计数器program-counter-register class=hash-link aria-label="1. 程序计数器（Program Counter Register）的直接链接" title="1. 程序计数器（Program Counter Register）的直接链接" translate=no>​</a></h3>
+<mermaid value='graph TD
+    subgraph "线程私有 (Private)"
+        A[程序计数器 Program Counter]
+        B[虚拟机栈 JVM Stack]
+        C[本地方法栈 Native Method Stack]
+    end
+    subgraph "线程共享 (Shared)"
+        D[堆 Heap]
+        E[方法区 Method Area / 元空间 Metaspace]
+    end
+    F["堆外内存 Direct Memory<br/>(不属于运行时数据区，但受 JVM 间接管理)"]'></mermaid>
+<h3 id=1-程序计数器program-counter-register>1. 程序计数器（Program Counter Register）</h3>
 <p>程序计数器是一块较小的内存空间，可以看作是当前线程所执行的字节码的<strong>行号指示器</strong>。</p>
 <ul>
-<li class=""><strong>核心作用</strong>：在多线程环境下，CPU 通过时间片轮转进行线程切换。当线程被唤醒重新获得 CPU 时，程序计数器负责记录并指示该线程应当继续执行的<strong>字节码指令地址</strong>。</li>
-<li class=""><strong>物理特性</strong>：
+<li><strong>核心作用</strong>：在多线程环境下，CPU 通过时间片轮转进行线程切换。当线程被唤醒重新获得 CPU 时，程序计数器负责记录并指示该线程应当继续执行的<strong>字节码指令地址</strong>。</li>
+<li><strong>物理特性</strong>：
 <ul>
-<li class=""><strong>线程私有</strong>：每个线程都有自己独立的程序计数器，互不影响。</li>
-<li class=""><strong>唯一无 OOM 区域</strong>：这是 JVM 内存规范中<strong>唯一一个没有规定任何 OutOfMemoryError 状况</strong>的区域。若线程正在执行的是 Native 方法，则该计数器值为空（Undefined）。</li>
+<li><strong>线程私有</strong>：每个线程都有自己独立的程序计数器，互不影响。</li>
+<li><strong>唯一无 OOM 区域</strong>：这是 JVM 内存规范中<strong>唯一一个没有规定任何 OutOfMemoryError 状况</strong>的区域。若线程正在执行的是 Native 方法，则该计数器值为空（Undefined）。</li>
 </ul>
 </li>
 </ul>
 <hr/>
-<h3 class="anchor anchorTargetStickyNavbar_Vzrq" id=2-虚拟机栈jvm-stack与栈帧stack-frame>2. 虚拟机栈（JVM Stack）与栈帧（Stack Frame）<a href=#2-虚拟机栈jvm-stack与栈帧stack-frame class=hash-link aria-label="2. 虚拟机栈（JVM Stack）与栈帧（Stack Frame）的直接链接" title="2. 虚拟机栈（JVM Stack）与栈帧（Stack Frame）的直接链接" translate=no>​</a></h3>
+<h3 id=2-虚拟机栈jvm-stack与栈帧stack-frame>2. 虚拟机栈（JVM Stack）与栈帧（Stack Frame）</h3>
 <p>虚拟机栈是线程私有的，生命周期与线程相同，描述的是 Java 方法执行的内存模型：每个方法被执行时，JVM 都会同步创建一个 <strong>栈帧（Stack Frame）</strong> 用于存储局部变量表、操作数栈、动态连接和方法出口等信息。</p>
-<!-- -->
-<h4 class="anchor anchorTargetStickyNavbar_Vzrq" id=-栈帧的内部结构>🔍 栈帧的内部结构<a href=#-栈帧的内部结构 class=hash-link aria-label="🔍 栈帧的内部结构的直接链接" title="🔍 栈帧的内部结构的直接链接" translate=no>​</a></h4>
+<mermaid value="graph LR
+    StackFrame[栈帧 Stack Frame] --> LVT[局部变量表 Local Variable Table]
+    StackFrame --> OS[操作数栈 Operand Stack]
+    StackFrame --> DL[动态连接 Dynamic Linking]
+    StackFrame --> RA[方法出口 Return Address]"></mermaid>
+<h4 id=-栈帧的内部结构>🔍 栈帧的内部结构</h4>
 <ol>
-<li class=""><strong>局部变量表（Local Variable Table, LVT）</strong>：
+<li><strong>局部变量表（Local Variable Table, LVT）</strong>：
 <ul>
-<li class="">存放了编译期可知的各种基本数据类型、对象引用（<code>reference</code>）和 <code>returnAddress</code>。</li>
-<li class="">分配的基本单位是 <strong>槽（Slot）</strong>：<code>double</code> 和 <code>long</code> 占用 <span class=katex><span class=katex-mathml><math xmlns=http://www.w3.org/1998/Math/MathML><semantics><mrow><mn>2</mn></mrow><annotation encoding=application/x-tex>2</annotation></semantics></math></span><span class=katex-html aria-hidden=true><span class=base><span class=strut style=height:0.6444em></span><span class=mord>2</span></span></span></span> 个 Slot，其余类型占用 <span class=katex><span class=katex-mathml><math xmlns=http://www.w3.org/1998/Math/MathML><semantics><mrow><mn>1</mn></mrow><annotation encoding=application/x-tex>1</annotation></semantics></math></span><span class=katex-html aria-hidden=true><span class=base><span class=strut style=height:0.6444em></span><span class=mord>1</span></span></span></span> 个 Slot。非静态方法的第 <span class=katex><span class=katex-mathml><math xmlns=http://www.w3.org/1998/Math/MathML><semantics><mrow><mn>0</mn></mrow><annotation encoding=application/x-tex>0</annotation></semantics></math></span><span class=katex-html aria-hidden=true><span class=base><span class=strut style=height:0.6444em></span><span class=mord>0</span></span></span></span> 位 Slot 默认存放 <code>this</code> 引用。</li>
-<li class=""><strong>Slot 复用</strong>：为了节省栈帧空间，当代码执行超出某局部变量的作用域后，其所占用的 Slot 可以被重新分配给后面声明的其他变量使用（这也是某些情况下手动将大对象引用置 <code>null</code> 无法真正提前触发回收的原因——只有作用域结束、Slot 被复用/清空后引用才真正失效）。</li>
+<li>存放了编译期可知的各种基本数据类型、对象引用（<code>reference</code>）和 <code>returnAddress</code>。</li>
+<li>分配的基本单位是 <strong>槽（Slot）</strong>：<code>double</code> 和 <code>long</code> 占用 <span class=katex><span class=katex-mathml><math xmlns=http://www.w3.org/1998/Math/MathML><semantics><mrow><mn>2</mn></mrow><annotation encoding=application/x-tex>2</annotation></semantics></math></span><span class=katex-html aria-hidden=true><span class=base><span class=strut style=height:0.6444em></span><span class=mord>2</span></span></span></span> 个 Slot，其余类型占用 <span class=katex><span class=katex-mathml><math xmlns=http://www.w3.org/1998/Math/MathML><semantics><mrow><mn>1</mn></mrow><annotation encoding=application/x-tex>1</annotation></semantics></math></span><span class=katex-html aria-hidden=true><span class=base><span class=strut style=height:0.6444em></span><span class=mord>1</span></span></span></span> 个 Slot。非静态方法的第 <span class=katex><span class=katex-mathml><math xmlns=http://www.w3.org/1998/Math/MathML><semantics><mrow><mn>0</mn></mrow><annotation encoding=application/x-tex>0</annotation></semantics></math></span><span class=katex-html aria-hidden=true><span class=base><span class=strut style=height:0.6444em></span><span class=mord>0</span></span></span></span> 位 Slot 默认存放 <code>this</code> 引用。</li>
+<li><strong>Slot 复用</strong>：为了节省栈帧空间，当代码执行超出某局部变量的作用域后，其所占用的 Slot 可以被重新分配给后面声明的其他变量使用（这也是某些情况下手动将大对象引用置 <code>null</code> 无法真正提前触发回收的原因——只有作用域结束、Slot 被复用/清空后引用才真正失效）。</li>
 </ul>
 </li>
-<li class=""><strong>操作数栈（Operand Stack, OS）</strong>：
+<li><strong>操作数栈（Operand Stack, OS）</strong>：
 <ul>
-<li class="">作为执行引擎的临时工作区，用于方法执行过程中数据的出栈和入栈操作（如加减乘除、加载与存储变量）。</li>
+<li>作为执行引擎的临时工作区，用于方法执行过程中数据的出栈和入栈操作（如加减乘除、加载与存储变量）。</li>
 </ul>
 </li>
-<li class=""><strong>动态连接（Dynamic Linking, DL）</strong>：
+<li><strong>动态连接（Dynamic Linking, DL）</strong>：
 <ul>
-<li class="">每个栈帧都包含一个指向运行时常量池中该栈帧所属方法的引用，以支持方法调用过程中的 <strong>动态连接</strong>（将符号引用解析为直接引用）。</li>
+<li>每个栈帧都包含一个指向运行时常量池中该栈帧所属方法的引用，以支持方法调用过程中的 <strong>动态连接</strong>（将符号引用解析为直接引用）。</li>
 </ul>
 </li>
-<li class=""><strong>方法出口（Return Address, RA）</strong>：
+<li><strong>方法出口（Return Address, RA）</strong>：
 <ul>
-<li class="">保存方法被调用时的现场信息，以便方法正常或异常退出时，程序能返回到调用该方法的位置继续执行。</li>
+<li>保存方法被调用时的现场信息，以便方法正常或异常退出时，程序能返回到调用该方法的位置继续执行。</li>
 </ul>
 </li>
 </ol>
-<h4 class="anchor anchorTargetStickyNavbar_Vzrq" id=-虚拟机栈字节码计算现场还原>💡 虚拟机栈字节码计算现场还原<a href=#-虚拟机栈字节码计算现场还原 class=hash-link aria-label="💡 虚拟机栈字节码计算现场还原的直接链接" title="💡 虚拟机栈字节码计算现场还原的直接链接" translate=no>​</a></h4>
-<div class="language-java codeBlockContainer_Ckt0 theme-code-block" style=--prism-color:#393A34;--prism-background-color:#f6f8fa><div class=codeBlockContent_QJqH><pre tabindex=0 class="prism-code language-java codeBlock_bY9V thin-scrollbar" style=color:#393A34;background-color:#f6f8fa><code class=codeBlockLines_e6Vv><div class=token-line style=color:#393A34><span class="token plain">public int calculate() {</span><br/></div><div class=token-line style=color:#393A34><span class="token plain">    int a = 1;</span><br/></div><div class=token-line style=color:#393A34><span class="token plain">    int b = 2;</span><br/></div><div class=token-line style=color:#393A34><span class="token plain">    int c = a + b;</span><br/></div><div class=token-line style=color:#393A34><span class="token plain">    return c;</span><br/></div><div class=token-line style=color:#393A34><span class="token plain">}</span><br/></div></code></pre></div></div>
+<h4 id=-虚拟机栈字节码计算现场还原>💡 虚拟机栈字节码计算现场还原</h4>
+<pre><code class=language-java>public int calculate() {
+    int a = 1;
+    int b = 2;
+    int c = a + b;
+    return c;
+}
+</code></pre>
 
 
 
@@ -119,44 +139,62 @@
 <p><strong>参数调优</strong>：虚拟机栈的大小可以通过 <code>-Xss</code> 进行配置（如 <code>-Xss256k</code>）。若线程请求的栈深度大于虚拟机所允许的深度，将抛出 <code>StackOverflowError</code>；若栈支持动态扩展但在申请内存时空间不足，则抛出 <code>OutOfMemoryError</code>。</p>
 </blockquote>
 <hr/>
-<h3 class="anchor anchorTargetStickyNavbar_Vzrq" id=3-本地方法栈native-method-stack>3. 本地方法栈（Native Method Stack）<a href=#3-本地方法栈native-method-stack class=hash-link aria-label="3. 本地方法栈（Native Method Stack）的直接链接" title="3. 本地方法栈（Native Method Stack）的直接链接" translate=no>​</a></h3>
+<h3 id=3-本地方法栈native-method-stack>3. 本地方法栈（Native Method Stack）</h3>
 <p>本地方法栈的作用与虚拟机栈非常相似，区别在于虚拟机栈为执行 Java 方法（字节码）服务，而本地方法栈是为虚拟机使用到的 <strong>Native 方法</strong> 服务。HotSpot 虚拟机直接将两者合二为一实现，因此本地方法栈同样会抛出 <code>StackOverflowError</code> 与 <code>OutOfMemoryError</code>。</p>
 <hr/>
-<h3 class="anchor anchorTargetStickyNavbar_Vzrq" id=4-java-堆java-heap与对象内存布局>4. Java 堆（Java Heap）与对象内存布局<a href=#4-java-堆java-heap与对象内存布局 class=hash-link aria-label="4. Java 堆（Java Heap）与对象内存布局的直接链接" title="4. Java 堆（Java Heap）与对象内存布局的直接链接" translate=no>​</a></h3>
+<h3 id=4-java-堆java-heap与对象内存布局>4. Java 堆（Java Heap）与对象内存布局</h3>
 <p>堆是 JVM 管理的内存中最大的一块，被所有线程共享，在虚拟机启动时创建，唯一目的是 <strong>存放对象实例</strong>。</p>
-<h4 class="anchor anchorTargetStickyNavbar_Vzrq" id=-堆内存结构总览>🔍 堆内存结构总览<a href=#-堆内存结构总览 class=hash-link aria-label="🔍 堆内存结构总览的直接链接" title="🔍 堆内存结构总览的直接链接" translate=no>​</a></h4>
-<!-- -->
+<h4 id=-堆内存结构总览>🔍 堆内存结构总览</h4>
+<mermaid value='graph LR
+    subgraph "Java Heap"
+        subgraph "新生代 Young（-XX:NewRatio 控制与老年代比例，默认 1:2）"
+            Eden["Eden（8）"] --- S0["Survivor From（1）"] --- S1["Survivor To（1）"]
+        end
+        Old["老年代 Old"]
+    end'></mermaid>
 <ul>
-<li class=""><code>-Xms</code> / <code>-Xmx</code>：堆初始与最大容量。</li>
-<li class=""><code>-Xmn</code>：新生代容量。</li>
-<li class=""><code>-XX:SurvivorRatio</code>：Eden 与单个 Survivor 区的比例（默认 <span class=katex><span class=katex-mathml><math xmlns=http://www.w3.org/1998/Math/MathML><semantics><mrow><mn>8</mn></mrow><annotation encoding=application/x-tex>8</annotation></semantics></math></span><span class=katex-html aria-hidden=true><span class=base><span class=strut style=height:0.6444em></span><span class=mord>8</span></span></span></span>）。</li>
+<li><code>-Xms</code> / <code>-Xmx</code>：堆初始与最大容量。</li>
+<li><code>-Xmn</code>：新生代容量。</li>
+<li><code>-XX:SurvivorRatio</code>：Eden 与单个 Survivor 区的比例（默认 <span class=katex><span class=katex-mathml><math xmlns=http://www.w3.org/1998/Math/MathML><semantics><mrow><mn>8</mn></mrow><annotation encoding=application/x-tex>8</annotation></semantics></math></span><span class=katex-html aria-hidden=true><span class=base><span class=strut style=height:0.6444em></span><span class=mord>8</span></span></span></span>）。</li>
 </ul>
-<h4 class="anchor anchorTargetStickyNavbar_Vzrq" id=-对象的创建过程>🔍 对象的创建过程<a href=#-对象的创建过程 class=hash-link aria-label="🔍 对象的创建过程的直接链接" title="🔍 对象的创建过程的直接链接" translate=no>​</a></h4>
+<h4 id=-对象的创建过程>🔍 对象的创建过程</h4>
 <p>当虚拟机遇到一条 <code>new</code> 指令时，会经历以下步骤：</p>
 <ol>
-<li class=""><strong>类加载检查</strong>：检查 <code>new</code> 指令的参数是否能在常量池中定位到一个类的符号引用，并检查该符号引用代表的类是否已被加载、解析和初始化。若没有，必须先执行相应的类加载过程。</li>
-<li class=""><strong>分配内存</strong>：根据堆内存是否规整，采用两种方式之一：
+<li><strong>类加载检查</strong>：检查 <code>new</code> 指令的参数是否能在常量池中定位到一个类的符号引用，并检查该符号引用代表的类是否已被加载、解析和初始化。若没有，必须先执行相应的类加载过程。</li>
+<li><strong>分配内存</strong>：根据堆内存是否规整，采用两种方式之一：
 <ul>
-<li class=""><strong>指针碰撞（Bump the Pointer）</strong>：适用于内存规整（无碎片）的场景，如配合带有 Compact 整理过程的 Serial、Parallel 等收集器。已用内存和空闲内存分居两侧，中间用一个指针作分界点。</li>
-<li class=""><strong>空闲列表（Free List）</strong>：适用于内存不规整（有碎片）的场景，如配合基于 Mark-Sweep 的 CMS 收集器。虚拟机维护一张列表记录哪些内存块可用，分配时从中找一块足够大的空间划给对象。</li>
+<li><strong>指针碰撞（Bump the Pointer）</strong>：适用于内存规整（无碎片）的场景，如配合带有 Compact 整理过程的 Serial、Parallel 等收集器。已用内存和空闲内存分居两侧，中间用一个指针作分界点。</li>
+<li><strong>空闲列表（Free List）</strong>：适用于内存不规整（有碎片）的场景，如配合基于 Mark-Sweep 的 CMS 收集器。虚拟机维护一张列表记录哪些内存块可用，分配时从中找一块足够大的空间划给对象。</li>
 </ul>
 </li>
-<li class=""><strong>解决并发分配的安全问题</strong>：
+<li><strong>解决并发分配的安全问题</strong>：
 <ul>
-<li class=""><strong>CAS + 失败重试</strong>：保证内存分配操作的原子性。</li>
-<li class=""><strong>TLAB（Thread Local Allocation Buffer，本地线程分配缓冲）</strong>：每个线程预先在 Eden 区申请一小块私有内存作为分配缓冲，对象优先在自己的 TLAB 上分配，只有 TLAB 用尽需要重新申请时才使用同步锁定，从而避免了绝大多数情况下的线程同步开销。默认开启（<code>-XX:+UseTLAB</code>），可通过 <code>-XX:TLABSize</code> 调整大小。</li>
+<li><strong>CAS + 失败重试</strong>：保证内存分配操作的原子性。</li>
+<li><strong>TLAB（Thread Local Allocation Buffer，本地线程分配缓冲）</strong>：每个线程预先在 Eden 区申请一小块私有内存作为分配缓冲，对象优先在自己的 TLAB 上分配，只有 TLAB 用尽需要重新申请时才使用同步锁定，从而避免了绝大多数情况下的线程同步开销。默认开启（<code>-XX:+UseTLAB</code>），可通过 <code>-XX:TLABSize</code> 调整大小。</li>
 </ul>
 </li>
-<li class=""><strong>初始化零值</strong>：将分配到的内存空间（不含对象头）初始化为零值，这保证了实例字段可以不赋初始值就直接使用。</li>
-<li class=""><strong>设置对象头</strong>：初始化 Mark Word、Klass Word（指向类元数据的指针）等信息。</li>
-<li class=""><strong>执行 <code>&lt;init></code> 方法</strong>：至此从虚拟机视角看对象已产生，但从 Java 程序视角看，对象创建才刚刚开始——所有字段仍为零值。执行 <code>&lt;init></code> 方法后，对象才会按照程序员的意图完成初始化。</li>
+<li><strong>初始化零值</strong>：将分配到的内存空间（不含对象头）初始化为零值，这保证了实例字段可以不赋初始值就直接使用。</li>
+<li><strong>设置对象头</strong>：初始化 Mark Word、Klass Word（指向类元数据的指针）等信息。</li>
+<li><strong>执行 <code>&lt;init></code> 方法</strong>：至此从虚拟机视角看对象已产生，但从 Java 程序视角看，对象创建才刚刚开始——所有字段仍为零值。执行 <code>&lt;init></code> 方法后，对象才会按照程序员的意图完成初始化。</li>
 </ol>
-<h4 class="anchor anchorTargetStickyNavbar_Vzrq" id=-堆内对象的物理内存排布>🔍 堆内对象的物理内存排布<a href=#-堆内对象的物理内存排布 class=hash-link aria-label="🔍 堆内对象的物理内存排布的直接链接" title="🔍 堆内对象的物理内存排布的直接链接" translate=no>​</a></h4>
-<div class="language-text codeBlockContainer_Ckt0 theme-code-block" style=--prism-color:#393A34;--prism-background-color:#f6f8fa><div class=codeBlockContent_QJqH><pre tabindex=0 class="prism-code language-text codeBlock_bY9V thin-scrollbar" style=color:#393A34;background-color:#f6f8fa><code class=codeBlockLines_e6Vv><div class=token-line style=color:#393A34><span class="token plain">+-------------------------------------------------------------+</span><br/></div><div class=token-line style=color:#393A34><span class="token plain">|                     对象头 (Object Header)                   |</span><br/></div><div class=token-line style=color:#393A34><span class="token plain">|  - Mark Word (64位下为 8 字节)                                |</span><br/></div><div class=token-line style=color:#393A34><span class="token plain">|  - Klass Word (类型指针，开启压缩时为 4 字节)                   |</span><br/></div><div class=token-line style=color:#393A34><span class="token plain">|  - 数组长度 (仅数组对象有，4 字节)                             |</span><br/></div><div class=token-line style=color:#393A34><span class="token plain">+-------------------------------------------------------------+</span><br/></div><div class=token-line style=color:#393A34><span class="token plain">|                      实例数据 (Instance Data)                |</span><br/></div><div class=token-line style=color:#393A34><span class="token plain">|  - 对象的各个成员变量数据                                      |</span><br/></div><div class=token-line style=color:#393A34><span class="token plain">+-------------------------------------------------------------+</span><br/></div><div class=token-line style=color:#393A34><span class="token plain">|                      对齐填充 (Padding)                      |</span><br/></div><div class=token-line style=color:#393A34><span class="token plain">|  - 将对象大小补齐至 8 字节的整数倍                             |</span><br/></div><div class=token-line style=color:#393A34><span class="token plain">+-------------------------------------------------------------+</span><br/></div></code></pre></div></div>
+<h4 id=-堆内对象的物理内存排布>🔍 堆内对象的物理内存排布</h4>
+<pre><code class=language-text>+-------------------------------------------------------------+
+|                     对象头 (Object Header)                   |
+|  - Mark Word (64位下为 8 字节)                                |
+|  - Klass Word (类型指针，开启压缩时为 4 字节)                   |
+|  - 数组长度 (仅数组对象有，4 字节)                             |
++-------------------------------------------------------------+
+|                      实例数据 (Instance Data)                |
+|  - 对象的各个成员变量数据                                      |
++-------------------------------------------------------------+
+|                      对齐填充 (Padding)                      |
+|  - 将对象大小补齐至 8 字节的整数倍                             |
++-------------------------------------------------------------+
+</code></pre>
 <blockquote>
 <p><strong>压缩指针（Compressed Oops）</strong>：64 位 JVM 默认开启 <code>-XX:+UseCompressedOops</code>，将对象引用与 Klass Word 由 <span class=katex><span class=katex-mathml><math xmlns=http://www.w3.org/1998/Math/MathML><semantics><mrow><mn>8</mn></mrow><annotation encoding=application/x-tex>8</annotation></semantics></math></span><span class=katex-html aria-hidden=true><span class=base><span class=strut style=height:0.6444em></span><span class=mord>8</span></span></span></span> 字节压缩为 <span class=katex><span class=katex-mathml><math xmlns=http://www.w3.org/1998/Math/MathML><semantics><mrow><mn>4</mn></mrow><annotation encoding=application/x-tex>4</annotation></semantics></math></span><span class=katex-html aria-hidden=true><span class=base><span class=strut style=height:0.6444em></span><span class=mord>4</span></span></span></span> 字节，以降低指针膨胀带来的内存开销，其可寻址的堆内存上限约为 <span class=katex><span class=katex-mathml><math xmlns=http://www.w3.org/1998/Math/MathML><semantics><mrow><mn>32</mn><mtext>GB</mtext></mrow><annotation encoding=application/x-tex>32\text{GB}</annotation></semantics></math></span><span class=katex-html aria-hidden=true><span class=base><span class=strut style=height:0.6833em></span><span class=mord>32</span><span class="mord text"><span class=mord>GB</span></span></span></span></span>；超过该阈值后指针压缩将自动失效，指针恢复为 <span class=katex><span class=katex-mathml><math xmlns=http://www.w3.org/1998/Math/MathML><semantics><mrow><mn>8</mn></mrow><annotation encoding=application/x-tex>8</annotation></semantics></math></span><span class=katex-html aria-hidden=true><span class=base><span class=strut style=height:0.6444em></span><span class=mord>8</span></span></span></span> 字节。</p>
 </blockquote>
-<h5 class="anchor anchorTargetStickyNavbar_Vzrq" id=mark-word标记字的锁升级位图结构>Mark Word（标记字）的锁升级位图结构<a href=#mark-word标记字的锁升级位图结构 class=hash-link aria-label="Mark Word（标记字）的锁升级位图结构的直接链接" title="Mark Word（标记字）的锁升级位图结构的直接链接" translate=no>​</a></h5>
+<h5 id=mark-word标记字的锁升级位图结构>Mark Word（标记字）的锁升级位图结构</h5>
 <p>在 <span class=katex><span class=katex-mathml><math xmlns=http://www.w3.org/1998/Math/MathML><semantics><mrow><mn>64</mn></mrow><annotation encoding=application/x-tex>64</annotation></semantics></math></span><span class=katex-html aria-hidden=true><span class=base><span class=strut style=height:0.6444em></span><span class=mord>64</span></span></span></span> 位 JVM 中，<code>Mark Word</code> 占用 <span class=katex><span class=katex-mathml><math xmlns=http://www.w3.org/1998/Math/MathML><semantics><mrow><mn>8</mn></mrow><annotation encoding=application/x-tex>8</annotation></semantics></math></span><span class=katex-html aria-hidden=true><span class=base><span class=strut style=height:0.6444em></span><span class=mord>8</span></span></span></span> 字节，会根据对象状态（无锁、偏向锁、轻量级锁、重量级锁、GC 标记）复用空间：</p>
 
 
@@ -206,47 +244,47 @@
 
 
 <table><thead><tr><th style=text-align:left>锁状态<th style=text-align:left>25 bits<th style=text-align:left>31 bits<th style=text-align:left>1 bit (偏向标志)<th style=text-align:left>2 bits (锁标志位)<tbody><tr><td style=text-align:left><strong>无锁</strong><td style=text-align:left>未使用<td style=text-align:left>对象的 Identity HashCode<td style=text-align:left>0<td style=text-align:left>01<tr><td style=text-align:left><strong>偏向锁</strong><td style=text-align:left>线程 ID (Thread ID)<td style=text-align:left>Epoch (偏向时间戳)<td style=text-align:left>1<td style=text-align:left>01<tr><td style=text-align:left><strong>轻量级锁</strong><td style=text-align:left>指向栈中锁记录的指针<td style=text-align:left>指向栈中锁记录的指针<td style=text-align:left>0<td style=text-align:left>00<tr><td style=text-align:left><strong>重量级锁</strong><td style=text-align:left>指向互斥量的指针<td style=text-align:left>指向互斥量的指针<td style=text-align:left>0<td style=text-align:left>10<tr><td style=text-align:left><strong>GC 标记</strong><td style=text-align:left>空 (未使用)<td style=text-align:left>空<td style=text-align:left>0<td style=text-align:left>11</table>
-<h4 class="anchor anchorTargetStickyNavbar_Vzrq" id=-对象访问定位方式>🔍 对象访问定位方式<a href=#-对象访问定位方式 class=hash-link aria-label="🔍 对象访问定位方式的直接链接" title="🔍 对象访问定位方式的直接链接" translate=no>​</a></h4>
+<h4 id=-对象访问定位方式>🔍 对象访问定位方式</h4>
 <p>Java 程序通过栈上的 <code>reference</code> 数据来操作堆上的具体对象，主流虚拟机主要有两种访问方式：</p>
 <ol>
-<li class=""><strong>句柄访问</strong>：堆中划出一块内存作为句柄池，<code>reference</code> 中存储对象的句柄地址，句柄中再包含实例数据与类型数据各自的具体地址。<strong>优点</strong>：对象被移动（如 GC 整理）时只需改变句柄中的实例数据指针，<code>reference</code> 本身无需修改。</li>
-<li class=""><strong>直接指针访问（HotSpot 默认采用）</strong>：<code>reference</code> 中存储的直接就是对象地址。<strong>优点</strong>：省去了一次指针定位的时间开销，由于对象访问在 Java 中是极为频繁的操作，HotSpot 因此选用此方式，代价是对象移动时需要同步更新所有指向它的 <code>reference</code>。</li>
+<li><strong>句柄访问</strong>：堆中划出一块内存作为句柄池，<code>reference</code> 中存储对象的句柄地址，句柄中再包含实例数据与类型数据各自的具体地址。<strong>优点</strong>：对象被移动（如 GC 整理）时只需改变句柄中的实例数据指针，<code>reference</code> 本身无需修改。</li>
+<li><strong>直接指针访问（HotSpot 默认采用）</strong>：<code>reference</code> 中存储的直接就是对象地址。<strong>优点</strong>：省去了一次指针定位的时间开销，由于对象访问在 Java 中是极为频繁的操作，HotSpot 因此选用此方式，代价是对象移动时需要同步更新所有指向它的 <code>reference</code>。</li>
 </ol>
-<h4 class="anchor anchorTargetStickyNavbar_Vzrq" id=-对象晋升老年代的四大硬核规则>🚀 对象晋升老年代的四大硬核规则<a href=#-对象晋升老年代的四大硬核规则 class=hash-link aria-label="🚀 对象晋升老年代的四大硬核规则的直接链接" title="🚀 对象晋升老年代的四大硬核规则的直接链接" translate=no>​</a></h4>
+<h4 id=-对象晋升老年代的四大硬核规则>🚀 对象晋升老年代的四大硬核规则</h4>
 <p>新生代与老年代默认比例为 <span class=katex><span class=katex-mathml><math xmlns=http://www.w3.org/1998/Math/MathML><semantics><mrow><mn>1</mn><mo>:</mo><mn>2</mn></mrow><annotation encoding=application/x-tex>1:2</annotation></semantics></math></span><span class=katex-html aria-hidden=true><span class=base><span class=strut style=height:0.6444em></span><span class=mord>1</span><span class=mspace style=margin-right:0.2778em></span><span class=mrel>:</span><span class=mspace style=margin-right:0.2778em></span></span><span class=base><span class=strut style=height:0.6444em></span><span class=mord>2</span></span></span></span>（新生代内部 Eden : S0 : S1 默认为 <span class=katex><span class=katex-mathml><math xmlns=http://www.w3.org/1998/Math/MathML><semantics><mrow><mn>8</mn><mo>:</mo><mn>1</mn><mo>:</mo><mn>1</mn></mrow><annotation encoding=application/x-tex>8:1:1</annotation></semantics></math></span><span class=katex-html aria-hidden=true><span class=base><span class=strut style=height:0.6444em></span><span class=mord>8</span><span class=mspace style=margin-right:0.2778em></span><span class=mrel>:</span><span class=mspace style=margin-right:0.2778em></span></span><span class=base><span class=strut style=height:0.6444em></span><span class=mord>1</span><span class=mspace style=margin-right:0.2778em></span><span class=mrel>:</span><span class=mspace style=margin-right:0.2778em></span></span><span class=base><span class=strut style=height:0.6444em></span><span class=mord>1</span></span></span></span>），对象晋升老年代遵循如下规则：</p>
 <ol>
-<li class=""><strong>长期存活晋升（Age Threshold）</strong>：
+<li><strong>长期存活晋升（Age Threshold）</strong>：
 <ul>
-<li class="">对象在 Eden 区出生并经过第一次 Minor GC 后若存活，移入 Survivor 区且年龄设为 <span class=katex><span class=katex-mathml><math xmlns=http://www.w3.org/1998/Math/MathML><semantics><mrow><mn>1</mn></mrow><annotation encoding=application/x-tex>1</annotation></semantics></math></span><span class=katex-html aria-hidden=true><span class=base><span class=strut style=height:0.6444em></span><span class=mord>1</span></span></span></span>。此后每熬过一次 Minor GC，年龄增加 <span class=katex><span class=katex-mathml><math xmlns=http://www.w3.org/1998/Math/MathML><semantics><mrow><mn>1</mn></mrow><annotation encoding=application/x-tex>1</annotation></semantics></math></span><span class=katex-html aria-hidden=true><span class=base><span class=strut style=height:0.6444em></span><span class=mord>1</span></span></span></span> 岁。当年龄达到阈值（默认 <span class=katex><span class=katex-mathml><math xmlns=http://www.w3.org/1998/Math/MathML><semantics><mrow><mn>15</mn></mrow><annotation encoding=application/x-tex>15</annotation></semantics></math></span><span class=katex-html aria-hidden=true><span class=base><span class=strut style=height:0.6444em></span><span class=mord>15</span></span></span></span>，由 <code>-XX:MaxTenuringThreshold</code> 控制）时，晋升老年代。</li>
+<li>对象在 Eden 区出生并经过第一次 Minor GC 后若存活，移入 Survivor 区且年龄设为 <span class=katex><span class=katex-mathml><math xmlns=http://www.w3.org/1998/Math/MathML><semantics><mrow><mn>1</mn></mrow><annotation encoding=application/x-tex>1</annotation></semantics></math></span><span class=katex-html aria-hidden=true><span class=base><span class=strut style=height:0.6444em></span><span class=mord>1</span></span></span></span>。此后每熬过一次 Minor GC，年龄增加 <span class=katex><span class=katex-mathml><math xmlns=http://www.w3.org/1998/Math/MathML><semantics><mrow><mn>1</mn></mrow><annotation encoding=application/x-tex>1</annotation></semantics></math></span><span class=katex-html aria-hidden=true><span class=base><span class=strut style=height:0.6444em></span><span class=mord>1</span></span></span></span> 岁。当年龄达到阈值（默认 <span class=katex><span class=katex-mathml><math xmlns=http://www.w3.org/1998/Math/MathML><semantics><mrow><mn>15</mn></mrow><annotation encoding=application/x-tex>15</annotation></semantics></math></span><span class=katex-html aria-hidden=true><span class=base><span class=strut style=height:0.6444em></span><span class=mord>15</span></span></span></span>，由 <code>-XX:MaxTenuringThreshold</code> 控制）时，晋升老年代。</li>
 </ul>
 </li>
-<li class=""><strong>动态年龄判定（Dynamic Age Determination）</strong>：
+<li><strong>动态年龄判定（Dynamic Age Determination）</strong>：
 <ul>
-<li class="">若 Survivor 空间中相同年龄所有对象大小的总和大于 Survivor 空间的一半（<span class=katex><span class=katex-mathml><math xmlns=http://www.w3.org/1998/Math/MathML><semantics><mrow><mn>50</mn><mi mathvariant=normal>%</mi></mrow><annotation encoding=application/x-tex>50\%</annotation></semantics></math></span><span class=katex-html aria-hidden=true><span class=base><span class=strut style=height:0.8056em;vertical-align:-0.0556em></span><span class=mord>50%</span></span></span></span>），则年龄大于或等于该年龄的对象可直接进入老年代，无需等到 <code>MaxTenuringThreshold</code> 要求的年龄。</li>
+<li>若 Survivor 空间中相同年龄所有对象大小的总和大于 Survivor 空间的一半（<span class=katex><span class=katex-mathml><math xmlns=http://www.w3.org/1998/Math/MathML><semantics><mrow><mn>50</mn><mi mathvariant=normal>%</mi></mrow><annotation encoding=application/x-tex>50\%</annotation></semantics></math></span><span class=katex-html aria-hidden=true><span class=base><span class=strut style=height:0.8056em;vertical-align:-0.0556em></span><span class=mord>50%</span></span></span></span>），则年龄大于或等于该年龄的对象可直接进入老年代，无需等到 <code>MaxTenuringThreshold</code> 要求的年龄。</li>
 </ul>
 </li>
-<li class=""><strong>大对象直接进入老年代</strong>：
+<li><strong>大对象直接进入老年代</strong>：
 <ul>
-<li class="">通过 <code>-XX:PretenureSizeThreshold</code> 设置阈值，大于该值的对象创建时直接绕过新生代，在老年代分配，以避免大对象在 Eden 与两个 Survivor 之间来回复制（注：该参数只对 Serial 和 ParNew 收集器有效）。</li>
+<li>通过 <code>-XX:PretenureSizeThreshold</code> 设置阈值，大于该值的对象创建时直接绕过新生代，在老年代分配，以避免大对象在 Eden 与两个 Survivor 之间来回复制（注：该参数只对 Serial 和 ParNew 收集器有效）。</li>
 </ul>
 </li>
-<li class=""><strong>空间分配担保机制（Handle Promotion Guarantee）</strong>：
+<li><strong>空间分配担保机制（Handle Promotion Guarantee）</strong>：
 <ul>
-<li class="">Minor GC 前，JVM 检查老年代最大可用连续空间是否大于新生代所有对象总空间：
+<li>Minor GC 前，JVM 检查老年代最大可用连续空间是否大于新生代所有对象总空间：
 <ul>
-<li class="">若大于，Minor GC 安全。</li>
-<li class="">若小于，查看 <code>-XX:+HandlePromotionFailure</code> 是否允许担保失败。若允许，检查老年代最大连续空间是否大于历次晋升对象的平均大小，大于则尝试 Minor GC；小于或不允许担保失败，则直接触发一次 <strong>Full GC</strong>。</li>
+<li>若大于，Minor GC 安全。</li>
+<li>若小于，查看 <code>-XX:+HandlePromotionFailure</code> 是否允许担保失败。若允许，检查老年代最大连续空间是否大于历次晋升对象的平均大小，大于则尝试 Minor GC；小于或不允许担保失败，则直接触发一次 <strong>Full GC</strong>。</li>
 </ul>
 </li>
 </ul>
 </li>
 </ol>
 <hr/>
-<h3 class="anchor anchorTargetStickyNavbar_Vzrq" id=5-方法区method-area与元空间metaspace>5. 方法区（Method Area）与元空间（Metaspace）<a href=#5-方法区method-area与元空间metaspace class=hash-link aria-label="5. 方法区（Method Area）与元空间（Metaspace）的直接链接" title="5. 方法区（Method Area）与元空间（Metaspace）的直接链接" translate=no>​</a></h3>
+<h3 id=5-方法区method-area与元空间metaspace>5. 方法区（Method Area）与元空间（Metaspace）</h3>
 <p>方法区是 JVM 规范定义的逻辑区域，用于存储已加载的类信息、常量、静态变量、即时编译器编译后的代码缓存等。永久代（PermGen）和元空间（Metaspace）是 HotSpot 在不同历史阶段对方法区的具体 <strong>物理实现</strong>。</p>
-<h4 class="anchor anchorTargetStickyNavbar_Vzrq" id=-运行时常量池的内容>🔍 运行时常量池的内容<a href=#-运行时常量池的内容 class=hash-link aria-label="🔍 运行时常量池的内容的直接链接" title="🔍 运行时常量池的内容的直接链接" translate=no>​</a></h4>
+<h4 id=-运行时常量池的内容>🔍 运行时常量池的内容</h4>
 <p>运行时常量池用于存放编译期生成的各种<strong>字面量（Literal）</strong>（如文本字符串、被声明为 <code>final</code> 的常量值）和<strong>符号引用（Symbolic References）</strong>（如类和接口的全限定名、字段的名称和描述符、方法的名称和描述符）。区别于 Class 文件常量池的最大特点是具备<strong>动态性</strong>——运行期间也可以将新的常量放入池中，最典型的例子就是 <code>String.intern()</code>。</p>
-<h4 class="anchor anchorTargetStickyNavbar_Vzrq" id=-字符串常量池与运行时常量池的演变史>🚀 字符串常量池与运行时常量池的演变史<a href=#-字符串常量池与运行时常量池的演变史 class=hash-link aria-label="🚀 字符串常量池与运行时常量池的演变史的直接链接" title="🚀 字符串常量池与运行时常量池的演变史的直接链接" translate=no>​</a></h4>
+<h4 id=-字符串常量池与运行时常量池的演变史>🚀 字符串常量池与运行时常量池的演变史</h4>
 <p>永久代和元空间最关键的区别在于：永久代使用的是 <strong>JVM 堆内存</strong>，而元空间使用的是 <strong>本地物理内存（Native Memory）</strong>。</p>
 
 
@@ -279,26 +317,26 @@
 
 <table><thead><tr><th style=text-align:left>JDK 版本<th style=text-align:left>运行时常量池位置<th style=text-align:left>字符串常量池 (String Table) 位置<th style=text-align:left>物理载体与限制<tbody><tr><td style=text-align:left><strong>JDK 6 及以前</strong><td style=text-align:left>方法区（内含字符串常量池）<td style=text-align:left>永久代内部<td style=text-align:left><strong>永久代 (PermGen)</strong>，受限于 <code>-XX:MaxPermSize</code>，易发 OOM<tr><td style=text-align:left><strong>JDK 7</strong><td style=text-align:left>方法区内<td style=text-align:left><strong>移至 Java 堆 (Java Heap)</strong><td style=text-align:left>永久代 + Java 堆，将高频分配的字符串剥离，利用堆 GC 回收<tr><td style=text-align:left><strong>JDK 8 及以后</strong><td style=text-align:left><strong>移至 元空间 (Metaspace)</strong><td style=text-align:left><strong>保留在 Java 堆 (Java Heap)</strong><td style=text-align:left><strong>本地内存 (Native Memory)</strong>，不受 JVM 内存限制，仅受系统物理内存限制</table>
 <ul>
-<li class=""><strong>永久代被彻底废除的原因</strong>：
+<li><strong>永久代被彻底废除的原因</strong>：
 <ol>
-<li class="">简化 GC 逻辑，类元数据生命周期与类加载器强绑定，释放更方便。</li>
-<li class="">规避动态生成类（如 Spring CGLIB、JSP）导致的方法区 OOM。</li>
+<li>简化 GC 逻辑，类元数据生命周期与类加载器强绑定，释放更方便。</li>
+<li>规避动态生成类（如 Spring CGLIB、JSP）导致的方法区 OOM。</li>
 </ol>
 </li>
 </ul>
-<h4 class="anchor anchorTargetStickyNavbar_Vzrq" id=-cdsclass-data-sharing>💡 CDS（Class Data Sharing）<a href=#-cdsclass-data-sharing class=hash-link aria-label="💡 CDS（Class Data Sharing）的直接链接" title="💡 CDS（Class Data Sharing）的直接链接" translate=no>​</a></h4>
+<h4 id=-cdsclass-data-sharing>💡 CDS（Class Data Sharing）</h4>
 <p>JDK 10 引入的 <strong>AppCDS（Application Class Data Sharing）</strong> 可以将类的元数据信息序列化到一个共享归档文件中，多个 JVM 进程启动时通过内存映射（<code>mmap</code>）共享同一份元数据，减少类加载解析的时间与内存占用，是容器化时代（如 K8s 中大量短生命周期 Pod 启动）加速 JVM 启动速度的重要手段。</p>
 <hr/>
-<h3 class="anchor anchorTargetStickyNavbar_Vzrq" id=6-堆外内存direct-memory>6. 堆外内存（Direct Memory）<a href=#6-堆外内存direct-memory class=hash-link aria-label="6. 堆外内存（Direct Memory）的直接链接" title="6. 堆外内存（Direct Memory）的直接链接" translate=no>​</a></h3>
+<h3 id=6-堆外内存direct-memory>6. 堆外内存（Direct Memory）</h3>
 <p>堆外内存不属于 JVM 运行时数据区，而是通过 JNI 直接在本地物理内存中分配的空间。</p>
 <ul>
-<li class=""><strong>分配机制</strong>：通过 <code>ByteBuffer.allocateDirect(int)</code> 或 <code>sun.misc.Unsafe</code> 分配，底层通过 <code>DirectByteBuffer</code> 的构造函数向系统申请分配直接内存。</li>
-<li class=""><strong>零拷贝（Zero-Copy）</strong>：传统 Java I/O 需先将数据从内核空间拷贝到 JVM 堆中再由应用读取；堆外内存避免了 Java 堆与系统内核缓冲区之间的来回复制，极大提高了网络与磁盘 I/O 性能（如 Netty、NIO 广泛使用）。</li>
-<li class=""><strong>垃圾回收</strong>：堆外内存不受 JVM GC 直接管理，通过 <code>Cleaner</code>（虚引用）机制，在 <code>DirectByteBuffer</code> 对象被 GC 回收时触发其底层的 <code>Deallocator</code> 任务，调用 <code>unsafe.freeMemory()</code> 释放本地物理内存。</li>
-<li class=""><strong>调优参数</strong>：<code>-XX:MaxDirectMemorySize</code> 限制堆外内存的最大容量，超出限制将抛出 <code>OutOfMemoryError: Direct buffer memory</code>。</li>
+<li><strong>分配机制</strong>：通过 <code>ByteBuffer.allocateDirect(int)</code> 或 <code>sun.misc.Unsafe</code> 分配，底层通过 <code>DirectByteBuffer</code> 的构造函数向系统申请分配直接内存。</li>
+<li><strong>零拷贝（Zero-Copy）</strong>：传统 Java I/O 需先将数据从内核空间拷贝到 JVM 堆中再由应用读取；堆外内存避免了 Java 堆与系统内核缓冲区之间的来回复制，极大提高了网络与磁盘 I/O 性能（如 Netty、NIO 广泛使用）。</li>
+<li><strong>垃圾回收</strong>：堆外内存不受 JVM GC 直接管理，通过 <code>Cleaner</code>（虚引用）机制，在 <code>DirectByteBuffer</code> 对象被 GC 回收时触发其底层的 <code>Deallocator</code> 任务，调用 <code>unsafe.freeMemory()</code> 释放本地物理内存。</li>
+<li><strong>调优参数</strong>：<code>-XX:MaxDirectMemorySize</code> 限制堆外内存的最大容量，超出限制将抛出 <code>OutOfMemoryError: Direct buffer memory</code>。</li>
 </ul>
 <hr/>
-<h3 class="anchor anchorTargetStickyNavbar_Vzrq" id=7-四种引用类型与应用场景>7. 四种引用类型与应用场景<a href=#7-四种引用类型与应用场景 class=hash-link aria-label="7. 四种引用类型与应用场景的直接链接" title="7. 四种引用类型与应用场景的直接链接" translate=no>​</a></h3>
+<h3 id=7-四种引用类型与应用场景>7. 四种引用类型与应用场景</h3>
 <p>JDK 1.2 之后，Java 将引用扩充为四种强度依次减弱的类型，这也是 <code>WeakHashMap</code>、<code>ThreadLocal</code>、缓存框架、<code>DirectByteBuffer</code> 回收（<code>Cleaner</code>）等机制的理论基石。</p>
 
 
@@ -340,35 +378,35 @@
 <p><strong>追问</strong>：为什么 <code>ThreadLocal</code> 的 Key 要设计成弱引用？—— 为了在外部强引用消失后，即使 <code>Entry</code> 仍被 <code>Thread</code> 通过 <code>ThreadLocalMap</code> 强引用着，其 Key 也能被 GC 正常回收，从而有机会被 <code>expungeStaleEntry</code> 探测并清理对应的 Value，缓解内存泄漏风险（但 Value 本身仍是强引用，实践中仍需手动调用 <code>remove()</code> 才能彻底避免泄漏）。</p>
 </blockquote>
 <hr/>
-<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id=二-垃圾回收基础理论>二、 垃圾回收基础理论<a href=#二-垃圾回收基础理论 class=hash-link aria-label="二、 垃圾回收基础理论的直接链接" title="二、 垃圾回收基础理论的直接链接" translate=no>​</a></h2>
-<h3 class="anchor anchorTargetStickyNavbar_Vzrq" id=1-垃圾判定标准>1. 垃圾判定标准<a href=#1-垃圾判定标准 class=hash-link aria-label="1. 垃圾判定标准的直接链接" title="1. 垃圾判定标准的直接链接" translate=no>​</a></h3>
+<h2 id=二-垃圾回收基础理论>二、 垃圾回收基础理论</h2>
+<h3 id=1-垃圾判定标准>1. 垃圾判定标准</h3>
 <ul>
-<li class=""><strong>引用计数法</strong>：给对象添加引用计数器，每有一处引用计数器加 <span class=katex><span class=katex-mathml><math xmlns=http://www.w3.org/1998/Math/MathML><semantics><mrow><mn>1</mn></mrow><annotation encoding=application/x-tex>1</annotation></semantics></math></span><span class=katex-html aria-hidden=true><span class=base><span class=strut style=height:0.6444em></span><span class=mord>1</span></span></span></span>，引用失效减 <span class=katex><span class=katex-mathml><math xmlns=http://www.w3.org/1998/Math/MathML><semantics><mrow><mn>1</mn></mrow><annotation encoding=application/x-tex>1</annotation></semantics></math></span><span class=katex-html aria-hidden=true><span class=base><span class=strut style=height:0.6444em></span><span class=mord>1</span></span></span></span>。<strong>缺点</strong>：无法解决对象间循环引用问题，已被现代主流虚拟机弃用。</li>
-<li class=""><strong>可达性分析算法（JVM 采用）</strong>：从一系列被称为 <strong><code>GC Roots</code></strong> 的根对象开始向下搜索，若一个对象到 <code>GC Roots</code> 没有任何引用链相连，则证明此对象不可用。</li>
+<li><strong>引用计数法</strong>：给对象添加引用计数器，每有一处引用计数器加 <span class=katex><span class=katex-mathml><math xmlns=http://www.w3.org/1998/Math/MathML><semantics><mrow><mn>1</mn></mrow><annotation encoding=application/x-tex>1</annotation></semantics></math></span><span class=katex-html aria-hidden=true><span class=base><span class=strut style=height:0.6444em></span><span class=mord>1</span></span></span></span>，引用失效减 <span class=katex><span class=katex-mathml><math xmlns=http://www.w3.org/1998/Math/MathML><semantics><mrow><mn>1</mn></mrow><annotation encoding=application/x-tex>1</annotation></semantics></math></span><span class=katex-html aria-hidden=true><span class=base><span class=strut style=height:0.6444em></span><span class=mord>1</span></span></span></span>。<strong>缺点</strong>：无法解决对象间循环引用问题，已被现代主流虚拟机弃用。</li>
+<li><strong>可达性分析算法（JVM 采用）</strong>：从一系列被称为 <strong><code>GC Roots</code></strong> 的根对象开始向下搜索，若一个对象到 <code>GC Roots</code> 没有任何引用链相连，则证明此对象不可用。</li>
 </ul>
 <p><strong>哪些对象可以作为 GC Roots？</strong></p>
 <ol>
-<li class="">虚拟机栈（栈帧中的局部变量表）中引用的对象。</li>
-<li class="">方法区中类静态属性引用的对象。</li>
-<li class="">方法区中常量引用的对象（如字符串常量池里的引用）。</li>
-<li class="">本地方法栈中 JNI（Native 方法）引用的对象。</li>
-<li class="">JVM 内部的引用，如基本数据类型对应的 <code>Class</code> 对象，常驻异常对象（<code>NullPointerException</code> 等），系统类加载器。</li>
+<li>虚拟机栈（栈帧中的局部变量表）中引用的对象。</li>
+<li>方法区中类静态属性引用的对象。</li>
+<li>方法区中常量引用的对象（如字符串常量池里的引用）。</li>
+<li>本地方法栈中 JNI（Native 方法）引用的对象。</li>
+<li>JVM 内部的引用，如基本数据类型对应的 <code>Class</code> 对象，常驻异常对象（<code>NullPointerException</code> 等），系统类加载器。</li>
 </ol>
-<h3 class="anchor anchorTargetStickyNavbar_Vzrq" id=2-分代收集理论>2. 分代收集理论<a href=#2-分代收集理论 class=hash-link aria-label="2. 分代收集理论的直接链接" title="2. 分代收集理论的直接链接" translate=no>​</a></h3>
+<h3 id=2-分代收集理论>2. 分代收集理论</h3>
 <p>现代商用虚拟机大多遵循 <strong>分代收集理论（Generational Collection Theory）</strong>，其建立在三个经验假说之上：</p>
 <ol>
-<li class=""><strong>弱分代假说</strong>：绝大多数对象都是朝生夕灭的。</li>
-<li class=""><strong>强分代假说</strong>：熬过越多次垃圾收集过程的对象就越难以消亡。</li>
-<li class=""><strong>跨代引用假说</strong>：跨代引用相对于同代引用来说仅占极少数。</li>
+<li><strong>弱分代假说</strong>：绝大多数对象都是朝生夕灭的。</li>
+<li><strong>强分代假说</strong>：熬过越多次垃圾收集过程的对象就越难以消亡。</li>
+<li><strong>跨代引用假说</strong>：跨代引用相对于同代引用来说仅占极少数。</li>
 </ol>
 <p>基于以上假说，堆被划分为不同区域分而治之。但假说 3 引出一个新问题：<strong>Minor GC 时如何避免扫描整个老年代来判断是否存在跨代引用，从而保证不漏标？</strong></p>
-<h4 class="anchor anchorTargetStickyNavbar_Vzrq" id=-卡表card-table与记忆集remembered-set>💡 卡表（Card Table）与记忆集（Remembered Set）<a href=#-卡表card-table与记忆集remembered-set class=hash-link aria-label="💡 卡表（Card Table）与记忆集（Remembered Set）的直接链接" title="💡 卡表（Card Table）与记忆集（Remembered Set）的直接链接" translate=no>​</a></h4>
+<h4 id=-卡表card-table与记忆集remembered-set>💡 卡表（Card Table）与记忆集（Remembered Set）</h4>
 <ul>
-<li class=""><strong>记忆集（RSet）</strong>：一种记录从非收集区域指向收集区域的指针集合的抽象数据结构，用于避免把整个堆加入扫描范围。</li>
-<li class=""><strong>卡表（Card Table）</strong>：记忆集的一种具体的、粗粒度实现。HotSpot 默认将老年代按 <span class=katex><span class=katex-mathml><math xmlns=http://www.w3.org/1998/Math/MathML><semantics><mrow><mn>512</mn></mrow><annotation encoding=application/x-tex>512</annotation></semantics></math></span><span class=katex-html aria-hidden=true><span class=base><span class=strut style=height:0.6444em></span><span class=mord>512</span></span></span></span> 字节划分为一个个 <strong>卡页（Card Page）</strong>，每个卡页对应卡表中的一个字节标记。当有其他分代对象引用了该卡页内的对象时，将该字节标记为 <span class=katex><span class=katex-mathml><math xmlns=http://www.w3.org/1998/Math/MathML><semantics><mrow><mn>1</mn></mrow><annotation encoding=application/x-tex>1</annotation></semantics></math></span><span class=katex-html aria-hidden=true><span class=base><span class=strut style=height:0.6444em></span><span class=mord>1</span></span></span></span>（Dirty），否则为 <span class=katex><span class=katex-mathml><math xmlns=http://www.w3.org/1998/Math/MathML><semantics><mrow><mn>0</mn></mrow><annotation encoding=application/x-tex>0</annotation></semantics></math></span><span class=katex-html aria-hidden=true><span class=base><span class=strut style=height:0.6444em></span><span class=mord>0</span></span></span></span>。</li>
-<li class=""><strong>写屏障（Write Barrier）</strong>：JVM 在赋值语句前后插入类似 AOP 切面的操作来动态维护卡表状态。Minor GC 时只需扫描卡表中标记为 Dirty 的卡页，无需扫描整个老年代，代价是每次引用字段赋值都会产生额外开销。</li>
+<li><strong>记忆集（RSet）</strong>：一种记录从非收集区域指向收集区域的指针集合的抽象数据结构，用于避免把整个堆加入扫描范围。</li>
+<li><strong>卡表（Card Table）</strong>：记忆集的一种具体的、粗粒度实现。HotSpot 默认将老年代按 <span class=katex><span class=katex-mathml><math xmlns=http://www.w3.org/1998/Math/MathML><semantics><mrow><mn>512</mn></mrow><annotation encoding=application/x-tex>512</annotation></semantics></math></span><span class=katex-html aria-hidden=true><span class=base><span class=strut style=height:0.6444em></span><span class=mord>512</span></span></span></span> 字节划分为一个个 <strong>卡页（Card Page）</strong>，每个卡页对应卡表中的一个字节标记。当有其他分代对象引用了该卡页内的对象时，将该字节标记为 <span class=katex><span class=katex-mathml><math xmlns=http://www.w3.org/1998/Math/MathML><semantics><mrow><mn>1</mn></mrow><annotation encoding=application/x-tex>1</annotation></semantics></math></span><span class=katex-html aria-hidden=true><span class=base><span class=strut style=height:0.6444em></span><span class=mord>1</span></span></span></span>（Dirty），否则为 <span class=katex><span class=katex-mathml><math xmlns=http://www.w3.org/1998/Math/MathML><semantics><mrow><mn>0</mn></mrow><annotation encoding=application/x-tex>0</annotation></semantics></math></span><span class=katex-html aria-hidden=true><span class=base><span class=strut style=height:0.6444em></span><span class=mord>0</span></span></span></span>。</li>
+<li><strong>写屏障（Write Barrier）</strong>：JVM 在赋值语句前后插入类似 AOP 切面的操作来动态维护卡表状态。Minor GC 时只需扫描卡表中标记为 Dirty 的卡页，无需扫描整个老年代，代价是每次引用字段赋值都会产生额外开销。</li>
 </ul>
-<h3 class="anchor anchorTargetStickyNavbar_Vzrq" id=3-三种基础垃圾回收算法>3. 三种基础垃圾回收算法<a href=#3-三种基础垃圾回收算法 class=hash-link aria-label="3. 三种基础垃圾回收算法的直接链接" title="3. 三种基础垃圾回收算法的直接链接" translate=no>​</a></h3>
+<h3 id=3-三种基础垃圾回收算法>3. 三种基础垃圾回收算法</h3>
 
 
 
@@ -402,24 +440,35 @@
 <blockquote>
 <p>老年代对象存活率高，缺乏额外空间做分配担保，大多采用<strong>标记-清除</strong>或<strong>标记-清除/整理混合策略</strong>（如 CMS 平时标记清除，碎片过多时定期做一次 Full GC 整理）。</p>
 </blockquote>
-<h3 class="anchor anchorTargetStickyNavbar_Vzrq" id=4-三色标记算法three-color-marking>4. 三色标记算法（Three-Color Marking）<a href=#4-三色标记算法three-color-marking class=hash-link aria-label="4. 三色标记算法（Three-Color Marking）的直接链接" title="4. 三色标记算法（Three-Color Marking）的直接链接" translate=no>​</a></h3>
+<h3 id=4-三色标记算法three-color-marking>4. 三色标记算法（Three-Color Marking）</h3>
 <p>并发标记阶段（用户线程与 GC 线程并发运行），收集器通常使用三色标记法对对象染色：</p>
-<!-- -->
+<mermaid value="graph LR
+    Black((黑色: 已扫描且存活)) --> Gray((灰色: 自身已扫, 引用待扫))
+    Gray --> White((白色: 未扫/垃圾))"></mermaid>
 <p>并发标记期间，若用户线程修改了对象引用关系，可能出现 <strong>漏标</strong>（存活对象被误判为垃圾），需同时满足两个条件：</p>
 <ol>
-<li class="">赋值器插入了一条或多条从黑色对象到白色对象的新引用；</li>
-<li class="">赋值器删除了全部从灰色对象到该白色对象的直接或间接引用。</li>
+<li>赋值器插入了一条或多条从黑色对象到白色对象的新引用；</li>
+<li>赋值器删除了全部从灰色对象到该白色对象的直接或间接引用。</li>
 </ol>
 <p>与漏标相对，还存在<strong>多标问题</strong>：本已死亡的对象被误标为存活，这类对象被称为<strong>浮动垃圾</strong>，不影响正确性，只是要等到下一轮 GC 才被清理。</p>
-<h4 class="anchor anchorTargetStickyNavbar_Vzrq" id=-解决方案>💡 解决方案<a href=#-解决方案 class=hash-link aria-label="💡 解决方案的直接链接" title="💡 解决方案的直接链接" translate=no>​</a></h4>
+<h4 id=-解决方案>💡 解决方案</h4>
 <ul>
-<li class=""><strong>原始快照（SATB, Snapshot At The Beginning）</strong>：G1 采用，破坏条件 <span class=katex><span class=katex-mathml><math xmlns=http://www.w3.org/1998/Math/MathML><semantics><mrow><mn>2</mn></mrow><annotation encoding=application/x-tex>2</annotation></semantics></math></span><span class=katex-html aria-hidden=true><span class=base><span class=strut style=height:0.6444em></span><span class=mord>2</span></span></span></span>。灰色对象要断开对白色对象的引用时，通过写屏障记录下这个即将断开的引用，并发标记结束后以这些记录对象为根重新扫描一次。</li>
-<li class=""><strong>增量更新（Incremental Update）</strong>：CMS 采用，破坏条件 <span class=katex><span class=katex-mathml><math xmlns=http://www.w3.org/1998/Math/MathML><semantics><mrow><mn>1</mn></mrow><annotation encoding=application/x-tex>1</annotation></semantics></math></span><span class=katex-html aria-hidden=true><span class=base><span class=strut style=height:0.6444em></span><span class=mord>1</span></span></span></span>。黑色对象插入指向白色对象的新引用时，通过写屏障记录这个新引用，并发标记结束后以这些黑色对象为根重新扫描一次。</li>
+<li><strong>原始快照（SATB, Snapshot At The Beginning）</strong>：G1 采用，破坏条件 <span class=katex><span class=katex-mathml><math xmlns=http://www.w3.org/1998/Math/MathML><semantics><mrow><mn>2</mn></mrow><annotation encoding=application/x-tex>2</annotation></semantics></math></span><span class=katex-html aria-hidden=true><span class=base><span class=strut style=height:0.6444em></span><span class=mord>2</span></span></span></span>。灰色对象要断开对白色对象的引用时，通过写屏障记录下这个即将断开的引用，并发标记结束后以这些记录对象为根重新扫描一次。</li>
+<li><strong>增量更新（Incremental Update）</strong>：CMS 采用，破坏条件 <span class=katex><span class=katex-mathml><math xmlns=http://www.w3.org/1998/Math/MathML><semantics><mrow><mn>1</mn></mrow><annotation encoding=application/x-tex>1</annotation></semantics></math></span><span class=katex-html aria-hidden=true><span class=base><span class=strut style=height:0.6444em></span><span class=mord>1</span></span></span></span>。黑色对象插入指向白色对象的新引用时，通过写屏障记录这个新引用，并发标记结束后以这些黑色对象为根重新扫描一次。</li>
 </ul>
 <hr/>
-<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id=三-经典与现代垃圾收集器全景>三、 经典与现代垃圾收集器全景<a href=#三-经典与现代垃圾收集器全景 class=hash-link aria-label="三、 经典与现代垃圾收集器全景的直接链接" title="三、 经典与现代垃圾收集器全景的直接链接" translate=no>​</a></h2>
-<h3 class="anchor anchorTargetStickyNavbar_Vzrq" id=0-收集器发展脉络与搭配关系>0. 收集器发展脉络与搭配关系<a href=#0-收集器发展脉络与搭配关系 class=hash-link aria-label="0. 收集器发展脉络与搭配关系的直接链接" title="0. 收集器发展脉络与搭配关系的直接链接" translate=no>​</a></h3>
-<!-- -->
+<h2 id=三-经典与现代垃圾收集器全景>三、 经典与现代垃圾收集器全景</h2>
+<h3 id=0-收集器发展脉络与搭配关系>0. 收集器发展脉络与搭配关系</h3>
+<mermaid value="graph TD
+    Serial[Serial 新生代] --- SerialOld[Serial Old 老年代]
+    Serial --- CMS[CMS 老年代]
+    ParNew[ParNew 新生代] --- SerialOld
+    ParNew --- CMS
+    PS[Parallel Scavenge 新生代] --- PO[Parallel Old 老年代]
+    PS --- SerialOld
+    G1[G1 整堆]
+    ZGC[ZGC 整堆]
+    Shenandoah[Shenandoah 整堆]"></mermaid>
 <blockquote>
 <p>JDK 14 中 CMS 已被彻底移除（<code>JEP 363</code>），Serial + CMS 组合早已不推荐使用，此处仅作历史脉络说明。</p>
 </blockquote>
@@ -492,66 +541,74 @@
 
 
 <table><thead><tr><th style=text-align:left>收集器<th style=text-align:left>作用分代<th style=text-align:left>收集算法<th style=text-align:left>线程模式<th style=text-align:left>设计目标<tbody><tr><td style=text-align:left>Serial<td style=text-align:left>新生代<td style=text-align:left>标记-复制<td style=text-align:left>单线程<td style=text-align:left>简单高效（客户端模式）<tr><td style=text-align:left>ParNew<td style=text-align:left>新生代<td style=text-align:left>标记-复制<td style=text-align:left>多线程并行<td style=text-align:left>配合 CMS 使用<tr><td style=text-align:left>Parallel Scavenge<td style=text-align:left>新生代<td style=text-align:left>标记-复制<td style=text-align:left>多线程并行<td style=text-align:left>高吞吐量<tr><td style=text-align:left>Serial Old<td style=text-align:left>老年代<td style=text-align:left>标记-整理<td style=text-align:left>单线程<td style=text-align:left>Parallel Scavenge 的备用方案<tr><td style=text-align:left>Parallel Old<td style=text-align:left>老年代<td style=text-align:left>标记-整理<td style=text-align:left>多线程并行<td style=text-align:left>与 Parallel Scavenge 搭配，高吞吐<tr><td style=text-align:left>CMS<td style=text-align:left>老年代<td style=text-align:left>标记-清除<td style=text-align:left>多线程并发<td style=text-align:left>最短回收停顿时间（已移除）<tr><td style=text-align:left>G1<td style=text-align:left>整堆（分 Region）<td style=text-align:left>局部标记-复制<td style=text-align:left>多线程并发<td style=text-align:left>停顿时间可预测<tr><td style=text-align:left>ZGC / Shenandoah<td style=text-align:left>整堆<td style=text-align:left>并发标记-整理<td style=text-align:left>多线程并发<td style=text-align:left>超低延迟（毫秒级 STW）</table>
-<h3 class="anchor anchorTargetStickyNavbar_Vzrq" id=1-serial--serial-old单线程收集器>1. Serial / Serial Old：单线程收集器<a href=#1-serial--serial-old单线程收集器 class=hash-link aria-label="1. Serial / Serial Old：单线程收集器的直接链接" title="1. Serial / Serial Old：单线程收集器的直接链接" translate=no>​</a></h3>
+<h3 id=1-serial--serial-old单线程收集器>1. Serial / Serial Old：单线程收集器</h3>
 <p>历史最悠久的收集器，进行垃圾收集时必须暂停其他所有工作线程（<code>Stop The World</code>）。因没有线程交互开销，在<strong>单核 CPU 或堆内存较小的客户端场景</strong>下反而简单高效，是 Client 模式下的默认新生代收集器。</p>
-<h3 class="anchor anchorTargetStickyNavbar_Vzrq" id=2-parnewserial-的多线程版本>2. ParNew：Serial 的多线程版本<a href=#2-parnewserial-的多线程版本 class=hash-link aria-label="2. ParNew：Serial 的多线程版本的直接链接" title="2. ParNew：Serial 的多线程版本的直接链接" translate=no>​</a></h3>
+<h3 id=2-parnewserial-的多线程版本>2. ParNew：Serial 的多线程版本</h3>
 <p>本质是 Serial 的多线程并行版本，工作原理与 Serial 完全一致。是运行在 Server 模式下的虚拟机首选的新生代收集器之一，重要原因是除 Serial 外，只有它能与 <strong>CMS</strong> 配合工作。</p>
-<h3 class="anchor anchorTargetStickyNavbar_Vzrq" id=3-parallel-scavenge--parallel-old吞吐量优先>3. Parallel Scavenge / Parallel Old：吞吐量优先<a href=#3-parallel-scavenge--parallel-old吞吐量优先 class=hash-link aria-label="3. Parallel Scavenge / Parallel Old：吞吐量优先的直接链接" title="3. Parallel Scavenge / Parallel Old：吞吐量优先的直接链接" translate=no>​</a></h3>
+<h3 id=3-parallel-scavenge--parallel-old吞吐量优先>3. Parallel Scavenge / Parallel Old：吞吐量优先</h3>
 <p>以尽可能高的吞吐量（<strong>Throughput = 用户代码运行时间 / (用户代码运行时间 + GC 时间)</strong>）为目标：</p>
 <ul>
-<li class=""><code>-XX:MaxGCPauseMillis</code>：控制最大垃圾收集停顿时间。</li>
-<li class=""><code>-XX:GCTimeRatio</code>：直接设置吞吐量大小。</li>
-<li class=""><code>-XX:+UseAdaptiveSizePolicy</code>：开启 <strong>GC 自适应调节策略</strong>，虚拟机根据运行情况动态调整新生代大小、Eden/Survivor 比例、晋升年龄等，无需人工干预。</li>
+<li><code>-XX:MaxGCPauseMillis</code>：控制最大垃圾收集停顿时间。</li>
+<li><code>-XX:GCTimeRatio</code>：直接设置吞吐量大小。</li>
+<li><code>-XX:+UseAdaptiveSizePolicy</code>：开启 <strong>GC 自适应调节策略</strong>，虚拟机根据运行情况动态调整新生代大小、Eden/Survivor 比例、晋升年龄等，无需人工干预。</li>
 </ul>
-<h3 class="anchor anchorTargetStickyNavbar_Vzrq" id=4-cmsconcurrent-mark-sweep以低延迟为目标>4. CMS（Concurrent Mark Sweep）：以低延迟为目标<a href=#4-cmsconcurrent-mark-sweep以低延迟为目标 class=hash-link aria-label="4. CMS（Concurrent Mark Sweep）：以低延迟为目标的直接链接" title="4. CMS（Concurrent Mark Sweep）：以低延迟为目标的直接链接" translate=no>​</a></h3>
+<h3 id=4-cmsconcurrent-mark-sweep以低延迟为目标>4. CMS（Concurrent Mark Sweep）：以低延迟为目标</h3>
 <p>CMS 是 HotSpot 上第一款真正意义上的<strong>并发收集器</strong>，首次实现垃圾收集线程与用户线程基本同时工作。基于<strong>标记-清除</strong>算法，全过程分 <span class=katex><span class=katex-mathml><math xmlns=http://www.w3.org/1998/Math/MathML><semantics><mrow><mn>4</mn></mrow><annotation encoding=application/x-tex>4</annotation></semantics></math></span><span class=katex-html aria-hidden=true><span class=base><span class=strut style=height:0.6444em></span><span class=mord>4</span></span></span></span> 步：</p>
-<!-- -->
+<mermaid value='graph LR
+    A["1.初始标记<br/>STW, 极短"] --> B["2.并发标记<br/>与用户线程并发"]
+    B --> C["3.重新标记<br/>STW, 修正变动"]
+    C --> D["4.并发清除<br/>与用户线程并发"]'></mermaid>
 <ol>
-<li class=""><strong>初始标记（Initial Mark）</strong>：STW，仅标记 GC Roots 直接关联的对象，速度很快。</li>
-<li class=""><strong>并发标记（Concurrent Mark）</strong>：从直接关联对象开始遍历整个对象图，与用户线程并发，耗时最长但不阻塞用户线程。</li>
-<li class=""><strong>重新标记（Remark）</strong>：STW，采用<strong>增量更新</strong>修正并发标记期间因用户线程运行而变动的标记记录，停顿时间比初始标记稍长，但远小于并发标记。</li>
-<li class=""><strong>并发清除（Concurrent Sweep）</strong>：清理已标记的可回收对象，与用户线程并发。</li>
+<li><strong>初始标记（Initial Mark）</strong>：STW，仅标记 GC Roots 直接关联的对象，速度很快。</li>
+<li><strong>并发标记（Concurrent Mark）</strong>：从直接关联对象开始遍历整个对象图，与用户线程并发，耗时最长但不阻塞用户线程。</li>
+<li><strong>重新标记（Remark）</strong>：STW，采用<strong>增量更新</strong>修正并发标记期间因用户线程运行而变动的标记记录，停顿时间比初始标记稍长，但远小于并发标记。</li>
+<li><strong>并发清除（Concurrent Sweep）</strong>：清理已标记的可回收对象，与用户线程并发。</li>
 </ol>
 <p><strong>三大缺点</strong>：</p>
 <ol>
-<li class=""><strong>CPU 资源敏感</strong>：并发阶段占用部分线程资源，导致吞吐量降低（默认并发线程数为 <code>(CPU数量+3)/4</code>）。</li>
-<li class=""><strong>无法处理浮动垃圾</strong>：并发清理阶段用户线程仍在产生新垃圾，只能留到下次 GC 清理，严重时会触发"并发失败"（Concurrent Mode Failure），退化为使用 Serial Old 进行一次 Full GC。</li>
-<li class=""><strong>基于标记-清除，产生大量空间碎片</strong>：碎片过多时即使老年代仍有较大剩余空间，也可能因无法找到连续空间分配大对象而提前触发 Full GC，可用 <code>-XX:+UseCMSCompactAtFullCollection</code> 缓解。</li>
+<li><strong>CPU 资源敏感</strong>：并发阶段占用部分线程资源，导致吞吐量降低（默认并发线程数为 <code>(CPU数量+3)/4</code>）。</li>
+<li><strong>无法处理浮动垃圾</strong>：并发清理阶段用户线程仍在产生新垃圾，只能留到下次 GC 清理，严重时会触发"并发失败"（Concurrent Mode Failure），退化为使用 Serial Old 进行一次 Full GC。</li>
+<li><strong>基于标记-清除，产生大量空间碎片</strong>：碎片过多时即使老年代仍有较大剩余空间，也可能因无法找到连续空间分配大对象而提前触发 Full GC，可用 <code>-XX:+UseCMSCompactAtFullCollection</code> 缓解。</li>
 </ol>
 <blockquote>
 <p><strong>现状</strong>：CMS 在 JDK 9 中标记为<strong>过时（Deprecated）</strong>，JDK 14 中被彻底<strong>移除</strong>，其历史使命已由 G1 全面接棒。</p>
 </blockquote>
-<h3 class="anchor anchorTargetStickyNavbar_Vzrq" id=5-g1-garbage-first-收集器>5. G1 (Garbage-First) 收集器<a href=#5-g1-garbage-first-收集器 class=hash-link aria-label="5. G1 (Garbage-First) 收集器的直接链接" title="5. G1 (Garbage-First) 收集器的直接链接" translate=no>​</a></h3>
+<h3 id=5-g1-garbage-first-收集器>5. G1 (Garbage-First) 收集器</h3>
 <p>G1 彻底放弃了物理上的连续分代，将堆划分为多个大小相同的独立区域（<strong>Region</strong>，<span class=katex><span class=katex-mathml><math xmlns=http://www.w3.org/1998/Math/MathML><semantics><mrow><mn>1</mn><mtext>MB</mtext></mrow><annotation encoding=application/x-tex>1\text{MB}</annotation></semantics></math></span><span class=katex-html aria-hidden=true><span class=base><span class=strut style=height:0.6833em></span><span class=mord>1</span><span class="mord text"><span class=mord>MB</span></span></span></span></span> 到 <span class=katex><span class=katex-mathml><math xmlns=http://www.w3.org/1998/Math/MathML><semantics><mrow><mn>32</mn><mtext>MB</mtext></mrow><annotation encoding=application/x-tex>32\text{MB}</annotation></semantics></math></span><span class=katex-html aria-hidden=true><span class=base><span class=strut style=height:0.6833em></span><span class=mord>32</span><span class="mord text"><span class=mord>MB</span></span></span></span></span>，须为 <span class=katex><span class=katex-mathml><math xmlns=http://www.w3.org/1998/Math/MathML><semantics><mrow><mn>2</mn></mrow><annotation encoding=application/x-tex>2</annotation></semantics></math></span><span class=katex-html aria-hidden=true><span class=base><span class=strut style=height:0.6444em></span><span class=mord>2</span></span></span></span> 的幂）。</p>
-<!-- -->
+<mermaid value='graph TD
+    subgraph "G1 Region 物理排布 (动态分配角色)"
+        R1[Eden] --- R2[Survivor] --- R3[Old] --- R4[Eden]
+        R5[Old] --- R6[Humongous] --- R7[Eden] --- R8[Survivor]
+        R9[Survivor] --- R10[Old] --- R11[Old] --- R12[Eden]
+    end'></mermaid>
 <ul>
-<li class=""><strong>Humongous Region</strong>：专门存储大对象（超过单个 Region 大小 <span class=katex><span class=katex-mathml><math xmlns=http://www.w3.org/1998/Math/MathML><semantics><mrow><mn>50</mn><mi mathvariant=normal>%</mi></mrow><annotation encoding=application/x-tex>50\%</annotation></semantics></math></span><span class=katex-html aria-hidden=true><span class=base><span class=strut style=height:0.8056em;vertical-align:-0.0556em></span><span class=mord>50%</span></span></span></span> 的对象）。</li>
-<li class=""><strong>可预测停顿</strong>：G1 在后台跟踪各 Region 的回收价值，每次根据 <code>-XX:MaxGCPauseMillis</code> 限制，优先回收性价比最高的 Region。</li>
+<li><strong>Humongous Region</strong>：专门存储大对象（超过单个 Region 大小 <span class=katex><span class=katex-mathml><math xmlns=http://www.w3.org/1998/Math/MathML><semantics><mrow><mn>50</mn><mi mathvariant=normal>%</mi></mrow><annotation encoding=application/x-tex>50\%</annotation></semantics></math></span><span class=katex-html aria-hidden=true><span class=base><span class=strut style=height:0.8056em;vertical-align:-0.0556em></span><span class=mord>50%</span></span></span></span> 的对象）。</li>
+<li><strong>可预测停顿</strong>：G1 在后台跟踪各 Region 的回收价值，每次根据 <code>-XX:MaxGCPauseMillis</code> 限制，优先回收性价比最高的 Region。</li>
 </ul>
-<h4 class="anchor anchorTargetStickyNavbar_Vzrq" id=-g1-的两种-gc-模式>🔍 G1 的两种 GC 模式<a href=#-g1-的两种-gc-模式 class=hash-link aria-label="🔍 G1 的两种 GC 模式的直接链接" title="🔍 G1 的两种 GC 模式的直接链接" translate=no>​</a></h4>
+<h4 id=-g1-的两种-gc-模式>🔍 G1 的两种 GC 模式</h4>
 <ol>
-<li class=""><strong>Young GC（年轻代收集）</strong>：Eden 区用尽时触发，采用<strong>标记-复制</strong>算法将存活对象复制到 Survivor 或直接晋升老年代 Region，全程 STW，但因只处理年轻代 Region，停顿时间可控。</li>
-<li class=""><strong>并发标记周期（Concurrent Marking Cycle）</strong>：老年代占用堆比例达到阈值（<code>-XX:InitiatingHeapOccupancyPercent</code>，默认 <span class=katex><span class=katex-mathml><math xmlns=http://www.w3.org/1998/Math/MathML><semantics><mrow><mn>45</mn><mi mathvariant=normal>%</mi></mrow><annotation encoding=application/x-tex>45\%</annotation></semantics></math></span><span class=katex-html aria-hidden=true><span class=base><span class=strut style=height:0.8056em;vertical-align:-0.0556em></span><span class=mord>45%</span></span></span></span>）时触发，采用 SATB 标记全堆存活对象，为混合回收提供依据。流程：初始标记（借用 Young GC 的 STW）→ 根区域扫描 → 并发标记 → 最终标记（STW）→ 筛选回收（STW，统计各 Region 回收价值）。</li>
-<li class=""><strong>Mixed GC（混合回收）</strong>：并发标记周期结束后触发，回收<strong>全部新生代 Region + 部分性价比最高的老年代 Region</strong>（数量由 <code>-XX:MaxGCPauseMillis</code> 决定），依然是标记-复制算法，存活对象被复制到空闲 Region，因此 G1 整体上不会产生内存碎片。</li>
+<li><strong>Young GC（年轻代收集）</strong>：Eden 区用尽时触发，采用<strong>标记-复制</strong>算法将存活对象复制到 Survivor 或直接晋升老年代 Region，全程 STW，但因只处理年轻代 Region，停顿时间可控。</li>
+<li><strong>并发标记周期（Concurrent Marking Cycle）</strong>：老年代占用堆比例达到阈值（<code>-XX:InitiatingHeapOccupancyPercent</code>，默认 <span class=katex><span class=katex-mathml><math xmlns=http://www.w3.org/1998/Math/MathML><semantics><mrow><mn>45</mn><mi mathvariant=normal>%</mi></mrow><annotation encoding=application/x-tex>45\%</annotation></semantics></math></span><span class=katex-html aria-hidden=true><span class=base><span class=strut style=height:0.8056em;vertical-align:-0.0556em></span><span class=mord>45%</span></span></span></span>）时触发，采用 SATB 标记全堆存活对象，为混合回收提供依据。流程：初始标记（借用 Young GC 的 STW）→ 根区域扫描 → 并发标记 → 最终标记（STW）→ 筛选回收（STW，统计各 Region 回收价值）。</li>
+<li><strong>Mixed GC（混合回收）</strong>：并发标记周期结束后触发，回收<strong>全部新生代 Region + 部分性价比最高的老年代 Region</strong>（数量由 <code>-XX:MaxGCPauseMillis</code> 决定），依然是标记-复制算法，存活对象被复制到空闲 Region，因此 G1 整体上不会产生内存碎片。</li>
 </ol>
-<h4 class="anchor anchorTargetStickyNavbar_Vzrq" id=-g1-中的记忆集实现>🔍 G1 中的记忆集实现<a href=#-g1-中的记忆集实现 class=hash-link aria-label="🔍 G1 中的记忆集实现的直接链接" title="🔍 G1 中的记忆集实现的直接链接" translate=no>​</a></h4>
+<h4 id=-g1-中的记忆集实现>🔍 G1 中的记忆集实现</h4>
 <p>由于 G1 的 Region 之间可以相互引用（不仅是新生代到老年代），G1 为<strong>每个 Region</strong> 都维护了一份独立的 RSet，记录粒度比传统卡表更精细，这也是 G1 内存占用（额外占堆容量 <span class=katex><span class=katex-mathml><math xmlns=http://www.w3.org/1998/Math/MathML><semantics><mrow><mn>10</mn><mi mathvariant=normal>%</mi><mtext>-</mtext><mn>20</mn><mi mathvariant=normal>%</mi></mrow><annotation encoding=application/x-tex>10\%\text{-}20\%</annotation></semantics></math></span><span class=katex-html aria-hidden=true><span class=base><span class=strut style=height:0.8056em;vertical-align:-0.0556em></span><span class=mord>10%</span><span class="mord text"><span class=mord>-</span></span><span class=mord>20%</span></span></span></span> 左右）相对较高的原因之一。</p>
-<h3 class="anchor anchorTargetStickyNavbar_Vzrq" id=6-zgc-z-garbage-collector-收集器>6. ZGC (Z Garbage Collector) 收集器<a href=#6-zgc-z-garbage-collector-收集器 class=hash-link aria-label="6. ZGC (Z Garbage Collector) 收集器的直接链接" title="6. ZGC (Z Garbage Collector) 收集器的直接链接" translate=no>​</a></h3>
+<h3 id=6-zgc-z-garbage-collector-收集器>6. ZGC (Z Garbage Collector) 收集器</h3>
 <p>ZGC 是一款在 JDK 15 正式转正的低延迟垃圾收集器，致力于将 <strong>STW 停顿控制在 10 ms（甚至 1 ms）以内</strong>，且停顿时间不随堆大小增长而增加。</p>
 <ul>
-<li class=""><strong>染色指针（Colored Pointers）</strong>：ZGC 仅使用 64 位指针中的 42 位寻址（最大支持 16 TB 堆），高 4 位存储 GC 元数据（Marked0, Marked1, Remapped, Finalizable），实现了指针本身携带 GC 标记信息。</li>
-<li class=""><strong>多重映射（Multi-Mapping）</strong>：ZGC 在虚拟内存层面将同一段物理内存同时映射到多个不同的虚拟地址空间（视图），借助染色指针的高位标志，操作系统层面的地址转换可以直接映射到对应的物理内存视图，避免了传统方案中额外的转发表查询开销。</li>
-<li class=""><strong>读屏障与自愈（Read Barrier & Self-Healing）</strong>：用户线程读取一个已被移动但未更新指针的对象时，读屏障会拦截该操作，根据转发表（Forwarding Table）更新引用为新地址，实现自愈，从而支持 <strong>并发整理（Concurrent Compact）</strong>。</li>
+<li><strong>染色指针（Colored Pointers）</strong>：ZGC 仅使用 64 位指针中的 42 位寻址（最大支持 16 TB 堆），高 4 位存储 GC 元数据（Marked0, Marked1, Remapped, Finalizable），实现了指针本身携带 GC 标记信息。</li>
+<li><strong>多重映射（Multi-Mapping）</strong>：ZGC 在虚拟内存层面将同一段物理内存同时映射到多个不同的虚拟地址空间（视图），借助染色指针的高位标志，操作系统层面的地址转换可以直接映射到对应的物理内存视图，避免了传统方案中额外的转发表查询开销。</li>
+<li><strong>读屏障与自愈（Read Barrier & Self-Healing）</strong>：用户线程读取一个已被移动但未更新指针的对象时，读屏障会拦截该操作，根据转发表（Forwarding Table）更新引用为新地址，实现自愈，从而支持 <strong>并发整理（Concurrent Compact）</strong>。</li>
 </ul>
-<h4 class="anchor anchorTargetStickyNavbar_Vzrq" id=-zgc-的三大并发阶段>🔍 ZGC 的三大并发阶段<a href=#-zgc-的三大并发阶段 class=hash-link aria-label="🔍 ZGC 的三大并发阶段的直接链接" title="🔍 ZGC 的三大并发阶段的直接链接" translate=no>​</a></h4>
+<h4 id=-zgc-的三大并发阶段>🔍 ZGC 的三大并发阶段</h4>
 <ol>
-<li class=""><strong>并发标记（Concurrent Mark）</strong>：遍历对象图做可达性分析，标记信息记录在指针的染色位中，而非对象头。</li>
-<li class=""><strong>并发预备重分配（Concurrent Prepare for Relocate）</strong>：统计各 Region（ZPage）的回收价值，组成重分配集（Relocation Set）。</li>
-<li class=""><strong>并发重分配（Concurrent Relocate）</strong>：将重分配集中的存活对象复制到新 Region，并为每个被移动的旧对象维护转发表。若用户线程并发访问了旧地址，将触发读屏障完成转发并"自愈"，之后再次访问将直接命中已修正的引用。</li>
+<li><strong>并发标记（Concurrent Mark）</strong>：遍历对象图做可达性分析，标记信息记录在指针的染色位中，而非对象头。</li>
+<li><strong>并发预备重分配（Concurrent Prepare for Relocate）</strong>：统计各 Region（ZPage）的回收价值，组成重分配集（Relocation Set）。</li>
+<li><strong>并发重分配（Concurrent Relocate）</strong>：将重分配集中的存活对象复制到新 Region，并为每个被移动的旧对象维护转发表。若用户线程并发访问了旧地址，将触发读屏障完成转发并"自愈"，之后再次访问将直接命中已修正的引用。</li>
 </ol>
-<h3 class="anchor anchorTargetStickyNavbar_Vzrq" id=7-shenandoah-简介>7. Shenandoah 简介<a href=#7-shenandoah-简介 class=hash-link aria-label="7. Shenandoah 简介的直接链接" title="7. Shenandoah 简介的直接链接" translate=no>​</a></h3>
+<h3 id=7-shenandoah-简介>7. Shenandoah 简介</h3>
 <p>由 RedHat 主导开发，设计目标与 ZGC 相似（低延迟），核心区别在于并发整理阶段的实现：Shenandoah 使用 <strong>Brooks 转发指针</strong>（在对象头前插入一个转发指针字段）配合<strong>读写屏障</strong>实现并发整理，而非染色指针。两者设计目标与效果基本一致，均能做到停顿时间与堆大小无关。</p>
-<h3 class="anchor anchorTargetStickyNavbar_Vzrq" id=8-收集器选型总结>8. 收集器选型总结<a href=#8-收集器选型总结 class=hash-link aria-label="8. 收集器选型总结的直接链接" title="8. 收集器选型总结的直接链接" translate=no>​</a></h3>
+<h3 id=8-收集器选型总结>8. 收集器选型总结</h3>
 
 
 
@@ -584,31 +641,31 @@
 
 <table><thead><tr><th style=text-align:left>场景<th style=text-align:left>推荐收集器<th style=text-align:left>JVM 参数<tbody><tr><td style=text-align:left>单核/小内存/客户端应用<td style=text-align:left>Serial + Serial Old<td style=text-align:left><code>-XX:+UseSerialGC</code><tr><td style=text-align:left>追求高吞吐（批处理、计算型任务）<td style=text-align:left>Parallel Scavenge + Parallel Old<td style=text-align:left><code>-XX:+UseParallelGC</code><tr><td style=text-align:left>中等堆（几 GB 至十几 GB），停顿可控<td style=text-align:left>G1（JDK 9+ 默认）<td style=text-align:left><code>-XX:+UseG1GC</code><tr><td style=text-align:left>超大堆（几十 GB 至 TB 级），极致低延迟<td style=text-align:left>ZGC / Shenandoah<td style=text-align:left><code>-XX:+UseZGC</code> / <code>-XX:+UseShenandoahGC</code></table>
 <hr/>
-<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id=四-高频面试题与追问>四、 高频面试题与追问<a href=#四-高频面试题与追问 class=hash-link aria-label="四、 高频面试题与追问的直接链接" title="四、 高频面试题与追问的直接链接" translate=no>​</a></h2>
-<h3 class="anchor anchorTargetStickyNavbar_Vzrq" id=1-为什么-zgc-的停顿时间能控制在-10ms-以内>1. 为什么 ZGC 的停顿时间能控制在 10ms 以内？<a href=#1-为什么-zgc-的停顿时间能控制在-10ms-以内 class=hash-link aria-label="1. 为什么 ZGC 的停顿时间能控制在 10ms 以内？的直接链接" title="1. 为什么 ZGC 的停顿时间能控制在 10ms 以内？的直接链接" translate=no>​</a></h3>
+<h2 id=四-高频面试题与追问>四、 高频面试题与追问</h2>
+<h3 id=1-为什么-zgc-的停顿时间能控制在-10ms-以内>1. 为什么 ZGC 的停顿时间能控制在 10ms 以内？</h3>
 <p><strong>答</strong>：ZGC 的几乎所有阶段（并发标记、并发准备、并发转移/重定位）都与用户线程并发执行，STW 阶段极其短暂，只用于初始标记、再标记等必要的极少数初始化操作。这些阶段耗时只与 GC Roots 的数量有关，与堆的大小、存活对象数量完全无关。</p>
-<h3 class="anchor anchorTargetStickyNavbar_Vzrq" id=2-什么是-minor-gcmajor-gcfull-gc>2. 什么是 Minor GC、Major GC、Full GC？<a href=#2-什么是-minor-gcmajor-gcfull-gc class=hash-link aria-label="2. 什么是 Minor GC、Major GC、Full GC？的直接链接" title="2. 什么是 Minor GC、Major GC、Full GC？的直接链接" translate=no>​</a></h3>
+<h3 id=2-什么是-minor-gcmajor-gcfull-gc>2. 什么是 Minor GC、Major GC、Full GC？</h3>
 <ul>
-<li class=""><strong>Minor GC (Young GC)</strong>：目标只是新生代（Eden, S0, S1）的垃圾收集，触发频率高，速度快。</li>
-<li class=""><strong>Major GC (Old GC)</strong>：目标只是老年代的垃圾收集，目前只有 CMS 收集器有单独收集老年代的行为。</li>
-<li class=""><strong>Mixed GC</strong>：目标是收集整个新生代以及部分老年代，目前只有 G1 会有这种行为。</li>
-<li class=""><strong>Full GC</strong>：收集整个 Java 堆和方法区的垃圾，最为沉重，会导致长时间 STW，应尽量避免。</li>
+<li><strong>Minor GC (Young GC)</strong>：目标只是新生代（Eden, S0, S1）的垃圾收集，触发频率高，速度快。</li>
+<li><strong>Major GC (Old GC)</strong>：目标只是老年代的垃圾收集，目前只有 CMS 收集器有单独收集老年代的行为。</li>
+<li><strong>Mixed GC</strong>：目标是收集整个新生代以及部分老年代，目前只有 G1 会有这种行为。</li>
+<li><strong>Full GC</strong>：收集整个 Java 堆和方法区的垃圾，最为沉重，会导致长时间 STW，应尽量避免。</li>
 </ul>
-<h3 class="anchor anchorTargetStickyNavbar_Vzrq" id=3-对象一定分配在堆上吗>3. 对象一定分配在堆上吗？<a href=#3-对象一定分配在堆上吗 class=hash-link aria-label="3. 对象一定分配在堆上吗？的直接链接" title="3. 对象一定分配在堆上吗？的直接链接" translate=no>​</a></h3>
+<h3 id=3-对象一定分配在堆上吗>3. 对象一定分配在堆上吗？</h3>
 <p>不一定。随着 JIT 编译期发展，若经过 <strong>逃逸分析（Escape Analysis）</strong> 发现对象不会逃逸出方法之外，可能被优化为：</p>
 <ol>
-<li class=""><strong>栈上分配</strong>：直接在虚拟机栈中分配。</li>
-<li class=""><strong>标量替换（Scalar Replacement）</strong>：由于对象实际上不需要连续内存，可将其成员变量拆分为基本类型存放到栈帧的局部变量表中（默认开启 <code>-XX:+EliminateAllocations</code>）。</li>
-<li class=""><strong>同步消除（Lock Elimination）</strong>：若对象不会被其他线程访问，可去掉对其的同步锁（<code>-XX:+EliminateLocks</code>）。</li>
+<li><strong>栈上分配</strong>：直接在虚拟机栈中分配。</li>
+<li><strong>标量替换（Scalar Replacement）</strong>：由于对象实际上不需要连续内存，可将其成员变量拆分为基本类型存放到栈帧的局部变量表中（默认开启 <code>-XX:+EliminateAllocations</code>）。</li>
+<li><strong>同步消除（Lock Elimination）</strong>：若对象不会被其他线程访问，可去掉对其的同步锁（<code>-XX:+EliminateLocks</code>）。</li>
 </ol>
 <blockquote>
 <p><strong>追问</strong>：为什么现在很多场景下"栈上分配"效果并不明显？—— 逃逸分析本身开销较大，且只能做保守判断（必须 100% 确定不逃逸才能优化），复杂调用链下命中率并不高。HotSpot 实际上并没有真正实现完整的栈上分配，其优化收益主要体现在<strong>标量替换</strong>与<strong>同步消除</strong>上。</p>
 </blockquote>
-<h3 class="anchor anchorTargetStickyNavbar_Vzrq" id=4-cms-为什么会被-g1-取代最终在-jdk-14-中移除>4. CMS 为什么会被 G1 取代，最终在 JDK 14 中移除？<a href=#4-cms-为什么会被-g1-取代最终在-jdk-14-中移除 class=hash-link aria-label="4. CMS 为什么会被 G1 取代，最终在 JDK 14 中移除？的直接链接" title="4. CMS 为什么会被 G1 取代，最终在 JDK 14 中移除？的直接链接" translate=no>​</a></h3>
+<h3 id=4-cms-为什么会被-g1-取代最终在-jdk-14-中移除>4. CMS 为什么会被 G1 取代，最终在 JDK 14 中移除？</h3>
 <p><strong>答</strong>：CMS 基于标记-清除算法，存在内存碎片、浮动垃圾、并发失败退化为 Full GC、CPU 敏感等固有缺陷，且只能收集老年代，需要与新生代收集器（ParNew）拼凑使用，维护成本高。G1 通过 Region 化内存布局，将标记-复制算法引入老年代回收，从根本上避免了内存碎片问题，同时支持"可预测停顿模型"，功能和性能全面反超，因此 JDK 9 起默认收集器改为 G1，CMS 也在 JDK 14（<code>JEP 363</code>）中被正式移除。</p>
-<h3 class="anchor anchorTargetStickyNavbar_Vzrq" id=5-minor-gc-会不会扫描老年代为什么>5. Minor GC 会不会扫描老年代？为什么？<a href=#5-minor-gc-会不会扫描老年代为什么 class=hash-link aria-label="5. Minor GC 会不会扫描老年代？为什么？的直接链接" title="5. Minor GC 会不会扫描老年代？为什么？的直接链接" translate=no>​</a></h3>
+<h3 id=5-minor-gc-会不会扫描老年代为什么>5. Minor GC 会不会扫描老年代？为什么？</h3>
 <p><strong>答</strong>：得益于卡表与记忆集机制，Minor GC 不需要扫描整个老年代来判断是否存在跨代引用。写屏障会在老年代对象的引用字段被赋值时动态维护卡表状态，Minor GC 只需扫描卡表中被标记为 Dirty 的少量卡页并等效视为 GC Roots 的一部分，大幅降低了扫描成本。</p>
-<h3 class="anchor anchorTargetStickyNavbar_Vzrq" id=6-常见的-oom-场景有哪些如何排查>6. 常见的 OOM 场景有哪些？如何排查？<a href=#6-常见的-oom-场景有哪些如何排查 class=hash-link aria-label="6. 常见的 OOM 场景有哪些？如何排查？的直接链接" title="6. 常见的 OOM 场景有哪些？如何排查？的直接链接" translate=no>​</a></h3>
+<h3 id=6-常见的-oom-场景有哪些如何排查>6. 常见的 OOM 场景有哪些？如何排查？</h3>
 
 
 
@@ -650,5 +707,5 @@
 
 
 <table><thead><tr><th style=text-align:left>OOM 类型<th style=text-align:left>触发场景<th style=text-align:left>排查思路<tbody><tr><td style=text-align:left><code>Java heap space</code><td style=text-align:left>堆中对象持续增长无法回收（内存泄漏）或 <code>-Xmx</code> 过小<td style=text-align:left><code>-XX:+HeapDumpOnOutOfMemoryError</code> 导出堆快照，借助 MAT / JProfiler 分析支配树，定位大对象与 GC Roots 引用链<tr><td style=text-align:left><code>GC overhead limit exceeded</code><td style=text-align:left>超过 <span class=katex><span class=katex-mathml><math xmlns=http://www.w3.org/1998/Math/MathML><semantics><mrow><mn>98</mn><mi mathvariant=normal>%</mi></mrow><annotation encoding=application/x-tex>98\%</annotation></semantics></math></span><span class=katex-html aria-hidden=true><span class=base><span class=strut style=height:0.8056em;vertical-align:-0.0556em></span><span class=mord>98%</span></span></span></span> 的时间用于 GC 但只回收不到 <span class=katex><span class=katex-mathml><math xmlns=http://www.w3.org/1998/Math/MathML><semantics><mrow><mn>2</mn><mi mathvariant=normal>%</mi></mrow><annotation encoding=application/x-tex>2\%</annotation></semantics></math></span><span class=katex-html aria-hidden=true><span class=base><span class=strut style=height:0.8056em;vertical-align:-0.0556em></span><span class=mord>2%</span></span></span></span> 的空间<td style=text-align:left>与堆 OOM 思路一致，往往是内存泄漏的前兆<tr><td style=text-align:left><code>StackOverflowError</code><td style=text-align:left>递归过深或栈帧过大<td style=text-align:left>检查递归终止条件，或调大 <code>-Xss</code><tr><td style=text-align:left><code>Metaspace</code><td style=text-align:left>动态生成类过多（如 CGLIB 代理、频繁热部署）且未被卸载<td style=text-align:left>观察 <code>-XX:MaxMetaspaceSize</code> 增长趋势，检查自定义 ClassLoader 是否泄漏<tr><td style=text-align:left><code>Direct buffer memory</code><td style=text-align:left>堆外内存申请超过 <code>-XX:MaxDirectMemorySize</code><td style=text-align:left>检查 <code>DirectByteBuffer</code> 是否及时释放，或 Full GC 频率过低导致 Cleaner 未及时触发<tr><td style=text-align:left><code>unable to create new native thread</code><td style=text-align:left>线程数超过操作系统限制<td style=text-align:left>检查线程池配置是否导致线程无限创建，可调低 <code>-Xss</code> 以容纳更多线程</table>
-<h3 class="anchor anchorTargetStickyNavbar_Vzrq" id=7-强引用软引用弱引用虚引用的核心区别与应用场景>7. 强引用、软引用、弱引用、虚引用的核心区别与应用场景？<a href=#7-强引用软引用弱引用虚引用的核心区别与应用场景 class=hash-link aria-label="7. 强引用、软引用、弱引用、虚引用的核心区别与应用场景？的直接链接" title="7. 强引用、软引用、弱引用、虚引用的核心区别与应用场景？的直接链接" translate=no>​</a></h3>
+<h3 id=7-强引用软引用弱引用虚引用的核心区别与应用场景>7. 强引用、软引用、弱引用、虚引用的核心区别与应用场景？</h3>
 <p>见正文「四种引用类型与应用场景」一节，核心结论：强引用永不回收；软引用 OOM 前回收（适合缓存）；弱引用见 GC 就回收（适合 <code>ThreadLocal</code>/<code>WeakHashMap</code> 的 Key）；虚引用无法取得对象实例，仅用于跟踪对象回收活动（如堆外内存释放）。</div><footer class="theme-doc-footer docusaurus-mt-lg"><div class="row margin-top--sm theme-doc-footer-edit-meta-row"><div class="col noPrint_WFHX"><a href=https://github.com/Aiden-Coding/AiDocs/tree/main/docs/java/jvm/0-memory-gc.md target=_blank rel="noopener noreferrer" class=theme-edit-this-page><svg fill=currentColor height=20 width=20 viewBox="0 0 40 40" class=iconEdit_Z9Sw aria-hidden=true><g><path d="m34.5 11.7l-3 3.1-6.3-6.3 3.1-3q0.5-0.5 1.2-0.5t1.1 0.5l3.9 3.9q0.5 0.4 0.5 1.1t-0.5 1.2z m-29.5 17.1l18.4-18.5 6.3 6.3-18.4 18.4h-6.3v-6.2z"/></g></svg>编辑此页</a></div><div class="col lastUpdated_JAkA"></div></div></footer></article><nav class="docusaurus-mt-lg pagination-nav" aria-label=文件选项卡><a class="pagination-nav__link pagination-nav__link--prev" href=/AiDocs/docs/category/3-jvm-虚拟机内核><div class=pagination-nav__sublabel>上一页</div><div class=pagination-nav__label>3. JVM 虚拟机内核</div></a><a class="pagination-nav__link pagination-nav__link--next" href=/AiDocs/docs/java/jvm/classloader-bytecode><div class=pagination-nav__sublabel>下一页</div><div class=pagination-nav__label>类加载与字节码</div></a></nav></div></div><div class="col col--3"><div class="tableOfContents_bqdL thin-scrollbar theme-doc-toc-desktop"><ul class="table-of-contents table-of-contents__left-border"><li><a href=#jvm-内存模型与垃圾回收机制 class="table-of-contents__link toc-highlight">JVM 内存模型与垃圾回收机制</a><li><a href=#一-jvm-运行时数据区深度剖析 class="table-of-contents__link toc-highlight">一、 JVM 运行时数据区深度剖析</a><ul><li><a href=#1-程序计数器program-counter-register class="table-of-contents__link toc-highlight">1. 程序计数器（Program Counter Register）</a><li><a href=#2-虚拟机栈jvm-stack与栈帧stack-frame class="table-of-contents__link toc-highlight">2. 虚拟机栈（JVM Stack）与栈帧（Stack Frame）</a><li><a href=#3-本地方法栈native-method-stack class="table-of-contents__link toc-highlight">3. 本地方法栈（Native Method Stack）</a><li><a href=#4-java-堆java-heap与对象内存布局 class="table-of-contents__link toc-highlight">4. Java 堆（Java Heap）与对象内存布局</a><li><a href=#5-方法区method-area与元空间metaspace class="table-of-contents__link toc-highlight">5. 方法区（Method Area）与元空间（Metaspace）</a><li><a href=#6-堆外内存direct-memory class="table-of-contents__link toc-highlight">6. 堆外内存（Direct Memory）</a><li><a href=#7-四种引用类型与应用场景 class="table-of-contents__link toc-highlight">7. 四种引用类型与应用场景</a></ul><li><a href=#二-垃圾回收基础理论 class="table-of-contents__link toc-highlight">二、 垃圾回收基础理论</a><ul><li><a href=#1-垃圾判定标准 class="table-of-contents__link toc-highlight">1. 垃圾判定标准</a><li><a href=#2-分代收集理论 class="table-of-contents__link toc-highlight">2. 分代收集理论</a><li><a href=#3-三种基础垃圾回收算法 class="table-of-contents__link toc-highlight">3. 三种基础垃圾回收算法</a><li><a href=#4-三色标记算法three-color-marking class="table-of-contents__link toc-highlight">4. 三色标记算法（Three-Color Marking）</a></ul><li><a href=#三-经典与现代垃圾收集器全景 class="table-of-contents__link toc-highlight">三、 经典与现代垃圾收集器全景</a><ul><li><a href=#0-收集器发展脉络与搭配关系 class="table-of-contents__link toc-highlight">0. 收集器发展脉络与搭配关系</a><li><a href=#1-serial--serial-old单线程收集器 class="table-of-contents__link toc-highlight">1. Serial / Serial Old：单线程收集器</a><li><a href=#2-parnewserial-的多线程版本 class="table-of-contents__link toc-highlight">2. ParNew：Serial 的多线程版本</a><li><a href=#3-parallel-scavenge--parallel-old吞吐量优先 class="table-of-contents__link toc-highlight">3. Parallel Scavenge / Parallel Old：吞吐量优先</a><li><a href=#4-cmsconcurrent-mark-sweep以低延迟为目标 class="table-of-contents__link toc-highlight">4. CMS（Concurrent Mark Sweep）：以低延迟为目标</a><li><a href=#5-g1-garbage-first-收集器 class="table-of-contents__link toc-highlight">5. G1 (Garbage-First) 收集器</a><li><a href=#6-zgc-z-garbage-collector-收集器 class="table-of-contents__link toc-highlight">6. ZGC (Z Garbage Collector) 收集器</a><li><a href=#7-shenandoah-简介 class="table-of-contents__link toc-highlight">7. Shenandoah 简介</a><li><a href=#8-收集器选型总结 class="table-of-contents__link toc-highlight">8. 收集器选型总结</a></ul><li><a href=#四-高频面试题与追问 class="table-of-contents__link toc-highlight">四、 高频面试题与追问</a><ul><li><a href=#1-为什么-zgc-的停顿时间能控制在-10ms-以内 class="table-of-contents__link toc-highlight">1. 为什么 ZGC 的停顿时间能控制在 10ms 以内？</a><li><a href=#2-什么是-minor-gcmajor-gcfull-gc class="table-of-contents__link toc-highlight">2. 什么是 Minor GC、Major GC、Full GC？</a><li><a href=#3-对象一定分配在堆上吗 class="table-of-contents__link toc-highlight">3. 对象一定分配在堆上吗？</a><li><a href=#4-cms-为什么会被-g1-取代最终在-jdk-14-中移除 class="table-of-contents__link toc-highlight">4. CMS 为什么会被 G1 取代，最终在 JDK 14 中移除？</a><li><a href=#5-minor-gc-会不会扫描老年代为什么 class="table-of-contents__link toc-highlight">5. Minor GC 会不会扫描老年代？为什么？</a><li><a href=#6-常见的-oom-场景有哪些如何排查 class="table-of-contents__link toc-highlight">6. 常见的 OOM 场景有哪些？如何排查？</a><li><a href=#7-强引用软引用弱引用虚引用的核心区别与应用场景 class="table-of-contents__link toc-highlight">7. 强引用、软引用、弱引用、虚引用的核心区别与应用场景？</a></ul></ul></div></div></div></div></main></div></div></div><footer class="theme-layout-footer footer footer--dark"><div class="container container-fluid"><div class="footer__bottom text--center"><div class=footer__copyright>Copyright © 2026 AiDocs 架构知识库. 基于 Docusaurus 驱动.</div></div></div></footer></div></body>
