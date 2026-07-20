@@ -1,6 +1,6 @@
 ---
 title: "前言"
-sidebar_position: 1
+sidebar_position: 0.1
 ---
 
 # 前言
