@@ -1197,7 +1197,7 @@ function Tooltip({ content, children, placement = 'top' }: TooltipProps) {
   );
 }
 
-// 使用
+// 使用示例
 function ButtonBar() {
   return (
     <div style={{ padding: 40 }}>
@@ -1211,4 +1211,192 @@ function ButtonBar() {
     </div>
   );
 }
+```
+
+---
+
+## 8. 模式选型决策树
+
+根据实际需求快速选择最合适的设计模式：
+
+```
+需要复用逻辑？
+├─ 只需要数据/副作用逻辑
+│  └─ ✅ 自定义 Hook (useXxx)
+│     优势：扁平、类型安全、零嵌套
+│
+├─ 需要包装/拦截组件渲染
+│  ├─ 单一职责增强（权限、日志、数据加载）
+│  │  └─ ✅ 高阶组件 (withXxx)
+│  │
+│  └─ 多种 UI 展示共用一套逻辑
+│     └─ ⚠️ Render Props (已基本被 Hook 替代)
+│
+├─ 组件群需要协作共享状态
+│  └─ ✅ 复合组件 + Context
+│     场景：Tabs、Accordion、Menu、Select
+│
+├─ 捕获子树渲染错误
+│  └─ ✅ 错误边界 (Class 组件)
+│     配合：react-error-boundary 库
+│
+└─ 打破 DOM 层级渲染到外部
+   └─ ✅ Portal (createPortal)
+      场景：Modal、Tooltip、Dropdown、Drawer
+```
+
+---
+
+## 9. 模式组合最佳实践
+
+实际项目中，这些模式常组合使用以发挥最大效能：
+
+### 组合 1：Portal + 自定义 Hook
+
+将 Portal 逻辑封装为 Hook，简化 Modal/Drawer 实现：
+
+```tsx
+import { useEffect, useState } from 'react';
+import { createPortal } from 'react-dom';
+
+function usePortal(id = 'portal-root') {
+  const [container] = useState(() => {
+    const existing = document.getElementById(id);
+    if (existing) return existing;
+    const el = document.createElement('div');
+    el.id = id;
+    document.body.appendChild(el);
+    return el;
+  });
+
+  useEffect(() => {
+    return () => {
+      // 组件卸载时清理（若无其他引用）
+      if (container.childNodes.length === 0) {
+        container.remove();
+      }
+    };
+  }, [container]);
+
+  return (node: React.ReactNode) => createPortal(node, container);
+}
+
+// 使用：极简 Modal 实现
+function SimpleModal({ isOpen, onClose, children }: {
+  isOpen: boolean;
+  onClose: () => void;
+  children: React.ReactNode;
+}) {
+  const renderPortal = usePortal();
+
+  if (!isOpen) return null;
+
+  return renderPortal(
+    <div className="modal-overlay" onClick={onClose}>
+      <div className="modal-content" onClick={e => e.stopPropagation()}>
+        <button className="close-btn" onClick={onClose}>×</button>
+        {children}
+      </div>
+    </div>
+  );
+}
+```
+
+### 组合 2：复合组件 + 错误边界
+
+为复合组件的每个子面板添加独立错误边界：
+
+```tsx
+Tabs.Panel = function Panel({ value, children }: {
+  value: string;
+  children: React.ReactNode;
+}) {
+  const context = useContext(TabsContext);
+  if (!context) throw new Error('Tabs.Panel 必须在 Tabs 内部使用');
+  
+  if (context.activeTab !== value) return null;
+
+  return (
+    <ErrorBoundary
+      FallbackComponent={({ error, resetErrorBoundary }) => (
+        <div className="tab-error">
+          <p>⚠️ 此标签页加载失败</p>
+          <code>{error.message}</code>
+          <button onClick={resetErrorBoundary}>重新加载</button>
+        </div>
+      )}
+    >
+      <div className="tab-panel">{children}</div>
+    </ErrorBoundary>
+  );
+};
+```
+
+### 组合 3：HOC + 自定义 Hook
+
+先用 Hook 封装逻辑，再用 HOC 包装给 Class 组件：
+
+```tsx
+// 1. 逻辑层：自定义 Hook
+function useWindowSize() {
+  const [size, setSize] = useState({ width: window.innerWidth, height: window.innerHeight });
+  
+  useEffect(() => {
+    const handler = () => setSize({ width: window.innerWidth, height: window.innerHeight });
+    window.addEventListener('resize', handler);
+    return () => window.removeEventListener('resize', handler);
+  }, []);
+  
+  return size;
+}
+
+// 2. 桥接层：HOC（为 Class 组件提供 Hook 能力）
+function withWindowSize<P extends object>(
+  WrappedComponent: React.ComponentType<P & { windowSize: { width: number; height: number } }>
+) {
+  return function WithWindowSize(props: P) {
+    const size = useWindowSize();
+    return <WrappedComponent {...props} windowSize={size} />;
+  };
+}
+
+// 3. 使用：Class 组件也能享受 Hook 的便利
+class LegacyChart extends React.Component<{ windowSize: { width: number; height: number } }> {
+  render() {
+    const { width, height } = this.props.windowSize;
+    return <div>图表尺寸适配：{width} x {height}</div>;
+  }
+}
+
+const ResponsiveChart = withWindowSize(LegacyChart);
+```
+
+---
+
+## 10. 快速参考表
+
+| 模式 | 用途 | 何时使用 | 何时避免 |
+|:---|:---|:---|:---|
+| **受控组件** | 表单状态管理 | 需要即时校验、联动、格式化 | 仅提交时读取值（性能浪费） |
+| **非受控组件** | 减少重渲染 | 简单表单、文件上传、第三方库集成 | 需要动态交互、复杂校验 |
+| **HOC** | 包装增强组件 | 权限校验、日志、数据预加载 | 逻辑简单（Hook 更优）、需多层嵌套 |
+| **Render Props** | UI 与逻辑分离 | 同一逻辑多种 UI（已少用） | Hook 能解决的场景（Hook 更简洁） |
+| **复合组件** | 组件群协作 | Tabs/Menu/Select 等组件族 | 组件间无共享状态需求 |
+| **自定义 Hook** | 复用逻辑 | 所有可抽取的逻辑（首选方案） | 需要操作渲染树结构 |
+| **错误边界** | 捕获渲染错误 | 防止局部崩溃导致白屏 | 捕获事件/异步错误（用 try/catch） |
+| **Portal** | 跨层级渲染 | Modal/Tooltip/Dropdown | 组件无需脱离父级 DOM |
+
+---
+
+## 总结
+
+现代 React 组件设计遵循"**优先 Hooks，按需组合**"原则：
+
+1. **日常开发**：自定义 Hook 解决 80% 的逻辑复用需求
+2. **组件族设计**：复合组件 + Context 构建灵活的组件 API
+3. **浮层场景**：Portal 处理 Modal/Tooltip 等脱离文档流的 UI
+4. **容错兜底**：错误边界分层布置，防止局部崩溃扩散
+5. **遗留兼容**：HOC 桥接 Hook 给 Class 组件，逐步迁移
+
+掌握这些模式后，能显著提升代码的**可维护性、可测试性与扩展性**，是构建企业级 React 应用的必备基石。
 ```
