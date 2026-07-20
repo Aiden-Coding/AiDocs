@@ -1,105 +1,105 @@
-<!doctype html><html lang=zh-Hans dir=ltr class="docs-wrapper plugin-docs plugin-id-default docs-version-current docs-doc-page docs-doc-id-interview/java/db-cache" data-has-hydrated=false><head><meta charset=UTF-8><meta name=generator content="Docusaurus v3.10.2"><title data-rh=true>六、MySQL 与 Redis 核心 | Ai文档</title><meta data-rh=true name=viewport content="width=device-width, initial-scale=1.0"/><meta data-rh=true name=twitter:card content=summary_large_image /><meta data-rh=true property=og:image content=https://github.com/AiDocs/img/social-card.webp /><meta data-rh=true name=twitter:image content=https://github.com/AiDocs/img/social-card.webp /><meta data-rh=true property=og:url content=https://github.com/AiDocs/docs/interview/java/db-cache /><meta data-rh=true property=og:locale content=zh_Hans /><meta data-rh=true name=docusaurus_locale content=zh-Hans /><meta data-rh=true name=docsearch:language content=zh-Hans /><meta data-rh=true name=docusaurus_version content=current /><meta data-rh=true name=docusaurus_tag content=docs-default-current /><meta data-rh=true name=docsearch:version content=current /><meta data-rh=true name=docsearch:docusaurus_tag content=docs-default-current /><meta data-rh=true property=og:title content="六、MySQL 与 Redis 核心 | Ai文档"/><meta data-rh=true name=description content="本章涵盖 MySQL 与 Redis 底层存储原理、高并发防护机制、双写一致性以及线上优化方案。"/><meta data-rh=true property=og:description content="本章涵盖 MySQL 与 Redis 底层存储原理、高并发防护机制、双写一致性以及线上优化方案。"/><link data-rh=true rel=icon href=/AiDocs/img/favicon.ico /><link data-rh=true rel=canonical href=https://github.com/AiDocs/docs/interview/java/db-cache /><link data-rh=true rel=alternate href=https://github.com/AiDocs/docs/interview/java/db-cache hreflang=zh-Hans /><link data-rh=true rel=alternate href=https://github.com/AiDocs/docs/interview/java/db-cache hreflang=x-default /><script data-rh=true type=application/ld+json>{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","item":"https://github.com/AiDocs/docs/category/java-后端","name":"Java 后端","position":1},{"@type":"ListItem","item":"https://github.com/AiDocs/docs/interview/java/db-cache","name":"6. MySQL 与 Redis","position":2}]}</script><link rel=stylesheet href=https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css type=text/css integrity=sha384-n8MVd4RsNIBMW3Zksd/cgGfpkkcg23OqxEnQl9o23PppNwe/eB84kLtyzzN3lft9 crossorigin=anonymous><link rel=stylesheet href=/AiDocs/assets/css/styles.3f833245.css /><script src=/AiDocs/assets/js/runtime~main.398b56d3.js defer></script><script src=/AiDocs/assets/js/main.5be0f03e.js defer></script></head><body><svg style="display: none;"><defs>
+<!doctype html><html lang=zh-Hans dir=ltr class="docs-wrapper plugin-docs plugin-id-default docs-version-current docs-doc-page docs-doc-id-interview/java/db-cache" data-has-hydrated=false><head><meta charset=UTF-8><meta name=generator content="Docusaurus v3.10.2"><title data-rh=true>六、MySQL 与 Redis 核心 | Ai文档</title><meta data-rh=true name=viewport content="width=device-width, initial-scale=1.0"/><meta data-rh=true name=twitter:card content=summary_large_image /><meta data-rh=true property=og:image content=https://github.com/AiDocs/img/social-card.webp /><meta data-rh=true name=twitter:image content=https://github.com/AiDocs/img/social-card.webp /><meta data-rh=true property=og:url content=https://github.com/AiDocs/docs/interview/java/db-cache /><meta data-rh=true property=og:locale content=zh_Hans /><meta data-rh=true name=docusaurus_locale content=zh-Hans /><meta data-rh=true name=docsearch:language content=zh-Hans /><meta data-rh=true name=docusaurus_version content=current /><meta data-rh=true name=docusaurus_tag content=docs-default-current /><meta data-rh=true name=docsearch:version content=current /><meta data-rh=true name=docsearch:docusaurus_tag content=docs-default-current /><meta data-rh=true property=og:title content="六、MySQL 与 Redis 核心 | Ai文档"/><meta data-rh=true name=description content="本章涵盖 MySQL 与 Redis 底层存储原理、高并发防护机制、双写一致性以及线上优化方案。"/><meta data-rh=true property=og:description content="本章涵盖 MySQL 与 Redis 底层存储原理、高并发防护机制、双写一致性以及线上优化方案。"/><link data-rh=true rel=icon href=/AiDocs/img/favicon.ico /><link data-rh=true rel=canonical href=https://github.com/AiDocs/docs/interview/java/db-cache /><link data-rh=true rel=alternate href=https://github.com/AiDocs/docs/interview/java/db-cache hreflang=zh-Hans /><link data-rh=true rel=alternate href=https://github.com/AiDocs/docs/interview/java/db-cache hreflang=x-default /><script data-rh=true type=application/ld+json>{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","item":"https://github.com/AiDocs/docs/category/java-后端","name":"Java 后端","position":1},{"@type":"ListItem","item":"https://github.com/AiDocs/docs/interview/java/db-cache","name":"6. MySQL 与 Redis","position":2}]}</script><link rel=stylesheet href=https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css type=text/css integrity=sha384-n8MVd4RsNIBMW3Zksd/cgGfpkkcg23OqxEnQl9o23PppNwe/eB84kLtyzzN3lft9 crossorigin=anonymous><link rel=stylesheet href=/AiDocs/assets/css/styles.0d18f9a1.css /><script src=/AiDocs/assets/js/runtime~main.93a38000.js defer></script><script src=/AiDocs/assets/js/main.0d50e96a.js defer></script></head><body><svg style="display: none;"><defs>
 <symbol id=theme-svg-external-link viewBox="0 0 24 24"><path fill=currentColor d="M21 13v10h-21v-19h12v2h-10v15h17v-8h2zm3-12h-10.988l4.035 4-6.977 7.07 2.828 2.828 6.977-7.07 4.125 4.172v-11z"/></symbol>
 </defs></svg>
-<script>!function(){var t=function(){try{return new URLSearchParams(window.location.search).get("docusaurus-theme")}catch(t){}}()||function(){try{return window.localStorage.getItem("theme-92a")}catch(t){}}();document.documentElement.setAttribute("data-theme",t||(window.matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light")),document.documentElement.setAttribute("data-theme-choice",t||"system")}(),function(){try{for(var[t,e]of new URLSearchParams(window.location.search).entries())if(t.startsWith("docusaurus-data-")){var a=t.replace("docusaurus-data-","data-");document.documentElement.setAttribute(a,e)}}catch(t){}}()</script><div id=__docusaurus><link rel=preload as=image href=/AiDocs/img/logo.webp /><div role=region aria-label=跳到主要内容><a class=skipToContent_fXgn href=#__docusaurus_skipToContent_fallback>跳到主要内容</a></div><nav aria-label=主导航 class="theme-layout-navbar navbar navbar--fixed-top"><div class=navbar__inner><div class="theme-layout-navbar-left navbar__items"><button aria-label=切换导航栏 aria-expanded=false class="navbar__toggle clean-btn" type=button><svg width=30 height=30 viewBox="0 0 30 30" aria-hidden=true><path stroke=currentColor stroke-linecap=round stroke-miterlimit=10 stroke-width=2 d="M4 7h22M4 15h22M4 23h22"/></svg></button><a class=navbar__brand href=/AiDocs/><div class=navbar__logo><img src=/AiDocs/img/logo.webp alt="Ai文档 Logo" class="themedComponent_mlkZ themedComponent--light_NVdE"/><img src=/AiDocs/img/logo.webp alt="Ai文档 Logo" class="themedComponent_mlkZ themedComponent--dark_xIcU"/></div><b class="navbar__title text--truncate">Ai文档</b></a><a class="navbar__item navbar__link" href=/AiDocs/docs/>体系介绍</a><a aria-current=page class="navbar__item navbar__link navbar__link--active" href=/AiDocs/docs/category/java-后端>面试</a><a class="navbar__item navbar__link" href=/AiDocs/docs/java/>Java</a><a class="navbar__item navbar__link" href=/AiDocs/docs/database/mysql/>数据库</a><a class="navbar__item navbar__link" href=/AiDocs/docs/cache/redis/>缓存</a><a class="navbar__item navbar__link" href=/AiDocs/docs/distributed/system/>分布式</a><a class="navbar__item navbar__link" href=/AiDocs/docs/rust/title-page>Rust</a><a class="navbar__item navbar__link" href=/AiDocs/docs/react/>React</a><a class="navbar__item navbar__link" href=/AiDocs/docs/web-basics/modern-javascript>Web 基础</a><a class="navbar__item navbar__link" href=/AiDocs/docs/linux/>Linux</a></div><div class="theme-layout-navbar-right navbar__items navbar__items--right"><a href=https://github.com/Aiden-Coding/AiDocs target=_blank rel="noopener noreferrer" class="navbar__item navbar__link header-github-link"></a><div class="toggle_vylO colorModeToggle_DEke"><button class="clean-btn toggleButton_gllP toggleButtonDisabled_aARS" type=button disabled title="system mode" aria-label="切换浅色/暗黑模式（当前为system mode）"><svg viewBox="0 0 24 24" width=24 height=24 aria-hidden=true class="toggleIcon_g3eP lightToggleIcon_pyhR"><path fill=currentColor d="M12,9c1.65,0,3,1.35,3,3s-1.35,3-3,3s-3-1.35-3-3S10.35,9,12,9 M12,7c-2.76,0-5,2.24-5,5s2.24,5,5,5s5-2.24,5-5 S14.76,7,12,7L12,7z M2,13l2,0c0.55,0,1-0.45,1-1s-0.45-1-1-1l-2,0c-0.55,0-1,0.45-1,1S1.45,13,2,13z M20,13l2,0c0.55,0,1-0.45,1-1 s-0.45-1-1-1l-2,0c-0.55,0-1,0.45-1,1S19.45,13,20,13z M11,2v2c0,0.55,0.45,1,1,1s1-0.45,1-1V2c0-0.55-0.45-1-1-1S11,1.45,11,2z M11,20v2c0,0.55,0.45,1,1,1s1-0.45,1-1v-2c0-0.55-0.45-1-1-1C11.45,19,11,19.45,11,20z M5.99,4.58c-0.39-0.39-1.03-0.39-1.41,0 c-0.39,0.39-0.39,1.03,0,1.41l1.06,1.06c0.39,0.39,1.03,0.39,1.41,0s0.39-1.03,0-1.41L5.99,4.58z M18.36,16.95 c-0.39-0.39-1.03-0.39-1.41,0c-0.39,0.39-0.39,1.03,0,1.41l1.06,1.06c0.39,0.39,1.03,0.39,1.41,0c0.39-0.39,0.39-1.03,0-1.41 L18.36,16.95z M19.42,5.99c0.39-0.39,0.39-1.03,0-1.41c-0.39-0.39-1.03-0.39-1.41,0l-1.06,1.06c-0.39,0.39-0.39,1.03,0,1.41 s1.03,0.39,1.41,0L19.42,5.99z M7.05,18.36c0.39-0.39,0.39-1.03,0-1.41c-0.39-0.39-1.03-0.39-1.41,0l-1.06,1.06 c-0.39,0.39-0.39,1.03,0,1.41s1.03,0.39,1.41,0L7.05,18.36z"/></svg><svg viewBox="0 0 24 24" width=24 height=24 aria-hidden=true class="toggleIcon_g3eP darkToggleIcon_wfgR"><path fill=currentColor d="M9.37,5.51C9.19,6.15,9.1,6.82,9.1,7.5c0,4.08,3.32,7.4,7.4,7.4c0.68,0,1.35-0.09,1.99-0.27C17.45,17.19,14.93,19,12,19 c-3.86,0-7-3.14-7-7C5,9.07,6.81,6.55,9.37,5.51z M12,3c-4.97,0-9,4.03-9,9s4.03,9,9,9s9-4.03,9-9c0-0.46-0.04-0.92-0.1-1.36 c-0.98,1.37-2.58,2.26-4.4,2.26c-2.98,0-5.4-2.42-5.4-5.4c0-1.81,0.89-3.42,2.26-4.4C12.92,3.04,12.46,3,12,3L12,3z"/></svg><svg viewBox="0 0 24 24" width=24 height=24 aria-hidden=true class="toggleIcon_g3eP systemToggleIcon_QzmC"><path fill=currentColor d="m12 21c4.971 0 9-4.029 9-9s-4.029-9-9-9-9 4.029-9 9 4.029 9 9 9zm4.95-13.95c1.313 1.313 2.05 3.093 2.05 4.95s-0.738 3.637-2.05 4.95c-1.313 1.313-3.093 2.05-4.95 2.05v-14c1.857 0 3.637 0.737 4.95 2.05z"/></svg></button></div><div class=navbarSearchContainer_Bca1></div></div></div><div role=presentation class=navbar-sidebar__backdrop></div></nav><div id=__docusaurus_skipToContent_fallback class="theme-layout-main main-wrapper mainWrapper_z2l0"><div class=docsWrapper_hBAB><button aria-label=回到顶部 class="clean-btn theme-back-to-top-button backToTopButton_sjWU" type=button></button><div class=docRoot_UBD9><aside class="theme-doc-sidebar-container docSidebarContainer_YfHR"><div class=sidebarViewport_aRkj><div class=sidebar_njMd><nav aria-label=文档侧边栏 class="menu thin-scrollbar menu_SIkG"><ul class="theme-doc-sidebar-menu menu__list"><li class="theme-doc-sidebar-item-category theme-doc-sidebar-item-category-level-1 menu__list-item"><div class=menu__list-item-collapsible><a class="categoryLink_byQd menu__link menu__link--sublist menu__link--active" href=/AiDocs/docs/category/java-后端><span class=categoryLinkLabel_W154>Java 后端</span></a><button aria-label="折叠侧边栏分类 'Java 后端'" aria-expanded=true type=button class="clean-btn menu__caret"></button></div><ul class=menu__list><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class=menu__link tabindex=0 href=/AiDocs/docs/interview/java/intro><span class=linkLabel_WmDU>0. 前言与总览</span></a><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class=menu__link tabindex=0 href=/AiDocs/docs/interview/java/basic><span class=linkLabel_WmDU>1. 基础与集合</span></a><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class=menu__link tabindex=0 href=/AiDocs/docs/interview/java/features><span class=linkLabel_WmDU>2. Java 新特性</span></a><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class=menu__link tabindex=0 href=/AiDocs/docs/interview/java/concurrent><span class=linkLabel_WmDU>3. 并发编程与虚拟线程</span></a><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class=menu__link tabindex=0 href=/AiDocs/docs/interview/java/jvm><span class=linkLabel_WmDU>4. JVM 运行时与垃圾回收</span></a><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class=menu__link tabindex=0 href=/AiDocs/docs/interview/java/spring><span class=linkLabel_WmDU>5. Spring 生态与 Boot 4.0</span></a><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class="menu__link menu__link--active" aria-current=page tabindex=0 href=/AiDocs/docs/interview/java/db-cache><span class=linkLabel_WmDU>6. MySQL 与 Redis</span></a><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class=menu__link tabindex=0 href=/AiDocs/docs/interview/java/distributed><span class=linkLabel_WmDU>7. 分布式与微服务</span></a><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class=menu__link tabindex=0 href=/AiDocs/docs/interview/java/mq><span class=linkLabel_WmDU>8. 消息队列</span></a><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class=menu__link tabindex=0 href=/AiDocs/docs/interview/java/scenarios><span class=linkLabel_WmDU>9. 场景设计</span></a><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class=menu__link tabindex=0 href=/AiDocs/docs/interview/java/ai><span class=linkLabel_WmDU>10. AI 结合与工程</span></a><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class=menu__link tabindex=0 href=/AiDocs/docs/interview/java/interview-jvm><span class=linkLabel_WmDU>JVM 虚拟机真题</span></a><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class=menu__link tabindex=0 href=/AiDocs/docs/interview/java/interview-concurrent><span class=linkLabel_WmDU>JUC 面试真题</span></a><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class=menu__link tabindex=0 href=/AiDocs/docs/interview/java/interview-basic><span class=linkLabel_WmDU>基础与集合真题</span></a><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class=menu__link tabindex=0 href=/AiDocs/docs/interview/java/interview-mybatis><span class=linkLabel_WmDU>MyBatis 面试真题</span></a><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class=menu__link tabindex=0 href=/AiDocs/docs/interview/java/interview-spring><span class=linkLabel_WmDU>Spring 面试真题</span></a><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class=menu__link tabindex=0 href=/AiDocs/docs/interview/java/interview-netty><span class=linkLabel_WmDU>Netty 面试真题</span></a></ul><li class="theme-doc-sidebar-item-category theme-doc-sidebar-item-category-level-1 menu__list-item menu__list-item--collapsed"><div class=menu__list-item-collapsible><a class="categoryLink_byQd menu__link menu__link--sublist" href=/AiDocs/docs/category/数据库><span class=categoryLinkLabel_W154>数据库</span></a><button aria-label="展开侧边栏分类 '数据库'" aria-expanded=false type=button class="clean-btn menu__caret"></button></div><li class="theme-doc-sidebar-item-category theme-doc-sidebar-item-category-level-1 menu__list-item menu__list-item--collapsed"><div class=menu__list-item-collapsible><a class="categoryLink_byQd menu__link menu__link--sublist" href=/AiDocs/docs/category/缓存><span class=categoryLinkLabel_W154>缓存</span></a><button aria-label="展开侧边栏分类 '缓存'" aria-expanded=false type=button class="clean-btn menu__caret"></button></div><li class="theme-doc-sidebar-item-category theme-doc-sidebar-item-category-level-1 menu__list-item menu__list-item--collapsed"><div class=menu__list-item-collapsible><a class="categoryLink_byQd menu__link menu__link--sublist" href=/AiDocs/docs/category/云原生--k8s><span class=categoryLinkLabel_W154>云原生 & K8s</span></a><button aria-label="展开侧边栏分类 '云原生 & K8s'" aria-expanded=false type=button class="clean-btn menu__caret"></button></div></ul></nav></div></div></aside><main class=docMainContainer_TBSr><div class="container padding-top--md padding-bottom--lg"><div class=row><div class="col docItemCol_VOVn"><div class=docItemContainer_Djhp><article><nav class="theme-doc-breadcrumbs breadcrumbsContainer_Z_bl" aria-label=页面路径><ul class=breadcrumbs><li class=breadcrumbs__item><a aria-label=主页面 class=breadcrumbs__link href=/AiDocs/><svg viewBox="0 0 24 24" class=breadcrumbHomeIcon_YNFT><path d="M10 19v-5h4v5c0 .55.45 1 1 1h3c.55 0 1-.45 1-1v-7h1.7c.46 0 .68-.57.33-.87L12.67 3.6c-.38-.34-.96-.34-1.34 0l-8.36 7.53c-.34.3-.13.87.33.87H5v7c0 .55.45 1 1 1h3c.55 0 1-.45 1-1z" fill=currentColor /></svg></a><li class=breadcrumbs__item><a class=breadcrumbs__link href=/AiDocs/docs/category/java-后端><span>Java 后端</span></a><li class="breadcrumbs__item breadcrumbs__item--active"><span class=breadcrumbs__link>6. MySQL 与 Redis</span></ul></nav><div class="tocCollapsible_ETCw theme-doc-toc-mobile tocMobile_ITEo"><button type=button class="clean-btn tocCollapsibleButton_TO0P">本页总览</button></div><div class="theme-doc-markdown markdown"><header><h1 id=六mysql-与-redis-核心>六、MySQL 与 Redis 核心</h1></header>
+<script>!function(){var t=function(){try{return new URLSearchParams(window.location.search).get("docusaurus-theme")}catch(t){}}()||function(){try{return window.localStorage.getItem("theme-92a")}catch(t){}}();document.documentElement.setAttribute("data-theme",t||(window.matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light")),document.documentElement.setAttribute("data-theme-choice",t||"system")}(),function(){try{for(var[t,e]of new URLSearchParams(window.location.search).entries())if(t.startsWith("docusaurus-data-")){var a=t.replace("docusaurus-data-","data-");document.documentElement.setAttribute(a,e)}}catch(t){}}()</script><div id=__docusaurus><link rel=preload as=image href=/AiDocs/img/logo.webp /><div role=region aria-label=跳到主要内容><a class=skipToContent_fXgn href=#__docusaurus_skipToContent_fallback>跳到主要内容</a></div><nav aria-label=主导航 class="theme-layout-navbar navbar navbar--fixed-top"><div class=navbar__inner><div class="theme-layout-navbar-left navbar__items"><button aria-label=切换导航栏 aria-expanded=false class="navbar__toggle clean-btn" type=button><svg width=30 height=30 viewBox="0 0 30 30" aria-hidden=true><path stroke=currentColor stroke-linecap=round stroke-miterlimit=10 stroke-width=2 d="M4 7h22M4 15h22M4 23h22"/></svg></button><a class=navbar__brand href=/AiDocs/><div class=navbar__logo><img src=/AiDocs/img/logo.webp alt="Ai文档 Logo" class="themedComponent_mlkZ themedComponent--light_NVdE"/><img src=/AiDocs/img/logo.webp alt="Ai文档 Logo" class="themedComponent_mlkZ themedComponent--dark_xIcU"/></div><b class="navbar__title text--truncate">Ai文档</b></a><a class="navbar__item navbar__link" href=/AiDocs/docs/>体系介绍</a><a aria-current=page class="navbar__item navbar__link navbar__link--active" href=/AiDocs/docs/category/java-后端>面试</a><a class="navbar__item navbar__link" href=/AiDocs/docs/java/>Java</a><a class="navbar__item navbar__link" href=/AiDocs/docs/database/mysql/>数据库</a><a class="navbar__item navbar__link" href=/AiDocs/docs/cache/redis/>缓存</a><a class="navbar__item navbar__link" href=/AiDocs/docs/distributed/system/>分布式</a><a class="navbar__item navbar__link" href=/AiDocs/docs/rust/title-page>Rust</a><a class="navbar__item navbar__link" href=/AiDocs/docs/react/>React</a><a class="navbar__item navbar__link" href=/AiDocs/docs/web-basics/modern-javascript>Web 基础</a><a class="navbar__item navbar__link" href=/AiDocs/docs/linux/>Linux</a></div><div class="theme-layout-navbar-right navbar__items navbar__items--right"><a href=https://github.com/Aiden-Coding/AiDocs target=_blank rel="noopener noreferrer" class="navbar__item navbar__link header-github-link"></a><div class="toggle_vylO colorModeToggle_DEke"><button class="clean-btn toggleButton_gllP toggleButtonDisabled_aARS" type=button disabled title="system mode" aria-label="切换浅色/暗黑模式（当前为system mode）"><svg viewBox="0 0 24 24" width=24 height=24 aria-hidden=true class="toggleIcon_g3eP lightToggleIcon_pyhR"><path fill=currentColor d="M12,9c1.65,0,3,1.35,3,3s-1.35,3-3,3s-3-1.35-3-3S10.35,9,12,9 M12,7c-2.76,0-5,2.24-5,5s2.24,5,5,5s5-2.24,5-5 S14.76,7,12,7L12,7z M2,13l2,0c0.55,0,1-0.45,1-1s-0.45-1-1-1l-2,0c-0.55,0-1,0.45-1,1S1.45,13,2,13z M20,13l2,0c0.55,0,1-0.45,1-1 s-0.45-1-1-1l-2,0c-0.55,0-1,0.45-1,1S19.45,13,20,13z M11,2v2c0,0.55,0.45,1,1,1s1-0.45,1-1V2c0-0.55-0.45-1-1-1S11,1.45,11,2z M11,20v2c0,0.55,0.45,1,1,1s1-0.45,1-1v-2c0-0.55-0.45-1-1-1C11.45,19,11,19.45,11,20z M5.99,4.58c-0.39-0.39-1.03-0.39-1.41,0 c-0.39,0.39-0.39,1.03,0,1.41l1.06,1.06c0.39,0.39,1.03,0.39,1.41,0s0.39-1.03,0-1.41L5.99,4.58z M18.36,16.95 c-0.39-0.39-1.03-0.39-1.41,0c-0.39,0.39-0.39,1.03,0,1.41l1.06,1.06c0.39,0.39,1.03,0.39,1.41,0c0.39-0.39,0.39-1.03,0-1.41 L18.36,16.95z M19.42,5.99c0.39-0.39,0.39-1.03,0-1.41c-0.39-0.39-1.03-0.39-1.41,0l-1.06,1.06c-0.39,0.39-0.39,1.03,0,1.41 s1.03,0.39,1.41,0L19.42,5.99z M7.05,18.36c0.39-0.39,0.39-1.03,0-1.41c-0.39-0.39-1.03-0.39-1.41,0l-1.06,1.06 c-0.39,0.39-0.39,1.03,0,1.41s1.03,0.39,1.41,0L7.05,18.36z"/></svg><svg viewBox="0 0 24 24" width=24 height=24 aria-hidden=true class="toggleIcon_g3eP darkToggleIcon_wfgR"><path fill=currentColor d="M9.37,5.51C9.19,6.15,9.1,6.82,9.1,7.5c0,4.08,3.32,7.4,7.4,7.4c0.68,0,1.35-0.09,1.99-0.27C17.45,17.19,14.93,19,12,19 c-3.86,0-7-3.14-7-7C5,9.07,6.81,6.55,9.37,5.51z M12,3c-4.97,0-9,4.03-9,9s4.03,9,9,9s9-4.03,9-9c0-0.46-0.04-0.92-0.1-1.36 c-0.98,1.37-2.58,2.26-4.4,2.26c-2.98,0-5.4-2.42-5.4-5.4c0-1.81,0.89-3.42,2.26-4.4C12.92,3.04,12.46,3,12,3L12,3z"/></svg><svg viewBox="0 0 24 24" width=24 height=24 aria-hidden=true class="toggleIcon_g3eP systemToggleIcon_QzmC"><path fill=currentColor d="m12 21c4.971 0 9-4.029 9-9s-4.029-9-9-9-9 4.029-9 9 4.029 9 9 9zm4.95-13.95c1.313 1.313 2.05 3.093 2.05 4.95s-0.738 3.637-2.05 4.95c-1.313 1.313-3.093 2.05-4.95 2.05v-14c1.857 0 3.637 0.737 4.95 2.05z"/></svg></button></div><div class=navbarSearchContainer_Bca1></div></div></div><div role=presentation class=navbar-sidebar__backdrop></div></nav><div id=__docusaurus_skipToContent_fallback class="theme-layout-main main-wrapper mainWrapper_z2l0"><div class=docsWrapper_hBAB><button aria-label=回到顶部 class="clean-btn theme-back-to-top-button backToTopButton_sjWU" type=button></button><div class=docRoot_UBD9><aside class="theme-doc-sidebar-container docSidebarContainer_YfHR"><div class=sidebarViewport_aRkj><div class=sidebar_njMd><nav aria-label=文档侧边栏 class="menu thin-scrollbar menu_SIkG"><ul class="theme-doc-sidebar-menu menu__list"><li class="theme-doc-sidebar-item-category theme-doc-sidebar-item-category-level-1 menu__list-item"><div class=menu__list-item-collapsible><a class="categoryLink_byQd menu__link menu__link--sublist menu__link--active" href=/AiDocs/docs/category/java-后端><span class=categoryLinkLabel_W154>Java 后端</span></a><button aria-label="折叠侧边栏分类 'Java 后端'" aria-expanded=true type=button class="clean-btn menu__caret"></button></div><ul class=menu__list><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class=menu__link tabindex=0 href=/AiDocs/docs/interview/java/intro><span class=linkLabel_WmDU>0. 前言与总览</span></a><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class=menu__link tabindex=0 href=/AiDocs/docs/interview/java/basic><span class=linkLabel_WmDU>1. 基础与集合</span></a><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class=menu__link tabindex=0 href=/AiDocs/docs/interview/java/features><span class=linkLabel_WmDU>2. Java 新特性</span></a><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class=menu__link tabindex=0 href=/AiDocs/docs/interview/java/concurrent><span class=linkLabel_WmDU>3. 并发编程与虚拟线程</span></a><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class=menu__link tabindex=0 href=/AiDocs/docs/interview/java/jvm><span class=linkLabel_WmDU>4. JVM 运行时与垃圾回收</span></a><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class=menu__link tabindex=0 href=/AiDocs/docs/interview/java/spring><span class=linkLabel_WmDU>5. Spring 生态与 Boot 4.0</span></a><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class="menu__link menu__link--active" aria-current=page tabindex=0 href=/AiDocs/docs/interview/java/db-cache><span class=linkLabel_WmDU>6. MySQL 与 Redis</span></a><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class=menu__link tabindex=0 href=/AiDocs/docs/interview/java/distributed><span class=linkLabel_WmDU>7. 分布式与微服务</span></a><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class=menu__link tabindex=0 href=/AiDocs/docs/interview/java/mq><span class=linkLabel_WmDU>8. 消息队列</span></a><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class=menu__link tabindex=0 href=/AiDocs/docs/interview/java/scenarios><span class=linkLabel_WmDU>9. 场景设计</span></a><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class=menu__link tabindex=0 href=/AiDocs/docs/interview/java/ai><span class=linkLabel_WmDU>10. AI 结合与工程</span></a><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class=menu__link tabindex=0 href=/AiDocs/docs/interview/java/interview-jvm><span class=linkLabel_WmDU>JVM 虚拟机真题</span></a><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class=menu__link tabindex=0 href=/AiDocs/docs/interview/java/interview-concurrent><span class=linkLabel_WmDU>JUC 面试真题</span></a><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class=menu__link tabindex=0 href=/AiDocs/docs/interview/java/interview-basic><span class=linkLabel_WmDU>基础与集合真题</span></a><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class=menu__link tabindex=0 href=/AiDocs/docs/interview/java/interview-mybatis><span class=linkLabel_WmDU>MyBatis 面试真题</span></a><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class=menu__link tabindex=0 href=/AiDocs/docs/interview/java/interview-spring><span class=linkLabel_WmDU>Spring 面试真题</span></a><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class=menu__link tabindex=0 href=/AiDocs/docs/interview/java/interview-netty><span class=linkLabel_WmDU>Netty 面试真题</span></a></ul><li class="theme-doc-sidebar-item-category theme-doc-sidebar-item-category-level-1 menu__list-item menu__list-item--collapsed"><div class=menu__list-item-collapsible><a class="categoryLink_byQd menu__link menu__link--sublist" href=/AiDocs/docs/category/数据库><span class=categoryLinkLabel_W154>数据库</span></a><button aria-label="展开侧边栏分类 '数据库'" aria-expanded=false type=button class="clean-btn menu__caret"></button></div><li class="theme-doc-sidebar-item-category theme-doc-sidebar-item-category-level-1 menu__list-item menu__list-item--collapsed"><div class=menu__list-item-collapsible><a class="categoryLink_byQd menu__link menu__link--sublist" href=/AiDocs/docs/category/缓存><span class=categoryLinkLabel_W154>缓存</span></a><button aria-label="展开侧边栏分类 '缓存'" aria-expanded=false type=button class="clean-btn menu__caret"></button></div><li class="theme-doc-sidebar-item-category theme-doc-sidebar-item-category-level-1 menu__list-item menu__list-item--collapsed"><div class=menu__list-item-collapsible><a class="categoryLink_byQd menu__link menu__link--sublist" href=/AiDocs/docs/category/云原生--k8s><span class=categoryLinkLabel_W154>云原生 & K8s</span></a><button aria-label="展开侧边栏分类 '云原生 & K8s'" aria-expanded=false type=button class="clean-btn menu__caret"></button></div></ul></nav></div></div></aside><main class=docMainContainer_TBSr><div class="container padding-top--md padding-bottom--lg"><div class=row><div class="col docItemCol_VOVn"><div class=docItemContainer_Djhp><article><nav class="theme-doc-breadcrumbs breadcrumbsContainer_Z_bl" aria-label=页面路径><ul class=breadcrumbs><li class=breadcrumbs__item><a aria-label=主页面 class=breadcrumbs__link href=/AiDocs/><svg viewBox="0 0 24 24" class=breadcrumbHomeIcon_YNFT><path d="M10 19v-5h4v5c0 .55.45 1 1 1h3c.55 0 1-.45 1-1v-7h1.7c.46 0 .68-.57.33-.87L12.67 3.6c-.38-.34-.96-.34-1.34 0l-8.36 7.53c-.34.3-.13.87.33.87H5v7c0 .55.45 1 1 1h3c.55 0 1-.45 1-1z" fill=currentColor /></svg></a><li class=breadcrumbs__item><a class=breadcrumbs__link href=/AiDocs/docs/category/java-后端><span>Java 后端</span></a><li class="breadcrumbs__item breadcrumbs__item--active"><span class=breadcrumbs__link>6. MySQL 与 Redis</span></ul></nav><div class="tocCollapsible_ETCw theme-doc-toc-mobile tocMobile_ITEo"><button type=button class="clean-btn tocCollapsibleButton_TO0P">本页总览</button></div><div class="theme-doc-markdown markdown"><header><h1>六、MySQL 与 Redis 核心</h1></header>
 <p>本章涵盖 MySQL 与 Redis 底层存储原理、高并发防护机制、双写一致性以及线上优化方案。</p>
 <hr/>
-<h2 id=39-innodb-索引结构与检索性能>39. InnoDB 索引结构与检索性能</h2>
+<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id=39-innodb-索引结构与检索性能>39. InnoDB 索引结构与检索性能<a href=#39-innodb-索引结构与检索性能 class=hash-link aria-label="39. InnoDB 索引结构与检索性能的直接链接" title="39. InnoDB 索引结构与检索性能的直接链接" translate=no>​</a></h2>
 <p>InnoDB 是 MySQL 的默认事务型存储引擎，其索引是以 <strong>B+ 树</strong> 结构实现的。</p>
-<h3 id=b-树的物理结构优势>B+ 树的物理结构优势</h3>
+<h3 class="anchor anchorTargetStickyNavbar_Vzrq" id=b-树的物理结构优势>B+ 树的物理结构优势<a href=#b-树的物理结构优势 class=hash-link aria-label="B+ 树的物理结构优势的直接链接" title="B+ 树的物理结构优势的直接链接" translate=no>​</a></h3>
 <ul>
-<li><strong>非叶子节点只存储索引键值</strong>：这使得非叶子节点能容纳更多的键值，整棵树的分叉数（扇出）极大。对于 16KB 的数据页，通常只需 3 层即可存储数千万条行记录，检索时仅需 3 次磁盘 I/O。</li>
-<li><strong>所有叶子节点存储真实数据且双向链表连接</strong>：非常适合进行范围查询和排序扫描。</li>
+<li class=""><strong>非叶子节点只存储索引键值</strong>：这使得非叶子节点能容纳更多的键值，整棵树的分叉数（扇出）极大。对于 16KB 的数据页，通常只需 3 层即可存储数千万条行记录，检索时仅需 3 次磁盘 I/O。</li>
+<li class=""><strong>所有叶子节点存储真实数据且双向链表连接</strong>：非常适合进行范围查询和排序扫描。</li>
 </ul>
-<h3 id=聚簇索引与非聚簇索引>聚簇索引与非聚簇索引</h3>
+<h3 class="anchor anchorTargetStickyNavbar_Vzrq" id=聚簇索引与非聚簇索引>聚簇索引与非聚簇索引<a href=#聚簇索引与非聚簇索引 class=hash-link aria-label=聚簇索引与非聚簇索引的直接链接 title=聚簇索引与非聚簇索引的直接链接 translate=no>​</a></h3>
 <ul>
-<li><strong>聚簇索引（Clustered Index）</strong>：
+<li class=""><strong>聚簇索引（Clustered Index）</strong>：
 <ul>
-<li><strong>物理特点</strong>：索引结构与行数据物理上存储在一起。B+ 树的叶子节点直接存储了<strong>完整的行记录数据</strong>。</li>
-<li><strong>限制</strong>：每张表有且仅有一个聚簇索引（默认是主键，若无主键则选择第一个非空唯一索引，若仍无则系统隐式生成一个 RowID）。</li>
-</ul>
-</li>
-<li><strong>非聚簇索引（Secondary Index，辅助索引）</strong>：
-<ul>
-<li><strong>物理特点</strong>：叶子节点不存储完整的行记录，只存储<strong>索引键值与对应行记录的聚簇索引键值（即主键 ID）</strong>。</li>
+<li class=""><strong>物理特点</strong>：索引结构与行数据物理上存储在一起。B+ 树的叶子节点直接存储了<strong>完整的行记录数据</strong>。</li>
+<li class=""><strong>限制</strong>：每张表有且仅有一个聚簇索引（默认是主键，若无主键则选择第一个非空唯一索引，若仍无则系统隐式生成一个 RowID）。</li>
 </ul>
 </li>
-</ul>
-<h3 id=回表与覆盖索引>回表与覆盖索引</h3>
+<li class=""><strong>非聚簇索引（Secondary Index，辅助索引）</strong>：
 <ul>
-<li><strong>回表（Table Lookup）</strong>：当通过非聚簇索引查询数据且所选字段不完全包含在索引树中时，MySQL 必须先通过非聚簇索引找到主键 ID，再拿着主键 ID 去聚簇索引树上检索出完整的数据行。这会产生二次磁盘 I/O 检索。</li>
-<li><strong>覆盖索引（Covering Index）</strong>：如果一个非聚簇索引树的键值中已经包含了查询语句所需要的所有字段（例如联合索引 <code>(name, age)</code>，查询 <code>SELECT name, age FROM users WHERE name = 'Tom'</code>），MySQL 就可以直接从这棵辅助索引树上获取所需数据并直接返回，<strong>避免了回表操作</strong>，性能大幅提升。</li>
+<li class=""><strong>物理特点</strong>：叶子节点不存储完整的行记录，只存储<strong>索引键值与对应行记录的聚簇索引键值（即主键 ID）</strong>。</li>
+</ul>
+</li>
+</ul>
+<h3 class="anchor anchorTargetStickyNavbar_Vzrq" id=回表与覆盖索引>回表与覆盖索引<a href=#回表与覆盖索引 class=hash-link aria-label=回表与覆盖索引的直接链接 title=回表与覆盖索引的直接链接 translate=no>​</a></h3>
+<ul>
+<li class=""><strong>回表（Table Lookup）</strong>：当通过非聚簇索引查询数据且所选字段不完全包含在索引树中时，MySQL 必须先通过非聚簇索引找到主键 ID，再拿着主键 ID 去聚簇索引树上检索出完整的数据行。这会产生二次磁盘 I/O 检索。</li>
+<li class=""><strong>覆盖索引（Covering Index）</strong>：如果一个非聚簇索引树的键值中已经包含了查询语句所需要的所有字段（例如联合索引 <code>(name, age)</code>，查询 <code>SELECT name, age FROM users WHERE name = 'Tom'</code>），MySQL 就可以直接从这棵辅助索引树上获取所需数据并直接返回，<strong>避免了回表操作</strong>，性能大幅提升。</li>
 </ul>
 <hr/>
-<h2 id=40-索引规则与失效边缘场景>40. 索引规则与失效边缘场景</h2>
-<h3 id=最左前缀匹配原则>最左前缀匹配原则</h3>
+<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id=40-索引规则与失效边缘场景>40. 索引规则与失效边缘场景<a href=#40-索引规则与失效边缘场景 class=hash-link aria-label="40. 索引规则与失效边缘场景的直接链接" title="40. 索引规则与失效边缘场景的直接链接" translate=no>​</a></h2>
+<h3 class="anchor anchorTargetStickyNavbar_Vzrq" id=最左前缀匹配原则>最左前缀匹配原则<a href=#最左前缀匹配原则 class=hash-link aria-label=最左前缀匹配原则的直接链接 title=最左前缀匹配原则的直接链接 translate=no>​</a></h3>
 <p>在联合索引（如 <code>index(a, b, c)</code>）中，查询条件必须从索引的最左列开始，并且不能跳过中间的列。</p>
 <ul>
-<li>例如，<code>WHERE a = 1 AND b = 2</code> 可以走索引；但 <code>WHERE b = 2 AND c = 3</code> 无法走索引。</li>
-<li><strong>范围查询阻断</strong>：如果查询条件中出现了范围查询（如 <code>></code>、<code>&lt;</code>、<code>between</code>、<code>like 'xxx%'</code>），那么联合索引中该列右边的所有列将无法再走索引（例如 <code>a = 1 AND b > 2 AND c = 3</code>，此时 <code>c</code> 无法走索引）。</li>
+<li class="">例如，<code>WHERE a = 1 AND b = 2</code> 可以走索引；但 <code>WHERE b = 2 AND c = 3</code> 无法走索引。</li>
+<li class=""><strong>范围查询阻断</strong>：如果查询条件中出现了范围查询（如 <code>></code>、<code>&lt;</code>、<code>between</code>、<code>like 'xxx%'</code>），那么联合索引中该列右边的所有列将无法再走索引（例如 <code>a = 1 AND b > 2 AND c = 3</code>，此时 <code>c</code> 无法走索引）。</li>
 </ul>
-<h3 id=索引下推index-condition-pushdown-icp>索引下推（Index Condition Pushdown, ICP）</h3>
+<h3 class="anchor anchorTargetStickyNavbar_Vzrq" id=索引下推index-condition-pushdown-icp>索引下推（Index Condition Pushdown, ICP）<a href=#索引下推index-condition-pushdown-icp class=hash-link aria-label="索引下推（Index Condition Pushdown, ICP）的直接链接" title="索引下推（Index Condition Pushdown, ICP）的直接链接" translate=no>​</a></h3>
 <ul>
-<li><strong>背景</strong>：在没有 ICP 之前，当使用联合索引进行过滤时（如 <code>a = 1 AND b LIKE '%Tom%' AND c = 3</code>），MySQL 只能在存储引擎层先用 <code>a</code> 字段过滤出数据，然后将大量数据返回到 Server 层，在 Server 层对 <code>b</code> 和 <code>c</code> 进行二次过滤。</li>
-<li><strong>优化</strong>：开启 ICP 后，MySQL 会把过滤条件中属于联合索引范围的字段（如 <code>b</code> 和 <code>c</code>）直接“下推”到存储引擎层。存储引擎在读取数据页时，直接在引擎层过滤掉不符合条件的行，大大减少了回表次数和传输到 Server 层的数据量。</li>
+<li class=""><strong>背景</strong>：在没有 ICP 之前，当使用联合索引进行过滤时（如 <code>a = 1 AND b LIKE '%Tom%' AND c = 3</code>），MySQL 只能在存储引擎层先用 <code>a</code> 字段过滤出数据，然后将大量数据返回到 Server 层，在 Server 层对 <code>b</code> 和 <code>c</code> 进行二次过滤。</li>
+<li class=""><strong>优化</strong>：开启 ICP 后，MySQL 会把过滤条件中属于联合索引范围的字段（如 <code>b</code> 和 <code>c</code>）直接“下推”到存储引擎层。存储引擎在读取数据页时，直接在引擎层过滤掉不符合条件的行，大大减少了回表次数和传输到 Server 层的数据量。</li>
 </ul>
-<h3 id=索引失效的典型场景>索引失效的典型场景</h3>
+<h3 class="anchor anchorTargetStickyNavbar_Vzrq" id=索引失效的典型场景>索引失效的典型场景<a href=#索引失效的典型场景 class=hash-link aria-label=索引失效的典型场景的直接链接 title=索引失效的典型场景的直接链接 translate=no>​</a></h3>
 <ol>
-<li><strong>对索引列进行函数或表达式操作</strong>：如 <code>WHERE YEAR(create_time) = 2026</code>，这会破坏索引树的有序性，使其退化为全表扫描。</li>
-<li><strong>隐式类型转换</strong>：如字段为字符类型，查询写成 <code>WHERE phone = 13800000000</code>（未加引号）。MySQL 会隐式调用 <code>CAST</code> 函数，导致索引失效。</li>
-<li><strong>前导模糊查询</strong>：如 <code>WHERE name LIKE '%Tom'</code>（百分号在最左侧），由于无法确定首字符，无法在 B+ 树中进行二分查找。</li>
+<li class=""><strong>对索引列进行函数或表达式操作</strong>：如 <code>WHERE YEAR(create_time) = 2026</code>，这会破坏索引树的有序性，使其退化为全表扫描。</li>
+<li class=""><strong>隐式类型转换</strong>：如字段为字符类型，查询写成 <code>WHERE phone = 13800000000</code>（未加引号）。MySQL 会隐式调用 <code>CAST</code> 函数，导致索引失效。</li>
+<li class=""><strong>前导模糊查询</strong>：如 <code>WHERE name LIKE '%Tom'</code>（百分号在最左侧），由于无法确定首字符，无法在 B+ 树中进行二分查找。</li>
 </ol>
 <hr/>
-<h2 id=41-mvcc-原理与幻读攻克>41. MVCC 原理与幻读攻克</h2>
+<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id=41-mvcc-原理与幻读攻克>41. MVCC 原理与幻读攻克<a href=#41-mvcc-原理与幻读攻克 class=hash-link aria-label="41. MVCC 原理与幻读攻克的直接链接" title="41. MVCC 原理与幻读攻克的直接链接" translate=no>​</a></h2>
 <p>MVCC（Multi-Version Concurrency Control，多版本并发控制）是 InnoDB 实现非锁定读和高并发事务隔离的核心机制。</p>
-<h3 id=mvcc-实现原理>MVCC 实现原理</h3>
+<h3 class="anchor anchorTargetStickyNavbar_Vzrq" id=mvcc-实现原理>MVCC 实现原理<a href=#mvcc-实现原理 class=hash-link aria-label="MVCC 实现原理的直接链接" title="MVCC 实现原理的直接链接" translate=no>​</a></h3>
 <p>MVCC 的底层核心主要由 <strong>Undo Log 版本链</strong> 与 <strong>ReadView</strong> 组成。</p>
-<h4 id=undo-log-版本链>Undo Log 版本链</h4>
+<h4 class="anchor anchorTargetStickyNavbar_Vzrq" id=undo-log-版本链>Undo Log 版本链<a href=#undo-log-版本链 class=hash-link aria-label="Undo Log 版本链的直接链接" title="Undo Log 版本链的直接链接" translate=no>​</a></h4>
 <ul>
-<li>InnoDB 在每行记录后都有两个隐式物理字段：
+<li class="">InnoDB 在每行记录后都有两个隐式物理字段：
 <ul>
-<li><code>DB_TRX_ID</code>：最近修改该行记录的事务 ID。</li>
-<li><code>DB_ROLL_PTR</code>：回滚指针，指向该行记录被修改前的旧版 Undo Log 记录。</li>
+<li class=""><code>DB_TRX_ID</code>：最近修改该行记录的事务 ID。</li>
+<li class=""><code>DB_ROLL_PTR</code>：回滚指针，指向该行记录被修改前的旧版 Undo Log 记录。</li>
 </ul>
 </li>
-<li>多个事务对同一行记录进行修改时，旧版本的数据会被存放在 Undo Log 中，通过回滚指针串联成一个单向链表。</li>
+<li class="">多个事务对同一行记录进行修改时，旧版本的数据会被存放在 Undo Log 中，通过回滚指针串联成一个单向链表。</li>
 </ul>
-<h4 id=readview-结构>ReadView 结构</h4>
+<h4 class="anchor anchorTargetStickyNavbar_Vzrq" id=readview-结构>ReadView 结构<a href=#readview-结构 class=hash-link aria-label="ReadView 结构的直接链接" title="ReadView 结构的直接链接" translate=no>​</a></h4>
 <p>当一个事务在执行 <code>SELECT</code> 时，系统会为其生成一个一致性视图（ReadView），包含以下核心字段：</p>
 <ul>
-<li><code>m_ids</code>：生成 ReadView 时，系统内当前正在活跃（未提交）的事务 ID 列表。</li>
-<li><code>min_trx_id</code>：活跃事务 ID 列表中的最小值。</li>
-<li><code>max_trx_id</code>：系统准备分配给下一个事务的 ID 值（即最大活跃事务 ID + 1）。</li>
-<li><code>creator_trx_id</code>：创建当前 ReadView 的事务 ID。</li>
+<li class=""><code>m_ids</code>：生成 ReadView 时，系统内当前正在活跃（未提交）的事务 ID 列表。</li>
+<li class=""><code>min_trx_id</code>：活跃事务 ID 列表中的最小值。</li>
+<li class=""><code>max_trx_id</code>：系统准备分配给下一个事务的 ID 值（即最大活跃事务 ID + 1）。</li>
+<li class=""><code>creator_trx_id</code>：创建当前 ReadView 的事务 ID。</li>
 </ul>
-<h4 id=可见性判断算法>可见性判断算法</h4>
+<h4 class="anchor anchorTargetStickyNavbar_Vzrq" id=可见性判断算法>可见性判断算法<a href=#可见性判断算法 class=hash-link aria-label=可见性判断算法的直接链接 title=可见性判断算法的直接链接 translate=no>​</a></h4>
 <p>当事务读取某行记录时，会拿着该行当前的 <code>DB_TRX_ID</code> 与 ReadView 中的字段进行对比：</p>
 <ol>
-<li>若 <code>DB_TRX_ID &lt; min_trx_id</code>：说明该版本的事务在 ReadView 生成前已提交，<strong>可见</strong>。</li>
-<li>若 <code>DB_TRX_ID >= max_trx_id</code>：说明该版本的事务在 ReadView 生成后才启动，<strong>不可见</strong>。</li>
-<li>若 <code>min_trx_id &lt;= DB_TRX_ID &lt; max_trx_id</code>：
+<li class="">若 <code>DB_TRX_ID &lt; min_trx_id</code>：说明该版本的事务在 ReadView 生成前已提交，<strong>可见</strong>。</li>
+<li class="">若 <code>DB_TRX_ID >= max_trx_id</code>：说明该版本的事务在 ReadView 生成后才启动，<strong>不可见</strong>。</li>
+<li class="">若 <code>min_trx_id &lt;= DB_TRX_ID &lt; max_trx_id</code>：
 <ul>
-<li>若 <code>DB_TRX_ID</code> 在 <code>m_ids</code> 列表中：说明该版本事务尚未提交，<strong>不可见</strong>。</li>
-<li>若不在：说明该版本事务已提交，<strong>可见</strong>。</li>
+<li class="">若 <code>DB_TRX_ID</code> 在 <code>m_ids</code> 列表中：说明该版本事务尚未提交，<strong>不可见</strong>。</li>
+<li class="">若不在：说明该版本事务已提交，<strong>可见</strong>。</li>
 </ul>
 </li>
-<li>若读取到不可见版本，则顺着 Undo Log 版本链向下寻找前一个旧版本，直到找到可见版本为止。</li>
+<li class="">若读取到不可见版本，则顺着 Undo Log 版本链向下寻找前一个旧版本，直到找到可见版本为止。</li>
 </ol>
-<h4 id=隔离级别的差异>隔离级别的差异</h4>
+<h4 class="anchor anchorTargetStickyNavbar_Vzrq" id=隔离级别的差异>隔离级别的差异<a href=#隔离级别的差异 class=hash-link aria-label=隔离级别的差异的直接链接 title=隔离级别的差异的直接链接 translate=no>​</a></h4>
 <ul>
-<li><strong>RC（Read Committed）</strong>：事务中<strong>每次执行 SELECT</strong> 时，都会重新生成一次最新的 ReadView，因此能读到其他事务新提交的数据（导致不可重复读）。</li>
-<li><strong>RR（Repeatable Read）</strong>：事务中<strong>只有在第一次执行 SELECT</strong> 时才会生成 ReadView，后续查询均复用该 ReadView，确保多次读取数据一致。</li>
+<li class=""><strong>RC（Read Committed）</strong>：事务中<strong>每次执行 SELECT</strong> 时，都会重新生成一次最新的 ReadView，因此能读到其他事务新提交的数据（导致不可重复读）。</li>
+<li class=""><strong>RR（Repeatable Read）</strong>：事务中<strong>只有在第一次执行 SELECT</strong> 时才会生成 ReadView，后续查询均复用该 ReadView，确保多次读取数据一致。</li>
 </ul>
-<h3 id=rr-如何很大程度解决幻读>RR 如何很大程度解决幻读</h3>
+<h3 class="anchor anchorTargetStickyNavbar_Vzrq" id=rr-如何很大程度解决幻读>RR 如何很大程度解决幻读<a href=#rr-如何很大程度解决幻读 class=hash-link aria-label="RR 如何很大程度解决幻读的直接链接" title="RR 如何很大程度解决幻读的直接链接" translate=no>​</a></h3>
 <p>幻读是指同一个事务在多次相同范围查询中，看到了其他事务新插入（<code>INSERT</code>）并提交的数据。</p>
 <p>InnoDB 在可重复读（RR）级别下，通过两种手段攻克幻读：</p>
 <ol>
-<li><strong>快照读（普通 SELECT）</strong>：基于 MVCC 机制，由于复用第一次生成的 ReadView，因此事务看不到其他事务在 ReadView 生成后新插入的行，从逻辑上规避了幻读。</li>
-<li><strong>当前读（SELECT ... FOR UPDATE / LOCK IN SHARE MODE / UPDATE）</strong>：通过 <strong>Next-Key Lock</strong>（行锁临键锁，即行锁与间隙锁 Gap Lock 的组合）进行控制。在查询范围时，不仅锁定当前行，还会锁定数据之间的“间隙”，阻止其他事务在这些间隙中插入新记录，从物理上杜绝了幻读的发生。</li>
+<li class=""><strong>快照读（普通 SELECT）</strong>：基于 MVCC 机制，由于复用第一次生成的 ReadView，因此事务看不到其他事务在 ReadView 生成后新插入的行，从逻辑上规避了幻读。</li>
+<li class=""><strong>当前读（SELECT ... FOR UPDATE / LOCK IN SHARE MODE / UPDATE）</strong>：通过 <strong>Next-Key Lock</strong>（行锁临键锁，即行锁与间隙锁 Gap Lock 的组合）进行控制。在查询范围时，不仅锁定当前行，还会锁定数据之间的“间隙”，阻止其他事务在这些间隙中插入新记录，从物理上杜绝了幻读的发生。</li>
 </ol>
 <hr/>
-<h2 id=42-事务隔离级别与两阶段提交>42. 事务隔离级别与两阶段提交</h2>
-<h3 id=事务隔离级别与解决问题>事务隔离级别与解决问题</h3>
+<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id=42-事务隔离级别与两阶段提交>42. 事务隔离级别与两阶段提交<a href=#42-事务隔离级别与两阶段提交 class=hash-link aria-label="42. 事务隔离级别与两阶段提交的直接链接" title="42. 事务隔离级别与两阶段提交的直接链接" translate=no>​</a></h2>
+<h3 class="anchor anchorTargetStickyNavbar_Vzrq" id=事务隔离级别与解决问题>事务隔离级别与解决问题<a href=#事务隔离级别与解决问题 class=hash-link aria-label=事务隔离级别与解决问题的直接链接 title=事务隔离级别与解决问题的直接链接 translate=no>​</a></h3>
 
 
 
@@ -141,109 +141,93 @@
 
 
 <table><thead><tr><th style=text-align:left>隔离级别<th style=text-align:left>脏读<th style=text-align:left>不可重复读<th style=text-align:left>幻读<th style=text-align:left>底层加锁/版本控制机制<tbody><tr><td style=text-align:left><strong>读未提交（RU）</strong><td style=text-align:left>允许<td style=text-align:left>允许<td style=text-align:left>允许<td style=text-align:left>不加锁，不作版本过滤。<tr><td style=text-align:left><strong>读已提交（RC）</strong><td style=text-align:left>解决<td style=text-align:left>允许<td style=text-align:left>允许<td style=text-align:left>每次 <code>SELECT</code> 重新生成 ReadView。<tr><td style=text-align:left><strong>可重复读（RR）</strong><td style=text-align:left>解决<td style=text-align:left>解决<td style=text-align:left>解决（绝大部分）<td style=text-align:left>事务首个 <code>SELECT</code> 生成 ReadView，当前读加 Next-Key Lock。<tr><td style=text-align:left><strong>串行化（Serializable）</strong><td style=text-align:left>解决<td style=text-align:left>解决<td style=text-align:left>解决<td style=text-align:left>读写全部加锁（共享锁/排他锁），退化为单线程。</table>
-<h3 id=binlog-与-redo-log-的两阶段提交2pc>Binlog 与 Redo Log 的两阶段提交（2PC）</h3>
+<h3 class="anchor anchorTargetStickyNavbar_Vzrq" id=binlog-与-redo-log-的两阶段提交2pc>Binlog 与 Redo Log 的两阶段提交（2PC）<a href=#binlog-与-redo-log-的两阶段提交2pc class=hash-link aria-label="Binlog 与 Redo Log 的两阶段提交（2PC）的直接链接" title="Binlog 与 Redo Log 的两阶段提交（2PC）的直接链接" translate=no>​</a></h3>
 <p>为了保证 MySQL 中的物理崩溃恢复日志（Redo Log）和逻辑备份日志（Binlog）之间的数据一致性，避免主从数据不一致，MySQL 采用了两阶段提交机制。</p>
-<mermaid value="sequenceDiagram
-    participant Executor as 执行器
-    participant InnoDB as InnoDB存储引擎
-    participant Binlog as 归档日志 (Binlog)
-
-    Executor->>InnoDB: 1. 准备更新行数据
-    InnoDB->>InnoDB: 2. 修改数据页, 写入 Redo Log 并标记为 prepare 状态
-    InnoDB->>Executor: 3. 返回准备就绪
-    Executor->>Binlog: 4. 写入 Binlog 文件并刷盘
-    Binlog->>Executor: 5. 写入成功
-    Executor->>InnoDB: 6. 提交事务
-    InnoDB->>InnoDB: 7. 将 Redo Log 状态修改为 commit"></mermaid>
-<h4 id=崩溃恢复策略>崩溃恢复策略</h4>
+<!-- -->
+<h4 class="anchor anchorTargetStickyNavbar_Vzrq" id=崩溃恢复策略>崩溃恢复策略<a href=#崩溃恢复策略 class=hash-link aria-label=崩溃恢复策略的直接链接 title=崩溃恢复策略的直接链接 translate=no>​</a></h4>
 <p>若系统在步骤 4 和 7 之间崩溃，重启后 MySQL 扫描 Prepare 状态的 Redo Log，并检查对应的事务 ID 是否存在于 Binlog 中：</p>
 <ul>
-<li>若 Binlog 中已经完整记录了该事务，则将 Redo Log 设为 <code>commit</code> 并提交。</li>
-<li>若 Binlog 中没有该事务，则利用 Undo Log 将事务回滚，确保主库和备份库的数据完美一致。</li>
+<li class="">若 Binlog 中已经完整记录了该事务，则将 Redo Log 设为 <code>commit</code> 并提交。</li>
+<li class="">若 Binlog 中没有该事务，则利用 Undo Log 将事务回滚，确保主库和备份库的数据完美一致。</li>
 </ul>
 <hr/>
-<h2 id=43-慢查询诊断与深分页优化>43. 慢查询诊断与深分页优化</h2>
-<h3 id=执行计划explain关键指标>执行计划（Explain）关键指标</h3>
+<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id=43-慢查询诊断与深分页优化>43. 慢查询诊断与深分页优化<a href=#43-慢查询诊断与深分页优化 class=hash-link aria-label="43. 慢查询诊断与深分页优化的直接链接" title="43. 慢查询诊断与深分页优化的直接链接" translate=no>​</a></h2>
+<h3 class="anchor anchorTargetStickyNavbar_Vzrq" id=执行计划explain关键指标>执行计划（Explain）关键指标<a href=#执行计划explain关键指标 class=hash-link aria-label=执行计划（Explain）关键指标的直接链接 title=执行计划（Explain）关键指标的直接链接 translate=no>​</a></h3>
 <p>通过 <code>EXPLAIN</code> 分析慢 SQL 时，重点关注以下字段：</p>
 <ul>
-<li><strong><code>type</code>（连接类型）</strong>：性能从好到差依次为：<code>system</code> > <code>const</code> > <code>eq_ref</code> > <code>ref</code> > <code>range</code> > <code>index</code> > <code>ALL</code>。要求生产 SQL 必须达到 <code>range</code> 或以上，严禁出现 <code>ALL</code>（全表扫描）。</li>
-<li><strong><code>key</code></strong>：MySQL 实际使用的索引名称。如果为 <code>NULL</code>，说明未走索引。</li>
-<li><strong><code>rows</code></strong>：预估需要读取和过滤的行数，该值越小越好。</li>
-<li><strong><code>Extra</code>（额外信息）</strong>：
+<li class=""><strong><code>type</code>（连接类型）</strong>：性能从好到差依次为：<code>system</code> > <code>const</code> > <code>eq_ref</code> > <code>ref</code> > <code>range</code> > <code>index</code> > <code>ALL</code>。要求生产 SQL 必须达到 <code>range</code> 或以上，严禁出现 <code>ALL</code>（全表扫描）。</li>
+<li class=""><strong><code>key</code></strong>：MySQL 实际使用的索引名称。如果为 <code>NULL</code>，说明未走索引。</li>
+<li class=""><strong><code>rows</code></strong>：预估需要读取和过滤的行数，该值越小越好。</li>
+<li class=""><strong><code>Extra</code>（额外信息）</strong>：
 <ul>
-<li><code>Using index</code>：使用了覆盖索引，性能极佳。</li>
-<li><code>Using index condition</code>：使用了索引下推。</li>
-<li><code>Using filesort</code>：使用了文件排序（无法利用索引排序，需要额外的内存或磁盘排序空间），需要重点优化。</li>
-<li><code>Using temporary</code>：使用了临时表，多见于 <code>GROUP BY</code> 或 <code>DISTINCT</code>，开销巨大。</li>
+<li class=""><code>Using index</code>：使用了覆盖索引，性能极佳。</li>
+<li class=""><code>Using index condition</code>：使用了索引下推。</li>
+<li class=""><code>Using filesort</code>：使用了文件排序（无法利用索引排序，需要额外的内存或磁盘排序空间），需要重点优化。</li>
+<li class=""><code>Using temporary</code>：使用了临时表，多见于 <code>GROUP BY</code> 或 <code>DISTINCT</code>，开销巨大。</li>
 </ul>
 </li>
 </ul>
-<h3 id=深分页deep-paging优化>深分页（Deep Paging）优化</h3>
+<h3 class="anchor anchorTargetStickyNavbar_Vzrq" id=深分页deep-paging优化>深分页（Deep Paging）优化<a href=#深分页deep-paging优化 class=hash-link aria-label="深分页（Deep Paging）优化的直接链接" title="深分页（Deep Paging）优化的直接链接" translate=no>​</a></h3>
 <p>在执行大偏移量分页时（如 <code>LIMIT 1000000, 10</code>），MySQL 会扫描前 1000010 条记录，并将前 1000000 条丢弃，如果涉及回表，会产生上百万次无意义的磁盘 I/O。</p>
-<h4 id=优化方案>优化方案</h4>
+<h4 class="anchor anchorTargetStickyNavbar_Vzrq" id=优化方案>优化方案<a href=#优化方案 class=hash-link aria-label=优化方案的直接链接 title=优化方案的直接链接 translate=no>​</a></h4>
 <ol>
-<li><strong>游标/滚动分页（Cursor-based）</strong>：
+<li class=""><strong>游标/滚动分页（Cursor-based）</strong>：
 <ul>
-<li>
+<li class="">
 <p>限制不能跳页，只能点击“下一页”。</p>
 </li>
-<li>
+<li class="">
 <p>记录上一页最后一条的主键 ID（如 <code>id = 1000000</code>），查询写为：</p>
-<pre><code class=language-sql>SELECT * FROM users WHERE id > 1000000 LIMIT 10;
-</code></pre>
+<div class="language-sql codeBlockContainer_Ckt0 theme-code-block" style=--prism-color:#393A34;--prism-background-color:#f6f8fa><div class=codeBlockContent_QJqH><pre tabindex=0 class="prism-code language-sql codeBlock_bY9V thin-scrollbar" style=color:#393A34;background-color:#f6f8fa><code class=codeBlockLines_e6Vv><div class=token-line style=color:#393A34><span class="token keyword" style=color:#00009f>SELECT</span><span class="token plain"> </span><span class="token operator" style=color:#393A34>*</span><span class="token plain"> </span><span class="token keyword" style=color:#00009f>FROM</span><span class="token plain"> users </span><span class="token keyword" style=color:#00009f>WHERE</span><span class="token plain"> id </span><span class="token operator" style=color:#393A34>></span><span class="token plain"> </span><span class="token number" style=color:#36acaa>1000000</span><span class="token plain"> </span><span class="token keyword" style=color:#00009f>LIMIT</span><span class="token plain"> </span><span class="token number" style=color:#36acaa>10</span><span class="token punctuation" style=color:#393A34>;</span><br/></div></code></pre></div></div>
 <p>能直接利用主键索引进行快速定位，扫描行数永远为 10 行。</p>
 </li>
 </ul>
 </li>
-<li><strong>延迟关联（Deferred Join）</strong>：
+<li class=""><strong>延迟关联（Deferred Join）</strong>：
 <ul>
-<li>
+<li class="">
 <p>先通过覆盖索引只查询出主键 ID（不进行回表），然后再通过子查询与主表进行内连接获取完整行数据：</p>
-<pre><code class=language-sql>SELECT u.* FROM users u 
-INNER JOIN (
-    SELECT id FROM users ORDER BY age LIMIT 1000000, 10
-) tmp ON u.id = tmp.id;
-</code></pre>
+<div class="language-sql codeBlockContainer_Ckt0 theme-code-block" style=--prism-color:#393A34;--prism-background-color:#f6f8fa><div class=codeBlockContent_QJqH><pre tabindex=0 class="prism-code language-sql codeBlock_bY9V thin-scrollbar" style=color:#393A34;background-color:#f6f8fa><code class=codeBlockLines_e6Vv><div class=token-line style=color:#393A34><span class="token keyword" style=color:#00009f>SELECT</span><span class="token plain"> u</span><span class="token punctuation" style=color:#393A34>.</span><span class="token operator" style=color:#393A34>*</span><span class="token plain"> </span><span class="token keyword" style=color:#00009f>FROM</span><span class="token plain"> users u </span><br/></div><div class=token-line style=color:#393A34><span class="token plain"></span><span class="token keyword" style=color:#00009f>INNER</span><span class="token plain"> </span><span class="token keyword" style=color:#00009f>JOIN</span><span class="token plain"> </span><span class="token punctuation" style=color:#393A34>(</span><span class="token plain"></span><br/></div><div class=token-line style=color:#393A34><span class="token plain">    </span><span class="token keyword" style=color:#00009f>SELECT</span><span class="token plain"> id </span><span class="token keyword" style=color:#00009f>FROM</span><span class="token plain"> users </span><span class="token keyword" style=color:#00009f>ORDER</span><span class="token plain"> </span><span class="token keyword" style=color:#00009f>BY</span><span class="token plain"> age </span><span class="token keyword" style=color:#00009f>LIMIT</span><span class="token plain"> </span><span class="token number" style=color:#36acaa>1000000</span><span class="token punctuation" style=color:#393A34>,</span><span class="token plain"> </span><span class="token number" style=color:#36acaa>10</span><span class="token plain"></span><br/></div><div class=token-line style=color:#393A34><span class="token plain"></span><span class="token punctuation" style=color:#393A34>)</span><span class="token plain"> tmp </span><span class="token keyword" style=color:#00009f>ON</span><span class="token plain"> u</span><span class="token punctuation" style=color:#393A34>.</span><span class="token plain">id </span><span class="token operator" style=color:#393A34>=</span><span class="token plain"> tmp</span><span class="token punctuation" style=color:#393A34>.</span><span class="token plain">id</span><span class="token punctuation" style=color:#393A34>;</span><br/></div></code></pre></div></div>
 <p>这样将百万次回表操作压缩到了仅有 10 次。</p>
 </li>
 </ul>
 </li>
 </ol>
 <hr/>
-<h2 id=44-分库分表设计与分布式-id>44. 分库分表设计与分布式 ID</h2>
-<h3 id=基因法路由gene-based-routing>基因法路由（Gene-based Routing）</h3>
+<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id=44-分库分表设计与分布式-id>44. 分库分表设计与分布式 ID<a href=#44-分库分表设计与分布式-id class=hash-link aria-label="44. 分库分表设计与分布式 ID的直接链接" title="44. 分库分表设计与分布式 ID的直接链接" translate=no>​</a></h2>
+<h3 class="anchor anchorTargetStickyNavbar_Vzrq" id=基因法路由gene-based-routing>基因法路由（Gene-based Routing）<a href=#基因法路由gene-based-routing class=hash-link aria-label="基因法路由（Gene-based Routing）的直接链接" title="基因法路由（Gene-based Routing）的直接链接" translate=no>​</a></h3>
 <p>在分库分表（如按用户 ID 分表）时，如果要支持按商户或订单 ID 查询，通常会发生“跨库多表广播扫描”。</p>
 <ul>
-<li><strong>原理</strong>：将用户 ID（User ID）的后几位二进制（如后 6 位，即 64 分表）作为“基因”，在创建订单时，将这几位基因强制拼接到订单 ID（Order ID）的特定位置。</li>
-<li><strong>效果</strong>：当用户根据 Order ID 查询订单时，路由算法只需提取 Order ID 中的基因部分，即可直接计算出该订单存在于哪张用户表中，避免了全表广播，实现单键精准路由。</li>
+<li class=""><strong>原理</strong>：将用户 ID（User ID）的后几位二进制（如后 6 位，即 64 分表）作为“基因”，在创建订单时，将这几位基因强制拼接到订单 ID（Order ID）的特定位置。</li>
+<li class=""><strong>效果</strong>：当用户根据 Order ID 查询订单时，路由算法只需提取 Order ID 中的基因部分，即可直接计算出该订单存在于哪张用户表中，避免了全表广播，实现单键精准路由。</li>
 </ul>
-<h3 id=雪花算法snowflake与时钟回拨>雪花算法（Snowflake）与时钟回拨</h3>
-<h4 id=64位-id-划分>64位 ID 划分</h4>
+<h3 class="anchor anchorTargetStickyNavbar_Vzrq" id=雪花算法snowflake与时钟回拨>雪花算法（Snowflake）与时钟回拨<a href=#雪花算法snowflake与时钟回拨 class=hash-link aria-label=雪花算法（Snowflake）与时钟回拨的直接链接 title=雪花算法（Snowflake）与时钟回拨的直接链接 translate=no>​</a></h3>
+<h4 class="anchor anchorTargetStickyNavbar_Vzrq" id=64位-id-划分>64位 ID 划分<a href=#64位-id-划分 class=hash-link aria-label="64位 ID 划分的直接链接" title="64位 ID 划分的直接链接" translate=no>​</a></h4>
 <ul>
-<li><code>1位</code> 符号位（恒为 0）。</li>
-<li><code>41位</code> 时间戳（可支持 69 年）。</li>
-<li><code>10位</code> 工作机器 ID（可支持 1024 台机器）。</li>
-<li><code>12位</code> 序列号（单机单毫秒内可产生 4096 个 ID）。</li>
+<li class=""><code>1位</code> 符号位（恒为 0）。</li>
+<li class=""><code>41位</code> 时间戳（可支持 69 年）。</li>
+<li class=""><code>10位</code> 工作机器 ID（可支持 1024 台机器）。</li>
+<li class=""><code>12位</code> 序列号（单机单毫秒内可产生 4096 个 ID）。</li>
 </ul>
-<h4 id=时钟回拨应对方案>时钟回拨应对方案</h4>
+<h4 class="anchor anchorTargetStickyNavbar_Vzrq" id=时钟回拨应对方案>时钟回拨应对方案<a href=#时钟回拨应对方案 class=hash-link aria-label=时钟回拨应对方案的直接链接 title=时钟回拨应对方案的直接链接 translate=no>​</a></h4>
 <p>若服务器发生 NTP 时间校准导致时间回拨，雪花算法可能会生成重复的 ID。</p>
 <ul>
-<li><strong>轻微回拨（小于 5 毫秒）</strong>：线程直接自旋等待时间追平。</li>
-<li><strong>严重回拨</strong>：
+<li class=""><strong>轻微回拨（小于 5 毫秒）</strong>：线程直接自旋等待时间追平。</li>
+<li class=""><strong>严重回拨</strong>：
 <ul>
-<li>维护多个<strong>备用工作机器 ID（Worker ID）</strong>。一旦发生回拨，自动切换到备用 Worker ID 继续生成 ID，避免冲突。</li>
-<li>记录历史最大生成时间戳。若当前时间小于历史最大时间，则通过序列号继续递增生成，或向后顺延时间戳。</li>
+<li class="">维护多个<strong>备用工作机器 ID（Worker ID）</strong>。一旦发生回拨，自动切换到备用 Worker ID 继续生成 ID，避免冲突。</li>
+<li class="">记录历史最大生成时间戳。若当前时间小于历史最大时间，则通过序列号继续递增生成，或向后顺延时间戳。</li>
 </ul>
 </li>
 </ul>
 <hr/>
-<h2 id=45-redis-基础结构与底层编码演进>45. Redis 基础结构与底层编码演进</h2>
+<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id=45-redis-基础结构与底层编码演进>45. Redis 基础结构与底层编码演进<a href=#45-redis-基础结构与底层编码演进 class=hash-link aria-label="45. Redis 基础结构与底层编码演进的直接链接" title="45. Redis 基础结构与底层编码演进的直接链接" translate=no>​</a></h2>
 <p>Redis 核心数据类型在不同版本中进行了深度的编码重构。</p>
 <ul>
-<li><strong>ziplist（压缩列表）</strong>：连续内存块，非常节省空间，但在修改或新增时需要重新分配内存，且在节点较多时存在“连锁更新（Cascade Update）”崩溃风险。</li>
-<li><strong>listpack（紧凑列表）</strong>：自 Redis 5 引入，并在 <strong>Redis 7 中彻底取代了 ziplist</strong>。它消除了节点中记录前一个节点长度的属性，将长度记录移到了节点尾部，从而<strong>彻底根治了连锁更新问题</strong>。</li>
+<li class=""><strong>ziplist（压缩列表）</strong>：连续内存块，非常节省空间，但在修改或新增时需要重新分配内存，且在节点较多时存在“连锁更新（Cascade Update）”崩溃风险。</li>
+<li class=""><strong>listpack（紧凑列表）</strong>：自 Redis 5 引入，并在 <strong>Redis 7 中彻底取代了 ziplist</strong>。它消除了节点中记录前一个节点长度的属性，将长度记录移到了节点尾部，从而<strong>彻底根治了连锁更新问题</strong>。</li>
 </ul>
-<h3 id=五大结构底层编码对照表>五大结构底层编码对照表</h3>
+<h3 class="anchor anchorTargetStickyNavbar_Vzrq" id=五大结构底层编码对照表>五大结构底层编码对照表<a href=#五大结构底层编码对照表 class=hash-link aria-label=五大结构底层编码对照表的直接链接 title=五大结构底层编码对照表的直接链接 translate=no>​</a></h3>
 
 
 
@@ -275,157 +259,133 @@ INNER JOIN (
 
 <table><thead><tr><th style=text-align:left>基础结构<th style=text-align:left>Redis 7+ 底层编码实现<tbody><tr><td style=text-align:left><strong>String</strong><td style=text-align:left><code>int</code>（整型）或 <code>raw</code>/<code>embstr</code>（简单动态字符串 SDS）。<tr><td style=text-align:left><strong>List</strong><td style=text-align:left><strong><code>quicklist</code></strong>（双向链表与 <code>listpack</code> 的结合体）。<tr><td style=text-align:left><strong>Hash</strong><td style=text-align:left><strong><code>listpack</code></strong>（小容量时）或 <strong><code>hashtable</code></strong>（大容量时）。<tr><td style=text-align:left><strong>Set</strong><td style=text-align:left><strong><code>intset</code></strong>（整数集合，全为整数时）或 <strong><code>hashtable</code></strong>。<tr><td style=text-align:left><strong>ZSet</strong><td style=text-align:left><strong><code>listpack</code></strong>（小容量时）或 <strong><code>skiplist</code></strong>（跳表，大容量时）。</table>
 <hr/>
-<h2 id=46-redis-缓存三大问题防护>46. Redis 缓存三大问题防护</h2>
-<h3 id=缓存穿透cache-penetration>缓存穿透（Cache Penetration）</h3>
+<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id=46-redis-缓存三大问题防护>46. Redis 缓存三大问题防护<a href=#46-redis-缓存三大问题防护 class=hash-link aria-label="46. Redis 缓存三大问题防护的直接链接" title="46. Redis 缓存三大问题防护的直接链接" translate=no>​</a></h2>
+<h3 class="anchor anchorTargetStickyNavbar_Vzrq" id=缓存穿透cache-penetration>缓存穿透（Cache Penetration）<a href=#缓存穿透cache-penetration class=hash-link aria-label="缓存穿透（Cache Penetration）的直接链接" title="缓存穿透（Cache Penetration）的直接链接" translate=no>​</a></h3>
 <ul>
-<li><strong>现象</strong>：查询一个<strong>数据库和缓存中都不存在</strong>的数据（如黑客恶意构造的负数 ID）。导致所有请求穿透缓存直达数据库，造成数据库宕机。</li>
-<li><strong>解决方案</strong>：
+<li class=""><strong>现象</strong>：查询一个<strong>数据库和缓存中都不存在</strong>的数据（如黑客恶意构造的负数 ID）。导致所有请求穿透缓存直达数据库，造成数据库宕机。</li>
+<li class=""><strong>解决方案</strong>：
 <ol>
-<li><strong>布隆过滤器（Bloom Filter）</strong>：在缓存前加一层布隆过滤器，保存所有可能存在的 Key。若过滤器判断不存在，直接拦截返回。</li>
-<li><strong>缓存空对象（Cache Null）</strong>：当数据库查询为空时，依然向缓存中写入一个带有较短过期时间（如 5 分钟）的 <code>null</code> 值或特定占位符，防止重复穿透。</li>
+<li class=""><strong>布隆过滤器（Bloom Filter）</strong>：在缓存前加一层布隆过滤器，保存所有可能存在的 Key。若过滤器判断不存在，直接拦截返回。</li>
+<li class=""><strong>缓存空对象（Cache Null）</strong>：当数据库查询为空时，依然向缓存中写入一个带有较短过期时间（如 5 分钟）的 <code>null</code> 值或特定占位符，防止重复穿透。</li>
 </ol>
 </li>
 </ul>
-<h3 id=缓存击穿cache-breakdown>缓存击穿（Cache Breakdown）</h3>
+<h3 class="anchor anchorTargetStickyNavbar_Vzrq" id=缓存击穿cache-breakdown>缓存击穿（Cache Breakdown）<a href=#缓存击穿cache-breakdown class=hash-link aria-label="缓存击穿（Cache Breakdown）的直接链接" title="缓存击穿（Cache Breakdown）的直接链接" translate=no>​</a></h3>
 <ul>
-<li><strong>现象</strong>：一个<strong>热点 Key</strong>（如爆款商品的库存），在承受极高并发访问的同时<strong>突然过期</strong>。瞬间海量请求直达数据库进行重建，压垮数据库。</li>
-<li><strong>解决方案</strong>：
+<li class=""><strong>现象</strong>：一个<strong>热点 Key</strong>（如爆款商品的库存），在承受极高并发访问的同时<strong>突然过期</strong>。瞬间海量请求直达数据库进行重建，压垮数据库。</li>
+<li class=""><strong>解决方案</strong>：
 <ol>
-<li>
+<li class="">
 <p><strong>互斥锁（Mutex Lock）</strong>：在缓存失效时，只允许一个线程抢占分布式锁去查询数据库并重建缓存，其他线程等待并重试：</p>
-<pre><code class=language-java>if (redis.get(key) == null) {
-    if (lock.tryLock()) {
-        dbData = queryDb();
-        redis.set(key, dbData);
-        lock.unlock();
-    } else {
-        Thread.sleep(50);
-        retry();
-    }
-}
-</code></pre>
+<div class="language-java codeBlockContainer_Ckt0 theme-code-block" style=--prism-color:#393A34;--prism-background-color:#f6f8fa><div class=codeBlockContent_QJqH><pre tabindex=0 class="prism-code language-java codeBlock_bY9V thin-scrollbar" style=color:#393A34;background-color:#f6f8fa><code class=codeBlockLines_e6Vv><div class=token-line style=color:#393A34><span class="token plain">if (redis.get(key) == null) {</span><br/></div><div class=token-line style=color:#393A34><span class="token plain">    if (lock.tryLock()) {</span><br/></div><div class=token-line style=color:#393A34><span class="token plain">        dbData = queryDb();</span><br/></div><div class=token-line style=color:#393A34><span class="token plain">        redis.set(key, dbData);</span><br/></div><div class=token-line style=color:#393A34><span class="token plain">        lock.unlock();</span><br/></div><div class=token-line style=color:#393A34><span class="token plain">    } else {</span><br/></div><div class=token-line style=color:#393A34><span class="token plain">        Thread.sleep(50);</span><br/></div><div class=token-line style=color:#393A34><span class="token plain">        retry();</span><br/></div><div class=token-line style=color:#393A34><span class="token plain">    }</span><br/></div><div class=token-line style=color:#393A34><span class="token plain">}</span><br/></div></code></pre></div></div>
 </li>
-<li>
+<li class="">
 <p><strong>逻辑过期（Logical Expiration）</strong>：热点数据物理上永不过期。在数据内部封装一个逻辑过期时间。当线程发现逻辑过期时，异步开启一个后台线程去重建缓存，当前线程直接返回旧的过期数据。</p>
 </li>
 </ol>
 </li>
 </ul>
-<h3 id=缓存雪崩cache-avalanche>缓存雪崩（Cache Avalanche）</h3>
+<h3 class="anchor anchorTargetStickyNavbar_Vzrq" id=缓存雪崩cache-avalanche>缓存雪崩（Cache Avalanche）<a href=#缓存雪崩cache-avalanche class=hash-link aria-label="缓存雪崩（Cache Avalanche）的直接链接" title="缓存雪崩（Cache Avalanche）的直接链接" translate=no>​</a></h3>
 <ul>
-<li><strong>现象</strong>：<strong>大量缓存 Key 在同一时间大面积失效</strong>，或者 Redis 服务器发生宕机。导致全网请求洪峰瞬间涌入数据库，造成雪崩式瘫痪。</li>
-<li><strong>解决方案</strong>：
+<li class=""><strong>现象</strong>：<strong>大量缓存 Key 在同一时间大面积失效</strong>，或者 Redis 服务器发生宕机。导致全网请求洪峰瞬间涌入数据库，造成雪崩式瘫痪。</li>
+<li class=""><strong>解决方案</strong>：
 <ol>
-<li><strong>随机过期时间</strong>：为每个 Key 的过期时间加上一个随机抖动值（如 1 到 5 分钟），避免它们在同一时间集体过期。</li>
-<li><strong>双层缓存架构</strong>：使用本地多级缓存（如 Caffeine）作为第一道防线。</li>
-<li><strong>服务限流降级</strong>：配置熔断保护（如 Sentinel），对非核心数据直接降级返回默认值。</li>
+<li class=""><strong>随机过期时间</strong>：为每个 Key 的过期时间加上一个随机抖动值（如 1 到 5 分钟），避免它们在同一时间集体过期。</li>
+<li class=""><strong>双层缓存架构</strong>：使用本地多级缓存（如 Caffeine）作为第一道防线。</li>
+<li class=""><strong>服务限流降级</strong>：配置熔断保护（如 Sentinel），对非核心数据直接降级返回默认值。</li>
 </ol>
 </li>
 </ul>
 <hr/>
-<h2 id=47-分布式锁演进与-redlock-争议>47. 分布式锁演进与 RedLock 争议</h2>
-<h3 id=set-nx-px-机制的缺陷>SET NX PX 机制的缺陷</h3>
+<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id=47-分布式锁演进与-redlock-争议>47. 分布式锁演进与 RedLock 争议<a href=#47-分布式锁演进与-redlock-争议 class=hash-link aria-label="47. 分布式锁演进与 RedLock 争议的直接链接" title="47. 分布式锁演进与 RedLock 争议的直接链接" translate=no>​</a></h2>
+<h3 class="anchor anchorTargetStickyNavbar_Vzrq" id=set-nx-px-机制的缺陷>SET NX PX 机制的缺陷<a href=#set-nx-px-机制的缺陷 class=hash-link aria-label="SET NX PX 机制的缺陷的直接链接" title="SET NX PX 机制的缺陷的直接链接" translate=no>​</a></h3>
 <p>传统简单的分布式锁写法如下：</p>
-<pre><code class=language-bash>SET lock_key unique_value NX PX 30000
-</code></pre>
-<h4 id=致命问题>致命问题</h4>
+<div class="language-bash codeBlockContainer_Ckt0 theme-code-block" style=--prism-color:#393A34;--prism-background-color:#f6f8fa><div class=codeBlockContent_QJqH><pre tabindex=0 class="prism-code language-bash codeBlock_bY9V thin-scrollbar" style=color:#393A34;background-color:#f6f8fa><code class=codeBlockLines_e6Vv><div class=token-line style=color:#393A34><span class="token plain">SET lock_key unique_value NX PX 30000</span><br/></div></code></pre></div></div>
+<h4 class="anchor anchorTargetStickyNavbar_Vzrq" id=致命问题>致命问题<a href=#致命问题 class=hash-link aria-label=致命问题的直接链接 title=致命问题的直接链接 translate=no>​</a></h4>
 <p>如果线程 A 拿到锁后，业务执行超时超过了 30 秒，锁被 Redis 自动释放。此时线程 B 拿到锁开始执行。随后线程 A 业务执行完毕，调用 <code>DEL lock_key</code>，会<strong>误释放掉线程 B 的锁</strong>，导致锁机制失效。</p>
 <ul>
-<li><strong>解决手段</strong>：
+<li class=""><strong>解决手段</strong>：
 <ol>
-<li>在释放锁时，必须使用 <strong>Lua 脚本</strong> 判断锁的值是否等于自己持有的 <code>unique_value</code>，只有相等才能执行 <code>DEL</code>。</li>
-<li>引入 <strong>Redisson 看门狗（Watchdog）</strong> 机制。</li>
+<li class="">在释放锁时，必须使用 <strong>Lua 脚本</strong> 判断锁的值是否等于自己持有的 <code>unique_value</code>，只有相等才能执行 <code>DEL</code>。</li>
+<li class="">引入 <strong>Redisson 看门狗（Watchdog）</strong> 机制。</li>
 </ol>
 </li>
 </ul>
-<h3 id=redisson-watchdog看门狗续期原理>Redisson Watchdog（看门狗）续期原理</h3>
+<h3 class="anchor anchorTargetStickyNavbar_Vzrq" id=redisson-watchdog看门狗续期原理>Redisson Watchdog（看门狗）续期原理<a href=#redisson-watchdog看门狗续期原理 class=hash-link aria-label="Redisson Watchdog（看门狗）续期原理的直接链接" title="Redisson Watchdog（看门狗）续期原理的直接链接" translate=no>​</a></h3>
 <ul>
-<li>当线程成功获取锁后，若没有显式指定锁过期时间，Redisson 会默认启动一个后台守护线程（看门狗），每隔 <code>lockWatchdogTimeout / 3</code>（默认 10 秒）向 Redis 发送一次续期命令，将锁的超时时间重新设置为 30 秒。</li>
-<li>只有当持锁线程主动调用 <code>unlock()</code>，或者当前 JVM 崩溃，看门狗才会停止续期，从而既防止了锁提前释放，又避免了死锁。</li>
+<li class="">当线程成功获取锁后，若没有显式指定锁过期时间，Redisson 会默认启动一个后台守护线程（看门狗），每隔 <code>lockWatchdogTimeout / 3</code>（默认 10 秒）向 Redis 发送一次续期命令，将锁的超时时间重新设置为 30 秒。</li>
+<li class="">只有当持锁线程主动调用 <code>unlock()</code>，或者当前 JVM 崩溃，看门狗才会停止续期，从而既防止了锁提前释放，又避免了死锁。</li>
 </ul>
-<h3 id=redlock红锁争议>RedLock（红锁）争议</h3>
+<h3 class="anchor anchorTargetStickyNavbar_Vzrq" id=redlock红锁争议>RedLock（红锁）争议<a href=#redlock红锁争议 class=hash-link aria-label=RedLock（红锁）争议的直接链接 title=RedLock（红锁）争议的直接链接 translate=no>​</a></h3>
 <p>为了解决主从架构下，主库写入锁后尚未同步给从库即宕机，导致从库被提升为主库后锁丢失、被其他线程重复获取的问题，Antirez 提出了 RedLock。</p>
 <ul>
-<li><strong>原理</strong>：在 N 个（通常为 5 个）完全独立的 Redis 节点上同时申请锁，只有当在过半数（>= 3）节点上成功获取锁，且总耗时小于锁的有效时间，才认为最终获取锁成功。</li>
-<li><strong>Martin Kleppmann 的质疑</strong>：
+<li class=""><strong>原理</strong>：在 N 个（通常为 5 个）完全独立的 Redis 节点上同时申请锁，只有当在过半数（>= 3）节点上成功获取锁，且总耗时小于锁的有效时间，才认为最终获取锁成功。</li>
+<li class=""><strong>Martin Kleppmann 的质疑</strong>：
 <ol>
-<li><strong>时钟漂移风险</strong>：RedLock 强依赖于物理服务器的时钟一致性。如果其中一台机器发生 NTP 时钟向前跳跃，锁会提前过期，导致锁失效。</li>
-<li><strong>垃圾回收停顿（GC Pause）</strong>：如果客户端在获取锁后发生了长达数秒的 Full GC 停顿，锁在 Redis 侧已过期，但客户端恢复后仍自认为持有锁，继续执行写操作会产生冲突。</li>
+<li class=""><strong>时钟漂移风险</strong>：RedLock 强依赖于物理服务器的时钟一致性。如果其中一台机器发生 NTP 时钟向前跳跃，锁会提前过期，导致锁失效。</li>
+<li class=""><strong>垃圾回收停顿（GC Pause）</strong>：如果客户端在获取锁后发生了长达数秒的 Full GC 停顿，锁在 Redis 侧已过期，但客户端恢复后仍自认为持有锁，继续执行写操作会产生冲突。</li>
 </ol>
 </li>
-<li><strong>生产建议</strong>：高并发且对一致性要求极高的金融级场景，优先使用 <strong>ZooKeeper 临时顺序节点</strong> 实现分布式锁（强一致性 CP 模型）；对于普通高并发场景，带看门狗的普通 Redis 单节点/哨兵模式锁已足够。</li>
+<li class=""><strong>生产建议</strong>：高并发且对一致性要求极高的金融级场景，优先使用 <strong>ZooKeeper 临时顺序节点</strong> 实现分布式锁（强一致性 CP 模型）；对于普通高并发场景，带看门狗的普通 Redis 单节点/哨兵模式锁已足够。</li>
 </ul>
 <hr/>
-<h2 id=48-redis-持久化与集群机制>48. Redis 持久化与集群机制</h2>
-<h3 id=rdb-与-aof-混合持久化>RDB 与 AOF 混合持久化</h3>
+<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id=48-redis-持久化与集群机制>48. Redis 持久化与集群机制<a href=#48-redis-持久化与集群机制 class=hash-link aria-label="48. Redis 持久化与集群机制的直接链接" title="48. Redis 持久化与集群机制的直接链接" translate=no>​</a></h2>
+<h3 class="anchor anchorTargetStickyNavbar_Vzrq" id=rdb-与-aof-混合持久化>RDB 与 AOF 混合持久化<a href=#rdb-与-aof-混合持久化 class=hash-link aria-label="RDB 与 AOF 混合持久化的直接链接" title="RDB 与 AOF 混合持久化的直接链接" translate=no>​</a></h3>
 <ul>
-<li><strong>RDB（快照）</strong>：周期性对全量数据进行二进制压缩存储。启动恢复快，但数据丢失多。</li>
-<li><strong>AOF（日志）</strong>：追加记录每次写指令。数据安全性高，但文件体积大、恢复慢。</li>
-<li><strong>混合持久化（Redis 4.0 起推荐）</strong>：
+<li class=""><strong>RDB（快照）</strong>：周期性对全量数据进行二进制压缩存储。启动恢复快，但数据丢失多。</li>
+<li class=""><strong>AOF（日志）</strong>：追加记录每次写指令。数据安全性高，但文件体积大、恢复慢。</li>
+<li class=""><strong>混合持久化（Redis 4.0 起推荐）</strong>：
 <ul>
-<li>AOF 重写时，将当前内存状态以 RDB 二进制格式写入 AOF 文件开头，后续新增的写指令仍以 AOF 文本格式追加。</li>
-<li>这种设计兼顾了 RDB 的快速加载与 AOF 的高数据安全性。</li>
+<li class="">AOF 重写时，将当前内存状态以 RDB 二进制格式写入 AOF 文件开头，后续新增的写指令仍以 AOF 文本格式追加。</li>
+<li class="">这种设计兼顾了 RDB 的快速加载与 AOF 的高数据安全性。</li>
 </ul>
 </li>
 </ul>
-<h3 id=cluster-集群哈希槽与主从网络抖动>Cluster 集群哈希槽与主从网络抖动</h3>
+<h3 class="anchor anchorTargetStickyNavbar_Vzrq" id=cluster-集群哈希槽与主从网络抖动>Cluster 集群哈希槽与主从网络抖动<a href=#cluster-集群哈希槽与主从网络抖动 class=hash-link aria-label="Cluster 集群哈希槽与主从网络抖动的直接链接" title="Cluster 集群哈希槽与主从网络抖动的直接链接" translate=no>​</a></h3>
 <ul>
-<li>
+<li class="">
 <p><strong>哈希槽（Hash Slot）</strong>：Redis Cluster 拥有固定的 <strong>16384</strong> 个哈希槽。集群中的每个 Master 节点负责管理一部分槽位。当存取一个 Key 时，通过：</p>
-<pre><code class=language-bash>slot = CRC16(key) & 16383
-</code></pre>
+<div class="language-bash codeBlockContainer_Ckt0 theme-code-block" style=--prism-color:#393A34;--prism-background-color:#f6f8fa><div class=codeBlockContent_QJqH><pre tabindex=0 class="prism-code language-bash codeBlock_bY9V thin-scrollbar" style=color:#393A34;background-color:#f6f8fa><code class=codeBlockLines_e6Vv><div class=token-line style=color:#393A34><span class="token plain">slot = CRC16(key) & 16383</span><br/></div></code></pre></div></div>
 <p>计算出槽位值，再路由到对应的物理节点。</p>
 </li>
-<li>
+<li class="">
 <p><strong>主从脑裂与网络抖动防范</strong>：</p>
 <ul>
-<li>
+<li class="">
 <p><strong>脑裂问题</strong>：主节点因网络故障与集群失联，但仍在工作，且集群选举出了新主节点。原主节点恢复后被降为从节点，清空本地数据进行同步，导致失联期间写入的数据全部丢失。</p>
 </li>
-<li>
+<li class="">
 <p><strong>配置优化</strong>：</p>
-<pre><code class=language-properties># 限制主节点必须有至少 1 个健康的从节点连接才能写入
-min-replicas-to-write 1
-# 主从同步时延阈值（秒）
-min-replicas-max-lag 10
-# 调整集群节点失联判定时间，防止因网络瞬时抖动造成频繁的主从倒换
-cluster-node-timeout 15000
-</code></pre>
+<div class="language-properties codeBlockContainer_Ckt0 theme-code-block" style=--prism-color:#393A34;--prism-background-color:#f6f8fa><div class=codeBlockContent_QJqH><pre tabindex=0 class="prism-code language-properties codeBlock_bY9V thin-scrollbar" style=color:#393A34;background-color:#f6f8fa><code class=codeBlockLines_e6Vv><div class=token-line style=color:#393A34><span class="token plain"># 限制主节点必须有至少 1 个健康的从节点连接才能写入</span><br/></div><div class=token-line style=color:#393A34><span class="token plain">min-replicas-to-write 1</span><br/></div><div class=token-line style=color:#393A34><span class="token plain"># 主从同步时延阈值（秒）</span><br/></div><div class=token-line style=color:#393A34><span class="token plain">min-replicas-max-lag 10</span><br/></div><div class=token-line style=color:#393A34><span class="token plain"># 调整集群节点失联判定时间，防止因网络瞬时抖动造成频繁的主从倒换</span><br/></div><div class=token-line style=color:#393A34><span class="token plain">cluster-node-timeout 15000</span><br/></div></code></pre></div></div>
 </li>
 </ul>
 </li>
 </ul>
 <hr/>
-<h2 id=49-缓存与数据库双写一致性方案>49. 缓存与数据库双写一致性方案</h2>
+<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id=49-缓存与数据库双写一致性方案>49. 缓存与数据库双写一致性方案<a href=#49-缓存与数据库双写一致性方案 class=hash-link aria-label="49. 缓存与数据库双写一致性方案的直接链接" title="49. 缓存与数据库双写一致性方案的直接链接" translate=no>​</a></h2>
 <p>在数据更新时，如何保证 Redis 与 MySQL 的数据一致性。</p>
-<h3 id=为什么先更新数据库再删除缓存最稳>为什么“先更新数据库，再删除缓存”最稳</h3>
+<h3 class="anchor anchorTargetStickyNavbar_Vzrq" id=为什么先更新数据库再删除缓存最稳>为什么“先更新数据库，再删除缓存”最稳<a href=#为什么先更新数据库再删除缓存最稳 class=hash-link aria-label=为什么“先更新数据库，再删除缓存”最稳的直接链接 title=为什么“先更新数据库，再删除缓存”最稳的直接链接 translate=no>​</a></h3>
 <p>我们来看两种常见顺序在并发下的表现：</p>
-<h4 id=方案-a先删除缓存再更新数据库>方案 A：先删除缓存，再更新数据库</h4>
+<h4 class="anchor anchorTargetStickyNavbar_Vzrq" id=方案-a先删除缓存再更新数据库>方案 A：先删除缓存，再更新数据库<a href=#方案-a先删除缓存再更新数据库 class=hash-link aria-label="方案 A：先删除缓存，再更新数据库的直接链接" title="方案 A：先删除缓存，再更新数据库的直接链接" translate=no>​</a></h4>
 <ol>
-<li>线程 1 准备更新数据，先删除了 Redis 缓存。</li>
-<li>此时并发线程 2 发起读取请求，发现缓存失效，去读取数据库，读到了<strong>旧值</strong>。</li>
-<li>线程 2 将读取到的旧值写入 Redis 缓存。</li>
-<li>线程 1 将新值写入数据库。</li>
-<li>结果：<strong>缓存为旧值，数据库为新值，产生永久不一致</strong>。必须通过昂贵的“延迟双删”才能修复。</li>
+<li class="">线程 1 准备更新数据，先删除了 Redis 缓存。</li>
+<li class="">此时并发线程 2 发起读取请求，发现缓存失效，去读取数据库，读到了<strong>旧值</strong>。</li>
+<li class="">线程 2 将读取到的旧值写入 Redis 缓存。</li>
+<li class="">线程 1 将新值写入数据库。</li>
+<li class="">结果：<strong>缓存为旧值，数据库为新值，产生永久不一致</strong>。必须通过昂贵的“延迟双删”才能修复。</li>
 </ol>
-<h4 id=方案-b先更新数据库再删除缓存cache-aside-pattern>方案 B：先更新数据库，再删除缓存（Cache Aside Pattern）</h4>
+<h4 class="anchor anchorTargetStickyNavbar_Vzrq" id=方案-b先更新数据库再删除缓存cache-aside-pattern>方案 B：先更新数据库，再删除缓存（Cache Aside Pattern）<a href=#方案-b先更新数据库再删除缓存cache-aside-pattern class=hash-link aria-label="方案 B：先更新数据库，再删除缓存（Cache Aside Pattern）的直接链接" title="方案 B：先更新数据库，再删除缓存（Cache Aside Pattern）的直接链接" translate=no>​</a></h4>
 <ol>
-<li>缓存刚好失效。</li>
-<li>线程 2 读取数据库，读到旧值。</li>
-<li>线程 1 更新数据库，将新值写入，并执行<strong>删除缓存</strong>操作。</li>
-<li>线程 2 将读到的旧值写入 Redis 缓存。</li>
-<li>结果：由于写库操作（步骤 3）通常比读库写缓存（步骤 2、4）慢得多，因此线程 2 写入缓存的动作几乎总是发生在线程 1 删除缓存之前，所以不一致的概率极低。</li>
+<li class="">缓存刚好失效。</li>
+<li class="">线程 2 读取数据库，读到旧值。</li>
+<li class="">线程 1 更新数据库，将新值写入，并执行<strong>删除缓存</strong>操作。</li>
+<li class="">线程 2 将读到的旧值写入 Redis 缓存。</li>
+<li class="">结果：由于写库操作（步骤 3）通常比读库写缓存（步骤 2、4）慢得多，因此线程 2 写入缓存的动作几乎总是发生在线程 1 删除缓存之前，所以不一致的概率极低。</li>
 </ol>
-<h3 id=终极强一致性闭环方案>终极强一致性闭环方案</h3>
+<h3 class="anchor anchorTargetStickyNavbar_Vzrq" id=终极强一致性闭环方案>终极强一致性闭环方案<a href=#终极强一致性闭环方案 class=hash-link aria-label=终极强一致性闭环方案的直接链接 title=终极强一致性闭环方案的直接链接 translate=no>​</a></h3>
 <p>如果对一致性有绝对的要求，推荐使用以下闭环：</p>
-<mermaid value="graph TD
-    Update[1. 业务更新数据] --> DB[(2. 写入 MySQL)]
-    DB --> Binlog{3. MySQL 产生 Binlog}
-    Binlog --> Canal[4. Canal 订阅并解析 Binlog]
-    Canal --> MQ[5. 发送消息到 Kafka/RabbitMQ]
-    MQ --> Consume[6. 消费者异步消费消息]
-    Consume --> DelCache[7. 精准删除 Redis 对应缓存]"></mermaid>
+<!-- -->
 <ul>
-<li><strong>延迟双删</strong>：更新库后，先删一次缓存，等待几百毫秒（确保读线程写缓存已完成），再删除一次，做兜底防范。</li>
-<li><strong>Canal 订阅 Binlog 异步删除</strong>：将缓存删除逻辑与业务代码解耦。即使业务线程删除失败，Canal 仍能通过消费 MQ 消息进行重试删除，保证了最终一致性。</li>
+<li class=""><strong>延迟双删</strong>：更新库后，先删一次缓存，等待几百毫秒（确保读线程写缓存已完成），再删除一次，做兜底防范。</li>
+<li class=""><strong>Canal 订阅 Binlog 异步删除</strong>：将缓存删除逻辑与业务代码解耦。即使业务线程删除失败，Canal 仍能通过消费 MQ 消息进行重试删除，保证了最终一致性。</li>
 </ul></div><footer class="theme-doc-footer docusaurus-mt-lg"><div class="row margin-top--sm theme-doc-footer-edit-meta-row"><div class="col noPrint_WFHX"><a href=https://github.com/Aiden-Coding/AiDocs/tree/main/docs/interview/java/6-db-cache.md target=_blank rel="noopener noreferrer" class=theme-edit-this-page><svg fill=currentColor height=20 width=20 viewBox="0 0 40 40" class=iconEdit_Z9Sw aria-hidden=true><g><path d="m34.5 11.7l-3 3.1-6.3-6.3 3.1-3q0.5-0.5 1.2-0.5t1.1 0.5l3.9 3.9q0.5 0.4 0.5 1.1t-0.5 1.2z m-29.5 17.1l18.4-18.5 6.3 6.3-18.4 18.4h-6.3v-6.2z"/></g></svg>编辑此页</a></div><div class="col lastUpdated_JAkA"></div></div></footer></article><nav class="docusaurus-mt-lg pagination-nav" aria-label=文件选项卡><a class="pagination-nav__link pagination-nav__link--prev" href=/AiDocs/docs/interview/java/spring><div class=pagination-nav__sublabel>上一页</div><div class=pagination-nav__label>5. Spring 生态与 Boot 4.0</div></a><a class="pagination-nav__link pagination-nav__link--next" href=/AiDocs/docs/interview/java/distributed><div class=pagination-nav__sublabel>下一页</div><div class=pagination-nav__label>7. 分布式与微服务</div></a></nav></div></div><div class="col col--3"><div class="tableOfContents_bqdL thin-scrollbar theme-doc-toc-desktop"><ul class="table-of-contents table-of-contents__left-border"><li><a href=#39-innodb-索引结构与检索性能 class="table-of-contents__link toc-highlight">39. InnoDB 索引结构与检索性能</a><ul><li><a href=#b-树的物理结构优势 class="table-of-contents__link toc-highlight">B+ 树的物理结构优势</a><li><a href=#聚簇索引与非聚簇索引 class="table-of-contents__link toc-highlight">聚簇索引与非聚簇索引</a><li><a href=#回表与覆盖索引 class="table-of-contents__link toc-highlight">回表与覆盖索引</a></ul><li><a href=#40-索引规则与失效边缘场景 class="table-of-contents__link toc-highlight">40. 索引规则与失效边缘场景</a><ul><li><a href=#最左前缀匹配原则 class="table-of-contents__link toc-highlight">最左前缀匹配原则</a><li><a href=#索引下推index-condition-pushdown-icp class="table-of-contents__link toc-highlight">索引下推（Index Condition Pushdown, ICP）</a><li><a href=#索引失效的典型场景 class="table-of-contents__link toc-highlight">索引失效的典型场景</a></ul><li><a href=#41-mvcc-原理与幻读攻克 class="table-of-contents__link toc-highlight">41. MVCC 原理与幻读攻克</a><ul><li><a href=#mvcc-实现原理 class="table-of-contents__link toc-highlight">MVCC 实现原理</a><li><a href=#rr-如何很大程度解决幻读 class="table-of-contents__link toc-highlight">RR 如何很大程度解决幻读</a></ul><li><a href=#42-事务隔离级别与两阶段提交 class="table-of-contents__link toc-highlight">42. 事务隔离级别与两阶段提交</a><ul><li><a href=#事务隔离级别与解决问题 class="table-of-contents__link toc-highlight">事务隔离级别与解决问题</a><li><a href=#binlog-与-redo-log-的两阶段提交2pc class="table-of-contents__link toc-highlight">Binlog 与 Redo Log 的两阶段提交（2PC）</a></ul><li><a href=#43-慢查询诊断与深分页优化 class="table-of-contents__link toc-highlight">43. 慢查询诊断与深分页优化</a><ul><li><a href=#执行计划explain关键指标 class="table-of-contents__link toc-highlight">执行计划（Explain）关键指标</a><li><a href=#深分页deep-paging优化 class="table-of-contents__link toc-highlight">深分页（Deep Paging）优化</a></ul><li><a href=#44-分库分表设计与分布式-id class="table-of-contents__link toc-highlight">44. 分库分表设计与分布式 ID</a><ul><li><a href=#基因法路由gene-based-routing class="table-of-contents__link toc-highlight">基因法路由（Gene-based Routing）</a><li><a href=#雪花算法snowflake与时钟回拨 class="table-of-contents__link toc-highlight">雪花算法（Snowflake）与时钟回拨</a></ul><li><a href=#45-redis-基础结构与底层编码演进 class="table-of-contents__link toc-highlight">45. Redis 基础结构与底层编码演进</a><ul><li><a href=#五大结构底层编码对照表 class="table-of-contents__link toc-highlight">五大结构底层编码对照表</a></ul><li><a href=#46-redis-缓存三大问题防护 class="table-of-contents__link toc-highlight">46. Redis 缓存三大问题防护</a><ul><li><a href=#缓存穿透cache-penetration class="table-of-contents__link toc-highlight">缓存穿透（Cache Penetration）</a><li><a href=#缓存击穿cache-breakdown class="table-of-contents__link toc-highlight">缓存击穿（Cache Breakdown）</a><li><a href=#缓存雪崩cache-avalanche class="table-of-contents__link toc-highlight">缓存雪崩（Cache Avalanche）</a></ul><li><a href=#47-分布式锁演进与-redlock-争议 class="table-of-contents__link toc-highlight">47. 分布式锁演进与 RedLock 争议</a><ul><li><a href=#set-nx-px-机制的缺陷 class="table-of-contents__link toc-highlight">SET NX PX 机制的缺陷</a><li><a href=#redisson-watchdog看门狗续期原理 class="table-of-contents__link toc-highlight">Redisson Watchdog（看门狗）续期原理</a><li><a href=#redlock红锁争议 class="table-of-contents__link toc-highlight">RedLock（红锁）争议</a></ul><li><a href=#48-redis-持久化与集群机制 class="table-of-contents__link toc-highlight">48. Redis 持久化与集群机制</a><ul><li><a href=#rdb-与-aof-混合持久化 class="table-of-contents__link toc-highlight">RDB 与 AOF 混合持久化</a><li><a href=#cluster-集群哈希槽与主从网络抖动 class="table-of-contents__link toc-highlight">Cluster 集群哈希槽与主从网络抖动</a></ul><li><a href=#49-缓存与数据库双写一致性方案 class="table-of-contents__link toc-highlight">49. 缓存与数据库双写一致性方案</a><ul><li><a href=#为什么先更新数据库再删除缓存最稳 class="table-of-contents__link toc-highlight">为什么“先更新数据库，再删除缓存”最稳</a><li><a href=#终极强一致性闭环方案 class="table-of-contents__link toc-highlight">终极强一致性闭环方案</a></ul></ul></div></div></div></div></main></div></div></div><footer class="theme-layout-footer footer footer--dark"><div class="container container-fluid"><div class="footer__bottom text--center"><div class=footer__copyright>Copyright © 2026 AiDocs 架构知识库. 基于 Docusaurus 驱动.</div></div></div></footer></div></body>

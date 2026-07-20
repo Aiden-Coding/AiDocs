@@ -1,213 +1,207 @@
-<!doctype html><html lang=zh-Hans dir=ltr class="docs-wrapper plugin-docs plugin-id-default docs-version-current docs-doc-page docs-doc-id-interview/java/spring" data-has-hydrated=false><head><meta charset=UTF-8><meta name=generator content="Docusaurus v3.10.2"><title data-rh=true>五、Spring 生态与 Boot 4.0 | Ai文档</title><meta data-rh=true name=viewport content="width=device-width, initial-scale=1.0"/><meta data-rh=true name=twitter:card content=summary_large_image /><meta data-rh=true property=og:image content=https://github.com/AiDocs/img/social-card.webp /><meta data-rh=true name=twitter:image content=https://github.com/AiDocs/img/social-card.webp /><meta data-rh=true property=og:url content=https://github.com/AiDocs/docs/interview/java/spring /><meta data-rh=true property=og:locale content=zh_Hans /><meta data-rh=true name=docusaurus_locale content=zh-Hans /><meta data-rh=true name=docsearch:language content=zh-Hans /><meta data-rh=true name=docusaurus_version content=current /><meta data-rh=true name=docusaurus_tag content=docs-default-current /><meta data-rh=true name=docsearch:version content=current /><meta data-rh=true name=docsearch:docusaurus_tag content=docs-default-current /><meta data-rh=true property=og:title content="五、Spring 生态与 Boot 4.0 | Ai文档"/><meta data-rh=true name=description content="本章涵盖 Spring 核心原理、循环依赖解密、声明式事务失效场景以及 Spring Boot 4.0 颠覆性的底层变化。"/><meta data-rh=true property=og:description content="本章涵盖 Spring 核心原理、循环依赖解密、声明式事务失效场景以及 Spring Boot 4.0 颠覆性的底层变化。"/><link data-rh=true rel=icon href=/AiDocs/img/favicon.ico /><link data-rh=true rel=canonical href=https://github.com/AiDocs/docs/interview/java/spring /><link data-rh=true rel=alternate href=https://github.com/AiDocs/docs/interview/java/spring hreflang=zh-Hans /><link data-rh=true rel=alternate href=https://github.com/AiDocs/docs/interview/java/spring hreflang=x-default /><script data-rh=true type=application/ld+json>{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","item":"https://github.com/AiDocs/docs/category/java-后端","name":"Java 后端","position":1},{"@type":"ListItem","item":"https://github.com/AiDocs/docs/interview/java/spring","name":"5. Spring 生态与 Boot 4.0","position":2}]}</script><link rel=stylesheet href=https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css type=text/css integrity=sha384-n8MVd4RsNIBMW3Zksd/cgGfpkkcg23OqxEnQl9o23PppNwe/eB84kLtyzzN3lft9 crossorigin=anonymous><link rel=stylesheet href=/AiDocs/assets/css/styles.3f833245.css /><script src=/AiDocs/assets/js/runtime~main.398b56d3.js defer></script><script src=/AiDocs/assets/js/main.5be0f03e.js defer></script></head><body><svg style="display: none;"><defs>
+<!doctype html><html lang=zh-Hans dir=ltr class="docs-wrapper plugin-docs plugin-id-default docs-version-current docs-doc-page docs-doc-id-interview/java/spring" data-has-hydrated=false><head><meta charset=UTF-8><meta name=generator content="Docusaurus v3.10.2"><title data-rh=true>五、Spring 生态与 Boot 4.0 | Ai文档</title><meta data-rh=true name=viewport content="width=device-width, initial-scale=1.0"/><meta data-rh=true name=twitter:card content=summary_large_image /><meta data-rh=true property=og:image content=https://github.com/AiDocs/img/social-card.webp /><meta data-rh=true name=twitter:image content=https://github.com/AiDocs/img/social-card.webp /><meta data-rh=true property=og:url content=https://github.com/AiDocs/docs/interview/java/spring /><meta data-rh=true property=og:locale content=zh_Hans /><meta data-rh=true name=docusaurus_locale content=zh-Hans /><meta data-rh=true name=docsearch:language content=zh-Hans /><meta data-rh=true name=docusaurus_version content=current /><meta data-rh=true name=docusaurus_tag content=docs-default-current /><meta data-rh=true name=docsearch:version content=current /><meta data-rh=true name=docsearch:docusaurus_tag content=docs-default-current /><meta data-rh=true property=og:title content="五、Spring 生态与 Boot 4.0 | Ai文档"/><meta data-rh=true name=description content="本章涵盖 Spring 核心原理、循环依赖解密、声明式事务失效场景以及 Spring Boot 4.0 颠覆性的底层变化。"/><meta data-rh=true property=og:description content="本章涵盖 Spring 核心原理、循环依赖解密、声明式事务失效场景以及 Spring Boot 4.0 颠覆性的底层变化。"/><link data-rh=true rel=icon href=/AiDocs/img/favicon.ico /><link data-rh=true rel=canonical href=https://github.com/AiDocs/docs/interview/java/spring /><link data-rh=true rel=alternate href=https://github.com/AiDocs/docs/interview/java/spring hreflang=zh-Hans /><link data-rh=true rel=alternate href=https://github.com/AiDocs/docs/interview/java/spring hreflang=x-default /><script data-rh=true type=application/ld+json>{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","item":"https://github.com/AiDocs/docs/category/java-后端","name":"Java 后端","position":1},{"@type":"ListItem","item":"https://github.com/AiDocs/docs/interview/java/spring","name":"5. Spring 生态与 Boot 4.0","position":2}]}</script><link rel=stylesheet href=https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css type=text/css integrity=sha384-n8MVd4RsNIBMW3Zksd/cgGfpkkcg23OqxEnQl9o23PppNwe/eB84kLtyzzN3lft9 crossorigin=anonymous><link rel=stylesheet href=/AiDocs/assets/css/styles.0d18f9a1.css /><script src=/AiDocs/assets/js/runtime~main.93a38000.js defer></script><script src=/AiDocs/assets/js/main.0d50e96a.js defer></script></head><body><svg style="display: none;"><defs>
 <symbol id=theme-svg-external-link viewBox="0 0 24 24"><path fill=currentColor d="M21 13v10h-21v-19h12v2h-10v15h17v-8h2zm3-12h-10.988l4.035 4-6.977 7.07 2.828 2.828 6.977-7.07 4.125 4.172v-11z"/></symbol>
 </defs></svg>
-<script>!function(){var t=function(){try{return new URLSearchParams(window.location.search).get("docusaurus-theme")}catch(t){}}()||function(){try{return window.localStorage.getItem("theme-92a")}catch(t){}}();document.documentElement.setAttribute("data-theme",t||(window.matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light")),document.documentElement.setAttribute("data-theme-choice",t||"system")}(),function(){try{for(var[t,e]of new URLSearchParams(window.location.search).entries())if(t.startsWith("docusaurus-data-")){var a=t.replace("docusaurus-data-","data-");document.documentElement.setAttribute(a,e)}}catch(t){}}()</script><div id=__docusaurus><link rel=preload as=image href=/AiDocs/img/logo.webp /><div role=region aria-label=跳到主要内容><a class=skipToContent_fXgn href=#__docusaurus_skipToContent_fallback>跳到主要内容</a></div><nav aria-label=主导航 class="theme-layout-navbar navbar navbar--fixed-top"><div class=navbar__inner><div class="theme-layout-navbar-left navbar__items"><button aria-label=切换导航栏 aria-expanded=false class="navbar__toggle clean-btn" type=button><svg width=30 height=30 viewBox="0 0 30 30" aria-hidden=true><path stroke=currentColor stroke-linecap=round stroke-miterlimit=10 stroke-width=2 d="M4 7h22M4 15h22M4 23h22"/></svg></button><a class=navbar__brand href=/AiDocs/><div class=navbar__logo><img src=/AiDocs/img/logo.webp alt="Ai文档 Logo" class="themedComponent_mlkZ themedComponent--light_NVdE"/><img src=/AiDocs/img/logo.webp alt="Ai文档 Logo" class="themedComponent_mlkZ themedComponent--dark_xIcU"/></div><b class="navbar__title text--truncate">Ai文档</b></a><a class="navbar__item navbar__link" href=/AiDocs/docs/>体系介绍</a><a aria-current=page class="navbar__item navbar__link navbar__link--active" href=/AiDocs/docs/category/java-后端>面试</a><a class="navbar__item navbar__link" href=/AiDocs/docs/java/>Java</a><a class="navbar__item navbar__link" href=/AiDocs/docs/database/mysql/>数据库</a><a class="navbar__item navbar__link" href=/AiDocs/docs/cache/redis/>缓存</a><a class="navbar__item navbar__link" href=/AiDocs/docs/distributed/system/>分布式</a><a class="navbar__item navbar__link" href=/AiDocs/docs/rust/title-page>Rust</a><a class="navbar__item navbar__link" href=/AiDocs/docs/react/>React</a><a class="navbar__item navbar__link" href=/AiDocs/docs/web-basics/modern-javascript>Web 基础</a><a class="navbar__item navbar__link" href=/AiDocs/docs/linux/>Linux</a></div><div class="theme-layout-navbar-right navbar__items navbar__items--right"><a href=https://github.com/Aiden-Coding/AiDocs target=_blank rel="noopener noreferrer" class="navbar__item navbar__link header-github-link"></a><div class="toggle_vylO colorModeToggle_DEke"><button class="clean-btn toggleButton_gllP toggleButtonDisabled_aARS" type=button disabled title="system mode" aria-label="切换浅色/暗黑模式（当前为system mode）"><svg viewBox="0 0 24 24" width=24 height=24 aria-hidden=true class="toggleIcon_g3eP lightToggleIcon_pyhR"><path fill=currentColor d="M12,9c1.65,0,3,1.35,3,3s-1.35,3-3,3s-3-1.35-3-3S10.35,9,12,9 M12,7c-2.76,0-5,2.24-5,5s2.24,5,5,5s5-2.24,5-5 S14.76,7,12,7L12,7z M2,13l2,0c0.55,0,1-0.45,1-1s-0.45-1-1-1l-2,0c-0.55,0-1,0.45-1,1S1.45,13,2,13z M20,13l2,0c0.55,0,1-0.45,1-1 s-0.45-1-1-1l-2,0c-0.55,0-1,0.45-1,1S19.45,13,20,13z M11,2v2c0,0.55,0.45,1,1,1s1-0.45,1-1V2c0-0.55-0.45-1-1-1S11,1.45,11,2z M11,20v2c0,0.55,0.45,1,1,1s1-0.45,1-1v-2c0-0.55-0.45-1-1-1C11.45,19,11,19.45,11,20z M5.99,4.58c-0.39-0.39-1.03-0.39-1.41,0 c-0.39,0.39-0.39,1.03,0,1.41l1.06,1.06c0.39,0.39,1.03,0.39,1.41,0s0.39-1.03,0-1.41L5.99,4.58z M18.36,16.95 c-0.39-0.39-1.03-0.39-1.41,0c-0.39,0.39-0.39,1.03,0,1.41l1.06,1.06c0.39,0.39,1.03,0.39,1.41,0c0.39-0.39,0.39-1.03,0-1.41 L18.36,16.95z M19.42,5.99c0.39-0.39,0.39-1.03,0-1.41c-0.39-0.39-1.03-0.39-1.41,0l-1.06,1.06c-0.39,0.39-0.39,1.03,0,1.41 s1.03,0.39,1.41,0L19.42,5.99z M7.05,18.36c0.39-0.39,0.39-1.03,0-1.41c-0.39-0.39-1.03-0.39-1.41,0l-1.06,1.06 c-0.39,0.39-0.39,1.03,0,1.41s1.03,0.39,1.41,0L7.05,18.36z"/></svg><svg viewBox="0 0 24 24" width=24 height=24 aria-hidden=true class="toggleIcon_g3eP darkToggleIcon_wfgR"><path fill=currentColor d="M9.37,5.51C9.19,6.15,9.1,6.82,9.1,7.5c0,4.08,3.32,7.4,7.4,7.4c0.68,0,1.35-0.09,1.99-0.27C17.45,17.19,14.93,19,12,19 c-3.86,0-7-3.14-7-7C5,9.07,6.81,6.55,9.37,5.51z M12,3c-4.97,0-9,4.03-9,9s4.03,9,9,9s9-4.03,9-9c0-0.46-0.04-0.92-0.1-1.36 c-0.98,1.37-2.58,2.26-4.4,2.26c-2.98,0-5.4-2.42-5.4-5.4c0-1.81,0.89-3.42,2.26-4.4C12.92,3.04,12.46,3,12,3L12,3z"/></svg><svg viewBox="0 0 24 24" width=24 height=24 aria-hidden=true class="toggleIcon_g3eP systemToggleIcon_QzmC"><path fill=currentColor d="m12 21c4.971 0 9-4.029 9-9s-4.029-9-9-9-9 4.029-9 9 4.029 9 9 9zm4.95-13.95c1.313 1.313 2.05 3.093 2.05 4.95s-0.738 3.637-2.05 4.95c-1.313 1.313-3.093 2.05-4.95 2.05v-14c1.857 0 3.637 0.737 4.95 2.05z"/></svg></button></div><div class=navbarSearchContainer_Bca1></div></div></div><div role=presentation class=navbar-sidebar__backdrop></div></nav><div id=__docusaurus_skipToContent_fallback class="theme-layout-main main-wrapper mainWrapper_z2l0"><div class=docsWrapper_hBAB><button aria-label=回到顶部 class="clean-btn theme-back-to-top-button backToTopButton_sjWU" type=button></button><div class=docRoot_UBD9><aside class="theme-doc-sidebar-container docSidebarContainer_YfHR"><div class=sidebarViewport_aRkj><div class=sidebar_njMd><nav aria-label=文档侧边栏 class="menu thin-scrollbar menu_SIkG"><ul class="theme-doc-sidebar-menu menu__list"><li class="theme-doc-sidebar-item-category theme-doc-sidebar-item-category-level-1 menu__list-item"><div class=menu__list-item-collapsible><a class="categoryLink_byQd menu__link menu__link--sublist menu__link--active" href=/AiDocs/docs/category/java-后端><span class=categoryLinkLabel_W154>Java 后端</span></a><button aria-label="折叠侧边栏分类 'Java 后端'" aria-expanded=true type=button class="clean-btn menu__caret"></button></div><ul class=menu__list><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class=menu__link tabindex=0 href=/AiDocs/docs/interview/java/intro><span class=linkLabel_WmDU>0. 前言与总览</span></a><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class=menu__link tabindex=0 href=/AiDocs/docs/interview/java/basic><span class=linkLabel_WmDU>1. 基础与集合</span></a><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class=menu__link tabindex=0 href=/AiDocs/docs/interview/java/features><span class=linkLabel_WmDU>2. Java 新特性</span></a><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class=menu__link tabindex=0 href=/AiDocs/docs/interview/java/concurrent><span class=linkLabel_WmDU>3. 并发编程与虚拟线程</span></a><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class=menu__link tabindex=0 href=/AiDocs/docs/interview/java/jvm><span class=linkLabel_WmDU>4. JVM 运行时与垃圾回收</span></a><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class="menu__link menu__link--active" aria-current=page tabindex=0 href=/AiDocs/docs/interview/java/spring><span class=linkLabel_WmDU>5. Spring 生态与 Boot 4.0</span></a><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class=menu__link tabindex=0 href=/AiDocs/docs/interview/java/db-cache><span class=linkLabel_WmDU>6. MySQL 与 Redis</span></a><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class=menu__link tabindex=0 href=/AiDocs/docs/interview/java/distributed><span class=linkLabel_WmDU>7. 分布式与微服务</span></a><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class=menu__link tabindex=0 href=/AiDocs/docs/interview/java/mq><span class=linkLabel_WmDU>8. 消息队列</span></a><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class=menu__link tabindex=0 href=/AiDocs/docs/interview/java/scenarios><span class=linkLabel_WmDU>9. 场景设计</span></a><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class=menu__link tabindex=0 href=/AiDocs/docs/interview/java/ai><span class=linkLabel_WmDU>10. AI 结合与工程</span></a><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class=menu__link tabindex=0 href=/AiDocs/docs/interview/java/interview-jvm><span class=linkLabel_WmDU>JVM 虚拟机真题</span></a><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class=menu__link tabindex=0 href=/AiDocs/docs/interview/java/interview-concurrent><span class=linkLabel_WmDU>JUC 面试真题</span></a><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class=menu__link tabindex=0 href=/AiDocs/docs/interview/java/interview-basic><span class=linkLabel_WmDU>基础与集合真题</span></a><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class=menu__link tabindex=0 href=/AiDocs/docs/interview/java/interview-mybatis><span class=linkLabel_WmDU>MyBatis 面试真题</span></a><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class=menu__link tabindex=0 href=/AiDocs/docs/interview/java/interview-spring><span class=linkLabel_WmDU>Spring 面试真题</span></a><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class=menu__link tabindex=0 href=/AiDocs/docs/interview/java/interview-netty><span class=linkLabel_WmDU>Netty 面试真题</span></a></ul><li class="theme-doc-sidebar-item-category theme-doc-sidebar-item-category-level-1 menu__list-item menu__list-item--collapsed"><div class=menu__list-item-collapsible><a class="categoryLink_byQd menu__link menu__link--sublist" href=/AiDocs/docs/category/数据库><span class=categoryLinkLabel_W154>数据库</span></a><button aria-label="展开侧边栏分类 '数据库'" aria-expanded=false type=button class="clean-btn menu__caret"></button></div><li class="theme-doc-sidebar-item-category theme-doc-sidebar-item-category-level-1 menu__list-item menu__list-item--collapsed"><div class=menu__list-item-collapsible><a class="categoryLink_byQd menu__link menu__link--sublist" href=/AiDocs/docs/category/缓存><span class=categoryLinkLabel_W154>缓存</span></a><button aria-label="展开侧边栏分类 '缓存'" aria-expanded=false type=button class="clean-btn menu__caret"></button></div><li class="theme-doc-sidebar-item-category theme-doc-sidebar-item-category-level-1 menu__list-item menu__list-item--collapsed"><div class=menu__list-item-collapsible><a class="categoryLink_byQd menu__link menu__link--sublist" href=/AiDocs/docs/category/云原生--k8s><span class=categoryLinkLabel_W154>云原生 & K8s</span></a><button aria-label="展开侧边栏分类 '云原生 & K8s'" aria-expanded=false type=button class="clean-btn menu__caret"></button></div></ul></nav></div></div></aside><main class=docMainContainer_TBSr><div class="container padding-top--md padding-bottom--lg"><div class=row><div class="col docItemCol_VOVn"><div class=docItemContainer_Djhp><article><nav class="theme-doc-breadcrumbs breadcrumbsContainer_Z_bl" aria-label=页面路径><ul class=breadcrumbs><li class=breadcrumbs__item><a aria-label=主页面 class=breadcrumbs__link href=/AiDocs/><svg viewBox="0 0 24 24" class=breadcrumbHomeIcon_YNFT><path d="M10 19v-5h4v5c0 .55.45 1 1 1h3c.55 0 1-.45 1-1v-7h1.7c.46 0 .68-.57.33-.87L12.67 3.6c-.38-.34-.96-.34-1.34 0l-8.36 7.53c-.34.3-.13.87.33.87H5v7c0 .55.45 1 1 1h3c.55 0 1-.45 1-1z" fill=currentColor /></svg></a><li class=breadcrumbs__item><a class=breadcrumbs__link href=/AiDocs/docs/category/java-后端><span>Java 后端</span></a><li class="breadcrumbs__item breadcrumbs__item--active"><span class=breadcrumbs__link>5. Spring 生态与 Boot 4.0</span></ul></nav><div class="tocCollapsible_ETCw theme-doc-toc-mobile tocMobile_ITEo"><button type=button class="clean-btn tocCollapsibleButton_TO0P">本页总览</button></div><div class="theme-doc-markdown markdown"><header><h1 id=五spring-生态与-boot-40>五、Spring 生态与 Boot 4.0</h1></header>
+<script>!function(){var t=function(){try{return new URLSearchParams(window.location.search).get("docusaurus-theme")}catch(t){}}()||function(){try{return window.localStorage.getItem("theme-92a")}catch(t){}}();document.documentElement.setAttribute("data-theme",t||(window.matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light")),document.documentElement.setAttribute("data-theme-choice",t||"system")}(),function(){try{for(var[t,e]of new URLSearchParams(window.location.search).entries())if(t.startsWith("docusaurus-data-")){var a=t.replace("docusaurus-data-","data-");document.documentElement.setAttribute(a,e)}}catch(t){}}()</script><div id=__docusaurus><link rel=preload as=image href=/AiDocs/img/logo.webp /><div role=region aria-label=跳到主要内容><a class=skipToContent_fXgn href=#__docusaurus_skipToContent_fallback>跳到主要内容</a></div><nav aria-label=主导航 class="theme-layout-navbar navbar navbar--fixed-top"><div class=navbar__inner><div class="theme-layout-navbar-left navbar__items"><button aria-label=切换导航栏 aria-expanded=false class="navbar__toggle clean-btn" type=button><svg width=30 height=30 viewBox="0 0 30 30" aria-hidden=true><path stroke=currentColor stroke-linecap=round stroke-miterlimit=10 stroke-width=2 d="M4 7h22M4 15h22M4 23h22"/></svg></button><a class=navbar__brand href=/AiDocs/><div class=navbar__logo><img src=/AiDocs/img/logo.webp alt="Ai文档 Logo" class="themedComponent_mlkZ themedComponent--light_NVdE"/><img src=/AiDocs/img/logo.webp alt="Ai文档 Logo" class="themedComponent_mlkZ themedComponent--dark_xIcU"/></div><b class="navbar__title text--truncate">Ai文档</b></a><a class="navbar__item navbar__link" href=/AiDocs/docs/>体系介绍</a><a aria-current=page class="navbar__item navbar__link navbar__link--active" href=/AiDocs/docs/category/java-后端>面试</a><a class="navbar__item navbar__link" href=/AiDocs/docs/java/>Java</a><a class="navbar__item navbar__link" href=/AiDocs/docs/database/mysql/>数据库</a><a class="navbar__item navbar__link" href=/AiDocs/docs/cache/redis/>缓存</a><a class="navbar__item navbar__link" href=/AiDocs/docs/distributed/system/>分布式</a><a class="navbar__item navbar__link" href=/AiDocs/docs/rust/title-page>Rust</a><a class="navbar__item navbar__link" href=/AiDocs/docs/react/>React</a><a class="navbar__item navbar__link" href=/AiDocs/docs/web-basics/modern-javascript>Web 基础</a><a class="navbar__item navbar__link" href=/AiDocs/docs/linux/>Linux</a></div><div class="theme-layout-navbar-right navbar__items navbar__items--right"><a href=https://github.com/Aiden-Coding/AiDocs target=_blank rel="noopener noreferrer" class="navbar__item navbar__link header-github-link"></a><div class="toggle_vylO colorModeToggle_DEke"><button class="clean-btn toggleButton_gllP toggleButtonDisabled_aARS" type=button disabled title="system mode" aria-label="切换浅色/暗黑模式（当前为system mode）"><svg viewBox="0 0 24 24" width=24 height=24 aria-hidden=true class="toggleIcon_g3eP lightToggleIcon_pyhR"><path fill=currentColor d="M12,9c1.65,0,3,1.35,3,3s-1.35,3-3,3s-3-1.35-3-3S10.35,9,12,9 M12,7c-2.76,0-5,2.24-5,5s2.24,5,5,5s5-2.24,5-5 S14.76,7,12,7L12,7z M2,13l2,0c0.55,0,1-0.45,1-1s-0.45-1-1-1l-2,0c-0.55,0-1,0.45-1,1S1.45,13,2,13z M20,13l2,0c0.55,0,1-0.45,1-1 s-0.45-1-1-1l-2,0c-0.55,0-1,0.45-1,1S19.45,13,20,13z M11,2v2c0,0.55,0.45,1,1,1s1-0.45,1-1V2c0-0.55-0.45-1-1-1S11,1.45,11,2z M11,20v2c0,0.55,0.45,1,1,1s1-0.45,1-1v-2c0-0.55-0.45-1-1-1C11.45,19,11,19.45,11,20z M5.99,4.58c-0.39-0.39-1.03-0.39-1.41,0 c-0.39,0.39-0.39,1.03,0,1.41l1.06,1.06c0.39,0.39,1.03,0.39,1.41,0s0.39-1.03,0-1.41L5.99,4.58z M18.36,16.95 c-0.39-0.39-1.03-0.39-1.41,0c-0.39,0.39-0.39,1.03,0,1.41l1.06,1.06c0.39,0.39,1.03,0.39,1.41,0c0.39-0.39,0.39-1.03,0-1.41 L18.36,16.95z M19.42,5.99c0.39-0.39,0.39-1.03,0-1.41c-0.39-0.39-1.03-0.39-1.41,0l-1.06,1.06c-0.39,0.39-0.39,1.03,0,1.41 s1.03,0.39,1.41,0L19.42,5.99z M7.05,18.36c0.39-0.39,0.39-1.03,0-1.41c-0.39-0.39-1.03-0.39-1.41,0l-1.06,1.06 c-0.39,0.39-0.39,1.03,0,1.41s1.03,0.39,1.41,0L7.05,18.36z"/></svg><svg viewBox="0 0 24 24" width=24 height=24 aria-hidden=true class="toggleIcon_g3eP darkToggleIcon_wfgR"><path fill=currentColor d="M9.37,5.51C9.19,6.15,9.1,6.82,9.1,7.5c0,4.08,3.32,7.4,7.4,7.4c0.68,0,1.35-0.09,1.99-0.27C17.45,17.19,14.93,19,12,19 c-3.86,0-7-3.14-7-7C5,9.07,6.81,6.55,9.37,5.51z M12,3c-4.97,0-9,4.03-9,9s4.03,9,9,9s9-4.03,9-9c0-0.46-0.04-0.92-0.1-1.36 c-0.98,1.37-2.58,2.26-4.4,2.26c-2.98,0-5.4-2.42-5.4-5.4c0-1.81,0.89-3.42,2.26-4.4C12.92,3.04,12.46,3,12,3L12,3z"/></svg><svg viewBox="0 0 24 24" width=24 height=24 aria-hidden=true class="toggleIcon_g3eP systemToggleIcon_QzmC"><path fill=currentColor d="m12 21c4.971 0 9-4.029 9-9s-4.029-9-9-9-9 4.029-9 9 4.029 9 9 9zm4.95-13.95c1.313 1.313 2.05 3.093 2.05 4.95s-0.738 3.637-2.05 4.95c-1.313 1.313-3.093 2.05-4.95 2.05v-14c1.857 0 3.637 0.737 4.95 2.05z"/></svg></button></div><div class=navbarSearchContainer_Bca1></div></div></div><div role=presentation class=navbar-sidebar__backdrop></div></nav><div id=__docusaurus_skipToContent_fallback class="theme-layout-main main-wrapper mainWrapper_z2l0"><div class=docsWrapper_hBAB><button aria-label=回到顶部 class="clean-btn theme-back-to-top-button backToTopButton_sjWU" type=button></button><div class=docRoot_UBD9><aside class="theme-doc-sidebar-container docSidebarContainer_YfHR"><div class=sidebarViewport_aRkj><div class=sidebar_njMd><nav aria-label=文档侧边栏 class="menu thin-scrollbar menu_SIkG"><ul class="theme-doc-sidebar-menu menu__list"><li class="theme-doc-sidebar-item-category theme-doc-sidebar-item-category-level-1 menu__list-item"><div class=menu__list-item-collapsible><a class="categoryLink_byQd menu__link menu__link--sublist menu__link--active" href=/AiDocs/docs/category/java-后端><span class=categoryLinkLabel_W154>Java 后端</span></a><button aria-label="折叠侧边栏分类 'Java 后端'" aria-expanded=true type=button class="clean-btn menu__caret"></button></div><ul class=menu__list><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class=menu__link tabindex=0 href=/AiDocs/docs/interview/java/intro><span class=linkLabel_WmDU>0. 前言与总览</span></a><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class=menu__link tabindex=0 href=/AiDocs/docs/interview/java/basic><span class=linkLabel_WmDU>1. 基础与集合</span></a><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class=menu__link tabindex=0 href=/AiDocs/docs/interview/java/features><span class=linkLabel_WmDU>2. Java 新特性</span></a><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class=menu__link tabindex=0 href=/AiDocs/docs/interview/java/concurrent><span class=linkLabel_WmDU>3. 并发编程与虚拟线程</span></a><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class=menu__link tabindex=0 href=/AiDocs/docs/interview/java/jvm><span class=linkLabel_WmDU>4. JVM 运行时与垃圾回收</span></a><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class="menu__link menu__link--active" aria-current=page tabindex=0 href=/AiDocs/docs/interview/java/spring><span class=linkLabel_WmDU>5. Spring 生态与 Boot 4.0</span></a><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class=menu__link tabindex=0 href=/AiDocs/docs/interview/java/db-cache><span class=linkLabel_WmDU>6. MySQL 与 Redis</span></a><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class=menu__link tabindex=0 href=/AiDocs/docs/interview/java/distributed><span class=linkLabel_WmDU>7. 分布式与微服务</span></a><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class=menu__link tabindex=0 href=/AiDocs/docs/interview/java/mq><span class=linkLabel_WmDU>8. 消息队列</span></a><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class=menu__link tabindex=0 href=/AiDocs/docs/interview/java/scenarios><span class=linkLabel_WmDU>9. 场景设计</span></a><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class=menu__link tabindex=0 href=/AiDocs/docs/interview/java/ai><span class=linkLabel_WmDU>10. AI 结合与工程</span></a><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class=menu__link tabindex=0 href=/AiDocs/docs/interview/java/interview-jvm><span class=linkLabel_WmDU>JVM 虚拟机真题</span></a><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class=menu__link tabindex=0 href=/AiDocs/docs/interview/java/interview-concurrent><span class=linkLabel_WmDU>JUC 面试真题</span></a><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class=menu__link tabindex=0 href=/AiDocs/docs/interview/java/interview-basic><span class=linkLabel_WmDU>基础与集合真题</span></a><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class=menu__link tabindex=0 href=/AiDocs/docs/interview/java/interview-mybatis><span class=linkLabel_WmDU>MyBatis 面试真题</span></a><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class=menu__link tabindex=0 href=/AiDocs/docs/interview/java/interview-spring><span class=linkLabel_WmDU>Spring 面试真题</span></a><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class=menu__link tabindex=0 href=/AiDocs/docs/interview/java/interview-netty><span class=linkLabel_WmDU>Netty 面试真题</span></a></ul><li class="theme-doc-sidebar-item-category theme-doc-sidebar-item-category-level-1 menu__list-item menu__list-item--collapsed"><div class=menu__list-item-collapsible><a class="categoryLink_byQd menu__link menu__link--sublist" href=/AiDocs/docs/category/数据库><span class=categoryLinkLabel_W154>数据库</span></a><button aria-label="展开侧边栏分类 '数据库'" aria-expanded=false type=button class="clean-btn menu__caret"></button></div><li class="theme-doc-sidebar-item-category theme-doc-sidebar-item-category-level-1 menu__list-item menu__list-item--collapsed"><div class=menu__list-item-collapsible><a class="categoryLink_byQd menu__link menu__link--sublist" href=/AiDocs/docs/category/缓存><span class=categoryLinkLabel_W154>缓存</span></a><button aria-label="展开侧边栏分类 '缓存'" aria-expanded=false type=button class="clean-btn menu__caret"></button></div><li class="theme-doc-sidebar-item-category theme-doc-sidebar-item-category-level-1 menu__list-item menu__list-item--collapsed"><div class=menu__list-item-collapsible><a class="categoryLink_byQd menu__link menu__link--sublist" href=/AiDocs/docs/category/云原生--k8s><span class=categoryLinkLabel_W154>云原生 & K8s</span></a><button aria-label="展开侧边栏分类 '云原生 & K8s'" aria-expanded=false type=button class="clean-btn menu__caret"></button></div></ul></nav></div></div></aside><main class=docMainContainer_TBSr><div class="container padding-top--md padding-bottom--lg"><div class=row><div class="col docItemCol_VOVn"><div class=docItemContainer_Djhp><article><nav class="theme-doc-breadcrumbs breadcrumbsContainer_Z_bl" aria-label=页面路径><ul class=breadcrumbs><li class=breadcrumbs__item><a aria-label=主页面 class=breadcrumbs__link href=/AiDocs/><svg viewBox="0 0 24 24" class=breadcrumbHomeIcon_YNFT><path d="M10 19v-5h4v5c0 .55.45 1 1 1h3c.55 0 1-.45 1-1v-7h1.7c.46 0 .68-.57.33-.87L12.67 3.6c-.38-.34-.96-.34-1.34 0l-8.36 7.53c-.34.3-.13.87.33.87H5v7c0 .55.45 1 1 1h3c.55 0 1-.45 1-1z" fill=currentColor /></svg></a><li class=breadcrumbs__item><a class=breadcrumbs__link href=/AiDocs/docs/category/java-后端><span>Java 后端</span></a><li class="breadcrumbs__item breadcrumbs__item--active"><span class=breadcrumbs__link>5. Spring 生态与 Boot 4.0</span></ul></nav><div class="tocCollapsible_ETCw theme-doc-toc-mobile tocMobile_ITEo"><button type=button class="clean-btn tocCollapsibleButton_TO0P">本页总览</button></div><div class="theme-doc-markdown markdown"><header><h1>五、Spring 生态与 Boot 4.0</h1></header>
 <p>本章涵盖 Spring 核心原理、循环依赖解密、声明式事务失效场景以及 Spring Boot 4.0 颠覆性的底层变化。</p>
 <hr/>
-<h2 id=34-bean-生命周期与三级缓存机制>34. Bean 生命周期与三级缓存机制</h2>
-<h3 id=ioc-容器启动与-bean-生命周期>IoC 容器启动与 Bean 生命周期</h3>
+<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id=34-bean-生命周期与三级缓存机制>34. Bean 生命周期与三级缓存机制<a href=#34-bean-生命周期与三级缓存机制 class=hash-link aria-label="34. Bean 生命周期与三级缓存机制的直接链接" title="34. Bean 生命周期与三级缓存机制的直接链接" translate=no>​</a></h2>
+<h3 class="anchor anchorTargetStickyNavbar_Vzrq" id=ioc-容器启动与-bean-生命周期>IoC 容器启动与 Bean 生命周期<a href=#ioc-容器启动与-bean-生命周期 class=hash-link aria-label="IoC 容器启动与 Bean 生命周期的直接链接" title="IoC 容器启动与 Bean 生命周期的直接链接" translate=no>​</a></h3>
 <p>Spring IoC 容器启动的核心方法是 <code>AbstractApplicationContext.refresh()</code>。Bean 的生命周期可归纳为以下四个主要阶段：</p>
 <ol>
-<li><strong>实例化（Instantiation）</strong>：
+<li class=""><strong>实例化（Instantiation）</strong>：
 <ul>
-<li>容器通过反射机制，根据 <code>BeanDefinition</code> 创建 Bean 实例的物理对象（类似于执行 <code>new</code> 操作）。</li>
+<li class="">容器通过反射机制，根据 <code>BeanDefinition</code> 创建 Bean 实例的物理对象（类似于执行 <code>new</code> 操作）。</li>
 </ul>
 </li>
-<li><strong>属性赋值（Populate）</strong>：
+<li class=""><strong>属性赋值（Populate）</strong>：
 <ul>
-<li>依赖注入（DI）发生在此阶段，容器根据属性声明将其他依赖的 Bean（如 <code>@Autowired</code> 修饰的属性）注入到当前实例中。</li>
+<li class="">依赖注入（DI）发生在此阶段，容器根据属性声明将其他依赖的 Bean（如 <code>@Autowired</code> 修饰的属性）注入到当前实例中。</li>
 </ul>
 </li>
-<li><strong>初始化（Initialization）</strong>：
+<li class=""><strong>初始化（Initialization）</strong>：
 <ul>
-<li><strong>Aware 接口回调</strong>：注入 <code>BeanFactory</code>、<code>ApplicationContext</code>、<code>BeanName</code> 等容器上下文。</li>
-<li><strong>BeanPostProcessor 前置处理</strong>：调用所有注册的 <code>postProcessBeforeInitialization</code> 方法。</li>
-<li><strong>执行初始化方法</strong>：如果 Bean 实现了 <code>InitializingBean</code> 接口，调用 <code>afterPropertiesSet()</code> 方法；或执行自定义的 <code>@PostConstruct</code> 方法、<code>init-method</code>。</li>
-<li><strong>BeanPostProcessor 后置处理</strong>：调用所有注册的 <code>postProcessAfterInitialization</code> 方法。<strong>Spring AOP 代理的创建即发生在此阶段</strong>。</li>
+<li class=""><strong>Aware 接口回调</strong>：注入 <code>BeanFactory</code>、<code>ApplicationContext</code>、<code>BeanName</code> 等容器上下文。</li>
+<li class=""><strong>BeanPostProcessor 前置处理</strong>：调用所有注册的 <code>postProcessBeforeInitialization</code> 方法。</li>
+<li class=""><strong>执行初始化方法</strong>：如果 Bean 实现了 <code>InitializingBean</code> 接口，调用 <code>afterPropertiesSet()</code> 方法；或执行自定义的 <code>@PostConstruct</code> 方法、<code>init-method</code>。</li>
+<li class=""><strong>BeanPostProcessor 后置处理</strong>：调用所有注册的 <code>postProcessAfterInitialization</code> 方法。<strong>Spring AOP 代理的创建即发生在此阶段</strong>。</li>
 </ul>
 </li>
-<li><strong>销毁（Destruction）</strong>：
+<li class=""><strong>销毁（Destruction）</strong>：
 <ul>
-<li>容器关闭时，执行 <code>@PreDestroy</code> 或 <code>DisposableBean.destroy()</code> 方法进行资源释放。</li>
+<li class="">容器关闭时，执行 <code>@PreDestroy</code> 或 <code>DisposableBean.destroy()</code> 方法进行资源释放。</li>
 </ul>
 </li>
 </ol>
-<h3 id=三级缓存解决循环依赖>三级缓存解决循环依赖</h3>
+<h3 class="anchor anchorTargetStickyNavbar_Vzrq" id=三级缓存解决循环依赖>三级缓存解决循环依赖<a href=#三级缓存解决循环依赖 class=hash-link aria-label=三级缓存解决循环依赖的直接链接 title=三级缓存解决循环依赖的直接链接 translate=no>​</a></h3>
 <p>Spring 使用三级缓存（均为 <code>Map</code> 结构）来解决属性注入时的**单例（Singleton）**循环依赖问题。</p>
-<h4 id=三级缓存定义>三级缓存定义</h4>
+<h4 class="anchor anchorTargetStickyNavbar_Vzrq" id=三级缓存定义>三级缓存定义<a href=#三级缓存定义 class=hash-link aria-label=三级缓存定义的直接链接 title=三级缓存定义的直接链接 translate=no>​</a></h4>
 <ul>
-<li><strong>一级缓存（<code>singletonObjects</code>）</strong>：存放完全初始化好的、立即可用的成品单例 Bean。</li>
-<li><strong>二级缓存（<code>earlySingletonObjects</code>）</strong>：存放提前暴露的、尚未进行属性注入的“半成品”半初始化 Bean。</li>
-<li><strong>三级缓存（<code>singletonFactories</code>）</strong>：存放 Bean 的工厂对象（<code>ObjectFactory&lt;?></code>），用于延迟创建代理对象。</li>
+<li class=""><strong>一级缓存（<code>singletonObjects</code>）</strong>：存放完全初始化好的、立即可用的成品单例 Bean。</li>
+<li class=""><strong>二级缓存（<code>earlySingletonObjects</code>）</strong>：存放提前暴露的、尚未进行属性注入的“半成品”半初始化 Bean。</li>
+<li class=""><strong>三级缓存（<code>singletonFactories</code>）</strong>：存放 Bean 的工厂对象（<code>ObjectFactory&lt;?></code>），用于延迟创建代理对象。</li>
 </ul>
-<h4 id=解决循环依赖的流转流程以-a-与-b-循环依赖为例>解决循环依赖的流转流程（以 A 与 B 循环依赖为例）</h4>
+<h4 class="anchor anchorTargetStickyNavbar_Vzrq" id=解决循环依赖的流转流程以-a-与-b-循环依赖为例>解决循环依赖的流转流程（以 A 与 B 循环依赖为例）<a href=#解决循环依赖的流转流程以-a-与-b-循环依赖为例 class=hash-link aria-label="解决循环依赖的流转流程（以 A 与 B 循环依赖为例）的直接链接" title="解决循环依赖的流转流程（以 A 与 B 循环依赖为例）的直接链接" translate=no>​</a></h4>
 <ol>
-<li>实例化 A，在将 A 的“早期引用”包装为 <code>ObjectFactory</code> 放入三级缓存中。</li>
-<li>A 开始属性填充，发现依赖 B，于是去获取 B。</li>
-<li>发现 B 不在一级缓存中，于是开始实例化 B，同样把 B 的 <code>ObjectFactory</code> 放入三级缓存。</li>
-<li>B 填充属性时，发现依赖 A。B 依次查找一级、二级缓存，均未命中，但命中了三级缓存中 A 的 <code>ObjectFactory</code>。</li>
-<li>B 调用 A 的 <code>ObjectFactory.getObject()</code>。在此步骤中，如果 A 需要进行 AOP，会提前在此阶段执行 AOP 生成 <strong>A 的早期代理对象</strong>；如果不需要，则返回普通的 A 实例。</li>
-<li>A 的早期代理对象（或普通实例）被放入二级缓存，同时将 A 从三级缓存中移除。</li>
-<li>B 成功注入 A 的早期代理引用，顺利完成初始化，并将自己（成品 B）放入一级缓存。</li>
-<li>B 返回给 A。A 注入成品 B，继续执行后续生命周期，最终将 A（或 A 的代理对象）放入一级缓存，循环依赖完美解决。</li>
+<li class="">实例化 A，在将 A 的“早期引用”包装为 <code>ObjectFactory</code> 放入三级缓存中。</li>
+<li class="">A 开始属性填充，发现依赖 B，于是去获取 B。</li>
+<li class="">发现 B 不在一级缓存中，于是开始实例化 B，同样把 B 的 <code>ObjectFactory</code> 放入三级缓存。</li>
+<li class="">B 填充属性时，发现依赖 A。B 依次查找一级、二级缓存，均未命中，但命中了三级缓存中 A 的 <code>ObjectFactory</code>。</li>
+<li class="">B 调用 A 的 <code>ObjectFactory.getObject()</code>。在此步骤中，如果 A 需要进行 AOP，会提前在此阶段执行 AOP 生成 <strong>A 的早期代理对象</strong>；如果不需要，则返回普通的 A 实例。</li>
+<li class="">A 的早期代理对象（或普通实例）被放入二级缓存，同时将 A 从三级缓存中移除。</li>
+<li class="">B 成功注入 A 的早期代理引用，顺利完成初始化，并将自己（成品 B）放入一级缓存。</li>
+<li class="">B 返回给 A。A 注入成品 B，继续执行后续生命周期，最终将 A（或 A 的代理对象）放入一级缓存，循环依赖完美解决。</li>
 </ol>
-<h4 id=为什么三级缓存中构造器注入的循环依赖无解>为什么三级缓存中构造器注入的循环依赖无解</h4>
+<h4 class="anchor anchorTargetStickyNavbar_Vzrq" id=为什么三级缓存中构造器注入的循环依赖无解>为什么三级缓存中构造器注入的循环依赖无解<a href=#为什么三级缓存中构造器注入的循环依赖无解 class=hash-link aria-label=为什么三级缓存中构造器注入的循环依赖无解的直接链接 title=为什么三级缓存中构造器注入的循环依赖无解的直接链接 translate=no>​</a></h4>
 <ul>
-<li>构造器注入发生于<strong>实例化阶段</strong>。在实例化完成之前，Spring 甚至无法将该 Bean 的 <code>ObjectFactory</code> 提前放入三级缓存中。</li>
-<li>当 A 正在执行构造函数需要 B 时，B 还没有任何途径获取到 A 的“半成品”物理指针，导致整个初始化链陷入死锁，只能抛出 <code>BeanCurrentlyInCreationException</code>。</li>
+<li class="">构造器注入发生于<strong>实例化阶段</strong>。在实例化完成之前，Spring 甚至无法将该 Bean 的 <code>ObjectFactory</code> 提前放入三级缓存中。</li>
+<li class="">当 A 正在执行构造函数需要 B 时，B 还没有任何途径获取到 A 的“半成品”物理指针，导致整个初始化链陷入死锁，只能抛出 <code>BeanCurrentlyInCreationException</code>。</li>
 </ul>
 <hr/>
-<h2 id=35-aop-原理与声明式事务失效>35. AOP 原理与声明式事务失效</h2>
-<h3 id=aop-底层实现机制>AOP 底层实现机制</h3>
+<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id=35-aop-原理与声明式事务失效>35. AOP 原理与声明式事务失效<a href=#35-aop-原理与声明式事务失效 class=hash-link aria-label="35. AOP 原理与声明式事务失效的直接链接" title="35. AOP 原理与声明式事务失效的直接链接" translate=no>​</a></h2>
+<h3 class="anchor anchorTargetStickyNavbar_Vzrq" id=aop-底层实现机制>AOP 底层实现机制<a href=#aop-底层实现机制 class=hash-link aria-label="AOP 底层实现机制的直接链接" title="AOP 底层实现机制的直接链接" translate=no>​</a></h3>
 <p>Spring AOP 的底层是基于动态代理实现的，共有两种技术实现方式：</p>
 <ul>
-<li><strong>JDK 动态代理</strong>：
+<li class=""><strong>JDK 动态代理</strong>：
 <ul>
-<li><strong>前提</strong>：目标类必须实现<strong>接口</strong>。</li>
-<li><strong>实现</strong>：利用 <code>java.lang.reflect.Proxy</code> 动态生成目标接口的实现类字节码，并通过 <code>InvocationHandler</code> 进行方法拦截。</li>
+<li class=""><strong>前提</strong>：目标类必须实现<strong>接口</strong>。</li>
+<li class=""><strong>实现</strong>：利用 <code>java.lang.reflect.Proxy</code> 动态生成目标接口的实现类字节码，并通过 <code>InvocationHandler</code> 进行方法拦截。</li>
 </ul>
 </li>
-<li><strong>CGLIB 动态代理</strong>：
+<li class=""><strong>CGLIB 动态代理</strong>：
 <ul>
-<li><strong>前提</strong>：目标类没有实现接口，或者显式配置了强制使用 CGLIB（<code>proxy-target-class=true</code>）。</li>
-<li><strong>实现</strong>：利用 ASM 字节码生成框架，在运行期动态生成目标类的<strong>子类</strong>，并重写父类的方法来进行拦截。</li>
-<li><strong>限制</strong>：由于是生成子类重写，因此目标类不能由 <code>final</code> 修饰，目标方法也不能是 <code>final</code> 或 <code>private</code>。</li>
+<li class=""><strong>前提</strong>：目标类没有实现接口，或者显式配置了强制使用 CGLIB（<code>proxy-target-class=true</code>）。</li>
+<li class=""><strong>实现</strong>：利用 ASM 字节码生成框架，在运行期动态生成目标类的<strong>子类</strong>，并重写父类的方法来进行拦截。</li>
+<li class=""><strong>限制</strong>：由于是生成子类重写，因此目标类不能由 <code>final</code> 修饰，目标方法也不能是 <code>final</code> 或 <code>private</code>。</li>
 </ul>
 </li>
 </ul>
-<h3 id=transactional-事务失效的典型场景>@Transactional 事务失效的典型场景</h3>
+<h3 class="anchor anchorTargetStickyNavbar_Vzrq" id=transactional-事务失效的典型场景>@Transactional 事务失效的典型场景<a href=#transactional-事务失效的典型场景 class=hash-link aria-label="@Transactional 事务失效的典型场景的直接链接" title="@Transactional 事务失效的典型场景的直接链接" translate=no>​</a></h3>
 <p>声明式事务是基于 AOP 代理实现的。如果调用没有经过代理对象，或者异常被吞掉，事务就会失效。</p>
 <ol>
-<li><strong>类内部自调用</strong>：
+<li class=""><strong>类内部自调用</strong>：
 <ul>
-<li><strong>现象</strong>：类中非事务方法 A 直接通过 <code>this.B()</code> 调用同一个类中的事务方法 B。</li>
-<li><strong>根因</strong>：<code>this</code> 代表当前目标对象本身，而非 Spring 增强后的代理对象，因此方法 B 不会触发任何 AOP 拦截，事务逻辑无法切入。</li>
-<li><strong>解决</strong>：通过 <code>AopContext.currentProxy()</code> 获取当前代理对象调用，或将方法 B 拆分到其他 Service 类中。</li>
+<li class=""><strong>现象</strong>：类中非事务方法 A 直接通过 <code>this.B()</code> 调用同一个类中的事务方法 B。</li>
+<li class=""><strong>根因</strong>：<code>this</code> 代表当前目标对象本身，而非 Spring 增强后的代理对象，因此方法 B 不会触发任何 AOP 拦截，事务逻辑无法切入。</li>
+<li class=""><strong>解决</strong>：通过 <code>AopContext.currentProxy()</code> 获取当前代理对象调用，或将方法 B 拆分到其他 Service 类中。</li>
 </ul>
 </li>
-<li><strong>方法非 <code>public</code> 修饰</strong>：
+<li class=""><strong>方法非 <code>public</code> 修饰</strong>：
 <ul>
-<li><strong>现象</strong>：事务方法声明为 <code>private</code> 或 <code>protected</code>。</li>
-<li><strong>根因</strong>：Spring 事务拦截器（<code>TransactionInterceptor</code>）在解析事务属性时，会默认过滤掉非 <code>public</code> 的方法，直接忽略事务增强。</li>
+<li class=""><strong>现象</strong>：事务方法声明为 <code>private</code> 或 <code>protected</code>。</li>
+<li class=""><strong>根因</strong>：Spring 事务拦截器（<code>TransactionInterceptor</code>）在解析事务属性时，会默认过滤掉非 <code>public</code> 的方法，直接忽略事务增强。</li>
 </ul>
 </li>
-<li><strong>异常被捕获（吞掉）</strong>：
+<li class=""><strong>异常被捕获（吞掉）</strong>：
 <ul>
-<li><strong>现象</strong>：在事务方法中使用了 <code>try-catch</code> 包裹了业务逻辑，且在 <code>catch</code> 块中没有重新抛出异常，或者只记录了日志。</li>
-<li><strong>根因</strong>：Spring 必须捕获到未处理的异常才能触发事务回滚。如果异常在方法内部被吃掉，AOP 事务管理器会认为方法成功执行，照常提交事务。</li>
+<li class=""><strong>现象</strong>：在事务方法中使用了 <code>try-catch</code> 包裹了业务逻辑，且在 <code>catch</code> 块中没有重新抛出异常，或者只记录了日志。</li>
+<li class=""><strong>根因</strong>：Spring 必须捕获到未处理的异常才能触发事务回滚。如果异常在方法内部被吃掉，AOP 事务管理器会认为方法成功执行，照常提交事务。</li>
 </ul>
 </li>
-<li><strong>回滚异常类型不匹配</strong>：
+<li class=""><strong>回滚异常类型不匹配</strong>：
 <ul>
-<li><strong>现象</strong>：方法抛出了 Checked Exception（如 <code>IOException</code>），事务未回滚。</li>
-<li><strong>根因</strong>：Spring 默认只在遇到 RuntimeException 和 Error 时回滚事务。若需对受检异常进行回滚，必须显式配置 <code>@Transactional(rollbackFor = Exception.class)</code>。</li>
+<li class=""><strong>现象</strong>：方法抛出了 Checked Exception（如 <code>IOException</code>），事务未回滚。</li>
+<li class=""><strong>根因</strong>：Spring 默认只在遇到 RuntimeException 和 Error 时回滚事务。若需对受检异常进行回滚，必须显式配置 <code>@Transactional(rollbackFor = Exception.class)</code>。</li>
 </ul>
 </li>
-<li><strong>事务传播级别（Propagation）误用</strong>：
+<li class=""><strong>事务传播级别（Propagation）误用</strong>：
 <ul>
-<li><strong>现象</strong>：配置了 <code>NOT_SUPPORTED</code> 或 <code>NEVER</code> 级别，导致事务挂起或直接以非事务方式运行，无法回滚。</li>
+<li class=""><strong>现象</strong>：配置了 <code>NOT_SUPPORTED</code> 或 <code>NEVER</code> 级别，导致事务挂起或直接以非事务方式运行，无法回滚。</li>
 </ul>
 </li>
 </ol>
 <hr/>
-<h2 id=36-spring-boot-自动配置原理>36. Spring Boot 自动配置原理</h2>
+<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id=36-spring-boot-自动配置原理>36. Spring Boot 自动配置原理<a href=#36-spring-boot-自动配置原理 class=hash-link aria-label="36. Spring Boot 自动配置原理的直接链接" title="36. Spring Boot 自动配置原理的直接链接" translate=no>​</a></h2>
 <p>Spring Boot 的自动配置（Auto-Configuration）实现了“约定大于配置”的核心理念。</p>
-<h3 id=核心实现原理>核心实现原理</h3>
+<h3 class="anchor anchorTargetStickyNavbar_Vzrq" id=核心实现原理>核心实现原理<a href=#核心实现原理 class=hash-link aria-label=核心实现原理的直接链接 title=核心实现原理的直接链接 translate=no>​</a></h3>
 <ol>
-<li><strong>启动类入口 <code>@SpringBootApplication</code></strong>：
+<li class=""><strong>启动类入口 <code>@SpringBootApplication</code></strong>：
 <ul>
-<li>该注解是一个复合注解，核心是 <strong><code>@EnableAutoConfiguration</code></strong>。</li>
+<li class="">该注解是一个复合注解，核心是 <strong><code>@EnableAutoConfiguration</code></strong>。</li>
 </ul>
 </li>
-<li><strong>加载自动配置类选择器</strong>：
+<li class=""><strong>加载自动配置类选择器</strong>：
 <ul>
-<li><code>@EnableAutoConfiguration</code> 内部通过 <code>@Import({AutoConfigurationImportSelector.class})</code> 导入了一个自动配置类导入选择器。</li>
+<li class=""><code>@EnableAutoConfiguration</code> 内部通过 <code>@Import({AutoConfigurationImportSelector.class})</code> 导入了一个自动配置类导入选择器。</li>
 </ul>
 </li>
-<li><strong>扫描配置文件加载全限定名</strong>：
+<li class=""><strong>扫描配置文件加载全限定名</strong>：
 <ul>
-<li>在选择器中，会调用 <code>SpringFactoriesLoader</code> 来扫描 Classpath 下所有 Jar 包中的 <code>META-INF/spring.factories</code>（Spring Boot 3.0 之前）或全新的 <strong><code>META-INF/spring/org.springframework.boot.autoconfigure.AutoConfiguration.imports</code></strong>（Spring Boot 3.0 起）配置文件。</li>
-<li>该配置文件中配置了成百上千个官方或第三方编写好的自动配置类（如 <code>DataSourceAutoConfiguration</code>）的全限定名。</li>
+<li class="">在选择器中，会调用 <code>SpringFactoriesLoader</code> 来扫描 Classpath 下所有 Jar 包中的 <code>META-INF/spring.factories</code>（Spring Boot 3.0 之前）或全新的 <strong><code>META-INF/spring/org.springframework.boot.autoconfigure.AutoConfiguration.imports</code></strong>（Spring Boot 3.0 起）配置文件。</li>
+<li class="">该配置文件中配置了成百上千个官方或第三方编写好的自动配置类（如 <code>DataSourceAutoConfiguration</code>）的全限定名。</li>
 </ul>
 </li>
-<li><strong>按条件装配（Conditional On...）</strong>：
+<li class=""><strong>按条件装配（Conditional On...）</strong>：
 <ul>
-<li>每个自动配置类上都标注了大量的 <code>@Conditional</code> 条件注解（如 <code>@ConditionalOnClass</code> 表示当 Classpath 中存在某个类时才装配；<code>@ConditionalOnMissingBean</code> 表示当容器中没有用户自定义的该 Bean 时才装配）。</li>
-<li>Spring 容器在初始化时会解析这些条件注解，只有条件完全匹配的自动配置类才会被真正加载并注册到 IoC 容器中，从而实现开箱即用。</li>
+<li class="">每个自动配置类上都标注了大量的 <code>@Conditional</code> 条件注解（如 <code>@ConditionalOnClass</code> 表示当 Classpath 中存在某个类时才装配；<code>@ConditionalOnMissingBean</code> 表示当容器中没有用户自定义的该 Bean 时才装配）。</li>
+<li class="">Spring 容器在初始化时会解析这些条件注解，只有条件完全匹配的自动配置类才会被真正加载并注册到 IoC 容器中，从而实现开箱即用。</li>
 </ul>
 </li>
 </ol>
 <hr/>
-<h2 id=37-spring-boot-40-重磅新特性>37. Spring Boot 4.0 重磅新特性</h2>
+<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id=37-spring-boot-40-重磅新特性>37. Spring Boot 4.0 重磅新特性<a href=#37-spring-boot-40-重磅新特性 class=hash-link aria-label="37. Spring Boot 4.0 重磅新特性的直接链接" title="37. Spring Boot 4.0 重磅新特性的直接链接" translate=no>​</a></h2>
 <p>Spring Boot 4.0 在 JDK 21+ 与 Jakarta EE 11 的大背景下进行了激进且彻底的升级。</p>
-<h3 id=一键开启虚拟线程>一键开启虚拟线程</h3>
+<h3 class="anchor anchorTargetStickyNavbar_Vzrq" id=一键开启虚拟线程>一键开启虚拟线程<a href=#一键开启虚拟线程 class=hash-link aria-label=一键开启虚拟线程的直接链接 title=一键开启虚拟线程的直接链接 translate=no>​</a></h3>
 <ul>
-<li>
+<li class="">
 <p><strong>配置</strong>：</p>
-<pre><code class=language-properties>spring.threads.virtual.enabled=true
-</code></pre>
+<div class="language-properties codeBlockContainer_Ckt0 theme-code-block" style=--prism-color:#393A34;--prism-background-color:#f6f8fa><div class=codeBlockContent_QJqH><pre tabindex=0 class="prism-code language-properties codeBlock_bY9V thin-scrollbar" style=color:#393A34;background-color:#f6f8fa><code class=codeBlockLines_e6Vv><div class=token-line style=color:#393A34><span class="token plain">spring.threads.virtual.enabled=true</span><br/></div></code></pre></div></div>
 </li>
-<li>
+<li class="">
 <p><strong>效果</strong>：开启该配置后，Tomcat 的请求处理线程池会自动切换为虚拟线程。更重要的是，<code>@Async</code> 异步方法、定时任务（<code>@Scheduled</code>）、Spring Integration 以及大部分内置阻塞组件，都会<strong>自动使用虚拟线程执行</strong>，无需修改任何代码，使得传统的 Servlet 架构能轻易抗住百万级并发。</p>
 </li>
 </ul>
-<h3 id=原生-api-版本控制>原生 API 版本控制</h3>
+<h3 class="anchor anchorTargetStickyNavbar_Vzrq" id=原生-api-版本控制>原生 API 版本控制<a href=#原生-api-版本控制 class=hash-link aria-label="原生 API 版本控制的直接链接" title="原生 API 版本控制的直接链接" translate=no>​</a></h3>
 <ul>
-<li>
+<li class="">
 <p><strong>新功能</strong>：引入了全新的原生 HTTP 路由版本控制。</p>
 </li>
-<li>
+<li class="">
 <p><strong>写法</strong>：</p>
-<pre><code class=language-java>@GetMapping(value = "/users", version = "1")
-public List&lt;UserV1> getUsersV1() { ... }
-
-@GetMapping(value = "/users", version = "2")
-public List&lt;UserV2> getUsersV2() { ... }
-</code></pre>
+<div class="language-java codeBlockContainer_Ckt0 theme-code-block" style=--prism-color:#393A34;--prism-background-color:#f6f8fa><div class=codeBlockContent_QJqH><pre tabindex=0 class="prism-code language-java codeBlock_bY9V thin-scrollbar" style=color:#393A34;background-color:#f6f8fa><code class=codeBlockLines_e6Vv><div class=token-line style=color:#393A34><span class="token plain">@GetMapping(value = "/users", version = "1")</span><br/></div><div class=token-line style=color:#393A34><span class="token plain">public List&lt;UserV1> getUsersV1() { ... }</span><br/></div><div class=token-line style=color:#393A34><span class="token plain" style=display:inline-block></span><br/></div><div class=token-line style=color:#393A34><span class="token plain">@GetMapping(value = "/users", version = "2")</span><br/></div><div class=token-line style=color:#393A34><span class="token plain">public List&lt;UserV2> getUsersV2() { ... }</span><br/></div></code></pre></div></div>
 </li>
-<li>
+<li class="">
 <p>支持通过 Request Header、Query Parameter 或 URL Path 自动路由解析对应版本，免去了老版本中手工编写拦截器或重写映射关系的繁琐逻辑。</p>
 </li>
 </ul>
-<h3 id=声明式-http-客户端>声明式 HTTP 客户端</h3>
+<h3 class="anchor anchorTargetStickyNavbar_Vzrq" id=声明式-http-客户端>声明式 HTTP 客户端<a href=#声明式-http-客户端 class=hash-link aria-label="声明式 HTTP 客户端的直接链接" title="声明式 HTTP 客户端的直接链接" translate=no>​</a></h3>
 <ul>
-<li><strong>新功能</strong>：正式支持 <strong><code>@HttpServiceClient</code></strong> 注解。</li>
-<li><strong>定位</strong>：可直接替代第三方 OpenFeign。开发者只需声明一个 Java 接口并在其上定义 HTTP 请求注解，Spring 4.0 会在运行期自动为其生成网络请求的动态代理实现，原生集成了 WebClient 与最新的 HTTP/3。</li>
+<li class=""><strong>新功能</strong>：正式支持 <strong><code>@HttpServiceClient</code></strong> 注解。</li>
+<li class=""><strong>定位</strong>：可直接替代第三方 OpenFeign。开发者只需声明一个 Java 接口并在其上定义 HTTP 请求注解，Spring 4.0 会在运行期自动为其生成网络请求的动态代理实现，原生集成了 WebClient 与最新的 HTTP/3。</li>
 </ul>
-<h3 id=内置服务器与底层库强力升级>内置服务器与底层库强力升级</h3>
+<h3 class="anchor anchorTargetStickyNavbar_Vzrq" id=内置服务器与底层库强力升级>内置服务器与底层库强力升级<a href=#内置服务器与底层库强力升级 class=hash-link aria-label=内置服务器与底层库强力升级的直接链接 title=内置服务器与底层库强力升级的直接链接 translate=no>​</a></h3>
 <ul>
-<li><strong>Jakarta EE 11 与 Servlet 6.1 独占支持</strong>：Spring Boot 4.0 全面支持 Jakarta EE 11 规范。</li>
-<li><strong>独占内置容器</strong>：仅支持 Tomcat 11 和 Jetty 12.1。<strong>完全移除了对 Undertow 服务器的支持</strong>（因其在 Servlet 6.1 及最新的 Jakarta EE 11 的支持进度上落后）。</li>
-<li><strong>Jackson 3 默认集成</strong>：默认采用全新重写、性能大幅提升且完美支持 Java 21 Record 序列化的 Jackson 3 库。</li>
-<li><strong>JSpecify 空安全支持</strong>：全面引入 JSpecify 标准的 <code>@NullMarked</code> 与 <code>@Nullable</code> 注解，使得 Java 与 Kotlin 混编时的空安全检查能达到编译期级别的绝对安全。</li>
+<li class=""><strong>Jakarta EE 11 与 Servlet 6.1 独占支持</strong>：Spring Boot 4.0 全面支持 Jakarta EE 11 规范。</li>
+<li class=""><strong>独占内置容器</strong>：仅支持 Tomcat 11 和 Jetty 12.1。<strong>完全移除了对 Undertow 服务器的支持</strong>（因其在 Servlet 6.1 及最新的 Jakarta EE 11 的支持进度上落后）。</li>
+<li class=""><strong>Jackson 3 默认集成</strong>：默认采用全新重写、性能大幅提升且完美支持 Java 21 Record 序列化的 Jackson 3 库。</li>
+<li class=""><strong>JSpecify 空安全支持</strong>：全面引入 JSpecify 标准的 <code>@NullMarked</code> 与 <code>@Nullable</code> 注解，使得 Java 与 Kotlin 混编时的空安全检查能达到编译期级别的绝对安全。</li>
 </ul>
-<h3 id=graalvm-原生镜像生产级优化>GraalVM 原生镜像生产级优化</h3>
+<h3 class="anchor anchorTargetStickyNavbar_Vzrq" id=graalvm-原生镜像生产级优化>GraalVM 原生镜像生产级优化<a href=#graalvm-原生镜像生产级优化 class=hash-link aria-label="GraalVM 原生镜像生产级优化的直接链接" title="GraalVM 原生镜像生产级优化的直接链接" translate=no>​</a></h3>
 <ul>
-<li><strong>表现</strong>：Spring Boot 4.0 配合 GraalVM 原生镜像的构建速度提升了 50%，运行时内存占用降低了 60%。</li>
-<li><strong>启动时间</strong>：从传统 JVM 的 500ms 级别直接压缩到了 <strong>50ms 以内</strong>，这使得 Java 应用无需再忍受冷启动的痛楚，完美匹配 Serverless 和 Kubernetes 容器极致扩缩容的需求。</li>
+<li class=""><strong>表现</strong>：Spring Boot 4.0 配合 GraalVM 原生镜像的构建速度提升了 50%，运行时内存占用降低了 60%。</li>
+<li class=""><strong>启动时间</strong>：从传统 JVM 的 500ms 级别直接压缩到了 <strong>50ms 以内</strong>，这使得 Java 应用无需再忍受冷启动的痛楚，完美匹配 Serverless 和 Kubernetes 容器极致扩缩容的需求。</li>
 </ul>
 <hr/>
-<h2 id=38-spring-boot-3-到-4-迁移要点>38. Spring Boot 3 到 4 迁移要点</h2>
+<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id=38-spring-boot-3-到-4-迁移要点>38. Spring Boot 3 到 4 迁移要点<a href=#38-spring-boot-3-到-4-迁移要点 class=hash-link aria-label="38. Spring Boot 3 到 4 迁移要点的直接链接" title="38. Spring Boot 3 到 4 迁移要点的直接链接" translate=no>​</a></h2>
 <p>由于 Spring Boot 4.0 进行了一系列的“破坏性”底层升级，企业级项目从旧版本升级时，需要重点关注以下迁移细节。</p>
 <ol>
-<li><strong>彻底废除 <code>javax.*</code> 命名空间</strong>：
+<li class=""><strong>彻底废除 <code>javax.*</code> 命名空间</strong>：
 <ul>
-<li>所有的 Servlet、JPA、Validation 依赖包名必须全部全局替换为 <strong><code>jakarta.*</code></strong>。</li>
+<li class="">所有的 Servlet、JPA、Validation 依赖包名必须全部全局替换为 <strong><code>jakarta.*</code></strong>。</li>
 </ul>
 </li>
-<li><strong>内置容器与 Undertow 迁移</strong>：
+<li class=""><strong>内置容器与 Undertow 迁移</strong>：
 <ul>
-<li>如果原有项目强依赖了 Undertow，必须将其替换为 Tomcat 11 或 Jetty 12.1，并对定制的嵌入式容器参数进行重写适配（Servlet 6.1 移除了部分不安全的传统 API）。</li>
+<li class="">如果原有项目强依赖了 Undertow，必须将其替换为 Tomcat 11 或 Jetty 12.1，并对定制的嵌入式容器参数进行重写适配（Servlet 6.1 移除了部分不安全的传统 API）。</li>
 </ul>
 </li>
-<li><strong>JDK 强依赖提升</strong>：
+<li class=""><strong>JDK 强依赖提升</strong>：
 <ul>
-<li>运行环境最低要求提升至 <strong>JDK 21</strong>，推荐直接使用 JDK 25。</li>
+<li class="">运行环境最低要求提升至 <strong>JDK 21</strong>，推荐直接使用 JDK 25。</li>
 </ul>
 </li>
-<li><strong>第三方依赖库兼容</strong>：
+<li class=""><strong>第三方依赖库兼容</strong>：
 <ul>
-<li>许多旧版 starter（特别是基于 spring.factories 自动配置的包）会由于不兼容新的 imports 文件机制及 Jakarta 命名空间而失效，必须将其全部升级至支持 Spring Boot 4 / Jakarta EE 11 的最新大版本。</li>
+<li class="">许多旧版 starter（特别是基于 spring.factories 自动配置的包）会由于不兼容新的 imports 文件机制及 Jakarta 命名空间而失效，必须将其全部升级至支持 Spring Boot 4 / Jakarta EE 11 的最新大版本。</li>
 </ul>
 </li>
 </ol></div><footer class="theme-doc-footer docusaurus-mt-lg"><div class="row margin-top--sm theme-doc-footer-edit-meta-row"><div class="col noPrint_WFHX"><a href=https://github.com/Aiden-Coding/AiDocs/tree/main/docs/interview/java/5-spring.md target=_blank rel="noopener noreferrer" class=theme-edit-this-page><svg fill=currentColor height=20 width=20 viewBox="0 0 40 40" class=iconEdit_Z9Sw aria-hidden=true><g><path d="m34.5 11.7l-3 3.1-6.3-6.3 3.1-3q0.5-0.5 1.2-0.5t1.1 0.5l3.9 3.9q0.5 0.4 0.5 1.1t-0.5 1.2z m-29.5 17.1l18.4-18.5 6.3 6.3-18.4 18.4h-6.3v-6.2z"/></g></svg>编辑此页</a></div><div class="col lastUpdated_JAkA"></div></div></footer></article><nav class="docusaurus-mt-lg pagination-nav" aria-label=文件选项卡><a class="pagination-nav__link pagination-nav__link--prev" href=/AiDocs/docs/interview/java/jvm><div class=pagination-nav__sublabel>上一页</div><div class=pagination-nav__label>4. JVM 运行时与垃圾回收</div></a><a class="pagination-nav__link pagination-nav__link--next" href=/AiDocs/docs/interview/java/db-cache><div class=pagination-nav__sublabel>下一页</div><div class=pagination-nav__label>6. MySQL 与 Redis</div></a></nav></div></div><div class="col col--3"><div class="tableOfContents_bqdL thin-scrollbar theme-doc-toc-desktop"><ul class="table-of-contents table-of-contents__left-border"><li><a href=#34-bean-生命周期与三级缓存机制 class="table-of-contents__link toc-highlight">34. Bean 生命周期与三级缓存机制</a><ul><li><a href=#ioc-容器启动与-bean-生命周期 class="table-of-contents__link toc-highlight">IoC 容器启动与 Bean 生命周期</a><li><a href=#三级缓存解决循环依赖 class="table-of-contents__link toc-highlight">三级缓存解决循环依赖</a></ul><li><a href=#35-aop-原理与声明式事务失效 class="table-of-contents__link toc-highlight">35. AOP 原理与声明式事务失效</a><ul><li><a href=#aop-底层实现机制 class="table-of-contents__link toc-highlight">AOP 底层实现机制</a><li><a href=#transactional-事务失效的典型场景 class="table-of-contents__link toc-highlight">@Transactional 事务失效的典型场景</a></ul><li><a href=#36-spring-boot-自动配置原理 class="table-of-contents__link toc-highlight">36. Spring Boot 自动配置原理</a><ul><li><a href=#核心实现原理 class="table-of-contents__link toc-highlight">核心实现原理</a></ul><li><a href=#37-spring-boot-40-重磅新特性 class="table-of-contents__link toc-highlight">37. Spring Boot 4.0 重磅新特性</a><ul><li><a href=#一键开启虚拟线程 class="table-of-contents__link toc-highlight">一键开启虚拟线程</a><li><a href=#原生-api-版本控制 class="table-of-contents__link toc-highlight">原生 API 版本控制</a><li><a href=#声明式-http-客户端 class="table-of-contents__link toc-highlight">声明式 HTTP 客户端</a><li><a href=#内置服务器与底层库强力升级 class="table-of-contents__link toc-highlight">内置服务器与底层库强力升级</a><li><a href=#graalvm-原生镜像生产级优化 class="table-of-contents__link toc-highlight">GraalVM 原生镜像生产级优化</a></ul><li><a href=#38-spring-boot-3-到-4-迁移要点 class="table-of-contents__link toc-highlight">38. Spring Boot 3 到 4 迁移要点</a></ul></div></div></div></div></main></div></div></div><footer class="theme-layout-footer footer footer--dark"><div class="container container-fluid"><div class="footer__bottom text--center"><div class=footer__copyright>Copyright © 2026 AiDocs 架构知识库. 基于 Docusaurus 驱动.</div></div></div></footer></div></body>
