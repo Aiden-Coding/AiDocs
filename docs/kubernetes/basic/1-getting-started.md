@@ -6,7 +6,7 @@ sidebar_position: 1
 
 # K8s 基础概念与入门
 
-## 什么是 Kubernetes？
+## 什么是 Kubernetes
 
 Kubernetes 是一个开源的容器编排引擎，用来对容器化应用进行自动化部署、扩缩和管理。
 
@@ -35,6 +35,25 @@ Kubernetes 是一个开源的容器编排引擎，用来对容器化应用进行
 - **概念**：用于将一个集群内的资源划分为多个虚拟集群。
 - **场景**：常用于区分不同环境（如 dev, test, prod）或不同团队的项目资源。
 
+## 常用工作负载
+
+除了 Deployment，K8s 还提供了其他适用于不同场景的工作负载控制器：
+
+### DaemonSet
+
+- **概念**：确保全部（或某些）节点上运行一个 Pod 的副本。当有节点加入集群时，也会为他们新增一个 Pod；当有节点离开集群时，这些 Pod 会被回收。
+- **场景**：常用在运行集群存储守护进程（如 glusterd）、日志收集守护进程（如 fluentd）、系统监控守护进程（如 Prometheus Node Exporter）。
+
+### Job
+
+- **概念**：创建一个或多个 Pod，并确保指定数量的 Pod 成功终止。一旦 Pod 运行成功结束，Job 即宣告完成。
+- **场景**：适用于一次性备份、数据批处理或迁移任务。
+
+### CronJob
+
+- **概念**：基于时间表（Cron 格式）周期性地运行 Job。
+- **场景**：适用于定期备份、发送邮件、清理临时文件等。
+
 ## 常用 kubectl 命令
 
 ```bash
@@ -52,4 +71,32 @@ kubectl logs <pod-name> -n <namespace>
 
 # 进入容器执行命令
 kubectl exec -it <pod-name> -n <namespace> -- /bin/sh
+```
+
+## 应用包管理 Helm
+
+### 什么是 Helm
+
+Helm 是 Kubernetes 的包管理工具，类似于 Linux 的包管理器（如 apt 或 yum）。它通过 Chart（打包的 K8s 资源清单模板）来简化应用的定义、安装和升级。
+
+### 常用 Helm 命令
+
+```bash
+# 添加 Chart 仓库
+helm repo add bitnami https://charts.bitnami.com/bitnami
+
+# 更新本地仓库信息
+helm repo update
+
+# 搜索 Chart
+helm search repo nginx
+
+# 安装应用
+helm install my-release bitnami/nginx
+
+# 查看已安装的应用列表
+helm list
+
+# 卸载应用
+helm uninstall my-release
 ```
