@@ -332,11 +332,11 @@ note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
 
 这是 Rust 在实践中安全原则的第一个例子。在很多低级语言中，并不进行这种检查，而且在你使用不正确的索引时，可以访问无效的内存。Rust 通过立即退出来的方式防止这种错误，而不是允许内存访问并继续运行程序。第 9 章将进一步讨论 Rust 的错误处理。
 
-[comparing-the-guess-to-the-secret-number]: ch02-00-guessing-game-tutorial#比较猜测的数字和秘密数字
-[control-flow]: ch03-05-control-flow#控制流
-[strings]: ch08-02-strings#使用字符串存储-utf-8-编码的文本
-[stack-and-heap]: ch04-01-what-is-ownership#栈stack与堆heap
-[vectors]: ch08-01-vectors
-[unrecoverable-errors-with-panic]: ch09-01-unrecoverable-errors-with-panic
+[comparing-the-guess-to-the-secret-number]: ../02-guessing-game/ch02-00-guessing-game-tutorial.md#比较猜测的数字和秘密数字
+[control-flow]: ch03-05-control-flow.md#控制流
+[strings]: ../08-common-collections/ch08-02-strings.md#使用字符串存储-utf-8-编码的文本
+[stack-and-heap]: ../04-understanding-ownership/ch04-01-what-is-ownership.md#栈stack与堆heap
+[vectors]: ../08-common-collections/ch08-01-vectors.md
+[unrecoverable-errors-with-panic]: ../09-error-handling/ch09-01-unrecoverable-errors-with-panic.md
 [wrapping]: ../std/num/struct.Wrapping
-[appendix_b]: appendix-02-operators.md
+[appendix_b]: ../appendix/appendix-02-operators.md

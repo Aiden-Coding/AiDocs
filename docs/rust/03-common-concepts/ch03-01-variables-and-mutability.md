@@ -175,7 +175,7 @@ error: could not compile `variables` due to previous error
 
 现在我们已经探讨了变量是如何工作的，接下来我们学习更多的数据类型。
 
-[comparing-the-guess-to-the-secret-number]: ch02-00-guessing-game-tutorial#比较猜测的数字和秘密数字
-[data-types]: ch03-02-data-types#数据类型
-[storing-values-with-variables]: ch02-00-guessing-game-tutorial#使用变量存储值
+[comparing-the-guess-to-the-secret-number]: ../02-guessing-game/ch02-00-guessing-game-tutorial.md#比较猜测的数字和秘密数字
+[data-types]: ch03-02-data-types.md#数据类型
+[storing-values-with-variables]: ../02-guessing-game/ch02-00-guessing-game-tutorial.md#使用变量存储值
 [const-eval]: https://rustwiki.org/zh-CN/reference/const_eval.html

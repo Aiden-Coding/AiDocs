@@ -13,4 +13,4 @@ sidebar_position: 8
 >
 > Rust 语言有一系列**关键字**（*keywords*），和其他语言一样，这些保留关键字只提供给语言作特殊用途。切记，这些关键字不能用作变量或函数的名称。大多数关键字都有特殊的含义，在 Rust 程序中可使用它们执行多种任务；有少数关键字暂时没有相关联的功能，但新功能将来可能会加入到 Rust 中。在[附录 A][appendix_a]<!-- ignore --> 中可找到关键字列表。
 
-[appendix_a]: appendix-01-keywords.md
+[appendix_a]: ../appendix/appendix-01-keywords.md
