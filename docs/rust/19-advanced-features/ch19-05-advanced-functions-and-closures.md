@@ -118,6 +118,6 @@ fn returns_closure() -> Box<dyn Fn(i32) -> i32> {
 接下来让我们学习宏！
 
 [advanced-traits]:
-ch19-03-advanced-traits#高级-trait
+ch19-03-advanced-traits.md#高级-trait
 [using-trait-objects-that-allow-for-values-of-different-types]:
-ch17-02-trait-objects#为使用不同类型的值而设计的-trait-对象
+../17-oop/ch17-02-trait-objects.md#为使用不同类型的值而设计的-trait-对象

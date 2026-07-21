@@ -358,10 +358,10 @@ unsafe impl Foo for i32 {
 使用 `unsafe` 来进行这五个操作（超能力）之一是没有问题的，甚至是不需要深思熟虑的，不过使得 `unsafe` 代码正确也实属不易，因为编译器不能帮助保证内存安全。当有理由使用 `unsafe` 代码时，是可以这么做的，通过使用显式的 `unsafe` 标注可以更容易地在错误发生时追踪问题的源头。
 
 [dangling-references]:
-ch04-02-references-and-borrowing#悬垂引用dangling-references
+../04-understanding-ownership/ch04-02-references-and-borrowing.md#悬垂引用dangling-references
 [differences-between-variables-and-constants]:
-ch03-01-variables-and-mutability#常量
+../03-common-concepts/ch03-01-variables-and-mutability.md#常量
 [extensible-concurrency-with-the-sync-and-send-traits]:
-ch16-04-extensible-concurrency-sync-and-send#使用-sync-和-send-trait-的可扩展并发
-[the-slice-type]: ch04-03-slices#切片-slice-类型
+../16-concurrency/ch16-04-extensible-concurrency-sync-and-send.md#使用-sync-和-send-trait-的可扩展并发
+[the-slice-type]: ../04-understanding-ownership/ch04-03-slices.md#切片-slice-类型
 [reference]: https://rustwiki.org/zh-CN/reference/items/unions.html
