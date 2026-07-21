@@ -296,9 +296,9 @@ $ cargo run
 
 我们的 `area` 函数非常特殊，它只计算长方形的面积。如果这个行为与 `Rectangle` 结构体再结合得更紧密一些就更好了，因为它不能用于其他类型。现在让我们看看如何继续重构这些代码，来将 `area` 函数协调进 `Rectangle` 类型定义的 `area` **方法**中。
 
-[the-tuple-type]: ch03-02-data-types#元组类型
-[app-c]: appendix-03-derivable-traits.md
+[the-tuple-type]: ../03-common-concepts/ch03-02-data-types.md#元组类型
+[app-c]: ../appendix/appendix-03-derivable-traits.md
 [println]: https://rustwiki.org/zh-CN/std/macro.println.html
 [dbg]: https://rustwiki.org/zh-CN/std/macro.dbg.html
-[err]: ch12-06-writing-to-stderr-instead-of-stdout
+[err]: ../12-io-project/ch12-06-writing-to-stderr-instead-of-stdout.md
 [attributes]: https://rustwiki.org/zh-CN/reference/attributes.html

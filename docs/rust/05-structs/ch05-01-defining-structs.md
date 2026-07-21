@@ -230,6 +230,6 @@ pbcopy < listings/ch05-using-structs-to-structure-related-data/no-listing-02-ref
 paste above
 add `> ` before every line -->
 
-[tuples]: ch03-02-data-types#元组类型
-[move]: ch04-01-what-is-ownership#变量与数据交互的方式一移动
-[copy]: ch04-01-what-is-ownership#变量与数据交互的方式二克隆
+[tuples]: ../03-common-concepts/ch03-02-data-types.md#元组类型
+[move]: ../04-understanding-ownership/ch04-01-what-is-ownership.md#变量与数据交互的方式一移动
+[copy]: ../04-understanding-ownership/ch04-01-what-is-ownership.md#变量与数据交互的方式二克隆

@@ -32,6 +32,6 @@ sidebar_position: 0
 [book-cn]: https://github.com/rust-lang-cn/book-cn
 [trpl-translation]: https://rustwiki.org/wiki/translate/other-translation/#the-rust-programing-language
 [translation-details]: https://rustwiki.org/docs/book/
-[install]: ch01-01-installation
+[install]: 01-getting-started/ch01-01-installation.md
 [nsprust]: https://nostarch.com/rust
-[translations]: appendix-06-translation
+[translations]: appendix/appendix-06-translation.md
