@@ -794,7 +794,7 @@ impl Worker {
 相反通过使用 `loop` 并在循环块之内而不是之外获取锁和任务，`lock` 方法返回的 `MutexGuard` 在 `let job` 语句结束之后立刻就被丢弃了。这确保了 `recv` 调用过程中持有锁，而在 `job()` 调用前锁就被释放了，这就允许并发处理多个请求了。
 
 [creating-type-synonyms-with-type-aliases]:
-ch19-04-advanced-types#类型别名用来创建类型同义词
-[integer-types]: ch03-02-data-types#整数类型
+../19-advanced-features/ch19-04-advanced-types.md#类型别名用来创建类型同义词
+[integer-types]: ../03-common-concepts/ch03-02-data-types.md#整数类型
 [使用带有泛型和-fn-trait-的闭包]:
-ch13-01-closures#使用带有泛型和-fn-trait-的闭包
+../13-functional-features/ch13-01-closures.md#使用带有泛型和-fn-trait-的闭包

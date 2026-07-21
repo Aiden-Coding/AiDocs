@@ -308,7 +308,7 @@ let slice = &a[1..3];
 
 所有权系统影响了 Rust 中很多其他部分的工作方式，所以我们还会继续讲到这些概念，这将贯穿本书的余下内容。让我们开始第 5 章，来看看如何将多份数据组合进一个 `struct` 中。
 
-[ch13]: ch13-02-iterators
-[ch6]: ch06-02-match#绑定值的模式
-[strings]: ch08-02-strings#使用字符串存储-utf-8-编码的文本
-[deref-coercions]: ch15-02-deref#函数和方法的隐式解引用强制转换
+[ch13]: ../13-functional-features/ch13-02-iterators.md
+[ch6]: ../06-enums/ch06-02-match.md#绑定值的模式
+[strings]: ../08-common-collections/ch08-02-strings.md#使用字符串存储-utf-8-编码的文本
+[deref-coercions]: ../15-smart-pointers/ch15-02-deref.md#函数和方法的隐式解引用强制转换

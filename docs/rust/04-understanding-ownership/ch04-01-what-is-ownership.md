@@ -359,9 +359,9 @@ fn calculate_length(s: String) -> (String, usize) {
 
 但是这未免有些形式主义，而且这种场景应该很常见。幸运的是，Rust 对此提供了一个功能，叫做 **引用**（*references*）。
 
-[data-types]: ch03-02-data-types#数据类型
-[ch8]: ch08-02-strings
-[derivable-traits]: appendix-03-derivable-traits
-[method-syntax]: ch05-03-method-syntax#方法语法
-[paths-module-tree]: ch07-03-paths-for-referring-to-an-item-in-the-module-tree
+[data-types]: ../03-common-concepts/ch03-02-data-types.md#数据类型
+[ch8]: ../08-common-collections/ch08-02-strings.md
+[derivable-traits]: ../appendix/appendix-03-derivable-traits.md
+[method-syntax]: ../05-structs/ch05-03-method-syntax.md#方法语法
+[paths-module-tree]: ../07-packages-crates-modules/ch07-03-paths-for-referring-to-an-item-in-the-module-tree.md
 [drop]: https://rustwiki.org/zh-CN/std/ops/trait.Drop.html#tymethod.drop
