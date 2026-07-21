@@ -147,6 +147,12 @@ const config: Config = {
           label: 'Linux',
         },
         {
+          type: 'doc',
+          docId: 'changelog',
+          position: 'right',
+          label: '更新记录',
+        },
+        {
           href: 'https://github.com/Aiden-Coding/AiDocs',
           className: 'header-github-link',
           position: 'right',
