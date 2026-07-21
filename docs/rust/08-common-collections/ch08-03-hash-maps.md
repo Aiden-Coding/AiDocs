@@ -196,4 +196,4 @@ vector、字符串和哈希 map 会在你的程序需要储存、访问和修改
 我们已经开始接触可能会有失败操作的复杂程序了，这也意味着接下来是一个了解错误处理的绝佳时机！
 
 [validating-references-with-lifetimes]:
-ch10-03-lifetime-syntax#生命周期与引用有效性
+../10-generics-traits-lifetimes/ch10-03-lifetime-syntax.md#生命周期与引用有效性
