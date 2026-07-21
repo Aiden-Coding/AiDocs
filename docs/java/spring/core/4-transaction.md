@@ -166,7 +166,34 @@ sequenceDiagram
 
 ### 2. `getTransaction` 与挂起栈
 
-`AbstractPlatformTransactionManager#getTransaction` 在执行传播行为决策时,若策略为 `REQUIRES_NEW` 或 `NOT_SUPPORTED`,会调用 `suspend(transaction)`。`suspend` 把当前线程的 `ConnectionHolder`、`TransactionSynchronization` 列表从 `TransactionSynchronizationManager` 的 ThreadLocal 解绑,以 `SuspendedResourcesHolder` 形式压回事务栈,新事务使用新连接,提交后再 `resume` 恢复外层栈。这就是“挂起-恢复”的真实含义。
+`AbstractPlatformTransactionManager#getTransaction` 在执行传播行为决策时，若策略为 `REQUIRES_NEW` 或 `NOT_SUPPORTED`，会调用 `suspend(transaction)`。
+
+```java
+// AbstractPlatformTransactionManager 挂起原理核心伪代码
+protected final SuspendedResourcesHolder suspend(@Nullable Object transaction) throws TransactionException {
+    if (TransactionSynchronizationManager.isSynchronizationActive()) {
+        List<TransactionSynchronization> suspendedSynchronizations = doSuspendSynchronization();
+        Object suspendedResources = null;
+        if (transaction != null) {
+            // 切断并隔离底层的 ConnectionHolder 数据源绑定
+            suspendedResources = doSuspend(transaction);
+        }
+        String name = TransactionSynchronizationManager.getCurrentTransactionName();
+        TransactionSynchronizationManager.setCurrentTransactionName(null);
+        boolean readOnly = TransactionSynchronizationManager.isCurrentTransactionReadOnly();
+        TransactionSynchronizationManager.setCurrentTransactionReadOnly(false);
+        // ...
+        return new SuspendedResourcesHolder(
+                suspendedResources, suspendedSynchronizations, name, readOnly, null);
+    }
+    return null;
+}
+```
+
+`suspend` 动作会将当前线程关联的 `ConnectionHolder`（JDBC 连接资源）以及当前的 `TransactionSynchronization` 事务同步器列表，从 `TransactionSynchronizationManager` 的各个 `ThreadLocal` 变量中剥离并解绑。
+随后，这些被解绑的数据会被封装进 `SuspendedResourcesHolder` 实例，并层层向上抛送到当前新事务执行帧的对象栈中保存。
+新事物在此之后会从数据源（`DataSource`）中获取一个**全新的 JDBC 连接（Connection）**并重新绑定到 `ThreadLocal` 中，使其与原有挂起的连接在数据库层面发生**绝对隔离的物理事务竞争**。
+当新事务执行完毕，无论是提交（Commit）还是回滚（Rollback），外层事务管理器都会在 `finally` 阶段调用 `resume(transaction, resourcesHolder)` 方法，将上一步压栈挂起的旧连接和同步器资源，重新绑定回 `TransactionSynchronizationManager` 的线程变量中。这就是“事务挂起与恢复”的解绑重装原理。
 
 ### 3. 回滚判定的关键:`rollbackOn`
 

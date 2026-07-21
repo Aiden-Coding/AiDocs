@@ -50,6 +50,7 @@ mindmap
 - [Java 集合框架底层源码深剖](basic/0-collection-framework.md)：探究 `ArrayList`、`LinkedList` 物理结构，深度解析 `LinkedHashMap` 构筑 LRU 及 `TreeMap` 红黑树旋转平衡。
 - [Java 核心基石：Object 方法、异常、反射、泛型与 SPI](basic/1-java-core-fundamentals.md)：剖析 `Object` 六大契约、异常体系、反射与 `MethodHandle`、泛型擦除与桥接方法、注解与 SPI 扩展。
 - [Java 新特性演进与核心底层原理](basic/2-java8-21-features.md)：剖析 Lambda `invokedynamic`、Stream 惰性求值与 JDK 21 虚拟线程 Carrier 调度机制。
+- [Java 引用体系与 Cleaner 机制](basic/5-references-cleaner.md)：全面梳理强软弱虚四级引用特性，详解 Cleaner 机制对废弃 `finalize` 析构方法的完美替代。
 - [Java 基础与集合核心面试真题](../interview/java/3-interview-basic.md)：深入底层剖析 `String` 不可变性、`HashMap` 与 `ConcurrentHashMap` 扩容演进机制。
 - [Java I/O 体系与序列化深剖](basic/4-io-serialization.md)：探究字节流与字符流关系、`BufferedInputStream` 内部缓冲区、装饰器模式应用，以及 Java 原生序列化和第三方协议对比。
 
@@ -57,8 +58,10 @@ mindmap
 
 - [JMM 内存模型与 happens-before 原理](concurrent/0-jmm-memory-model.md)：图解 MESI 与内存屏障，推导 volatile 双重语义与 happens-before 八大规则。
 - [AQS 机制与显式锁实现](concurrent/1-aqs-locks.md)：深入 AQS `state` 变量与双向 CLH 队列，对比公平与非公平锁。
+- [AQS ConditionObject 核心机制](concurrent/13-condition-object-internals.md)：深度解密 AQS 内部双队列协同、线程物理挂起与节点迁移、以及中断两阶段退出的核心算法。
 - [HashMap 与 ConcurrentHashMap 源码](concurrent/2-hashmap-concurrenthashmap.md)：从 JDK 7 到 8 的演进，透析桶锁与 CAS。
 - [ThreadLocal 与 CAS 核心解析](concurrent/3-threadlocal-cas.md)：图解内存泄漏成因及 `LongAdder` 分段热点优化。
+- [Unsafe 类与 JDK 9+ VarHandle 内存访问](concurrent/12-varhandle-unsafe.md)：探究 JVM Unsafe 危险黑魔法、`VarHandle` 精细化多级内存屏障及五大访问控制模式。
 - [线程池 ThreadPoolExecutor 全解](concurrent/4-threadpool.md)：掌握 `ctl` 位运算与动态调优思路。
 - [CompletableFuture 异步编排与底层原理](concurrent/5-completable-future.md)：回调链、Completion 栈与 `tryFire` 模型，生产级服务聚合网关实战。
 - [并发容器与同步工具源码精析](concurrent/6-concurrent-collections-sync.md)：`CountDownLatch`、`CyclicBarrier`、`Semaphore`、COW 集合与无锁队列全景对比。
@@ -72,6 +75,8 @@ mindmap
 
 - [内存模型与垃圾回收 (GC)](jvm/0-memory-gc.md)：从三色标记到 ZGC 染色指针、读屏障技术。
 - [类加载体系与字节码强化](jvm/1-classloader-bytecode.md)：解构双亲委派模型及 Java Agent 动态插桩原理。
+- [Tomcat & OSGi 类加载隔离与打破双亲委派实战](jvm/6-classloader-plugins.md)：以 Tomcat 与 OSGi 拓扑为例，拆解类隔离、JSP 独立刻画及插件热插拔卸载与元空间防泄露内核。
+- [JDK 演进：GraalVM AOT 与静态编译](jvm/7-graalvm-aot.md)：深剖提前编译、封闭性假设、初始化时空分类及 Spring Native 毫秒冷启和极低 RSS 调优。
 - [JIT 进阶之逃逸分析](jvm/2-escape-analysis.md)：解密标量替换与锁消除。
 - [性能诊断与在线排障艺术](jvm/3-tuning-tools.md)：Arthas 实战与 MAT 内存泄露追踪。
 - [线上故障深度复盘记录](jvm/4-prod-troubleshooting-cases.md)：四大经典 OOM 与 CPU 100% 根因分析。
@@ -103,6 +108,7 @@ mindmap
 - [Spring MVC 工作流设计](spring/mvc/8-springmvc-principles.md)：理解 `DispatcherServlet` 与 `HandlerMapping` 的协作。
 - [Spring MVC 高级强化特性](spring/mvc/9-springmvc-advanced.md)：拦截器、过滤器与参数解析器深度定制。
 - [Spring MVC 执行流程与远程调用](spring/mvc/22-mvc-remote-call.md)：`RestTemplate`、Feign 动态代理与负载均衡调用链路。
+- [反应式编程规范与响应式 WebFlux 底层设计](spring/mvc/23-reactive-webflux.md)：深剖 Thread-per-Request (Servlet) 与 Event-Loop 线程模型对决、Project Reactor (Flux/Mono) 核心机制及 Schedulers 线程漂移、生产级无损排障实战。
 
 ### 2.3 Spring Boot 与自动装配
 
@@ -126,13 +132,16 @@ mindmap
 - [Seata 分布式事务全解](spring/cloud/25-seata-distributed-transaction.md)：AT 模式深度剖析与实战。
 - [Sentinel 滑动窗口与限流算法](spring/cloud/26-sentinel-algorithm-core.md)：`LeapArray` 与高性能限流内核。
 - [Sentinel 流量治理与故障容错](spring/cloud/27-sentinel-governance.md)：熔断、降级与系统自适应保护。
+- [微服务可观测性：Spring Boot 3.x/Cloud Micrometer 与 OpenTelemetry 链路透传](spring/cloud/32-microservices-observability.md)：精剖三位一体可观测性设计，详解 W3C 跨网络连接拦截、Logback traceId MDC 持久化以及线程池自愈。
 - [Spring 框架生态面试真题](../interview/java/31-interview-spring.md)：IoC、AOP、事务、Boot 与微服务高频考点。
 
 ### 2.5 持久层与连接池 (Persistence)
 
 - [MyBatis 持久层原理与 HikariCP 连接池](persistence/0-mybatis-hikaricp.md)：HikariCP 无锁化 `LocalBag` 容器与 MyBatis 插件责任链。
+- [Druid 连接池内核机制精剖与 HikariCP 对比调优](persistence/3-druid-connection-pool.md)：分析 Druid 基于 AST 语法解析的防 SQL 注入规则，连接泄露精确追踪与弹性保活（keep-alive），以及两大连接池大厂参数对比调优模板。
+- [分布式架构：ShardingSphere 分库分表与读写分离内核机制精剖](persistence/4-sharding-sphere.md)：梳理千万级大表 B+ 树寻址痛点，精剖 ShardingSphere 进行 SQL 解析、路由、改写、执行及合并的五部曲核心流，并给出读写分离 100ms 延迟下的 Hint 主库强制自愈实战方案。
 - [MyBatis 核心组件与 SQL 执行全流程](persistence/1-mybatis-core-flow.md)：从 `SqlSessionFactory` 到 `ResultSet` 映射的完整链路。
-- [MyBatis 插件原理与二级缓存](persistence/2-mybatis-cache-plugin.md)：拦截器责任链、一二级缓存与 Redis 集成。
+- [MyBatis 插件原理与二级缓存](persistence/2-mybatis-cache-plugin.md)：拦截器责任链、一二级缓存与 Redis integration。
 - [MyBatis 与连接池面试真题](../interview/java/3-interview-mybatis.md)：Executor、缓存、插件与 HikariCP 高频考点。
 
 ---
