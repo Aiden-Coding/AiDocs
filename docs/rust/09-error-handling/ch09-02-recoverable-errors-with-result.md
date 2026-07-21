@@ -9,7 +9,7 @@ sidebar_position: 38
 
 回忆一下第 2 章 [“使用 `Result` 类型来处理潜在的错误”][handle_failure] 部分中的那个 `Result` 枚举，它定义有如下两个成员，`Ok` 和 `Err`：
 
-[handle_failure]: ch02-00-guessing-game-tutorial#使用-result-类型来处理潜在的错误
+[handle_failure]: ../02-guessing-game/ch02-00-guessing-game-tutorial.md#使用-result-类型来处理潜在的错误
 
 ```rust
 enum Result<T, E> {
@@ -346,4 +346,4 @@ fn main() -> Result<(), Box<dyn Error>> {
 
 现在我们讨论过了调用 `panic!` 或返回 `Result` 的细节，是时候回到他们各自适合哪些场景的话题了。
 
-[trait-objects]: ch17-02-trait-objects#为使用不同类型的值而设计的-trait-对象
+[trait-objects]: ../17-oop/ch17-02-trait-objects.md#为使用不同类型的值而设计的-trait-对象

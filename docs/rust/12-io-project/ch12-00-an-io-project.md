@@ -23,10 +23,10 @@ Rust 的运行速度、安全性、单二进制文件输出和跨平台支持使
 
 另外还会简要的讲到闭包、迭代器和 trait 对象，他们分别会在 [第 13 章][ch13] 和 [第 17 章][ch17] 中详细介绍。
 
-[ch7]: ch07-00-managing-growing-projects-with-packages-crates-and-modules
-[ch8]: ch08-00-common-collections
-[ch9]: ch09-00-error-handling
-[ch10]: ch10-00-generics
-[ch11]: ch11-00-testing
-[ch13]: ch13-00-functional-features
-[ch17]: ch17-00-oop
+[ch7]: ../07-packages-crates-modules/ch07-00-managing-growing-projects-with-packages-crates-and-modules.md
+[ch8]: ../08-common-collections/ch08-00-common-collections.md
+[ch9]: ../09-error-handling/ch09-00-error-handling.md
+[ch10]: ../10-generics-traits-lifetimes/ch10-00-generics.md
+[ch11]: ../11-testing/ch11-00-testing.md
+[ch13]: ../13-functional-features/ch13-00-functional-features.md
+[ch17]: ../17-oop/ch17-00-oop.md

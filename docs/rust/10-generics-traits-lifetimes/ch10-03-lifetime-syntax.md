@@ -490,6 +490,6 @@ fn longest_with_an_announcement<'a, T>(x: &'a str, y: &'a str, ann: T) -> &'a st
 你可能不会相信，这个话题还有更多需要学习的内容：第 17 章会讨论 trait 对象，这是另一种使用 trait 的方式。第 19 章会涉及到生命周期标注更复杂的场景，并讲解一些高级的类型系统功能。不过接下来，让我们聊聊如何在 Rust 中编写测试，来确保代码的所有功能能像我们希望的那样工作！
 
 [references-and-borrowing]:
-ch04-02-references-and-borrowing#引用与借用
+../04-understanding-ownership/ch04-02-references-and-borrowing.md#引用与借用
 [string-slices-as-parameters]:
-ch04-03-slices#字符串-slice-作为参数
+../04-understanding-ownership/ch04-03-slices.md#字符串-slice-作为参数

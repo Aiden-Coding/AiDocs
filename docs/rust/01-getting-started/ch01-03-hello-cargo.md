@@ -162,5 +162,5 @@ $ cargo build
 
 是时候通过构建更强大的程序来熟悉阅读和编写 Rust 代码了。所以在第 2 章，我们会构建一个猜数字游戏程序。如果你更希望从学习 Rust 常用的编程概念开始，请阅读第 3 章，接着再回到第 2 章。
 
-[installation]: ch01-01-installation#安装
-[appendix-e]: appendix-05-editions
+[installation]: ch01-01-installation.md#安装
+[appendix-e]: ../appendix/appendix-05-editions.md

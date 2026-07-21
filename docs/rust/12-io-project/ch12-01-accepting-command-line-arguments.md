@@ -99,5 +99,5 @@ In file sample.txt
 
 好的，它可以工作！我们将所需的参数值保存进了对应的变量中。之后会增加一些错误处理来应对类似用户没有提供参数的情况，不过现在我们将忽略他们并开始增加读取文件功能。
 
-[ch13]: ch13-00-functional-features
-[ch7-idiomatic-use]: ch07-04-bringing-paths-into-scope-with-the-use-keyword#创建惯用的-use-路径
+[ch13]: ../13-functional-features/ch13-00-functional-features.md
+[ch7-idiomatic-use]: ../07-packages-crates-modules/ch07-04-bringing-paths-into-scope-with-the-use-keyword.md#创建惯用的-use-路径

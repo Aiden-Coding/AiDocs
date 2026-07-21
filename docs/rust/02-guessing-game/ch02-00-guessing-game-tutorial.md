@@ -809,22 +809,22 @@ fn main() {
 本项目通过动手实践，向你介绍了许多 Rust 的新概念：`let`、`match`、函数、使用外部 crate，等等。接下来的几章，你会继续深入学习这些概念。第 3 章介绍大部分编程语言都有的概念，比如变量、数据类型和函数，以及如何在 Rust 中使用它们。第 4 章探索所有权（ownership），这是一个 Rust 同其他语言大不相同的功能。第 5 章讨论结构体和方法的语法，而第 6 章侧重解释枚举。
 
 [prelude]: https://rustwiki.org/zh-CN/std/prelude/index.html
-[variables-and-mutability]: ch03-01-variables-and-mutability#变量和可变性
-[comments]: ch03-04-comments
+[variables-and-mutability]: ../03-common-concepts/ch03-01-variables-and-mutability.md#变量和可变性
+[comments]: ../03-common-concepts/ch03-04-comments.md
 [string]: https://rustwiki.org/zh-CN/std/string/struct.String.html
 [iostdin]: https://rustwiki.org/zh-CN/std/io/struct.Stdin.html
 [read_line]: https://rustwiki.org/zh-CN/std/io/struct.Stdin.html#method.read_line
 [ioresult]: https://rustwiki.org/zh-CN/std/io/type.Result.html
 [result]: https://rustwiki.org/zh-CN/std/result/enum.Result.html
-[enums]: ch06-00-enums
+[enums]: ../06-enums/ch06-00-enums.md
 [expect]: https://rustwiki.org/zh-CN/std/result/enum.Result.html#method.expect
-[recover]: ch09-02-recoverable-errors-with-result
+[recover]: ../09-error-handling/ch09-02-recoverable-errors-with-result.md
 [randcrate]: https://crates.io/crates/rand
 [semver]: http://semver.org
 [cratesio]: https://crates.io
 [doccargo]: http://doc.crates.io
 [doccratesio]: http://doc.crates.io/crates-io.html
-[match]: ch06-02-match
+[match]: ../06-enums/ch06-02-match.md
 [parse]: https://rustwiki.org/zh-CN/std/primitive.str.html#method.parse
 [handling-potential-failure-with-the-result-type]: #使用-result-类型来处理潜在的错误
 [comparing-the-guess-to-the-secret-number]: #比较猜测的数字和秘密数字

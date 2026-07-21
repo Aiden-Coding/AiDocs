@@ -258,8 +258,8 @@ $ cargo run monomorphization poem.txt
 为了使这个项目更丰满，我们将简要的展示如何处理环境变量和打印到标准错误，这两者在编写命令行程序时都很有用。
 
 [validating-references-with-lifetimes]:
-ch10-03-lifetime-syntax#生命周期与引用有效性
-[ch11-anatomy]: ch11-01-writing-tests#测试函数剖析
-[ch10-lifetimes]: ch10-03-lifetime-syntax
-[ch3-iter]: ch03-05-control-flow#使用-for-遍历集合
-[ch13-iterators]: ch13-02-iterators
+../10-generics-traits-lifetimes/ch10-03-lifetime-syntax.md#生命周期与引用有效性
+[ch11-anatomy]: ../11-testing/ch11-01-writing-tests.md#测试函数剖析
+[ch10-lifetimes]: ../10-generics-traits-lifetimes/ch10-03-lifetime-syntax.md
+[ch3-iter]: ../03-common-concepts/ch03-05-control-flow.md#使用-for-遍历集合
+[ch13-iterators]: ../13-functional-features/ch13-02-iterators.md
