@@ -19,3 +19,4 @@ sidebar_position: 73
 - **消息传递**（_Message passing_）并发，其中通道（channel）被用来在线程间传递消息。
 - **共享状态**（_Shared state_）并发，其中多个线程可以访问同一片数据。
 - `Sync` 和 `Send` trait，将 Rust 的并发保证扩展到用户定义的以及标准库提供的类型中。
+- **[Tokio 异步微调度内核](ch16-05-tokio-internals.md)**：深剖三级工作窃取队列、61 次饥饿规避算法、Mio 边缘触发 epoll 网络循环拦截、Waker 零成本状态机流转与手动 Future 实战。

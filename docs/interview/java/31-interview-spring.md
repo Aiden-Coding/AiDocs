@@ -328,3 +328,52 @@ Spring 缓存基于 **AOP 动态代理** 和 **拦截器链** 机制：
 - **缓存雪崩（大面积过期）**：在 Redis 缓存配置类中自定义 `RedisCacheManager`，为不同的 cacheName 或者是通过序列化器在 TTL 上加上随机扰动值。
 
 详细原理与生产实战，请参考 [缓存抽象与原理](../../java/spring/boot/16-spring-cache.md)。
+
+---
+
+### Q3：微服务异步链路日志/Trace丢失之痛：如何利用 Spring 的 `TaskDecorator` 编写完美透传 `ThreadLocal`（如 MDC 链路标签、用户信息）的业务级高性能线程池？其内存泄漏隐患如何规避？
+
+#### 💡 典型大厂连环追问
+
+* **追问 1**：为什么说在**高并发且池化复用**的场景下，绝对不能使用 `InheritableThreadLocal`？（线程复用导致上下文污染与内存溢出）。
+* **追问 2**：在 `TaskDecorator` 内部重写的 `decorate(Runnable executable)` 方法中，由于涉及到了“提取父线程变量”与“子线程清洗注入”，这段代码的两个阶段分别是在**哪一个线程**中执行狂刷的？
+
+#### 🛠️ 核心解析答题要点
+
+1. **`InheritableThreadLocal` 为什么死于线程池**：
+
+   `InheritableThreadLocal` 仅在**创建新物理线程**的一瞬间，通过 `parent.inheritableThreadLocals` 浅拷贝值到子线程。但是高并发下，我们必然采用**线程池（池化复用机制）**。池内的线程是反复重用不销毁的。
+   当下一次其他客户端请求进来，复用该线程时，子线程读出来的依然是上一次请求遗存的垃圾数据。这就导致了严重的**业务上下文错乱污染**和**严重的本地内存泄漏**。
+
+2. **Spring 神级救砖利器：`TaskDecorator` 优雅透传方案**：
+
+   我们向 `ThreadPoolTaskExecutor` 注入自定义的 `TaskDecorator` 接口实现，对提交上来的 `Runnable` 进行装饰包装：
+
+   ```java
+   public class MdcTaskDecorator implements TaskDecorator {
+       @Override
+       public Runnable decorate(Runnable runnable) {
+           // ⚠️ 第一阶段：抓取现场！此处由【提交任务的父线程】同步执行。
+           Map<String, String> contextMap = MDC.getCopyOfContextMap();
+           
+           return () -> {
+               try {
+                   // ⚠️ 第二阶段：子线程装载！此处由【线程池分发的异步子线程】执行。
+                   if (contextMap != null) {
+                       MDC.setContextMap(contextMap);
+                   }
+                   runnable.run(); // 执行真实的业务
+               } finally {
+                   // ⚠️ 第三阶段：极致守护！子线程执行完毕后，物理彻底清空，防范内存重留！
+                   MDC.clear();
+               }
+           };
+       }
+   }
+   ```
+
+3. **核心执行时机与内存泄漏防御点**：
+
+   - `decorate()` 本身：在**父线程**提交 `execute()` / `submit()` 时同步激活，瞬间抓取当前的 MDC / Trace 键。
+   - 内部匿名 `run()` ：在分配到**子线程**真正开始被调度时，装载并在最后强制 `MDC.clear()` 清除。
+   - **至关重要的防范**：必须加 `try-finally` 并在 `finally` 里显式调用 `MDC.clear()` 或 `ThreadLocal.remove()`。这是因为子线程来自于线程池，如果不清空，子线程中的 `Thread` 内部成员 `ThreadLocalMap` 就会紧紧拽住该引用，多次执行后造成本地大内存溢出，直接报出 OOM。

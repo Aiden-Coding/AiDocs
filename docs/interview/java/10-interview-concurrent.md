@@ -163,3 +163,71 @@ graph TD
     由于大部分时间 CPU 处于等待 I/O 完成的空闲状态，线程数应设置得多一些。
     `N_threads = N_CPU * (1 + Wait_Time / Service_Time)`
     在标准互联网微服务中，推荐从 `2 * N_CPU` 开始试运行，并通过压测不断调优核心比。
+
+---
+
+### Q4：AQS `ConditionObject` 在底层执行 `await()` 和 `signal()` 时发生了什么？如果线程在 `park` 状态下遭遇外部 `interrupt` 唤醒，是如何进行两阶段中断退出的？
+
+#### 💡 典型大厂连环追问
+
+* **追问 1**：当调用 `signal()` 时，AQS 是怎样安全地将节点从 Condition 的单向链表物理拆除，并 CAS 挂载到 AQS 双向同步链表尾部的？若是此时 CAS 改变节点的 `waitStatus` 失败，会怎么处置？
+* **追问 2**：`ConditionObject` 里标识中断的两个核心状态码：`THROW_IE (-1)` 和 `REINTERRUPT (1)` 代表的底层真实上下文到底是什么？
+
+#### 🛠️ 核心解析答题要点
+
+1. **双队列底层的动态迁移机制**：
+
+   ```mermaid
+   sequenceDiagram
+       Note over 线程: 持有 AQS 独占锁
+       线程->>Condition单向条件队列: await() 挂起, 释放 AQS 锁 并在条件队列尾创建 Node
+       Condition单向条件队列-->>线程: LockSupport.park() 阻塞
+       Note over 另一线程: 调用 signal() 唤醒
+       另一线程->>Condition单向条件队列: 取出第一只 FirstNode
+       Condition单向条件队列->>AQS双向同步队列: CAS 改变状态从 CONDITION (-2) 为 0, 然后 enq() 强挂到双向队列尾
+       Note over AQS双向同步队列: 前置节点状态 CAS 设为 SIGNAL (-1) 指明后置需唤醒
+       AQS双向同步队列-->>线程: LockSupport.unpark() 唤醒，开始在 AQS 里自旋抢锁
+   ```
+
+2. **条件队列挂起被中断的两阶段安全退出机制**：
+
+   如果一个处于 `park` 阻塞的线程遭遇突发 `Thread.interrupt()`，它会瞬间苏醒。此时它必须做出最硬核的裁决：**这个中断发生在 `signal` 激发之前，还是之后？**
+
+   - **发生在 `signal` 之前（`THROW_IE / -1`）**：
+     - 底层是通过调用 `transferAfterCancelledWait(node)` 来判断的。
+     - 如果线程通过 CAS 将节点的 `waitStatus` 从 `CONDITION` (-2) 成功改写为 0，说明该节点**还在**单向条件队列里，`signal` 还没有来得及操作它。
+     - 此时，该线程的节点必须要强制脱离条件队列，并自主入队到 AQS 双向同步队列中去自旋抢锁。抢锁成功后，立即主动抛出 `InterruptedException` 来告知外层框架。
+   - **发生在 `signal` 之后（`REINTERRUPT / 1`）**：
+     - 如果 CAS 尝试改写 `CONDITION` 标志失败，说明在发生中断的同时，另一个线程已经执行了 `transferForSignal`，将该节点变更为 0 并挂载到了双向的 AQS 链表中。
+     - 这种情况下，中断发生得比物理唤醒略迟。尽管线程依然苏醒，但它属于正常唤醒通道。此时不会抛出 `InterruptedException` 异常，而是在抢到锁退出 `await` 时，再次调用 `selfInterrupt()` “自我重置中断标记”，留给后续业务逻辑处理。
+
+---
+
+### Q5：`VarHandle` 相比传统 `Unsafe` 升级了什么？它在内存屏障和 AQS 中如何工作？
+
+#### 💡 典型大厂连环追问
+
+* **追问 1**：`VarHandle` 精细化控制里的 `getAcquire/setRelease` 以及 `compareAndSet` 底层分别触发了 CPU 哪一种级别的内存屏障？我们可以结合底层 AQS 重构谈谈吗？
+* **追问 2**：既然直接内存操作有那么大风险，虚拟机为什么默认设计 `DirectBuffer` 堆外内存回收？它是如何与 `Cleaner` 配合工作的？
+
+#### 🛠️ 核心解析答题要点
+
+1. **`VarHandle` 提升的安全性与高精细度屏障**：
+
+   传统 `Unsafe` 可以无限制读写任意物理内存偏移（Offset），容易引入非法地址访问错误致使 JVM 崩溃，且无法打包到 Java 模块系统中。`VarHandle`（变量句柄，JDK 9+ 引入）在保证近似于裸硬件级极速存取特性的同时，提供了**多级强度的内存一致性保证（Memory Ordering）**，彻底规范了重排序行径：
+
+   - **Plain（普通读写）**：无任何内存屏障。
+   - **Opaque（不透明）**：保证操作本身的原子性及物理执行顺序性（单线程内禁止重排），但不加高昂跨核心缓存一致性的锁总线屏障。
+   - **Acquire / Release（单向半屏障）**：
+     - `getAcquire` 保证“该读取”及“后续所有读写”均不重排到该读取之前（禁止下移，即 `LoadLoad` + `LoadStore` 屏障）。
+     - `setRelease` 保证“该写入”之前的所有读写均已落盘，不被重排到该写入之后（禁止上移，即 `StoreStore` + `LoadStore` 屏障）。
+   - **Volatile（全能强屏障）**：对齐标准 `volatile` 读写，底层触发完整的全局 `StoreLoad` 屏障。
+
+   **AQS 的重构**：自 JDK 9 起，AQS 等底座对同步状态 `state`、以及队列中的 `head`/`tail` 指针更新的控制，全部由原生的 `Unsafe` 偏移量定位，重构为了类型安全，可在编译期实施强类型校验的 `VarHandle` 变量句柄形式。
+
+2. **`DirectBuffer` 与 `Cleaner` 机制的物理回收链条**：
+
+   - `finalize()` 已经由于其执存效率极低、极易在挂起时带来 GC 线程雪崩、以及死死复活等硬伤在 JDK 9 被全面废弃。
+   - `DirectByteBuffer`（通过 `ByteBuffer.allocateDirect` 申请）内部在申请堆外内存时，会统一创建并静态注册一个 `sun.misc.Cleaner`（基于 **PhantomReference 虚引用**）。其内部封装了具体的 `Deallocator`（实现 Runnable）。
+   - 当 JVM 发现堆内的 `DirectByteBuffer` 句柄已经毫无引用、被宣告死亡后，其伴生的虚引用会被自动排入底层的 `ReferenceQueue`（引用队列）中。
+   - 特属的 `ReferenceHandler` 线程定时轮询唤醒，并就地回调 `Cleaner.clean()` 动作。由此，调用其内封的 `Unsafe.freeMemory(address)`，无锁物理释放堆外 OS 首地址内存，完美防范泄露。

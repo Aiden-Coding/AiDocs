@@ -622,9 +622,10 @@ export default async function ProductPage({ params }: { params: { id: string } }
 // export default function LikeButton({ productId }) { ... }
 ```
 
-### 5.3 React 19 全新特性
+### 5.3 React 19 全新特性与架构
 
 - [React 19 全新特性与 API](advanced/11-react19-features.md)：深入实践 React 19 异步 Action 管理器 `useActionState`、无感表单状态获取 `useFormStatus`、条件性解析 Resource 与 Context 的 `use` 关键字、`useOptimistic` 乐观更新 Hook。
+- [React 19 进阶：RSC 协议、流式渲染（Streaming HTML）与 Suspense 挂起底层机制](advanced/12-rsc-streaming-suspense.md)：精剖 React Server Components (RSC) 流式 Payload 协议字节级格式，详拆 Stream 分卷传输 Chunk 后台运行，以及 Suspense 抛出并捕获 Promise 时的 Fiber 断裂挂起自愈重建原理。
 
 #### 💡 核心示例：useActionState 自动托管表单提交 Loading 与 Error 状态
 
