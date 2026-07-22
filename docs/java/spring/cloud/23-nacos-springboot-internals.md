@@ -19,25 +19,25 @@ sidebar_label: Nacos & Spring Boot 原理
 ```mermaid
 flowchart TD
     subgraph Spring Boot 启动过程
-        A[SpringApplication.run] --> B[EnvironmentPostProcessor]
-        A --> C[ApplicationContext Refresh]
-        C --> D[AutoConfiguration 装配]
-        C --> E[SmartLifecycle 触发]
+        A["SpringApplication.run"] --> B["EnvironmentPostProcessor"]
+        A --> C["ApplicationContext Refresh"]
+        C --> D["AutoConfiguration 装配"]
+        C --> E["SmartLifecycle 触发"]
     end
 
     subgraph Nacos Config 侧
-        B -->|加载远程配置| NC_IMP[NacosConfigDataLocationResolver / Bootstrap]
-        NC_IMP -->|拉取 DataId 配置| NC_SRV[Nacos Server]
-        D -->|注册 Listener| NC_LST[NacosPropertySourceLocator / NacosContextRefresher]
-        NC_LST -->|gRPC/长轮询订阅| NC_EVENT[监听配置变更]
-        NC_EVENT -->|发送 RefreshEvent| REFRESH[@RefreshScope 刷新 Bean]
+        B -->|"加载远程配置"| NC_IMP["NacosConfigDataLocationResolver / Bootstrap"]
+        NC_IMP -->|"拉取 DataId 配置"| NC_SRV["Nacos Server"]
+        D -->|"注册 Listener"| NC_LST["NacosPropertySourceLocator / NacosContextRefresher"]
+        NC_LST -->|"gRPC/长轮询订阅"| NC_EVENT["监听配置变更"]
+        NC_EVENT -->|"发送 RefreshEvent"| REFRESH["@RefreshScope 刷新 Bean"]
     end
 
     subgraph Nacos Discovery 侧
-        E -->|start 方法| ND_REG[NacosAutoServiceRegistration]
-        ND_REG -->|调用 Nacos Client| ND_SRV[Nacos NamingService]
-        ND_SRV -->|POST /nacos/v1/ns/instance| ND_SERVER[Nacos Server 注册中心]
-        ND_SRV -->|启动 HeartBeat Task / gRPC Stream| ND_BEAT[服务健康心跳维持]
+        E -->|"start 方法"| ND_REG["NacosAutoServiceRegistration"]
+        ND_REG -->|"调用 Nacos Client"| ND_SRV["Nacos NamingService"]
+        ND_SRV -->|"POST /nacos/v1/ns/instance"| ND_SERVER["Nacos Server 注册中心"]
+        ND_SRV -->|"启动 HeartBeat Task / gRPC Stream"| ND_BEAT["服务健康心跳维持"]
     end
 ```
 
@@ -67,7 +67,7 @@ sequenceDiagram
     participant Client as Nacos NamingService
 
     App->>Reg: WebServer 启动完毕，触发 SmartLifecycle.start()
-    Reg->>Reg: super.start() -> register()
+    Reg->>Reg: super.start() -&gt; register()
     Reg->>ServiceReg: register(Registration)
     ServiceReg->>Client: namingService.registerInstance(...)
     Client->>Client: 提交 HeartBeatTask / 开启 gRPC 双向流
@@ -149,9 +149,9 @@ flowchart LR
 
 ```mermaid
 flowchart TD
-    Client[业务调用方] -->|1. 调用方法| Proxy[CGLIB 代理对象]
-    Proxy -->|2. getBean 方法| Scope[GenericScope / RefreshScope]
-    Scope -->|3. 查询 Map 缓存| Cache{Cache 中是否存在?}
+    Client[业务调用方] -->|"1. 调用方法"| Proxy[CGLIB 代理对象]
+    Proxy -->|"2. getBean 方法"| Scope[GenericScope / RefreshScope]
+    Scope -->|"3. 查询 Map 缓存"| Cache{Cache 中是否存在?}
     Cache -- 存在 --> RealBean[返回现有真实 Bean 实例]
     Cache -- 不存在 --> CreateBean[重新创建 Bean 实例并存入 Cache]
     CreateBean --> RealBean
