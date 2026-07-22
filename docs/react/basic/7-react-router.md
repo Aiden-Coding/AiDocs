@@ -46,7 +46,8 @@ const router = createBrowserRouter([
       },
       {
         path: 'dashboard',
-        // 动态懒加载组件
+        // 1.3 路由按需懒加载 (Lazy Loading)
+        // 仅当用户访问 /dashboard 时才动态加载 Dashboard 组件 Bundle，提升首屏加载性能
         lazy: async () => {
           const Dashboard = await import('../pages/Dashboard');
           return { Component: Dashboard.default };
@@ -231,7 +232,58 @@ export default function UserList() {
 
 ---
 
-## 5. 生产环境路由守卫与权限控制
+## 5. 路由按需懒加载 (Lazy Loading)
+
+**懒加载（Lazy Loading / 代码分割 Code Splitting）** 是一种关键的前端性能优化技术。其核心原则是 **“按需加载，用时再拿”**：在用户首次打开页面时，只下载当前视图必需的代码，避免一次性加载整个应用，从而大幅缩短**首屏白屏时间**。
+
+### 5.1 两种懒加载方案对比
+
+#### 方案一： React Router 6.4+ 路由级别 `lazy`（推荐）
+
+React Router 6.4 引入了路由级的 `lazy` 属性，可以直接异步加载包含组件、`loader` 和 `action` 的路由模块：
+
+```tsx
+const router = createBrowserRouter([
+  {
+    path: '/dashboard',
+    // 只有当匹配到 /dashboard 路由时，才发起 HTTP 请求下载对应 JS 模块
+    lazy: async () => {
+      const { DashboardPage, dashboardLoader } = await import('../pages/DashboardPage');
+      return {
+        Component: DashboardPage,
+        loader: dashboardLoader,
+      };
+    },
+  },
+]);
+```
+
+#### 方案二： React 原生 `React.lazy` + `<Suspense>`
+
+适用于常规组件级按需加载或旧版 React Router 模式：
+
+```tsx
+import React, { Suspense, lazy } from 'react';
+
+// 1. 动态 import() 声明懒加载组件
+const AnalyticsChart = lazy(() => import('../components/AnalyticsChart'));
+
+export default function Dashboard() {
+  return (
+    <div>
+      <h2>数据看板</h2>
+      {/* 2. 使用 Suspense 包裹，设置代码下载期间的 Loading 占位 UI */}
+      <Suspense fallback={<div>图表组件加载中...</div>}>
+        <AnalyticsChart />
+      </Suspense>
+    </div>
+  );
+}
+```
+
+---
+
+## 6. 生产环境路由守卫与权限控制
 
 在企业级应用中，受保护的路由（如后台管理面板、个人中心）必须要求用户已登录并具备指定权限。
 
@@ -272,8 +324,8 @@ export function ProtectedRoute({ children, requiredRole }: ProtectedRouteProps) 
 
 ---
 
-## 6. 总结与最佳实践
+## 7. 总结与最佳实践
 
 1. **结构组织**：优先使用 `createBrowserRouter` + `RouterProvider`，获得最新的异步数据流与懒加载优化。
 2. **状态与 URL 绑定**：善用 `useSearchParams` 将筛选、分页等 UI 状态暴露在 URL 中，增强可分享性。
-3. **代码分割**：在中大型应用中，务必对非首屏路由页面使用 `lazy()` 进行按需加载，降低首屏 JS Bundle 体积。
+3. **代码分割**：在中大型应用中，务必对非首屏路由页面使用 `lazy` 进行按需加载，降低首屏 JS Bundle 体积。
