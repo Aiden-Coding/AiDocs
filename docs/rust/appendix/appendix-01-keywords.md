@@ -52,6 +52,43 @@ sidebar_position: 97
 - `where` - 表示一个约束类型的从句
 - `while` - 基于一个表达式的结果判断是否进行循环
 
+#### 核心与常用关键字示例
+
+```rust
+// 1. type 别名与关联类型
+type Kilometers = i32;
+
+// 2. dyn 动态分发 trait 对象
+trait Draw {
+    fn draw(&self);
+}
+fn render(item: &dyn Draw) {
+    item.draw();
+}
+
+// 3. ref 引用绑定与 mut 模式
+fn process_opt(opt: Option<String>) {
+    if let Some(ref name) = opt {
+        println!("Name reference: {}", name);
+    } // opt 依然保持所有权
+}
+
+// 4. async / await 异步
+async fn fetch_data() -> u32 {
+    42
+}
+
+// 5. extern 外部函数接口
+extern "C" {
+    fn abs(input: i32) -> i32;
+}
+
+fn main() {
+    let dist: Kilometers = 100;
+    println!("Distance: {} km", dist);
+}
+```
+
 ### 保留做将来使用的关键字
 
 如下关键字没有任何功能，不过由 Rust 保留以备将来应用。

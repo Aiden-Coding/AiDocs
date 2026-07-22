@@ -31,6 +31,22 @@ sidebar_position: 99
 
 例如，在使用 `assert_eq!` 宏时，`Debug` trait 是必须的。如果等式断言失败，这个宏就把给定实例的值作为参数打印出来，如此开发者可以看到两个实例为什么不相等。
 
+代码案例：
+
+```rust
+#[derive(Debug)]
+struct Point {
+    x: i32,
+    y: i32,
+}
+
+fn main() {
+    let p = Point { x: 10, y: 20 };
+    println!("Point: {:?}", p); // 输出: Point: Point { x: 10, y: 20 }
+    println!("Pretty print: {:#?}", p);
+}
+```
+
 ### 等值比较的 `PartialEq` 和 `Eq`
 
 `PartialEq` trait 可以比较一个类型的实例以检查是否相等，并开启了 `==` 和 `!=` 运算符的功能。
@@ -42,6 +58,29 @@ sidebar_position: 99
 `Eq` trait 没有方法。其作用是表明每一个被标记类型的值等于其自身。`Eq` trait 只能应用于那些实现了 `PartialEq` 的类型，但并非所有实现了 `PartialEq` 的类型都可以实现 `Eq`。浮点类型就是一个例子：浮点数的实现表明两个非数字（`NaN`，not-a-number）值是互不相等的。
 
 例如，对于一个 `HashMap<K, V>` 中的 key 来说， `Eq` 是必须的，这样 `HashMap<K, V>` 就可以知道两个 key 是否一样了。
+
+代码案例：
+
+```rust
+use std::collections::HashMap;
+
+#[derive(Debug, PartialEq, Eq, Hash)]
+struct StudentKey {
+    id: u32,
+}
+
+fn main() {
+    let k1 = StudentKey { id: 101 };
+    let k2 = StudentKey { id: 101 };
+
+    println!("k1 == k2: {}", k1 == k2); // true
+
+    // Eq 与 Hash 是 HashMap Key 所必需的
+    let mut map = HashMap::new();
+    map.insert(k1, "Alice");
+    println!("Search result: {:?}", map.get(&k2)); // Some("Alice")
+}
+```
 
 ### 次序比较的 `PartialOrd` 和 `Ord`
 
@@ -56,6 +95,33 @@ sidebar_position: 99
 `Ord` trait 也让你明白在一个带注明类型上的任意两个值存在有效顺序。`Ord` trait 实现了 `cmp` 方法，它返回一个 `Ordering` 而不是 `Option<Ordering>`，因为总存在一个合法的顺序。只可以在实现了 `PartialOrd` 和 `Eq`（`Eq` 依赖 `PartialEq`）的类型上使用 `Ord` trait 。当在结构体或枚举上派生时， `cmp` 和以 `PartialOrd` 派生实现的 `partial_cmp` 表现一致。
 
 例如，当在 `BTreeSet<T>`（一种基于有序值存储数据的数据结构）上存值时，`Ord` 是必须的。
+
+代码案例：
+
+```rust
+use std::collections::BTreeSet;
+
+#[derive(Debug, PartialEq, Eq, PartialOrd, Ord)]
+struct Task {
+    priority: u8,
+    name: String,
+}
+
+fn main() {
+    let t1 = Task { priority: 2, name: "Fix Bug".to_string() };
+    let t2 = Task { priority: 1, name: "Write Docs".to_string() };
+
+    println!("t1 > t2: {}", t1 > t2); // true（以字段出现顺序对比：2 > 1）
+
+    let mut set = BTreeSet::new();
+    set.insert(t1);
+    set.insert(t2);
+
+    for task in set {
+        println!("{:?}", task); // 按 priority 升序输出
+    }
+}
+```
 
 ### 复制值的 `Clone` 和 `Copy`
 
@@ -75,6 +141,24 @@ sidebar_position: 99
 
 任何使用 `Copy` 的代码都可以通过 `Clone` 实现，但代码可能会稍慢，或者不得不在代码中的许多位置上使用 `clone`。
 
+代码案例：
+
+```rust
+// 只有所有字段都实现了 Copy，结构体才能实现 Copy
+#[derive(Debug, Clone, Copy)]
+struct Coordinate {
+    x: f64,
+    y: f64,
+}
+
+fn main() {
+    let c1 = Coordinate { x: 12.5, y: 30.0 };
+    let c2 = c1; // 发生 Copy，而非 Move
+
+    println!("c1: {:?}, c2: {:?}", c1, c2); // c1 依然可用
+}
+```
+
 ### 固定大小的值到值映射的 `Hash`
 
 `Hash` trait 可以实例化一个任意大小的类型，并且能够用哈希（hash）函数将该实例映射到一个固定大小的值上。派生 `Hash` 实现了 `hash` 方法。`hash` 方法的派生实现结合了在类型的每部分调用 `hash` 的结果，这意味着所有的字段或值也必须实现了 `Hash`，这样才能够派生 `Hash`。
@@ -88,6 +172,30 @@ sidebar_position: 99
 `Default::default` 函数通常结合结构体更新语法一起使用，这在第 5 章的 [“使用结构体更新语法从其他实例中创建实例”][creating-instances-from-other-instances-with-struct-update-syntax] 部分有讨论。可以自定义一个结构体的一小部分字段而剩余字段则使用 `..Default::default()` 设置为默认值。
 
 例如，当你在 `Option<T>` 实例上使用 `unwrap_or_default` 方法时，`Default` trait 是必须的。如果 `Option<T>` 是 `None` 的话, `unwrap_or_default` 方法将返回存储在 `Option<T>` 中 `T` 类型的 `Default::default` 的结果。
+
+代码案例：
+
+```rust
+#[derive(Debug, Default)]
+struct UserConfig {
+    timeout_ms: u64,
+    retry_count: u32,
+    enable_cache: bool,
+}
+
+fn main() {
+    // 使用 Default::default() 创建默认配置
+    let defaultConfig = UserConfig::default();
+    println!("Default config: {:?}", defaultConfig);
+
+    // 结合结构体更新语法只自定义部分字段
+    let customConfig = UserConfig {
+        timeout_ms: 5000,
+        ..UserConfig::default()
+    };
+    println!("Custom config: {:?}", customConfig);
+}
+```
 
 [creating-instances-from-other-instances-with-struct-update-syntax]:
 ../05-structs/ch05-01-defining-structs.md#使用结构体更新语法从其他实例创建实例
