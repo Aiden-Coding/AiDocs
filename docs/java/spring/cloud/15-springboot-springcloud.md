@@ -6,7 +6,7 @@ sidebar_label: 自动装配与微服务组件
 
 ## Spring Boot 自动装配与微服务组件原理
 
-Spring Boot 的出现极大地简化了 Java 应用的搭建 and 开发，其核心在于**自动装配（Auto-Configuration）**。而在微服务架构中，注册中心（如 Nacos）和限流熔断器（如 Sentinel）则是保障系统高可用的核心组件。
+Spring Boot 的出现极大地简化了 Java 应用的搭建与开发，其核心在于**自动装配（Auto-Configuration）**。而在微服务架构中，注册中心（如 Nacos）和限流熔断器（如 Sentinel）则是保障系统高可用的核心组件。深度集成细节可参考 [Nacos & Spring Boot 集成底层原理](23-nacos-springboot-internals.md)。
 
 ---
 

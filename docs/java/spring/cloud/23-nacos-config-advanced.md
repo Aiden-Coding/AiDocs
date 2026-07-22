@@ -8,7 +8,7 @@ sidebar_label: Nacos 配置中心
 
 Nacos 同时承担**注册中心**与**配置中心**。配置侧解决：集中管理、环境隔离、动态推送、共享配置与灰度。本篇聚焦配置模型、长轮询、Spring Cloud 集成与生产安全。
 
-相关：[微服务起步](30-springcloud-quickstart.md)、[Sentinel 规则持久化](27-sentinel-governance.md)、[Boot 配置环境](../boot/11-springboot-internals.md)。
+相关：[微服务起步](30-springcloud-quickstart.md)、[Nacos与SpringBoot集成原理](23-nacos-springboot-internals.md)、[Sentinel 规则持久化](27-sentinel-governance.md)、[Boot 配置环境](../boot/11-springboot-internals.md)。
 
 ---
 
