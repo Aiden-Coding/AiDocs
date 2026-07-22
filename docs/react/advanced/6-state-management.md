@@ -197,7 +197,87 @@ function TodoListApp() {
 
 ---
 
-## 4. 架构选型建议
+## 4. 服务端状态管理：TanStack Query (React Query)
+
+在传统 React 架构中，开发者常把从后端接口获取的数据（如用户信息、商品列表）强行存入 Redux 或 Zustand 等客户端 Store。这会导致手动维护加载状态、缓存失效、重复请求打爆服务器等繁琐代码。
+
+**服务端状态（Server State）** 具有异步性、远程存储、易变性（可能被其他终端修改）等特点。**TanStack Query**（原 React Query）是现代 React 专门处理服务端状态/缓存/同步的标准库。
+
+### 4.1 核心概念与优势
+
+- **自动缓存与后台更新**：数据处于 `stale`（陈旧）状态时，在触发组件挂载、窗口聚焦（Window Focus）或网络恢复时自动重新获取。
+- **开箱即用的异步状态**：声明式获得 `data`, `isLoading`, `isError`, `error` 状态。
+- **乐观更新（Optimistic Updates）**：在提交修改请求时立即更改本地 UI，若服务器报错则自动回滚。
+
+### 4.2 基础使用：`useQuery` 与 `useMutation`
+
+```tsx
+import React from 'react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+
+interface Todo {
+  id: number;
+  title: string;
+  completed: boolean;
+}
+
+// 获取 Todo 列表
+async function fetchTodos(): Promise<Todo[]> {
+  const res = await fetch('/api/todos');
+  if (!res.ok) throw new Error('网络请求错误');
+  return res.json();
+}
+
+// 新增 Todo
+async function addTodo(newTodo: { title: string }): Promise<Todo> {
+  const res = await fetch('/api/todos', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(newTodo),
+  });
+  return res.json();
+}
+
+export function TodoAppWithReactQuery() {
+  const queryClient = useQueryClient();
+
+  // 1. 查询数据
+  const { data: todos, isLoading, isError, error } = useQuery<Todo[]>({
+    queryKey: ['todos'],
+    queryFn: fetchTodos,
+    staleTime: 1000 * 60 * 5, // 5 分钟内认为数据新鲜，不重复触发网络请求
+  });
+
+  // 2. 变更数据 (Mutation)
+  const mutation = useMutation({
+    mutationFn: addTodo,
+    onSuccess: () => {
+      // 提交成功后使缓存失效，促使列表自动重新拉取最新数据
+      queryClient.invalidateQueries({ queryKey: ['todos'] });
+    },
+  });
+
+  if (isLoading) return <div>数据加载中...</div>;
+  if (isError) return <div>加载失败: {(error as Error).message}</div>;
+
+  return (
+    <div>
+      <button onClick={() => mutation.mutate({ title: '学习 React Query' })}>
+        新增任务
+      </button>
+      <ul>
+        {todos?.map((todo) => (
+          <li key={todo.id}>{todo.title}</li>
+        ))}
+      </ul>
+    </div>
+  );
+}
+```
+
+---
+
+## 5. 架构选型建议
 
 1. **选择 RTK 的场景**：
    - 团队拥有浓厚的经典 Redux 背景，推崇规范的代码一致性。
@@ -208,3 +288,5 @@ function TodoListApp() {
    - 需要在非 React 环境（如纯 vanilla JS、三维可视化 Three.js 事件循环）中随时读写和监听 Store 数据。
 3. **选择 Jotai 的场景**：
    - 应用包含复杂的交互编辑器、多选框拖拽、可视化数据画布（如 Figma 类似的前端结构）。此时传统单 Store 会因一个节点变化导致大范围 Diff 卡顿，使用散落的 Atom 原子直接订阅能精准更新对应 DOM 节点。
+4. **选择 TanStack Query / SWR 的场景**：
+   - 几乎所有现代 React 项目！**强烈推荐**将客户端 UI 状态（如弹窗开关、主题切换存入 Zustand/Context）与服务端 API 数据（存入 React Query）彻底解耦，能大幅减少 60% 以上的模板代码。

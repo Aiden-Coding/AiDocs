@@ -290,10 +290,15 @@ function PatternDemo() {
 }
 ```
 
-### 2.3 状态管理生态
+### 2.3 客户端路由体系
+
+- [React Router 路由体系与架构实践](basic/7-react-router.md)：深入掌握 React Router v6/v7、嵌套路由 (`<Outlet />`)、数据加载 (`loader`/`action`)、路由守卫与动态导航。
+
+### 2.4 状态管理与工程化
 
 - [Context 与 useReducer 模式](advanced/5-context-reducer.md)：Context API 的订阅更新机制、性能陷阱与优化方案；结合 `useReducer` 构建复杂可预测状态机。
-- [状态管理库选型与实践](advanced/6-state-management.md)：对比 Zustand 轻量方案、Redux Toolkit 经典方案、Jotai/Recoil 原子状态方案。
+- [状态管理库选型与实践](advanced/6-state-management.md)：对比 Zustand 轻量方案、Redux Toolkit 经典方案、Jotai/Recoil 原子状态方案，以及 **TanStack Query (React Query)** 服务端状态与数据缓存同步。
+- [React 样式方案与工程化构建](advanced/13-styling-and-build.md)：Tailwind CSS / CSS Modules 样式方案、`ErrorBoundary` 异常捕获与 Vite 构建工程化实战。
 
 #### 💡 核心示例：Zustand 轻量化全局状态管理
 
