@@ -387,7 +387,68 @@ function useOnlineStatus() {
 - **仅用于调试**：`useDebugValue` 不影响组件渲染行为，只在 React DevTools 中可见。
 - **格式化显示**：可以传入第二个参数，将值格式化为更易读的内容，例如 `useDebugValue(value, v => v ? 'ON' : 'OFF')`。
 
-### 10) useId：稳定唯一的标识符
+### 10) useTransition：延迟优先渲染
+
+`useTransition` 用于将某些更新标记为“可延迟”，从而为用户交互保留更高优先级的响应性。它返回一个布尔值 `isPending`，用于指示延迟任务是否仍在挂起。
+
+```tsx
+import { useState, useTransition } from 'react';
+
+function SearchPage() {
+  const [query, setQuery] = useState('');
+  const [isPending, startTransition] = useTransition();
+  const [results, setResults] = useState<string[]>([]);
+
+  const handleChange = (value: string) => {
+    setQuery(value);
+
+    startTransition(() => {
+      const filtered = expensiveSearch(value);
+      setResults(filtered);
+    });
+  };
+
+  return (
+    <div>
+      <input value={query} onChange={e => handleChange(e.target.value)} />
+      {isPending ? <div>加载中...</div> : null}
+      <ul>{results.map(item => <li key={item}>{item}</li>)}</ul>
+    </div>
+  );
+}
+```
+
+- **用途**：当你有高优先级交互（例如输入、点击）和低优先级更新（例如列表过滤、渲染结果）共存时，`useTransition` 能让高优先级更新先响应。
+- **注意**：不要滥用，它不是防抖，而是用于改善 UI 响应性。
+
+### 11) useDeferredValue：推迟值更新
+
+`useDeferredValue` 用于将一个值标记为可延迟更新，React 会优先渲染其他更高优先级的变化，然后在空闲时更新该值。
+
+```tsx
+import { useState, useDeferredValue, useMemo } from 'react';
+
+function SearchResults({ query }: { query: string }) {
+  const deferredQuery = useDeferredValue(query);
+
+  const results = useMemo(() => {
+    return expensiveSearch(deferredQuery);
+  }, [deferredQuery]);
+
+  return (
+    <ul>
+      {results.map(item => (
+        <li key={item}>{item}</li>
+      ))}
+    </ul>
+  );
+}
+```
+
+- **用途**：用于避免 UI 在输入或其他快速变化时被低优先级渲染卡住。
+- **区别于 `useTransition`**：`useTransition` 让你显式创建一个延迟更新的任务，`useDeferredValue` 则让你声明某个值可以在后台更新。
+
+### 12) useId：稳定唯一的标识符
 
 `useId` 是 React 18 引入的 Hook，用于生成在服务端渲染（SSR）和客户端激活（Hydration）之间保持绝对稳定、唯一的 ID。
 
@@ -538,6 +599,8 @@ graph LR
 - [ ] **useLayoutEffect**：理解同步读取布局与 DOM 修改的场景
 - [ ] **useImperativeHandle**：理解如何限制 ref 暴露的实例 API
 - [ ] **useDebugValue**：理解如何为自定义 Hook 添加调试标签
+- [ ] **useTransition**：理解如何将更新标记为可延迟以提升界面响应性
+- [ ] **useDeferredValue**：理解如何推迟值更新以减少渲染阻塞
 - [ ] **Hooks 规则**：理解为什么不能在条件语句中使用Hooks
 - [ ] **闭包陷阱**：理解Hooks闭包问题及解决方案
 
@@ -1030,8 +1093,12 @@ function ResponsiveComponent() {
 | **useContext** | 跨组件消费Context | 避免过度使用导致性能问题 |
 | **useMemo** | 缓存计算结果 | 只在性能优化时使用 |
 | **useCallback** | 缓存函数引用 | 配合 React.memo 使用 |
+| **useReducer** | 复杂状态管理 | 便于测试与 action 驱动更新 |
 | **useLayoutEffect** | 同步DOM操作 | 会阻塞渲染，谨慎使用 |
 | **useImperativeHandle** | 自定义暴露给父组件的 ref 属性/方法 | 配合子组件的 ref 属性使用 |
+| **useDebugValue** | 自定义 Hook 调试标签 | 仅在 DevTools 中可见 |
+| **useTransition** | 延迟优先渲染 | 提升输入与交互响应性 |
+| **useDeferredValue** | 推迟值更新 | 减少低优先级渲染阻塞 |
 | **useId** | 生成 SSR 安全的稳定唯一 ID | 避免 Hydration Mismatch |
 | **useSyncExternalStore** | 订阅外部非 React 状态源 | 解决并发模式下的屏幕“撕裂”问题 |
 | **useInsertionEffect** | 动态注入 CSS 样式表 | 仅供 CSS-in-JS 库在 DOM 突变前使用 |
