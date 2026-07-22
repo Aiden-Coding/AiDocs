@@ -4,9 +4,10 @@
  */
 
 /* ──────────────────────────────────────────────
-   1. Google Fonts Import
+   1. Google Fonts & KaTeX CSS Import
    ────────────────────────────────────────────── */
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Plus+Jakarta+Sans:wght@600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap');
+@import 'katex/dist/katex.min.css';
 
 /* ──────────────────────────────────────────────
    2. Design Token — Light Mode
