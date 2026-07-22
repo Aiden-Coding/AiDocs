@@ -94,12 +94,12 @@ graph TD
 
 | 模块 | 核心内容 | 目标 |
 | :--- | :--- | :--- |
-| **[01. 基础准备](./01-fundamentals/0-readme.md)** | 数学基础（线代/矩阵/维度图解）、Python AI 生态、PyTorch 自动求导与计算图 | 打牢数学与编程底座 |
-| **[02. ML & DL 核心](./02-ml-and-dl/0-readme.md)** | 经典神经网络、Transformer QKV 图书馆比喻、缩放点积算例与完整 PyTorch 实现 | 理解 AI 模型计算本质 |
-| **[03. LLM 大模型](./03-llm-core/0-readme.md)** | Prompt 结构化设计、LoRA 低秩分解直观图解、SFT 端到端微调实战 | 掌握 LLM 定制与优化 |
-| **[04. RAG & 向量库](./04-rag-and-vector/0-readme.md)** | Naive RAG vs Advanced RAG、RRF 多路召回融合算例、真实 Embedding 向量库实战 | 解决大模型幻觉与私有库结合 |
-| **[05. AI Agent 开发](./05-agent-development/0-readme.md)** | Tool Calling 底层解析、LangGraph 状态机图解与死循环防护最佳实践 | 打造可自主规划与调用 Tools 的 AI |
-| **[06. MLOps & LLMOps](./06-mlops-llmops/0-readme.md)** | KV Cache 显存碎片化分析、PagedAttention 原理、Ollama/vLLM 部署与压测 | 实现 AI 应用的生产级高可用部署 |
+| **[01. 基础准备](./01-fundamentals/0-readme.md)** | NumPy/Pandas 科学计算、直观线代与 Softmax 算例、PyTorch 张量与自动求导 | 打牢数学与编程底座 |
+| **[02. ML & DL 核心](./02-ml-and-dl/0-readme.md)** | 经典机器学习 Regression/Classification、手写 MLP 神经网络、Transformer & Self-Attention | 理解 AI 模型计算本质 |
+| **[03. LLM 大模型](./03-llm-core/0-readme.md)** | Prompt 工程与 JSON 提取、Tokenizer 机制与主流架构、LoRA/QLoRA 4-bit 量化微调 | 掌握 LLM 定制与优化 |
+| **[04. RAG & 向量库](./04-rag-and-vector/0-readme.md)** | RAG 基础与 Overlap 文档切分、Chroma 向量数据库实战、混合检索与 Cross-Encoder 重排序 | 解决大模型幻觉与私有库结合 |
+| **[05. AI Agent 开发](./05-agent-development/0-readme.md)** | Agent 四要素与 Tool Calling 机制、ReAct 范式与 LangChain 快速搭建、LangGraph 状态图智能体 | 打造可自主规划与调用 Tools 的 AI |
+| **[06. MLOps & LLMOps](./06-mlops-llmops/0-readme.md)** | Ollama 本地私有化部署、vLLM PagedAttention 推理加速、GGUF/AWQ 量化与服务监控 | 实现 AI 应用的生产级高可用部署 |
 
 ---
 
