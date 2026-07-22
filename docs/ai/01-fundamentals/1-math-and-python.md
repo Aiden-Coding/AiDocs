@@ -1,97 +1,186 @@
 ---
 id: 1-math-and-python
-title: 线性代数、概率论与 Python 科学计算栈
+title: 零基础入门：线性代数、概率论与 Python 科学计算栈
 sidebar_position: 2
 ---
 
-# 线性代数、概率论与 Python 科学计算栈
+# 零基础入门：线性代数、概率论与 Python 科学计算栈
 
-掌握 AI 的底层计算机制，需要理解张量运算、概率推理以及 Python 科学计算核心库的使用。
+如果你刚接触人工智能，看到一堆公式（如 $\sum$、$\mathbf{u} \cdot \mathbf{v}$、$\text{Softmax}$）感到头大，**完全不用担心**！
 
----
+AI 的本质其实就像**制作一道美食**：
+- **数据**（如一句话、一张图片）就是**食材**。
+- **数学**（向量、矩阵）是把食材打碎成计算机看得懂的**数字表格**。
+- **模型**（神经网络）就是**烘焙烤箱**，通过调整温度（参数）烘焙出我们想要的答案。
 
-## 1. 线性代数核心 (Linear Algebra)
-
-在深度学习中，绝大多数计算均可抽象为矩阵与张量（Tensor）运算。
-
-### 1.1 向量与点积 (Vector & Dot Product)
-
-向量是表示高维特征的基本单位。两个 $n$ 维向量 $\mathbf{u}$ 和 $\mathbf{v}$ 的点积计算如下：
-
-$$\mathbf{u} \cdot \mathbf{v} = \sum_{i=1}^{n} u_i v_i = u_1 v_1 + u_2 v_2 + \dots + u_n v_n$$
-
-在 NLP 与 Embedding 相似度计算中，常用**余弦相似度（Cosine Similarity）**：
-
-$$\text{Cosine Similarity}(\mathbf{u}, \mathbf{v}) = \frac{\mathbf{u} \cdot \mathbf{v}}{\|\mathbf{u}\| \|\mathbf{v}\|}$$
-
-### 1.2 矩阵乘法 (Matrix Multiplication)
-
-设矩阵 $A \in \mathbb{R}^{m \times k}$，矩阵 $B \in \mathbb{R}^{k \times n}$，则乘积矩阵 $C = AB \in \mathbb{R}^{m \times n}$：
-
-$$C_{ij} = \sum_{l=1}^{k} A_{il} B_{lj}$$
-
-> 💡 **神经网络映射**：全连接层 $Y = XW + b$ 本质上就是矩阵乘法结合偏置项与激活函数。
+本章将用**最通俗的生活比喻**和**单步拆解的代码**，带你轻松跨过数学与编程门槛！
 
 ---
 
-## 2. 概率论与统计学 (Probability & Statistics)
+## 📚 1. 什么是向量与张量？（小白通俗篇）
 
-### 2.1 条件概率与贝叶斯定理
+### 1.1 标量、向量、矩阵与张量的直观对比
 
-$$\text{P}(A|B) = \frac{\text{P}(B|A)\text{P}(A)}{\text{P}(B)}$$
+很多小白容易被名称搞晕，用生活中的例子一对比就懂了：
 
-在 LLM 生成预测中，大模型根据前面所有 Token（条件 $B$）预测下一个 Token（事件 $A$）的概率分布： $P(w_t | w_1, w_2, \dots, w_{t-1})$。
+| 概念 | 英文 | 通俗理解 | 生活比喻 | 维度 (Rank) |
+| :--- | :--- | :--- | :--- | :--- |
+| **标量** | Scalar | 单个孤立的数字 | 一个人的**身高**：`175` | 0 维 |
+| **向量** | Vector | 一排有序的数字 | 一个人的**名片卡**：`[身高: 175, 体重: 70, 年龄: 25]` | 1 维 |
+| **矩阵** | Matrix | 很多排数字组成的表格 | 全班同学的**名片表格**（多行多列） | 2 维 |
+| **张量** | Tensor | 多张表格叠在一起的**三维/高维数据块** | 包含了全校所有班级、所有同学名片数据的**立体数据册** | 3 维及以上 |
 
-### 2.2 常见概率分布
-
-- **高斯分布 (Gaussian Distribution)**：权重初始化与扩散模型（Diffusion Models）噪声添加的基础。
-- **Softmax 函数**：将高维 logits 转换为概率分布：
-
-$$\text{Softmax}(z_i) = \frac{e^{z_i}}{\sum_{j} e^{z_j}}$$
+```mermaid
+graph LR
+    A["标量 (Scalar)<br/>[175]"] --> B["向量 (Vector)<br/>[175, 70, 25]"]
+    B --> C["矩阵 (Matrix)<br/>[[175, 70],<br/> [165, 55]]"]
+    C --> D["张量 (Tensor)<br/>3D/高维数据块"]
+```
 
 ---
 
-## 3. Python 科学计算栈实战
+### 1.2 向量点积（Dot Product）：计算“相似度”的魔法
 
-### 3.1 NumPy 核心矩阵操作
+#### ❓ 什么是 Embedding（词向量/特征向量）？
+
+在大模型眼里，不管是“苹果”、“香蕉”还是“手机”，计算机都不认识文字。我们需要把文字变成一串有意义的数字（即 **Embedding 向量**）。
+
+例如，我们用 3 个维度（[甜度, 形状圆不圆, 是不是电子产品]）来打分：
+- **苹果**：`[0.9, 0.8, 0.0]`
+- **香蕉**：`[0.8, 0.2, 0.0]`
+- **iPhone**：`[0.0, 0.9, 0.9]`
+
+#### 💡 向量点积怎么算？（对应位置相乘再相加）
+
+计算“苹果”和“香蕉”的关联度：
+
+$$\text{苹果} \cdot \text{香蕉} = (0.9 \times 0.8) + (0.8 \times 0.2) + (0.0 \times 0.0) = 0.72 + 0.16 + 0 = 0.88$$
+
+数值高达 **0.88**，说明它们俩很相似（都是水果）！
+
+如果算“苹果”和“iPhone”：
+
+$$\text{苹果} \cdot \text{iPhone} = (0.9 \times 0.0) + (0.8 \times 0.9) + (0.0 \times 0.9) = 0.72$$
+
+#### 📐 余弦相似度（Cosine Similarity）：排除“干扰”只看角度
+
+有时候一个向量数值特别大（比如文章很长），点积就会虚高。**余弦相似度**做了一步“标准化”，把最终得分约束在 **[-1, 1]** 之间：
+- **1**：完全一样 / 方向相同
+- **0**：毫无关系 / 互相垂直
+- **-1**：完全相反
+
+---
+
+## 🧮 2. 神经网络的核心：矩阵乘法与 Softmax
+
+### 2.1 矩阵乘法 $Y = XW + b$ 拆解
+
+在神经网络里，输入数据 $X$ 乘以权重 $W$，再加上偏置 $b$，就是在做**特征组合**。
+
+假设我们根据学生的 **[平时成绩, 期末成绩]** 预测 **[最终得分]**：
+- 输入 $X = [80, 90]$ （平时 80，期末 90）
+- 权重 $W = \begin{bmatrix} 0.4 \\ 0.6 \end{bmatrix}$ （平时占 40%，期末占 60%）
+- 偏置 $b = 5$ （卷面表现加分 5 分）
+
+计算过程：
+
+$$\text{最终得分} = (80 \times 0.4) + (90 \times 0.6) + 5 = 32 + 54 + 5 = 91$$
+
+如果同时预测全班 100 个学生，把 100 个学生的数据堆成矩阵 $X_{100 \times 2}$，一次矩阵乘法就全部算完了！这就是 GPU 为什么算得这么快的原因。
+
+---
+
+### 2.2 Softmax 函数：把得分变成“百分比概率”
+
+当大模型思考“下一个人名可能是什么”时，模型输出原始打分（Logits），比如：
+- 张三：`4.0`
+- 李四：`1.0`
+- 王五：`0.0`
+
+这些原始打分不好直接比较。**Softmax** 做了两件事：
+1. 通过指数 $e^x$ 把负数全变正数，把差距拉大。
+2. 除以总和，归一化成**百分比概率**（总和恰好等于 100%）。
+
+$$\text{Softmax}(z_i) = \frac{e^{z_i}}{e^{z_1} + e^{z_2} + \dots + e^{z_n}}$$
+
+经过 Softmax 转换后：
+- 张三：`95.2%`（极高概率选张三）
+- 李四：`3.5%`
+- 王五：`1.3%`
+
+---
+
+## 🐍 3. Python 科学计算实战（手把手代码）
+
+### 3.1 NumPy 入门：从零手写向量点积与余弦相似度
+
+不需要复杂算法，用 NumPy 几行代码就能搞定：
 
 ```python
 import numpy as np
 
-# 1. 创建特征矩阵与权重
-X = np.array([[1.0, 2.0], [3.0, 4.0]])  # Shape: (2, 2)
-W = np.array([[0.5], [0.1]])             # Shape: (2, 1)
-b = 0.2
+# 1. 定义两个词的特征向量 (Embedding)
+# 特征维度：[水果概率, 科技产品概率, 价格高低]
+apple_fruit = np.array([0.9, 0.05, 0.2])  # 红富士苹果
+apple_phone = np.array([0.1, 0.95, 0.9])  # 苹果手机
+banana      = np.array([0.85, 0.01, 0.1]) # 香蕉
 
-# 2. 前向传播计算: Y = XW + b
-Y = np.dot(X, W) + b
-print("Output Y:\n", Y)
+# 2. 手写点积函数 (Dot Product)
+def dot_product(v1, v2):
+    return np.sum(v1 * v2) # 对应元素相乘再相加
 
-# 3. 计算余弦相似度
+print("红富士苹果 vs 香蕉 点积:", dot_product(apple_fruit, banana))
+# 输出: 0.785 (高相关度)
+
+# 3. 手写余弦相似度函数 (Cosine Similarity)
 def cosine_similarity(v1, v2):
-    return np.dot(v1, v2) / (np.linalg.norm(v1) * np.linalg.norm(v2))
+    # np.linalg.norm 计算向量的模长 (长度)
+    length1 = np.linalg.norm(v1)
+    length2 = np.linalg.norm(v2)
+    return dot_product(v1, v2) / (length1 * length2)
 
-emb1 = np.array([0.1, 0.8, 0.5])
-emb2 = np.array([0.2, 0.9, 0.4])
-print("Embedding Similarity:", cosine_similarity(emb1, emb2))
+print("红富士苹果 vs 香蕉 相似度:", cosine_similarity(apple_fruit, banana))
+# 输出: 0.998 (方向极度接近)
+
+print("红富士苹果 vs 苹果手机 相似度:", cosine_similarity(apple_fruit, apple_phone))
+# 输出: 0.320 (区分出是不同概念)
 ```
 
-### 3.2 PyTorch 张量与 GPU 加速
+---
+
+### 3.2 PyTorch 入门：理解张量与自动求导 (Autograd)
+
+PyTorch 是目前全球最流行的深度学习框架，它的核心优势有两点：
+1. **可以放进 GPU 显卡**里并行加速。
+2. **会自动求导数**（梯度），让模型学会自动纠错。
 
 ```python
 import torch
 
-# 检查 CUDA GPU 可用性
-device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+# 1. 创建标量与张量
+# requires_grad=True 告诉 PyTorch：请记录对这个变量的运算，一会儿要对它求导！
+x = torch.tensor(3.0, requires_grad=True)
 
-# 创建随机张量并打到 GPU 上
-x = torch.randn(1000, 1000, device=device)
-w = torch.randn(1000, 500, device=device)
+# 2. 模拟一个简单的损失函数: y = x^2 + 2x + 1
+y = x**2 + 2*x + 1
 
-# 自动求导机制 (Autograd)
-x_val = torch.tensor([2.0], requires_grad=True)
-y = x_val ** 2 + 3 * x_val + 1
+# 3. 反向传播 (Backward) - PyTorch 自动求导机制
 y.backward()
 
-print("dy/dx at x=2:", x_val.grad.item())  # 2*x + 3 = 7.0
+# 4. 查看 x 的导数 dy/dx (当 x=3 时，导数 2x + 2 = 8)
+print("x 处的导数/梯度 (grad):", x.grad.item()) # 输出: 8.0
 ```
+
+> 💡 **为什么要求导/梯度？**  
+> 导数代表了“变化趋势”。如果导数是正数，说明 $x$ 增大 $y$ 就会增大；如果想让误差 $y$ 变小，$x$ 就必须减小！这就是深度学习模型**自我调整、不断学习**的核心原理（梯度下降法）。
+
+---
+
+## 🎯 总结复盘
+
+1. **向量** 就是包含多个特征数字的数组，**Embedding** 则是把现实世界的文字/图片映射为向量。
+2. **点积与余弦相似度** 是大模型与 RAG 搜索的核心，用来快速判断两个事物是否相似。
+3. **矩阵乘法 $Y = XW + b$** 是神经网络最核心的算子，GPU 可以并行极速处理。
+4. **Softmax** 把模型的原始打分变成了直观的百分比概率。
+5. **PyTorch** 帮助我们自动完成高维张量运算与梯度求导，是后续学习大模型微调的基础！
+
