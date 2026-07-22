@@ -86,7 +86,7 @@ npm install
 npm run start
 ```
 
-启动后，可在浏览器中访问 `http://localhost:3000` 进行实时预览。
+启动后，可在浏览器中访问 `http://localhost:3000/AiDocsre` 进行实时预览。
 
 ### 3. 编译静态网页
 
