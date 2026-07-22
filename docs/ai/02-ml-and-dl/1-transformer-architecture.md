@@ -62,6 +62,9 @@ graph LR
 将输入的 Embedding 向量 $X$ 分别乘以三个可学习矩阵 $W_Q, W_K, W_V$：
 $$Q = X \cdot W_Q \quad | \quad K = X \cdot W_K \quad | \quad V = X \cdot W_V$$
 
+> ❓ **小白疑问**：为什么不直接用输入 $X$ 去互相算点积，而要多此一举乘以 $W_Q, W_K, W_V$？  
+> 💡 **答案**：因为一个词在不同的上下文中扮演角色不同！$W_Q$ 负责抽取“我想寻找什么”的特征，$W_K$ 负责抽取“我是什么身份”的特征，$W_V$ 负责抽取“我包含什么具体内容”。乘以这三个参数矩阵后，模型就可以在训练过程中自主调整关注视角。
+
 #### 步 2：计算相关性得分（点积）
 用“苹果”的 $Q$ 去和句子里所有词的 $K$ 计算点积（Dot Product）：
 - “苹果” $Q$ $\cdot$ “苹果” $K$ = $8.0$
@@ -69,8 +72,10 @@ $$Q = X \cdot W_Q \quad | \quad K = X \cdot W_K \quad | \quad V = X \cdot W_V$$
 - “苹果” $Q$ $\cdot$ “好吃” $K$ = $6.5$
 
 #### 步 3：除以 $\sqrt{d_k}$ 缩放并做 Softmax（归一化）
-- **为什么要除以 $\sqrt{d_k}$？**：如果向量维度很高（比如 $d_k=64$），点积数值会非常大（如 $80$）。很大数值传入 Softmax 会导致梯度极小（梯度饱和），模型学不动。缩放后能让梯度更稳定。
-- **Softmax**：将得分转化为总和为 1 的百分比（注意力权重）：
+- **数值算例（为什么除以 $\sqrt{d_k}$？）**：假设向量维度 $d_k=64$，$\sqrt{d_k}=8$。如果不除以 8，点积直接输入 Softmax：
+  $$\text{Softmax}([80.0, 15.0, 65.0]) \rightarrow [\mathbf{1.0000}, 0.0000, 0.0000]$$
+  导致概率极其陡峭（Softmax 导数几乎为 0，即**梯度饱和/梯度消失**），模型完全学不动！除以 $\sqrt{64}=8$ 缩放后，点积变为 $[10.0, 1.875, 8.125]$，Softmax 输出平滑变回 $[0.85, 0.01, 0.14]$，梯度恢复健康！
+- **Softmax 归一化**：将缩放后的得分转化为总和为 1 的百分比（注意力权重）：
   $$\text{Softmax}([8.0/\sqrt{d_k}, 1.5/\sqrt{d_k}, 6.5/\sqrt{d_k}]) \rightarrow [\mathbf{0.68}, 0.02, \mathbf{0.30}]$$
 
 #### 步 4：按权重对 $V$ 加权求和
@@ -152,7 +157,9 @@ graph TD
 ### 关键辅助结构：
 - **Masked Self-Attention（掩码自注意力）**：在 Decoder 中，模型生成下一个词时，不能“穿越”偷看后面的词，因此使用上三角掩码（把未来的词得分设为 $-\infty$）。
 - **Residual Connection（残差连接 `Add`）**：$X_{\text{out}} = F(X) + X$，防止层数变深时梯度消失，让深层网络更容易训练。
-- **Layer Normalization（层归一化 `Norm`）**：将每一层神经元的激活值归一化为均值为 0、方差为 1，加速收敛并保持稳定。
+- **Layer Normalization（层归一化 `Norm`）与 BatchNorm 对比**：
+  - **BatchNorm（图像常用）**：在 Batch 维度上独立对所有样本的相同通道做归一化。但在 NLP 领域，不同句子的文本长度各不相同，BatchNorm 会受句子填充（Padding）严重干扰。
+  - **LayerNorm（文本 Transformer 必用）**：在单条样本内部对所有特征维度（Embedding Dim）进行独立归一化，计算不受 Batch 批大小和句子长度变化的干扰，训练极其稳定。
 
 ---
 
@@ -168,7 +175,7 @@ graph TD
 
 ## 💻 7. PyTorch 逐行手把手实现 Self-Attention
 
-下面是用 PyTorch 写的标准带因果掩码的 Self-Attention 模块，带详尽中文注释：
+下面是用 PyTorch 写的标准带因果掩码的 Self-Attention 模块，带详尽中文注释与完整可运行的主函数：
 
 ```python
 import torch
@@ -216,8 +223,30 @@ class SelfAttention(nn.Module):
         return output, attn_weights
 
 
-# --- 测试代码 ---
+# --- 完整单步可运行测试代码 ---
 if __name__ == "__main__":
+    # 模拟输入: 1 批数据, 3 个词 (例如 "苹果 很好 吃"), 词向量维度为 4
+    batch_size = 1
+    seq_len = 3
+    embed_dim = 4
+
+    # 随机生成模拟的 Embedding 输入
+    torch.manual_seed(42)
+    x = torch.randn(batch_size, seq_len, embed_dim)
+    print("输入张量 Shape:", x.shape) # [1, 3, 4]
+
+    # 初始化 SelfAttention 模块
+    attention_layer = SelfAttention(embed_dim=embed_dim)
+
+    # 1. 测试标准双向 Self-Attention (例如 BERT 模式)
+    output, attn_weights = attention_layer(x, causal_mask=False)
+    print("\n[双向 Attention] 输出 Shape:", output.shape)
+    print("[双向 Attention] 权重矩阵:\n", attn_weights[0])
+
+    # 2. 测试因果掩码 Self-Attention (例如 GPT 模式，不能看未生成的后文)
+    output_causal, attn_weights_causal = attention_layer(x, causal_mask=True)
+    print("\n[因果 Masked Attention] 权重矩阵 (注意右上角全为 0):\n", attn_weights_causal[0])
+```
     # 模拟输入数据: Batch大小为2，序列长度为5（5个词），每个词的向量维度为64
     batch_size = 2
     seq_len = 5

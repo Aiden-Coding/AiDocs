@@ -14,6 +14,18 @@ sidebar_position: 2
 
 ### 7 月
 
+#### ⚡ [重构] 全栈 AI 模块小白无痛入门全面重构与升级
+
+- **影响/发布专题**：重构 [docs/ai/](ai/0-readme.md) 下全部 7 篇 AI 技术文档。
+- **核心升级与优化细节**：
+  - [AI 学习路线导航](ai/0-readme.md)：新增零基础小白“应用 $\rightarrow$ 理论 $\rightarrow$ 业务 $\rightarrow$ 微调”四步走路线图、硬件显存与依赖指南，及高频 AI 术语“小白通俗字典”。
+  - [基础数学与 Python](ai/01-fundamentals/1-math-and-python.md)：补充矩阵乘法 $Y = XW + b$ 的维度匹配图解与广播机制（Broadcasting）算例，拆解 PyTorch 计算图与自动求导（Autograd）机制。
+  - [Transformer 架构](ai/02-ml-and-dl/1-transformer-architecture.md)：补充 $W_Q, W_K, W_V$ 投影矩阵物理意义、缩放因子 $\sqrt{d_k}$ 防止梯度饱和的数值算例、LayerNorm vs BatchNorm 对比，并补全单步运行的 PyTorch Attention 代码。
+  - [Prompt 与微调](ai/03-llm-core/1-prompt-and-finetuning.md)：拆解 LoRA 低秩矩阵分解公式与参数意义，提供包含数据集格式化、4-bit NF4 量化与 `SFTTrainer` 的端到端微调实战代码。
+  - [进阶 RAG 架构](ai/04-rag-and-vector/1-advanced-rag-pipeline.md)：新增基础 RAG vs 进阶 RAG 对比、RRF 排序融合计算示例，接入 `sentence-transformers` 真实向量进行内存版 Qdrant 实战。
+  - [ReAct Agent 与 LangGraph](ai/05-agent-development/1-react-agent-and-langgraph.md)：图解大模型 Tool Calling 底层通信原理、拆解 LangGraph 状态机语法，增加 Agent 死循环防护最佳实践。
+  - [推理加速与 MLOps](ai/06-mlops-llmops/1-vllm-and-ollama.md)：通俗拆解 KV Cache 显存碎片化与 PagedAttention 虚拟页表原理，新增 TTFT/TPS 评测指标与 vLLM/Ollama 部署代码。
+
 #### ✨ [新增] 2026 Java 后端核心考点突击指南
 
 - **发布专题**：新增 [interview/java/0-intro.md](interview/java/0-intro.md)，涵盖全新 70 道大厂高频面试真题与源码级解构。
