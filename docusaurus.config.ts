@@ -94,6 +94,12 @@ const config: Config = {
         },
         {
           type: 'docSidebar',
+          sidebarId: 'aiSidebar',
+          position: 'left',
+          label: 'AI / 人工智能',
+        },
+        {
+          type: 'docSidebar',
           sidebarId: 'interviewSidebar',
           position: 'left',
           label: '面试',
