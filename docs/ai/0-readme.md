@@ -23,27 +23,27 @@ graph TD
     A --> F[05. AI Agent 智能体开发]
     A --> G[06. MLOps & LLMOps]
 
-    B --> B1[线性代数/概率论/微积分]
-    B --> B2[Python 科学计算 NumPy/Pandas]
-    B --> B3[PyTorch / TensorFlow 深度学习框架]
+    B --> B1["线性代数/概率论/微积分"]
+    B --> B2["Python 科学计算 NumPy/Pandas"]
+    B --> B3["PyTorch / TensorFlow 深度学习框架"]
 
-    C --> C1[经典 ML: 线性回归/决策树/SVM]
-    C --> C2[深度学习: CNN / RNN / Attention]
+    C --> C1["经典 ML: 线性回归/决策树/SVM"]
+    C --> C2["深度学习: CNN / RNN / Attention"]
     C --> C3[Transformer 架构原理]
 
     D --> D1[Prompt 工程与提示词设计]
-    D --> D2[微调技术: LoRA / QLoRA / P-Tuning]
-    D --> D3[模型评估与对齐 RLHF / DPO]
+    D --> D2["微调技术: LoRA / QLoRA / P-Tuning"]
+    D --> D3["模型评估与对齐 RLHF / DPO"]
 
-    E --> E1[RAG 架构: Chunking / Embedding]
-    E --> E2[向量数据库: Milvus / Chroma / Qdrant]
+    E --> E1["RAG 架构: Chunking / Embedding"]
+    E --> E2["向量数据库: Milvus / Chroma / Qdrant"]
     E --> E3[重排序 Rerank 与混合检索]
 
     F --> F1[Agent 单体架构与 ReAct 模式]
-    F --> F2[框架选型: LangChain / LlamaIndex / LangGraph]
-    F --> F3[多智能体协同: AutoGen / CrewAI]
+    F --> F2["框架选型: LangChain / LlamaIndex / LangGraph"]
+    F --> F3["多智能体协同: AutoGen / CrewAI"]
 
-    G --> G1[推理加速: vLLM / Ollama / TensorRT-LLM]
+    G --> G1["推理加速: vLLM / Ollama / TensorRT-LLM"]
     G --> G2[LLM 监控、Guardrails 与量化]
 ```
 

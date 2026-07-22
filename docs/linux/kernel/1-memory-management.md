@@ -220,7 +220,7 @@ graph LR
     E[write 系统调用] --> F[写入 Page Cache]
     F --> G[标记为 Dirty 页]
     G --> H{定期 or sync}
-    H --> I[pdflush/kworker 写回磁盘]
+    H --> I["pdflush/kworker 写回磁盘"]
 ```
 
 ```bash

@@ -21,9 +21,9 @@ graph TD
     Browser[浏览器主进程 Browser Process] -->|控制协调| GPU[GPU 进程 GPU Process]
     Browser -->|安全沙箱沙化| Renderer[渲染进程 Renderer Process]
     Browser -->|网络请求| Network[网络进程 Network Process]
-    Renderer -->|主线程| MainThread[GUI 渲染 / JS 执行 / Event Loop]
+    Renderer -->|主线程| MainThread["GUI 渲染 / JS 执行 / Event Loop"]
     Renderer -->|工作线程| WorkerThread[Web Workers]
-    Renderer -->|合成线程| CompositorThread[Compositor / Raster]
+    Renderer -->|合成线程| CompositorThread["Compositor / Raster"]
 ```
 
 * **浏览器主进程 (Browser Process)**：控制应用生命周期的标签页创建、销毁，负责浏览器界面（Chrome）的地址栏、书签栏、后退按钮等，并协调其他子进程的工作。
@@ -41,11 +41,11 @@ graph TD
 flowchart TD
     HTML[HTML 字节] -->|Tokenize & Parse| DOM[DOM 树]
     CSS[CSS 字节] -->|Parse Style| CSSOM[CSSOM 树]
-    DOM -->|Attachment| RenderTree[Render Tree / Layout Tree]
+    DOM -->|Attachment| RenderTree["Render Tree / Layout Tree"]
     CSSOM -->|Attachment| RenderTree
-    RenderTree -->|Layout / Reflow| Layout[Layout / 几何几何计算]
-    Layout -->|Paint / Record| Paint[Paint / 绘制记录与图层拆分]
-    Paint -->|Raster / Tiles| Raster[Rasterization / 栅格化]
+    RenderTree -->|"Layout / Reflow"| Layout["Layout / 几何几何计算"]
+    Layout -->|"Paint / Record"| Paint["Paint / 绘制记录与图层拆分"]
+    Paint -->|"Raster / Tiles"| Raster["Rasterization / 栅格化"]
     Raster -->|GPU Composite| GPUFrames[屏幕像素输出]
 ```
 

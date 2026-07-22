@@ -140,12 +140,12 @@ sequenceDiagram
 
 ```mermaid
 graph LR
-    A[业务系统] -->|1. 写操作| B[(MySQL)]
+    A[业务系统] -->|1. 写操作| B["(MySQL)"]
     B -->|2. 产生| C[Binlog]
     C -->|3. 订阅| D[Canal 伪装成 Slave]
     D -->|4. 解析并发送| E[MQ 消息队列]
     F[缓存更新服务] -->|5. 消费消息| E
-    F -->|6. 删除/更新| G[(Redis)]
+    F -->|"6. 删除/更新"| G["(Redis)"]
 ```
 
 1. 业务系统只管更新 MySQL，不直接操作 Redis。

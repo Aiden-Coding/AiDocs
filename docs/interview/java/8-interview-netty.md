@@ -42,8 +42,8 @@ flowchart TB
       S2 --> W2
     end
     subgraph 主从多线程
-      M[MainReactor: 只 accept]
-      Sub[SubReactor: 读写]
+      M["MainReactor: 只 accept"]
+      Sub["SubReactor: 读写"]
       Biz[业务线程池可选]
       M --> Sub --> Biz
     end

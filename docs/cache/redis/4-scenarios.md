@@ -33,8 +33,8 @@ sidebar_label: 缓存实战与分布式锁
 ```mermaid
 graph TD
     A[请求 Key] --> B{布隆过滤器判定是否存在?}
-    B -->|否: 一定不存在| C[直接返回 Null / 拦截]
-    B -->|是: 可能存在| D[查询 Redis / DB]
+    B -->|"否: 一定不存在"| C["直接返回 Null / 拦截"]
+    B -->|"是: 可能存在"| D["查询 Redis / DB"]
 ```
 
 ---

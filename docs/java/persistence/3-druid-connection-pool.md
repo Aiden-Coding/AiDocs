@@ -23,9 +23,9 @@ graph TD
     UserSQL[1. 待执行 SQL 语句] -->|拦截拦截| WallFilter[2. Druid WallFilter]
     WallFilter -->|词法与语法剖析| Parser[3. SQLParser 引擎]
     Parser -->|生成解耦结构| AST[4. 抽象语法树 Abstract Syntax Tree]
-    AST -->|5. 自定义规则链校验: 探测是否存在非法拼接或恶意注释| Rules{6. 规则链判定}
+    AST -->|"5. 自定义规则链校验: 探测是否存在非法拼接或恶意注释"| Rules{6. 规则链判定}
     Rules -->|安全无害| JDBC[7. 完美放行 - 交付 PreparedStatement 执行]
-    Rules -->|发现非法注入/注释破坏/拖库语句| Deny[8. 直接抛出 SQLWallException 强力阻断]
+    Rules -->|"发现非法注入/注释破坏/拖库语句"| Deny[8. 直接抛出 SQLWallException 强力阻断]
     style Deny fill:#f9f,stroke:#333,stroke-width:2px
 ```
 

@@ -100,7 +100,7 @@ graph TD
     A[执行 DML 修改二级索引] --> B{二级索引页在内存中?}
     B -->|Yes| C[直接修改内存中的索引页]
     B -->|No| D[将修改操作缓存在 Change Buffer]
-    D --> E[异步 Master 线程 / 后续读操作加载该页时 Merge]
+    D --> E["异步 Master 线程 / 后续读操作加载该页时 Merge"]
 ```
 
 ### 1. 为什么唯一索引（Unique Index）无法使用 Change Buffer？

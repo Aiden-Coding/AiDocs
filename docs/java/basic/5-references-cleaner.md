@@ -196,7 +196,7 @@ graph LR
     end
     DBB -->|address 执存虚拟地址| NativeMem
     Ref -->|referent 虚引用追踪| DBB
-    Ref -->|内置 clean() 执行器| CleanAction[Deallocator 底层调用]
+    Ref -->|"内置 clean() 执行器"| CleanAction[Deallocator 底层调用]
 ```
 
 ### 2. 回收链路的闭环流转

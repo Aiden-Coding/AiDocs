@@ -53,7 +53,7 @@ JVM 中存在多种类加载器，它们之间呈树状层次结构：
 
 ```mermaid
 graph TD
-    A[Bootstrap ClassLoader 启动类加载器] --> B[Extension ClassLoader 扩展类加载器 / Platform ClassLoader]
+    A[Bootstrap ClassLoader 启动类加载器] --> B["Extension ClassLoader 扩展类加载器 / Platform ClassLoader"]
     B --> C[Application ClassLoader 应用程序类加载器]
     C --> D[Custom ClassLoader 自定义类加载器]
 ```

@@ -66,7 +66,7 @@ finally { permits.release(); }
 
 ```mermaid
 graph LR
-    A[acquire] --> B{state > 0 ?}
+    A[acquire] --> B{"state > 0 ?"}
     B -->|是| C[CAS state-1]
     B -->|否| D[入队阻塞]
     C -->|成功| E[进入临界区]

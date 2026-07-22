@@ -14,18 +14,18 @@ sidebar_label: Context 刷新流程解析
 
 ```mermaid
 graph TD
-    Start[refresh 开始] --> P1[1. prepareRefresh<br/>环境准备]
-    P1 --> P2[2. obtainFreshBeanFactory<br/>创建/获取内部 BeanFactory]
-    P2 --> P3[3. prepareBeanFactory<br/>配置工厂标准特性]
-    P3 --> P4[4. postProcessBeanFactory<br/>子类扩展钩子]
-    P4 --> P5[5. invokeBeanFactoryPostProcessors<br/>激活两类工厂后置处理器]
-    P5 --> P6[6. registerBeanPostProcessors<br/>注册 Bean 拦截后置处理器]
-    P6 --> P7[7. initMessageSource<br/>初始化国际化组件]
-    P7 --> P8[8. initApplicationEventMulticaster<br/>初始化事件广播器]
-    P8 --> P9[9. onRefresh<br/>模板方法: 如启动 Web 容器]
-    P9 --> P10[10. registerListeners<br/>注册并广播早期事件]
-    P10 --> P11[11. finishBeanFactoryInitialization<br/>实例化所有非懒加载单例]
-    P11 --> P12[12. finishRefresh<br/>清理缓存并发布完成事件]
+    Start[refresh 开始] --> P1["1. prepareRefresh<br/>环境准备"]
+    P1 --> P2["2. obtainFreshBeanFactory<br/>创建/获取内部 BeanFactory"]
+    P2 --> P3["3. prepareBeanFactory<br/>配置工厂标准特性"]
+    P3 --> P4["4. postProcessBeanFactory<br/>子类扩展钩子"]
+    P4 --> P5["5. invokeBeanFactoryPostProcessors<br/>激活两类工厂后置处理器"]
+    P5 --> P6["6. registerBeanPostProcessors<br/>注册 Bean 拦截后置处理器"]
+    P6 --> P7["7. initMessageSource<br/>初始化国际化组件"]
+    P7 --> P8["8. initApplicationEventMulticaster<br/>初始化事件广播器"]
+    P8 --> P9["9. onRefresh<br/>模板方法: 如启动 Web 容器"]
+    P9 --> P10["10. registerListeners<br/>注册并广播早期事件"]
+    P10 --> P11["11. finishBeanFactoryInitialization<br/>实例化所有非懒加载单例"]
+    P11 --> P12["12. finishRefresh<br/>清理缓存并发布完成事件"]
     P12 --> End[refresh 结束]
 
     style P5 fill:#ffeedd,stroke:#ff9900,stroke-width:2px
@@ -81,7 +81,7 @@ graph TD
     Step2 --> Step3[3. 执行其余常规的 RegistryPostProcessors]
     Step3 --> Step4[4. 循环迭代执行在执行过程中新注册的 RegistryPostProcessors]
     Step4 --> Step5[5. 触发上述所有处理器的 postProcessBeanFactory 回调]
-    Step5 --> Step6[6. 依次对常规 BeanFactoryPostProcessor 进行 PriorityOrdered/Ordered/常规 排序并执行]
+    Step5 --> Step6["6. 依次对常规 BeanFactoryPostProcessor 进行 PriorityOrdered/Ordered/常规 排序并执行"]
     Step6 --> End[结束]
 ```
 

@@ -98,7 +98,7 @@ Spring AOP 支持两种动态代理技术：
 
 ```mermaid
 graph TD
-    Start[AOP 代理创建] --> Cond{目标类是否配置了 proxyTargetClass <br/> 或未实现任何接口?}
+    Start[AOP 代理创建] --> Cond{"目标类是否配置了 proxyTargetClass <br/> 或未实现任何接口?"}
     Cond -->|Yes| CGLIB[使用 CGLIB 动态代理]
     Cond -->|No| JDK[使用 JDK 动态代理]
 ```

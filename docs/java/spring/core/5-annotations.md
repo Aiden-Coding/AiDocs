@@ -86,11 +86,11 @@ public @interface Configuration {
 
 ```mermaid
 graph TD
-    Start[方法 A 调用 B()] --> ProxyCheck{配置类是否为 CGLIB 代理?}
-    ProxyCheck -->|Yes: Full 模式| Intercept[CGLIB 拦截器介入]
-    Intercept --> GetBean[从 IoC 容器中 getBean('B')]
+    Start["方法 A 调用 B()"] --> ProxyCheck{配置类是否为 CGLIB 代理?}
+    ProxyCheck -->|"Yes: Full 模式"| Intercept[CGLIB 拦截器介入]
+    Intercept --> GetBean["从 IoC 容器中 getBean('B')"]
     
-    ProxyCheck -->|No: Lite 模式| ExecMethod[直接执行 B() 的 Java 方法体]
+    ProxyCheck -->|"No: Lite 模式"| ExecMethod["直接执行 B() 的 Java 方法体"]
     ExecMethod --> NewObj[产生全新的普通 Java 对象]
 ```
 

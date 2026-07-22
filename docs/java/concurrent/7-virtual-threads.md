@@ -68,7 +68,7 @@ graph TD
     VT1[Virtual Thread 1] -->|调度挂载| CT1[Carrier Thread A]
     VT2[Virtual Thread 2] -->|调度挂载| CT1
     VT3[Virtual Thread 3] -->|调度挂载| CT2[Carrier Thread B]
-    CT1 & CT2 -->|1:1 映射| OST[OS Kernel Thread]
+    CT1 & CT2 -->|"1:1 映射"| OST[OS Kernel Thread]
 ```
 
 ### 2. 挂载（Mount）与卸载（Unmount）

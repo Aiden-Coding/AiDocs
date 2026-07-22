@@ -96,9 +96,9 @@ graph LR
         Q2["双端队列 2 (Deque)"]
     end
 
-    W1 -->|LIFO: 头部 Push/Pop| Q1
-    W2 -->|LIFO: 头部 Push/Pop| Q2
-    W2 -.->|FIFO: 尾部 Steal 窃取| Q1
+    W1 -->|"LIFO: 头部 Push/Pop"| Q1
+    W2 -->|"LIFO: 头部 Push/Pop"| Q2
+    W2 -.->|"FIFO: 尾部 Steal 窃取"| Q1
 ```
 
 - **本地操作（LIFO/后进先出）**：工作线程 1 自己产生的子任务（通过 `fork()` 提交）会放入自己队列的**头部**。线程 1 也会优先从自己队列的**头部**获取任务执行。

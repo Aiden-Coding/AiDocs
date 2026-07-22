@@ -55,9 +55,9 @@ sidebar_label: HashMap/CHM 源码解析
 ```mermaid
 graph TD
     subgraph ConcurrentHashMap JDK 7
-        CHM[ConcurrentHashMap] --> Seg0[Segment 0 / ReentrantLock]
-        CHM --> Seg1[Segment 1 / ReentrantLock]
-        CHM --> Seg15[Segment 15 / ReentrantLock]
+        CHM[ConcurrentHashMap] --> Seg0["Segment 0 / ReentrantLock"]
+        CHM --> Seg1["Segment 1 / ReentrantLock"]
+        CHM --> Seg15["Segment 15 / ReentrantLock"]
         
         Seg0 --> Table0[HashEntry 数组]
         Seg1 --> Table1[HashEntry 数组]
@@ -76,9 +76,9 @@ graph TD
 ```mermaid
 graph TD
     subgraph ConcurrentHashMap JDK 8
-        Array[Node 数组] --> Bin0[Node 0: synchronized]
-        Array --> Bin1[Node 1: synchronized]
-        Array --> Bin2[Node 2: CAS / 空桶]
+        Array[Node 数组] --> Bin0["Node 0: synchronized"]
+        Array --> Bin1["Node 1: synchronized"]
+        Array --> Bin2["Node 2: CAS / 空桶"]
         
         Bin0 --> NodeA[Node] --> NodeB[Node]
     end

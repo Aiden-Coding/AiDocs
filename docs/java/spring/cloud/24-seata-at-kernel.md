@@ -22,11 +22,11 @@ sidebar_label: Seata AT 事务内核
 
 ```mermaid
 flowchart LR
-    TM -->|begin/commit/rollback| TC
-    RM1[RM 订单库] -->|register/branch report| TC
-    RM2[RM 库存库] -->|register/branch report| TC
-    RM1 --> DB1[(order DB)]
-    RM2 --> DB2[(stock DB)]
+    TM -->|"begin/commit/rollback"| TC
+    RM1["RM 订单库"] -->|"register/branch report"| TC
+    RM2["RM 库存库"] -->|"register/branch report"| TC
+    RM1 --> DB1["("order DB")"]
+    RM2 --> DB2["("stock DB")"]
 ```
 
 全局事务 ID：`XID`。分支事务 ID：`branchId`。跨服务调用需把 `XID` 写入 RPC 上下文（Seata 对 Feign/Dubbo 有拦截器自动透传）。

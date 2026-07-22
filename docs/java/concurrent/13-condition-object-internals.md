@@ -21,11 +21,11 @@ AQS 内部实际上共存着两种物理链接队列：
 ```mermaid
 graph TD
     subgraph AQS 同步队列 (Sync Queue - 双向)
-        Head[Head / Dummy Node] <--> NodeA[Node A: Thread X] <--> NodeB[Node B: Thread Y] <--> Tail[Tail]
+        Head["Head / Dummy Node"] <--> NodeA["Node A: Thread X"] <--> NodeB["Node B: Thread Y"] <--> Tail[Tail]
     end
 
     subgraph ConditionObject 等待队列 (Condition Queue - 单向)
-        FirstWaiter[firstWaiter: Thread P] --> NextWaiter[Node Q: Thread Q] --> LastWaiter[lastWaiter: Thread R]
+        FirstWaiter["firstWaiter: Thread P"] --> NextWaiter["Node Q: Thread Q"] --> LastWaiter["lastWaiter: Thread R"]
     end
 
     NodeA -.->|fullyRelease 释放锁| Head

@@ -21,9 +21,9 @@ graph LR
     A -->|3. Flink 2.0 异步读写| D[ForSt DB 存算分离状态后端]
     
     B -->|内存| RAM[JVM 堆内存]
-    C -->|本地磁盘 / 异步后台刷盘| RocksDB[C++ 嵌入式 RocksDB SST]
+    C -->|"本地磁盘 / 异步后台刷盘"| RocksDB[C++ 嵌入式 RocksDB SST]
     D -->|极轻量本地 Cache| Local[本地 NVMe]
-    D -->|OAP 异步远程文件系统| DFS[(DFS 远程如 S3 / HDFS)]
+    D -->|OAP 异步远程文件系统| DFS["(DFS 远程如 S3 / HDFS)"]
 ```
 
 ### 1. 传统的两种选择：配置选型与调优
@@ -83,12 +83,12 @@ sequenceDiagram
 ```mermaid
 graph TD
     subgraph Flink Cluster [Flink 运行时]
-        Input[Source: Kafka Consumer] -->|解析 Offset| Logic[State Logic]
-        Logic -->|双阶段控制| Output[Sink: Kafka Producer 开启事务]
+        Input["Source: Kafka Consumer"] -->|解析 Offset| Logic[State Logic]
+        Logic -->|双阶段控制| Output["Sink: Kafka Producer 开启事务"]
     end
 
     KafkaSrc[Kafka Source Topic] -->|1. 触发 Offset 读取| Input
-    Output -->|2. 在 Checkpoint 100 期间写入数据到事务| KafkaDest[(Kafka Destination Topic: 事务未提交状态)]
+    Output -->|2. 在 Checkpoint 100 期间写入数据到事务| KafkaDest["(Kafka Destination Topic: 事务未提交状态)"]
     JM_Coord[JobMaster 触发屏障对齐完成] -.->|3. 成功落盘| Output
     Output -->|4. 协调者调用 commit| KafkaDest
 ```

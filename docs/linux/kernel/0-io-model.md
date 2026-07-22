@@ -31,7 +31,7 @@ graph LR
         B2 -- 是 --> B4[内核→用户拷贝] --> B5[返回]
     end
     subgraph "I/O 多路复用"
-        C1[select/poll/epoll 等待] --> C2[某 fd 就绪] --> C3[调用 recvfrom] --> C4[内核→用户拷贝] --> C5[返回]
+        C1["select/poll/epoll 等待"] --> C2[某 fd 就绪] --> C3[调用 recvfrom] --> C4[内核→用户拷贝] --> C5[返回]
     end
     subgraph "信号驱动 I/O"
         D1[注册 SIGIO 信号处理器] --> D2[内核：数据就绪发送 SIGIO]

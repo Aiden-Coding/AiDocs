@@ -23,7 +23,7 @@ flowchart TB
     BFPP --> INST[实例化 Bean]
     INST --> AWARE[Aware 回调]
     AWARE --> BPP_B[BeanPostProcessor before]
-    BPP_B --> INIT[init-method / InitializingBean]
+    BPP_B --> INIT["init-method / InitializingBean"]
     INIT --> BPP_A[BeanPostProcessor after]
     BPP_A --> READY[单例可用]
 ```

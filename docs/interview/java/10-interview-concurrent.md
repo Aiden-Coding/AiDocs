@@ -86,12 +86,12 @@ sequenceDiagram
 ```mermaid
 graph LR
     subgraph "Volatile 写入操作"
-        StoreStore[StoreStore Barrier<br/>防范上方普通写与 volatile 写重排] --> VolatileStore[volatile Store]
-        VolatileStore --> StoreLoad[StoreLoad Barrier<br/>防范此处 volatile 写与下方任何读写重排]
+        StoreStore["StoreStore Barrier<br/>防范上方普通写与 volatile 写重排"] --> VolatileStore[volatile Store]
+        VolatileStore --> StoreLoad["StoreLoad Barrier<br/>防范此处 volatile 写与下方任何读写重排"]
     end
     subgraph "Volatile 读取操作"
-        VolatileLoad[volatile Load] --> LoadLoad[LoadLoad Barrier<br/>防范此处 volatile 读与下方任何读重排]
-        LoadLoad --> LoadStore[LoadStore Barrier<br/>防范此处 volatile 读与下方任何普通写重排]
+        VolatileLoad[volatile Load] --> LoadLoad["LoadLoad Barrier<br/>防范此处 volatile 读与下方任何读重排"]
+        LoadLoad --> LoadStore["LoadStore Barrier<br/>防范此处 volatile 读与下方任何普通写重排"]
     end
 ```
 
@@ -113,11 +113,11 @@ graph LR
 
 ```mermaid
 graph TD
-    Task[提交新任务] --> Core{当前活动线程数 < corePoolSize?}
+    Task[提交新任务] --> Core{"当前活动线程数 < corePoolSize?"}
     Core -- 是 --> CreateCore[创建 core 线程并执行任务]
     Core -- 否 --> Queue{向 workQueue 阻塞队列加入任务能否成功?}
     Queue -- 是 --> Buffer[任务排队缓冲等待]
-    Queue -- 否 --> Max{当前活动线程数 < maximumPoolSize?}
+    Queue -- 否 --> Max{"当前活动线程数 < maximumPoolSize?"}
     Max -- 是 --> CreateNonCore[创建非核心临时线程并执行任务]
     Max -- 否 --> Reject[执行 RejectedExecutionHandler 拒绝策略]
 ```

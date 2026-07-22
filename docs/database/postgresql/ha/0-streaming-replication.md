@@ -43,7 +43,7 @@ $PGDATA/pg_wal/
 ```mermaid
 graph LR
     subgraph "Primary"
-        W[WAL Writer] --> WF[WAL 文件 pg_wal/]
+        W[WAL Writer] --> WF["WAL 文件 pg_wal/"]
         WS[WAL Sender 进程]
         WF --> WS
     end

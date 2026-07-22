@@ -11,10 +11,10 @@ sidebar_label: 生产故障排障案例
 ```mermaid
 graph TD
     A[生产故障报警] --> B{故障分类}
-    B --> |元空间OOM| C[案例一: Groovy 脚本导致 Metaspace 溢出]
-    B --> |进程被 OS 杀掉| D[案例二: Netty 堆外内存泄露]
-    B --> |CPU 100% 死循环| E[案例三: 并发 HashMap 环形链表]
-    B --> |老年代频繁 Full GC| F[案例四: ThreadLocal 线程池内存泄漏]
+    B --> |元空间OOM| C["案例一: Groovy 脚本导致 Metaspace 溢出"]
+    B --> |进程被 OS 杀掉| D["案例二: Netty 堆外内存泄露"]
+    B --> |CPU 100% 死循环| E["案例三: 并发 HashMap 环形链表"]
+    B --> |老年代频繁 Full GC| F["案例四: ThreadLocal 线程池内存泄漏"]
 ```
 
 ---

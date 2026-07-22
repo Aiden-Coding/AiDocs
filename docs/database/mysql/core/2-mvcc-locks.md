@@ -32,8 +32,8 @@ MVCC 的实现主要依赖于：**隐藏字段**、**Undo Log（回滚日志）*
 
 ```mermaid
 graph TD
-    A[当前记录: name='Jack', trx_id=30] -->|roll_ptr| B[Undo Log 1: name='Tom', trx_id=20]
-    B -->|roll_ptr| C[Undo Log 2: name='Rose', trx_id=10]
+    A["当前记录: name='Jack', trx_id=30"] -->|roll_ptr| B["Undo Log 1: name='Tom', trx_id=20"]
+    B -->|roll_ptr| C["Undo Log 2: name='Rose', trx_id=10"]
 ```
 
 **ReadView（一致性视图）**：

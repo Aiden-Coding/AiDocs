@@ -34,9 +34,9 @@ MyBatis 的本质是一个 **半自动 ORM** 框架：用配置或注解把 Java
 
 ```mermaid
 flowchart TD
-    A[mybatis-config.xml / 注解] --> B[XMLConfigBuilder]
+    A["mybatis-config.xml / 注解"] --> B[XMLConfigBuilder]
     B --> C[Configuration 全局配置]
-    C --> D[解析 environments / typeHandlers / mappers]
+    C --> D["解析 environments / typeHandlers / mappers"]
     D --> E[Mapper XML → MappedStatement]
     E --> F[SqlSessionFactoryBuilder.build]
     F --> G[DefaultSqlSessionFactory]

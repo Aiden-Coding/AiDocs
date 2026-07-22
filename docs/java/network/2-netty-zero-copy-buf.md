@@ -18,10 +18,10 @@ sidebar_label: Netty 内存管理与零拷贝
 
 ```mermaid
 graph TD
-    ZC[Netty 零拷贝] --> ZC1[堆内外零拷贝: DirectByteBuf]
-    ZC --> ZC2[容器层逻辑复合零拷贝: CompositeByteBuf]
-    ZC --> ZC3[字节包装零拷贝: Unpooled.wrappedBuffer]
-    ZC --> ZC4[系统级零拷贝: FileRegion / TransferTo]
+    ZC[Netty 零拷贝] --> ZC1["堆内外零拷贝: DirectByteBuf"]
+    ZC --> ZC2["容器层逻辑复合零拷贝: CompositeByteBuf"]
+    ZC --> ZC3["字节包装零拷贝: Unpooled.wrappedBuffer"]
+    ZC --> ZC4["系统级零拷贝: FileRegion / TransferTo"]
 ```
 
 ### 1. 堆外直接内存零拷贝（DirectByteBuf）

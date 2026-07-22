@@ -16,16 +16,16 @@ Spring Bean 的生命周期是 Spring 框架中最核心的知识点之一，也
 
 ```mermaid
 graph TD
-    A[开始] --> B[实例化前: InstantiationAwareBeanPostProcessor.postProcessBeforeInstantiation]
-    B --> C[实例化: createBeanInstance]
-    C --> D[实例化后: InstantiationAwareBeanPostProcessor.postProcessAfterInstantiation]
-    D --> E[属性赋值前: InstantiationAwareBeanPostProcessor.postProcessProperties]
-    E --> F[属性赋值: populateBean]
+    A[开始] --> B["实例化前: InstantiationAwareBeanPostProcessor.postProcessBeforeInstantiation"]
+    B --> C["实例化: createBeanInstance"]
+    C --> D["实例化后: InstantiationAwareBeanPostProcessor.postProcessAfterInstantiation"]
+    D --> E["属性赋值前: InstantiationAwareBeanPostProcessor.postProcessProperties"]
+    E --> F["属性赋值: populateBean"]
     F --> G[Aware 接口回调]
-    G --> H[初始化前: BeanPostProcessor.postProcessBeforeInitialization]
+    G --> H["初始化前: BeanPostProcessor.postProcessBeforeInitialization"]
     H --> I[InitializingBean.afterPropertiesSet]
     I --> J[自定义 init-method]
-    J --> K[初始化后: BeanPostProcessor.postProcessAfterInitialization]
+    J --> K["初始化后: BeanPostProcessor.postProcessAfterInitialization"]
     K --> L[Bean 可用]
     L --> M[容器关闭]
     M --> N[DisposableBean.destroy]

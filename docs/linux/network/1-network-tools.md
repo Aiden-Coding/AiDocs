@@ -238,16 +238,16 @@ perf record -F 99 -a -g -- sleep 30
 ```mermaid
 graph TD
     A[连接问题] --> B{能 ping 通?}
-    B -- 否 --> C[检查路由: ip route / traceroute]
+    B -- 否 --> C["检查路由: ip route / traceroute"]
     B -- 是 --> D{端口能连通?}
-    D -- 否 --> E[检查防火墙: iptables -L -n]
-    E --> F[检查服务是否监听: ss -tlnp]
+    D -- 否 --> E["检查防火墙: iptables -L -n"]
+    E --> F["检查服务是否监听: ss -tlnp"]
     D -- 是 --> G{连接建立后有数据?}
     G -- 否 --> H[tcpdump 抓包分析]
     H --> I{有 SYN-ACK?}
-    I -- 否 --> J[服务未就绪 / 半连接队列满]
+    I -- 否 --> J["服务未就绪 / 半连接队列满"]
     I -- 是 --> K{有 RST?}
-    K -- 是 --> L[连接被拒绝 / 防火墙 RST]
+    K -- 是 --> L["连接被拒绝 / 防火墙 RST"]
     G -- 是 --> M{延迟高?}
     M -- 是 --> N[mtr 检查链路丢包\nss -tmn 检查缓冲区\ntcpretrans 检查重传]
 ```

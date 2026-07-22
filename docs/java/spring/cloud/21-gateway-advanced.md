@@ -33,7 +33,7 @@ flowchart LR
     HM -->|匹配 Route| WH[FilteringWebHandler]
     WH --> GF[GlobalFilter 链]
     GF --> RF[Route Filter 链]
-    RF --> LB[LoadBalancer / 下游 URI]
+    RF --> LB["LoadBalancer / 下游 URI"]
     LB --> S[下游微服务]
 ```
 

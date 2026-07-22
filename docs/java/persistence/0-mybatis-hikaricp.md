@@ -32,9 +32,9 @@ HikariCP 能够击败传统的 C3P0、DBCP 和 Druid 本质并非依靠硬件优
 graph TD
     Thread[Java 请求线程 - ThreadA] -->|1. 优先从物理级本地缓存获取| ThreadLocal[ThreadLocal - threadList]
     ThreadLocal -->|获取成功 Connection| Got[直接执行 SQL 不需要任何夺锁加锁]
-    ThreadLocal -->|未命中 / 本地缓存内连接已被占用| SharedQueue[LocalBag 内部 Shared CopyList - CAS 无锁双向共享队列]
+    ThreadLocal -->|"未命中 / 本地缓存内连接已被占用"| SharedQueue[LocalBag 内部 Shared CopyList - CAS 无锁双向共享队列]
     SharedQueue -->|2. 利用 CAS 无锁控制自旋夺取| Got
-    SharedQueue -->|竞争失败 / 队列空闲无连接| HandOff[3. 陷入超时挂起等待 - SynchronousQueue ]
+    SharedQueue -->|"竞争失败 / 队列空闲无连接"| HandOff[3. 陷入超时挂起等待 - SynchronousQueue ]
 ```
 
 - **第一层：`ThreadLocal` 缓存隔离**：每个请求线程内持有一个本地线程缓存（属于私有个体的 threadList）。

@@ -83,9 +83,9 @@ graph LR
 graph TD
     A[收到消息] --> B[获取 Message ID]
     B --> C{Redis SETNX message_id 1?}
-    C -->|成功: 首次消费| D[执行本地业务]
+    C -->|"成功: 首次消费"| D[执行本地业务]
     D --> E[确认消息 ACK]
-    C -->|失败: 重复消息| F[直接确认消息 ACK]
+    C -->|"失败: 重复消息"| F[直接确认消息 ACK]
 ```
 
 ---

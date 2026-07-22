@@ -65,9 +65,9 @@ In JDK 8 中，`String` 底层使用 `char[]` 数组存储；在 JDK 9 以后改
 ```mermaid
 graph TD
     Node[新加入节点] --> Hash[计算 Hash & 路由桶位置]
-    Hash --> CheckSize{桶内元素个数 >= 8?}
+    Hash --> CheckSize{"桶内元素个数 >= 8?"}
     CheckSize -- 否 --> Insert[链表插入]
-    CheckSize -- 是 --> CheckCap{数组容量 >= 64?}
+    CheckSize -- 是 --> CheckCap{"数组容量 >= 64?"}
     CheckCap -- 否 --> Resize[进行数组扩容]
     CheckCap -- 是 --> Treeify[链表转化为红黑树]
 ```

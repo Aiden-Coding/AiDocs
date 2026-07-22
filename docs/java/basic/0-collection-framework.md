@@ -45,10 +45,10 @@ private void grow(int minCapacity) {
 
 ```mermaid
 graph TD
-    Add[调用 add 写入元素] --> Check{size + 1 > elementData.length?}
+    Add[调用 add 写入元素] --> Check{"size + 1 > elementData.length?"}
     Check -- 否 --> Write[直接在 size 处写入并 size++]
     Check -- 是 --> Grow[触发 grow 扩容方法]
-    Grow --> Calc[新容量 = oldCapacity + oldCapacity >> 1]
+    Grow --> Calc["新容量 = oldCapacity + oldCapacity >> 1"]
     Calc --> Copy[Arrays.copyOf 创建新数组]
     Copy --> SystemCopy[调用 System.arraycopy 批量搬移数据]
     SystemCopy --> Write
@@ -123,8 +123,8 @@ graph TD
     subgraph HashMap JDK 8 结构
         Array[Node 数组] --> Bin0[Node 0]
         Array --> Bin1[Node 1]
-        Array --> Bin2[Node 2: 链表]
-        Array --> Bin3[Node 3: 红黑树]
+        Array --> Bin2["Node 2: 链表"]
+        Array --> Bin3["Node 3: 红黑树"]
         
         Bin2 --> Bin2_1[Node] --> Bin2_2[Node]
         Bin3 --> TreeNode1[TreeNode]
@@ -206,9 +206,9 @@ graph TD
 ```mermaid
 graph LR
     subgraph LinkedHashMap 双向循环链表
-        Head[Header 虚拟头] <--> Node1[Node 1<br/>K1:V1]
-        Node1 <--> Node2[Node 2<br/>K2:V2]
-        Node2 <--> Node3[Node 3<br/>K3:V3]
+        Head[Header 虚拟头] <--> Node1["Node 1<br/>K1:V1"]
+        Node1 <--> Node2["Node 2<br/>K2:V2"]
+        Node2 <--> Node3["Node 3<br/>K3:V3"]
         Node3 <--> Tail[Tailer 尾节点]
     end
     subgraph HashMap 哈希散列表
@@ -346,7 +346,7 @@ graph TD
         R1 --> RL1[子树 RL]
         R1 --> RR1[右子树 RR]
         
-        Link1[==== 左旋后 ====>]
+        Link1["==== 左旋后 ====>"]
         
         R2[节点 R] --> P2[节点 P]
         R2 --> RR2[右子树 RR]

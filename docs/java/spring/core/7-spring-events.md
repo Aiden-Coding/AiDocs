@@ -16,9 +16,9 @@ Spring 事件机制主要由以下四个角色组成：
 
 ```mermaid
 graph TD
-    Publisher[1. 事件发布者: ApplicationEventPublisher] -->|publishEvent| Multicaster[2. 事件广播器: ApplicationEventMulticaster]
-    Event[3. 事件对象: ApplicationEvent] --> Multicaster
-    Multicaster -->|multicastEvent 分发| Listener[4. 事件监听器: ApplicationListener]
+    Publisher["1. 事件发布者: ApplicationEventPublisher"] -->|publishEvent| Multicaster["2. 事件广播器: ApplicationEventMulticaster"]
+    Event["3. 事件对象: ApplicationEvent"] --> Multicaster
+    Multicaster -->|multicastEvent 分发| Listener["4. 事件监听器: ApplicationListener"]
     
     style Publisher fill:#e1f5ff
     style Multicaster fill:#fff4e1

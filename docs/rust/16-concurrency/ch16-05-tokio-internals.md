@@ -27,18 +27,18 @@ graph TD
         GlobalQ[全局队列 Global Queue - 基于 Lock-Free 链表]
 
         subgraph Worker-Thread-0 [CPU-Core-0]
-            MioEv0[1. epoll / Mio 外部驱动]
+            MioEv0["1. epoll / Mio 外部驱动"]
             Lifo0[2. 最速单任务插槽 LIFO Slot - 零锁 & 永驻缓存]
             LocalQ0[3. 本地无锁环形队列 LocBlok - 256 Limit]
         end
 
         subgraph Worker-Thread-1 [CPU-Core-1]
-            MioEv1[epoll / Mio 外部驱动]
+            MioEv1["epoll / Mio 外部驱动"]
             Lifo1[最速单任务插槽 LIFO Slot]
             LocalQ1[本地无锁环形队列 LocBlok - 256 Limit]
         end
 
-        LocalQ1 -->|窃取 1/2 任务| LocalQ0
+        LocalQ1 -->|"窃取 1/2 任务"| LocalQ0
         GlobalQ -.->|空闲线程兜底检索| LocalQ0
     end
 

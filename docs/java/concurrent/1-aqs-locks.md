@@ -24,9 +24,9 @@ AQS 内部主要维护了两个部分：
 ```mermaid
 graph LR
     subgraph "AQS 同步队列"
-        Head[Head / Dummy] <--> NodeA[Node / Thread A]
-        NodeA <--> NodeB[Node / Thread B]
-        NodeB <--> Tail[Tail / Thread C]
+        Head["Head / Dummy"] <--> NodeA["Node / Thread A"]
+        NodeA <--> NodeB["Node / Thread B"]
+        NodeB <--> Tail["Tail / Thread C"]
     end
     State((state)) -. 指向 .-> Head
 ```
@@ -230,8 +230,8 @@ protected final boolean tryRelease(int releases) {
 ```mermaid
 graph TD
     A[无锁状态] -->|单线程访问| B[偏向锁]
-    B -->|多线程轻度竞争 / CAS 失败| C[轻量级锁]
-    C -->|自适应自旋失败 / 重度竞争| D[重量级锁]
+    B -->|"多线程轻度竞争 / CAS 失败"| C[轻量级锁]
+    C -->|"自适应自旋失败 / 重度竞争"| D[重量级锁]
 ```
 
 **无锁 -> 偏向锁**：

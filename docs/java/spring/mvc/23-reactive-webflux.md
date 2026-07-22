@@ -17,8 +17,8 @@ sidebar_label: 反应式编程与 WebFlux
 ```mermaid
 graph TD
     subgraph 传统 Servlet 阻塞模型 (Thread-per-Request)
-        ClientA[请求 A] --> Thread1[线程 1: 执行 DB 查询 - 阻塞等待 100ms]
-        ClientB[请求 B] --> Thread2[线程 2: 执行 API 调用 - 阻塞等待 500ms]
+        ClientA[请求 A] --> Thread1["线程 1: 执行 DB 查询 - 阻塞等待 100ms"]
+        ClientB[请求 B] --> Thread2["线程 2: 执行 API 调用 - 阻塞等待 500ms"]
         style Thread1 fill:#f9f,stroke:#333
         style Thread2 fill:#f9f,stroke:#333
     end
@@ -26,7 +26,7 @@ graph TD
     subgraph 响应式 Event-Loop 非阻塞模型
         RCA[请求 A] --> EL[Event-Loop 线程]
         RCB[请求 B] --> EL
-        EL -->|1. 任务分发非阻塞| NIO[Linux epoll / Netty 堆外通道]
+        EL -->|1. 任务分发非阻塞| NIO["Linux epoll / Netty 堆外通道"]
         NIO -.->|2. 数据准备完毕事件通知回调| EL
         style EL fill:#bbf,stroke:#333,stroke-width:2px
     end

@@ -36,7 +36,7 @@ flowchart TD
     B --> C[Condition.matches]
     C --> D{全部通过?}
     D -->|是| E[注册 BeanDefinition]
-    D -->|否| F[跳过 / 记录 ConditionOutcome]
+    D -->|否| F["跳过 / 记录 ConditionOutcome"]
 ```
 
 实现接口：

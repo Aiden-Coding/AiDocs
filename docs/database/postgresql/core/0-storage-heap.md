@@ -113,11 +113,11 @@ SELECT ctid, id, name FROM orders WHERE id = 1;
 ```mermaid
 graph LR
     subgraph "HOT 更新前"
-        I1[Index: key→(0,1)]
+        I1["Index: key→(0,1)"]
         T1["Tuple(0,1): xmin=100 xmax=0\nname=Alice"]
     end
     subgraph "HOT 更新后"
-        I2[Index: key→(0,1)]
+        I2["Index: key→(0,1)"]
         T2["ItemId(0,1): REDIRECT→(0,5)"]
         T3["Tuple(0,5): xmin=200 xmax=0\nname=Alice2"]
     end
@@ -159,7 +159,7 @@ LIMIT 20;
 
 ```mermaid
 graph TD
-    A[autovacuum_vacuum_threshold=50\nautovacuum_vacuum_scale_factor=0.2] --> B{死元组数 > threshold + scale*reltuples?}
+    A[autovacuum_vacuum_threshold=50\nautovacuum_vacuum_scale_factor=0.2] --> B{"死元组数 > threshold + scale*reltuples?"}
     B -- 是 --> C[触发 VACUUM]
     C --> D[扫描表，标记死元组对应的ItemId为无效]
     D --> E[更新 FSM：释放死元组占用的空间]

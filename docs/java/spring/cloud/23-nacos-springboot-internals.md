@@ -115,12 +115,12 @@ Spring Boot 框架中，Nacos Config 提供了两种加载机制：
 
 ```mermaid
 flowchart LR
-    A[Nacos ClientWorker] -->|gRPC 双向流 / HTTP 挂起轮询| B[Nacos Server]
+    A[Nacos ClientWorker] -->|"gRPC 双向流 / HTTP 挂起轮询"| B[Nacos Server]
     B -->|配置更新事件| A
-    A -->|触发 Listener 回调| C[NacosContextRefresher / ApplicationListener]
+    A -->|触发 Listener 回调| C["NacosContextRefresher / ApplicationListener"]
     C -->|发布 RefreshEvent| D[Spring Cloud Event System]
     D -->|更新 Environment| E[PropertySource 重写]
-    D -->|清理 @RefreshScope 缓存| F[Bean 重构/重注]
+    D -->|清理 @RefreshScope 缓存| F["Bean 重构/重注"]
 ```
 
 1. **配置注册监听器**：Nacos Client 在拉取配置后，会为该 DataId 注册 `Listener`。
@@ -150,7 +150,7 @@ flowchart LR
 ```mermaid
 flowchart TD
     Client[业务调用方] -->|"1. 调用方法"| Proxy[CGLIB 代理对象]
-    Proxy -->|"2. getBean 方法"| Scope[GenericScope / RefreshScope]
+    Proxy -->|"2. getBean 方法"| Scope["GenericScope / RefreshScope"]
     Scope -->|"3. 查询 Map 缓存"| Cache{Cache 中是否存在?}
     Cache -- 存在 --> RealBean[返回现有真实 Bean 实例]
     Cache -- 不存在 --> CreateBean[重新创建 Bean 实例并存入 Cache]

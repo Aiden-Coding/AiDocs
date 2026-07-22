@@ -35,7 +35,7 @@ graph TD
     Client[Flink Client] -->|提交 JobGraph| Dispatcher
     Dispatcher -->|拉起 JobMaster| JobMaster
     JobMaster -->|请求资源Slots| JM_RM
-    JM_RM -->|向外部 Manager 申请容器 / 协调| TM_RM[TM 节点]
+    JM_RM -->|"向外部 Manager 申请容器 / 协调"| TM_RM[TM 节点]
     TaskManager1 -->|汇报 Slots 状态| JM_RM
     TaskManager2 -->|汇报 Slots 状态| JM_RM
 ```

@@ -211,9 +211,9 @@ Reactor 模式由 Doug Schmidt 在 POSA2 提出,把 NIO 的“select → dispatc
 
 ```mermaid
 graph TD
-    S[Selector<br/> demultiplexer] -->|就绪事件| D[Dispatcher<br/>事件分发]
-    D -->|Accept| H1[Acceptor<br/>建立连接]
-    D -->|Read/Write| H2[Handler<br/>业务处理]
+    S["Selector<br/> demultiplexer"] -->|就绪事件| D["Dispatcher<br/>事件分发"]
+    D -->|Accept| H1["Acceptor<br/>建立连接"]
+    D -->|"Read/Write"| H2["Handler<br/>业务处理"]
     H2 -. 业务耗时则丢给 .- WP[Worker Pool]
 ```
 

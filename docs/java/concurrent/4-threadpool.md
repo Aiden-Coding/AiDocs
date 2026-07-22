@@ -42,11 +42,11 @@ public ThreadPoolExecutor(
 
 ```mermaid
 graph TD
-    A[提交任务] --> B{当前线程数 < corePoolSize?}
+    A[提交任务] --> B{"当前线程数 < corePoolSize?"}
     B -->|是| C[创建核心线程执行任务]
     B -->|否| D{阻塞队列 workQueue 已满?}
     D -->|否| E[任务放入阻塞队列]
-    D -->|是| F{当前线程数 < maximumPoolSize?}
+    D -->|是| F{"当前线程数 < maximumPoolSize?"}
     F -->|是| G[创建非核心线程执行任务]
     F -->|否| H[执行拒绝策略 RejectedExecutionHandler]
 ```

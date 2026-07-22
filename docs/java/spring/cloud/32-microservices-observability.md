@@ -23,13 +23,13 @@ sidebar_label: 跨系统链路透传与可观测性
 ```mermaid
 graph TD
     subgraph 用户发起请求
-        Client[Client Request] -->|生成 Trace ID: X-B3-TraceId = 999| Gateway[1. API-Gateway]
+        Client[Client Request] -->|"生成 Trace ID: X-B3-TraceId = 999"| Gateway[1. API-Gateway]
     end
 
     subgraph 微服务跨网络透传 (W3C Trace Context / B3 Protocol)
-        Gateway -->|HTTP Header: TraceId=999, SpanId=001| Order[2. Order-Service]
-        Order -->|RPC Body: TraceId=999, SpanId=002| Pay[3. Pay-Service]
-        Pay -->|MQ Topic: TraceId=999, SpanId=003| Notify[4. Notify-Service]
+        Gateway -->|"HTTP Header: TraceId=999, SpanId=001"| Order[2. Order-Service]
+        Order -->|"RPC Body: TraceId=999, SpanId=002"| Pay[3. Pay-Service]
+        Pay -->|"MQ Topic: TraceId=999, SpanId=003"| Notify[4. Notify-Service]
     end
 ```
 
@@ -64,8 +64,8 @@ traceparent: 00-4bf92f3577b34da6a3ce929d0e0e4736-00f067aa0ba902b7-01
 graph LR
     Business[1. 业务核心代码] -->|统一 Observation 呼叫| Micrometer[2. Micrometer Observation 统一层抽象]
     Micrometer -->|多维监控流向| OTelTrace[3. OpenTelemetry Tracing]
-    Micrometer -->|多维指标流向| Prometheus[4. Micrometer Metrics / Prometheus]
-    OTelTrace -->|W3C Trace Context HTTP Headers 组装| Jaeger[5. Jaeger / Zipkin 收集器端]
+    Micrometer -->|多维指标流向| Prometheus["4. Micrometer Metrics / Prometheus"]
+    OTelTrace -->|W3C Trace Context HTTP Headers 组装| Jaeger["5. Jaeger / Zipkin 收集器端"]
 ```
 
 ---
@@ -161,7 +161,7 @@ management:
 
 ```mermaid
 graph TD
-    ParentThread[1. 主线程: 拥有 TraceID 999] -->|任务提交给物理非对等线程池| ChildThread[2. 子线程池: 找不到 ThreadLocal]
+    ParentThread["1. 主线程: 拥有 TraceID 999"] -->|任务提交给物理非对等线程池| ChildThread["2. 子线程池: 找不到 ThreadLocal"]
     ChildThread -->|丢失链路血脉| Lost[3. 打印 TraceID = NO_TRACE]
     style Lost fill:#f9f,stroke:#333,stroke-width:2px
 ```

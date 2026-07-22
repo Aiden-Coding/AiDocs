@@ -16,11 +16,11 @@ Nacos 同时承担**注册中心**与**配置中心**。配置侧解决：集中
 
 ```mermaid
 flowchart TD
-    NS[Namespace 环境/租户隔离]
-    NS --> G1[Group 业务线]
-    NS --> G2[Group]
-    G1 --> D1[DataId 应用配置]
-    G1 --> D2[DataId 共享配置]
+    NS["Namespace 环境/租户隔离"]
+    NS --> G1["Group 业务线"]
+    NS --> G2["Group"]
+    G1 --> D1["DataId 应用配置"]
+    G1 --> D2["DataId 共享配置"]
 ```
 
 | 概念 | 建议用法 |
@@ -186,10 +186,10 @@ public void onChange(String newContent) {
 
 ```mermaid
 flowchart LR
-    C1[Nacos] --> VIP[VIP/SLB]
+    C1[Nacos] --> VIP["VIP/SLB"]
     C2[Nacos] --> VIP
     C3[Nacos] --> VIP
-    C1 --> DB[(MySQL 元数据)]
+    C1 --> DB["(MySQL 元数据)"]
     C2 --> DB
     C3 --> DB
     App[应用] --> VIP

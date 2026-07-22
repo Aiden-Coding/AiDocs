@@ -19,11 +19,11 @@ graph TD
     B --> C["top / ps aux --sort=-%cpu"]
     C --> D{用户态 or 内核态高?}
     D -- 用户态 %us 高 --> E[进入进程内部分析]
-    D -- 内核态 %sy 高 --> F[系统调用频繁 / 内核 Bug]
+    D -- 内核态 %sy 高 --> F["系统调用频繁 / 内核 Bug"]
     D -- 软中断 %si 高 --> G[网络包处理压力大]
     E --> H{Java 进程?}
     H -- 是 --> I[jstack 分析线程]
-    H -- 否 --> J[perf top / 火焰图]
+    H -- 否 --> J["perf top / 火焰图"]
     F --> K[strace 追踪系统调用]
 ```
 

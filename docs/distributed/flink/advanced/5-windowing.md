@@ -50,15 +50,15 @@ sidebar_label: 窗口切分与计算机制
 
 ```mermaid
 graph TD
-    Data[Data Stream 数据流入] --> WA[Window Assigner (分配器)]
-    WA -->|决定放入 [0s-5s] 窗口| State[(Window State 状态存储)]
+    Data[Data Stream 数据流入] --> WA["Window Assigner (分配器)"]
+    WA -->|决定放入 [0s-5s] 窗口| State["(Window State 状态存储)"]
     
     Trigger[Trigger 触发器]
     WA -.-> Trigger
     Data -.-> Trigger
-    Trigger -->|1. 满足要求例如 Watermark > 窗口结束| WF[Window Function (计算逻辑)]
+    Trigger -->|"1. 满足要求例如 Watermark > 窗口结束"| WF["Window Function (计算逻辑)"]
     WF -->|2. 取出状态聚合| State
-    WF -->|3. 排出结果| Out[最终报表/结果流]
+    WF -->|3. 排出结果| Out["最终报表/结果流"]
     
     Evictor[Evictor 驱逐器] -->|可选：剔除不想要的数据| State
 ```

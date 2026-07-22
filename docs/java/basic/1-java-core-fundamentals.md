@@ -93,8 +93,8 @@ JDK 9 起标记 `@Deprecated(since="9", forRemoval=true)`,JDK 18+ 默认 `--fina
 graph TD
     Throwable --> Error
     Throwable --> Exception
-    Exception --> RuntimeException[RuntimeException <br/>非受检]
-    Exception --> Checked[IOException 等 <br/>受检]
+    Exception --> RuntimeException["RuntimeException <br/>非受检"]
+    Exception --> Checked["IOException 等 <br/>受检"]
     Error --> OOM[OutOfMemoryError]
     Error --> StackOverflow[StackOverflowError]
 ```

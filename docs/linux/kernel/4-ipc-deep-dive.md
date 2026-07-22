@@ -10,10 +10,10 @@ sidebar_position: 4
 
 ```mermaid
 graph TD
-    A[Process A] -->|Shared Memory: Zero-Copy| SHM[Physical Memory Page]
-    B[Process B] -->|Shared Memory: Zero-Copy| SHM
+    A[Process A] -->|"Shared Memory: Zero-Copy"| SHM[Physical Memory Page]
+    B[Process B] -->|"Shared Memory: Zero-Copy"| SHM
 
-    C[Process C] -->|write sys_call| Pipe[Kernel Buffer: Pipe]
+    C[Process C] -->|write sys_call| Pipe["Kernel Buffer: Pipe"]
     pipe_read[Process D] <--|read sys_call| Pipe
 
     E[Process E] -->|No TCP cost| UDS[Unix Domain Socket]
@@ -73,7 +73,7 @@ graph LR
         VAS1[Virtual Address Space V1]
     end
     subgraph Kernel Page Table Mapping
-        PT[MMU / Page Table]
+        PT["MMU / Page Table"]
     end
     subgraph Shared Physical Frame
         PF[Linux Physical Memory Frame]

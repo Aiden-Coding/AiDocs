@@ -23,7 +23,7 @@ graph TD
     end
     subgraph "线程共享 (Shared)"
         D[堆 Heap]
-        E[方法区 Method Area / 元空间 Metaspace]
+        E["方法区 Method Area / 元空间 Metaspace"]
     end
     F["堆外内存 Direct Memory<br/>(不属于运行时数据区，但受 JVM 间接管理)"]
 ```

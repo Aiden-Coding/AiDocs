@@ -131,7 +131,7 @@ graph TD
 
     VT1 -->|1. Mount 绑定| Carrier
     Carrier -->|2. 1对1 映射| KernelThread
-    VT1 -->|3. 执行 I/O 阻塞| Unmount[解绑并拷贝栈到堆]
+    VT1 -->|"3. 执行 I/O 阻塞"| Unmount[解绑并拷贝栈到堆]
     Unmount -->|4. 释放载体线程| Carrier
     VT2 -->|5. 调度载体线程执行 VT2| Carrier
 ```

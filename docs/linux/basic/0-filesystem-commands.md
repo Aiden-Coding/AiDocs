@@ -15,12 +15,12 @@ Linux 通过 **VFS（Virtual File System）** 提供统一的文件操作接口�
 
 ```mermaid
 graph TD
-    A[用户态 read/write 系统调用] --> B[VFS 层]
-    B --> C[inode / dentry 缓存]
+    A["用户态 read/write 系统调用"] --> B[VFS 层]
+    B --> C["inode / dentry 缓存"]
     B --> D{具体文件系统}
     D --> E[ext4]
     D --> F[xfs]
-    D --> G[tmpfs / proc / sysfs]
+    D --> G["tmpfs / proc / sysfs"]
     E --> H[块设备层 Block Layer]
     F --> H
     H --> I[磁盘驱动]

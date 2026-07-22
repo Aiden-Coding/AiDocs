@@ -22,12 +22,12 @@ Tomcat 作为一个 Web 容器，在单进程中可以并发跑数个 Web 应用
 
 ```mermaid
 graph TD
-    Bootstrap[Bootstrap ClassLoader - 启动: JVM 内置] --> System[System ClassLoader - 系统: CLASSPATH 目录]
-    System --> Common[Common ClassLoader - 共享: catalina.properties 中的 common.loader]
-    Common --> Catalina[Catalina ClassLoader - 容器私有: server.loader]
-    Common --> Shared[Shared ClassLoader - 应用间共享: shared.loader]
-    Shared --> WebApp1[WebApp ClassLoader 应用 1 - /WEB-INF/*]
-    Shared --> WebApp2[WebApp ClassLoader 应用 2 - /WEB-INF/*]
+    Bootstrap["Bootstrap ClassLoader - 启动: JVM 内置"] --> System["System ClassLoader - 系统: CLASSPATH 目录"]
+    System --> Common["Common ClassLoader - 共享: catalina.properties 中的 common.loader"]
+    Common --> Catalina["Catalina ClassLoader - 容器私有: server.loader"]
+    Common --> Shared["Shared ClassLoader - 应用间共享: shared.loader"]
+    Shared --> WebApp1["WebApp ClassLoader 应用 1 - /WEB-INF/*"]
+    Shared --> WebApp2["WebApp ClassLoader 应用 2 - /WEB-INF/*"]
     WebApp1 --> Jasper1[JasperLoader JSP 1]
     WebApp2 --> Jasper2[JasperLoader JSP 2]
 ```

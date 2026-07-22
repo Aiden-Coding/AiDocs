@@ -21,9 +21,9 @@ sidebar_label: ShardingSphere 与分库分表
 
 ```mermaid
 graph TD
-    Data[1. 数据不断暴增至千万/亿级] --> BTree[2. InnoDB B+ 树索引结构发生蜕变突破 3 层]
-    BTree --> NonLeaf[3. 非叶子节点常驻 L1/L2 缓存耗尽]
-    NonLeaf --> DiskSeek[4. 二级索引查询无法一步到位，必须高频陷入物理磁盘随机寻道 I/O]
+    Data["1. 数据不断暴增至千万/亿级"] --> BTree[2. InnoDB B+ 树索引结构发生蜕变突破 3 层]
+    BTree --> NonLeaf["3. 非叶子节点常驻 L1/L2 缓存耗尽"]
+    NonLeaf --> DiskSeek["4. 二级索引查询无法一步到位，必须高频陷入物理磁盘随机寻道 I/O"]
     DiskSeek --> PageFault[5. 多核线程并发竞争操作系统内核虚拟内存页 - Page Fault]
     PageFault --> LockWait[6. 数据库连接池占满, 崩溃 OOM 堆积]
     style LockWait fill:#f9f,stroke:#333,stroke-width:2px
@@ -47,11 +47,11 @@ SELECT * FROM t_order WHERE order_id = 1001;
 
 ```mermaid
 graph LR
-    LogSQL[1. 逻辑 SQL] --> Parser[Step 1: SQL 解析]
-    Parser --> Router[Step 2: 路由决策]
-    Router --> Rewriter[Step 3: SQL 改写]
-    Rewriter --> Executor[Step 4: SQL 执行]
-    Executor --> Merger[Step 5: 结果合并]
+    LogSQL[1. 逻辑 SQL] --> Parser["Step 1: SQL 解析"]
+    Parser --> Router["Step 2: 路由决策"]
+    Router --> Rewriter["Step 3: SQL 改写"]
+    Rewriter --> Executor["Step 4: SQL 执行"]
+    Executor --> Merger["Step 5: 结果合并"]
     Merger --> LogResult[2. Java 组装好的 POJO 结果对象]
 ```
 
@@ -70,7 +70,7 @@ graph LR
 
 ```mermaid
 graph TD
-    Rule[分片路由决策] --> Single[1. 直接路由 / 单主路由 - WHERE id = 1001]
+    Rule[分片路由决策] --> Single["1. 直接路由 / 单主路由 - WHERE id = 1001"]
     Rule --> Standard[2. 标准路由 - 涉及 IN, AND 范围区间]
     Rule --> Cartesian[3. 笛卡尔积路由 - 无分片键两表 JOIN]
     style Cartesian fill:#f9f,stroke:#333

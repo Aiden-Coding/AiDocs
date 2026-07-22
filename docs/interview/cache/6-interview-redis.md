@@ -28,12 +28,12 @@ sidebar_position: 100
 
 ```mermaid
 graph LR
-    Key[Key: id=99] --> Hash1[Hash 函数 1]
+    Key["Key: id=99"] --> Hash1[Hash 函数 1]
     Key --> Hash2[Hash 函数 2]
     Key --> Hash3[Hash 函数 3]
-    Hash1 --> Bit1[位数组对应索引 5 -> 置 1]
-    Hash2 --> Bit2[位数组对应索引 12 -> 置 1]
-    Hash3 --> Bit3[位数组对应索引 28 -> 置 1]
+    Hash1 --> Bit1["位数组对应索引 5 -> 置 1"]
+    Hash2 --> Bit2["位数组对应索引 12 -> 置 1"]
+    Hash3 --> Bit3["位数组对应索引 28 -> 置 1"]
 ```
 
 - **算法断言机制**：

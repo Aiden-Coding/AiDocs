@@ -47,7 +47,7 @@ graph TD
     B --> E[3PC 三阶段提交]
     C --> F[TCC 补偿型事务]
     C --> G[Saga 柔性事务]
-    C --> H[本地消息表 / MQ 事务消息]
+    C --> H["本地消息表 / MQ 事务消息"]
 ```
 
 ### 1. 2PC (Two-Phase Commit) 二阶段提交
@@ -173,11 +173,11 @@ $T_1, T_2, T_3, \dots, T_n$
 
 ```mermaid
 graph LR
-    A[Start] --> T1[T1: 扣除用户余额]
-    T1 --> T2[T2: 扣减商品库存]
-    T2 --> T3[T3: 触发第三方配送 失败]
-    T3 -->|Trigger Rollback| C2[C2: 退还商品库存]
-    C2 --> C1[C1: 退还用户余额]
+    A[Start] --> T1["T1: 扣除用户余额"]
+    T1 --> T2["T2: 扣减商品库存"]
+    T2 --> T3["T3: 触发第三方配送 失败"]
+    T3 -->|Trigger Rollback| C2["C2: 退还商品库存"]
+    C2 --> C1["C1: 退还用户余额"]
     C1 --> End[End]
 ```
 

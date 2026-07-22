@@ -38,18 +38,18 @@ Netfilter 是一套在 Linux 内核网络协议栈的特定关键切入位置（
 
 ```mermaid
 graph TD
-    NIC_IN[Input NIC Packet] --> PRE[PRE_ROUTING Hook <br/> raw -> mangle -> nat]
-    PRE --> ROUTING_DEC[Local Routing Decision: Is local IP?]
+    NIC_IN[Input NIC Packet] --> PRE["PRE_ROUTING Hook <br/> raw -> mangle -> nat"]
+    PRE --> ROUTING_DEC["Local Routing Decision: Is local IP?"]
     
-    ROUTING_DEC -->|Yes| LOCAL_IN[LOCAL_IN Hook <br/> mangle -> filter]
+    ROUTING_DEC -->|Yes| LOCAL_IN["LOCAL_IN Hook <br/> mangle -> filter"]
     LOCAL_IN --> APP[Local User-space Application process]
     
-    ROUTING_DEC -->|No - Forwarding enabled| FORWARD[FORWARD Hook <br/> mangle -> filter]
+    ROUTING_DEC -->|No - Forwarding enabled| FORWARD["FORWARD Hook <br/> mangle -> filter"]
     
-    APP --> LOCAL_OUT[LOCAL_OUT Hook <br/> raw -> mangle -> nat -> filter]
+    APP --> LOCAL_OUT["LOCAL_OUT Hook <br/> raw -> mangle -> nat -> filter"]
     LOCAL_OUT --> ROUTING_OUT[Routing Decision]
     
-    FORWARD --> POST[POST_ROUTING Hook <br/> mangle -> nat]
+    FORWARD --> POST["POST_ROUTING Hook <br/> mangle -> nat"]
     ROUTING_OUT --> POST
     POST --> NIC_OUT[Output NIC Packet]
 ```

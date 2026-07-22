@@ -16,10 +16,10 @@ sidebar_label: Unsafe 与 VarHandle 进阶
 
 ```mermaid
 graph TD
-    Unsafe[Unsafe Class] -->|黑魔法 1: 直接内存控制| RawMem[allocateMemory / freeMemory - 堆外物理空间读写]
-    Unsafe -->|黑魔法 2: 内存屏障干预| Barrier[loadFence / storeFence / fullFence]
-    Unsafe -->|黑魔法 3: 锁底座原语| Park[park / unpark - 线程精准挂起与唤醒]
-    Unsafe -->|黑魔法 4: 高阶对象劫持| Fields[objectFieldOffset / putOrderedObject]
+    Unsafe[Unsafe Class] -->|"黑魔法 1: 直接内存控制"| RawMem["allocateMemory / freeMemory - 堆外物理空间读写"]
+    Unsafe -->|"黑魔法 2: 内存屏障干预"| Barrier["loadFence / storeFence / fullFence"]
+    Unsafe -->|"黑魔法 3: 锁底座原语"| Park["park / unpark - 线程精准挂起与唤醒"]
+    Unsafe -->|"黑魔法 4: 高阶对象劫持"| Fields["objectFieldOffset / putOrderedObject"]
 ```
 
 ### 1. `Unsafe` 的高频黑魔法 API 实战
@@ -105,7 +105,7 @@ ImmutableEntity obj = (ImmutableEntity) unsafe.allocateInstance(ImmutableEntity.
 graph LR
     subgraph VarHandle 核心特性
         Access[细粒度变量读写控制]
-        Modes[多级内存访问模式 - Plain/Opaque/Acquire-Release/Volatile]
+        Modes["多级内存访问模式 - Plain/Opaque/Acquire-Release/Volatile"]
         Safety[严格类型安全检测与内存平滑移植]
     end
     VarHandle -->|完美替换| Unsafe[Unsafe 危险修改]

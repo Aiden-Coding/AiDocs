@@ -21,16 +21,16 @@ sidebar_label: 网络流控与反压
 ```mermaid
 graph TD
     subgraph TM_Sender [TaskManager A (发送端 (槽位 1))]
-        LogicA[Operator Subtask] -->|1. 将数据写入预分配 Buffer| OutPool[LocalBufferPool (Sender)]
+        LogicA[Operator Subtask] -->|1. 将数据写入预分配 Buffer| OutPool["LocalBufferPool (Sender)"]
         OutPool -->|4. TCP 连接发送数据包| Netty[Netty Client]
     end
 
     subgraph TM_Receiver [TaskManager B (接收端 (槽位 2))]
-        NettyServer[Netty Server] -->|5. 分发读取| InPool[LocalBufferPool (Receiver)]
+        NettyServer[Netty Server] -->|5. 分发读取| InPool["LocalBufferPool (Receiver)"]
         InPool -->|6. 主动消费提取并计算| LogicB[Operator Subtask Business]
     end
 
-    InPool -.->|2. 发送信令: 剩余 Buffer 块数 -> Credit| OutPool
+    InPool -.->|"2. 发送信令: 剩余 Buffer 块数 -> Credit"| OutPool
     LogicB -->|3. 计算完毕释放 Buffer| InPool
 ```
 
@@ -56,7 +56,7 @@ graph TD
 ```mermaid
 graph LR
     A[Source 算子] -->|1. 触发 Barrier| B((网络传输介质 TCP/Netty))
-    B -->|2. 排在数据队列的最末尾 (反压阻塞)| C[下游 各种计算 算子]
+    B -->|"2. 排在数据队列的最末尾 (反压阻塞)"| C[下游 各种计算 算子]
 ```
 
 ### 1. 致命的“慢数据排队”灾难

@@ -28,7 +28,7 @@ graph LR
       T2[Thread-2] --> L1C1[L1 Cache]
       L1C1 --> IQ[Invalidate Queue]
     end
-    SB -. 暂未 flush .-> Main[(Main Memory)]
+    SB -. 暂未 flush .-> Main["(Main Memory)"]
     Main -. invalidate ack 被排队 .-> IQ
 ```
 

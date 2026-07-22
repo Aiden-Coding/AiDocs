@@ -51,9 +51,9 @@ Spring MVC 在启动时会默认初始化数十个参数解析器，并在 `Hand
 ```mermaid
 graph TD
     A[NativeWebRequest 原始数据] --> B[创建 WebDataBinder]
-    B --> C[使用 ConversionService/PropertyEditor 进行类型转换]
+    B --> C["使用 ConversionService/PropertyEditor 进行类型转换"]
     C --> D[将数据绑定到 Target Bean 属性上]
-    D --> E{参数上是否标注了 @Validated/@Valid?}
+    D --> E{"参数上是否标注了 @Validated/@Valid?"}
     E -->|Yes| F[激活 Validator 校验器进行字段验证]
     E -->|No| G[绑定结束]
     F --> H{校验是否通过?}

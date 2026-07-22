@@ -112,7 +112,7 @@ JDK 自带了许多强大的命令行工具，位于 `bin` 目录下：
 graph TD
     A[启动 Arthas] --> B[Attach 到目标 Java 进程]
     B --> C{选择诊断命令}
-    C -->|查看 CPU / 内存| D[dashboard / thread]
+    C -->|"查看 CPU / 内存"| D["dashboard / thread"]
     C -->|反编译代码| E[jad]
     C -->|监控方法耗时| F[trace]
     C -->|查看入参出参| G[watch]

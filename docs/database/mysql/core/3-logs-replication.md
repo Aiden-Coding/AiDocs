@@ -17,11 +17,11 @@ MySQL 架构分为两层：**Server 层**（负责 SQL 解析、优化、执行�
 ```mermaid
 graph TD
     subgraph "Server 层"
-        Binlog[Binlog: 归档日志 / 逻辑日志]
+        Binlog["Binlog: 归档日志 / 逻辑日志"]
     end
     subgraph "InnoDB 存储引擎层"
-        Redo[Redo Log: 重做日志 / 物理日志]
-        Undo[Undo Log: 回滚日志 / 逻辑日志]
+        Redo["Redo Log: 重做日志 / 物理日志"]
+        Undo["Undo Log: 回滚日志 / 逻辑日志"]
     end
 ```
 
@@ -141,8 +141,8 @@ sequenceDiagram
 ```mermaid
 graph TD
     subgraph "三阶段队列 (Pipeline 协调)"
-        A[Flush Stage: 写入 Binlog 内存缓冲] -->|合并提交| B[Sync Stage: 多个事务统一 fsync 刷磁盘]
-        B -->|串行接手| C[Commit Stage: 统一在存储引擎侧提交]
+        A["Flush Stage: 写入 Binlog 内存缓冲"] -->|合并提交| B["Sync Stage: 多个事务统一 fsync 刷磁盘"]
+        B -->|串行接手| C["Commit Stage: 统一在存储引擎侧提交"]
     end
 ```
 
@@ -169,14 +169,14 @@ graph TD
 ```mermaid
 graph LR
     subgraph "Master 节点"
-        M_DB[(Master DB)] -->|写操作| M_Bin[Binlog]
+        M_DB["(Master DB)"] -->|写操作| M_Bin[Binlog]
         M_Bin -->|Dump 线程| Dump[Binlog Dump 线程]
     end
     subgraph "Slave 节点"
-        Dump -->|网络传输| IO[I/O 线程]
+        Dump -->|网络传输| IO["I/O 线程"]
         IO -->|写入| Relay[Relay Log 中继日志]
         Relay -->|SQL 线程| SQL[SQL 线程]
-        SQL -->|重放| S_DB[(Slave DB)]
+        SQL -->|重放| S_DB["(Slave DB)"]
     end
 ```
 

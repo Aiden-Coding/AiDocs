@@ -310,9 +310,9 @@ function StyledButton({ children }) {
 
 ```mermaid
 graph LR
-    component[Fiber Node] -->|memoizedState| hook1[Hook 1: useState]
-    hook1 -->|next| hook2[Hook 2: useEffect]
-    hook2 -->|next| hook3[Hook 3: useRef]
+    component[Fiber Node] -->|memoizedState| hook1["Hook 1: useState"]
+    hook1 -->|next| hook2["Hook 2: useEffect"]
+    hook2 -->|next| hook3["Hook 3: useRef"]
     hook3 -->|next| nullNode[null]
 ```
 

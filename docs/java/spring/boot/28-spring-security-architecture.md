@@ -20,10 +20,10 @@ flowchart TD
     DFP --> FCP[FilterChainProxy]
     FCP --> SFC[SecurityFilterChain 匹配]
     SFC --> F1[SecurityContextHolderFilter]
-    F1 --> F2[UsernamePasswordAuthenticationFilter / BearerToken...]
+    F1 --> F2["UsernamePasswordAuthenticationFilter / BearerToken..."]
     F2 --> F3[ExceptionTranslationFilter]
     F3 --> F4[AuthorizationFilter]
-    F4 --> APP[DispatcherServlet / Controller]
+    F4 --> APP["DispatcherServlet / Controller"]
 ```
 
 ### 1. DelegatingFilterProxy

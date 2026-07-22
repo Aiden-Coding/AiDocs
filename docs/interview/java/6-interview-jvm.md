@@ -80,9 +80,9 @@ graph TD
     Start[CPU 100% 线上报警] --> Top[1. 执行 top -c 获取最高 CPU 进程 PID]
     Top --> FindThread[2. 执行 top -Hp PID 定位高负载线程 TID]
     FindThread --> Hex[3. 执行 printf '%x\n' TID 转换为 16 进制 hex]
-    Hex --> Stack[4. 导出堆栈: jstack PID > stack.txt]
+    Hex --> Stack["4. 导出堆栈: jstack PID > stack.txt"]
     Stack --> Locate[5. grep 检索 hex 寻找核心代码 logic 所在行]
-    Locate --> Resolve[6. 根据具体堆栈(如 HashMap 死循环或密集 JNI 调用)解决代码隐患]
+    Locate --> Resolve["6. 根据具体堆栈(如 HashMap 死循环或密集 JNI 调用)解决代码隐患"]
 ```
 
 1. **第一步：锁定高能进程**：

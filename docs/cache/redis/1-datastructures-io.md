@@ -26,7 +26,7 @@ graph TD
     subgraph "底层数据结构"
         F[SDS 简单动态字符串]
         G[Quicklist 双向链表]
-        H[Dict 字典 / Hashtable]
+        H["Dict 字典 / Hashtable"]
         I[Intset 整数集合]
         J[Skiplist 跳表]
         K[Listpack 紧凑列表]

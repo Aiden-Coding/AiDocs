@@ -23,7 +23,7 @@ graph TD
     CDN --> Cache[4. Local Cache 内存标记阻断]
     Cache --> Redis[5. Redis 预热库存 Lua 原子扣减]
     Redis --> MQ[6. 异步消息队列削峰]
-    MQ --> DB[(7. 数据库异步下单与行锁保护)]
+    MQ --> DB["(7. 数据库异步下单与行锁保护)"]
 ```
 
 #### 核心设计维度说明
@@ -123,10 +123,10 @@ Feed 流是指持续展示用户关注好友动态的信息流（如朋友圈、
 
 ```mermaid
 graph TD
-    All[1. 全局 100% 流量] --> Header[2. 一阶段: 特殊 Header/白名单 灰度]
-    Header --> Inner[3. 二阶段: 公司内部员工/测试组 流量]
-    Inner --> Percent[4. 三阶段: 按用户比例 1% -> 5% -> 20% -> 50%]
-    Percent --> Final[5. 四阶段: 全量 100% 覆盖]
+    All[1. 全局 100% 流量] --> Header["2. 一阶段: 特殊 Header/白名单 灰度"]
+    Header --> Inner["3. 二阶段: 公司内部员工/测试组 流量"]
+    Inner --> Percent["4. 三阶段: 按用户比例 1% -> 5% -> 20% -> 50%"]
+    Percent --> Final["5. 四阶段: 全量 100% 覆盖"]
 ```
 
 ### 全链路 Trace 与路由染色

@@ -171,7 +171,7 @@ graph TD
     B -->|否| C[CAS 累加到 base 变量]
     B -->|是| D[根据线程 Hash 分流到 Cell 数组]
     D --> E[CAS 累加到对应的 Cell[i]]
-    E --> F[最终求和: base + sum(Cells)]
+    E --> F["最终求和: base + sum(Cells)"]
 ```
 
 #### 3. 只能保证一个共享变量的原子操作

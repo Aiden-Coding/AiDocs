@@ -373,10 +373,10 @@ SET lock_key unique_value NX PX 30000
 
 ```mermaid
 graph TD
-    Update[1. 业务更新数据] --> DB[(2. 写入 MySQL)]
+    Update[1. 业务更新数据] --> DB["(2. 写入 MySQL)"]
     DB --> Binlog{3. MySQL 产生 Binlog}
     Binlog --> Canal[4. Canal 订阅并解析 Binlog]
-    Canal --> MQ[5. 发送消息到 Kafka/RabbitMQ]
+    Canal --> MQ["5. 发送消息到 Kafka/RabbitMQ"]
     MQ --> Consume[6. 消费者异步消费消息]
     Consume --> DelCache[7. 精准删除 Redis 对应缓存]
 ```

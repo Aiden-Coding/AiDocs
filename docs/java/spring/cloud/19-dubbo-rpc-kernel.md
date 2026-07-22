@@ -33,7 +33,7 @@ flowchart TB
     Service[Service 业务接口] --> Config[Config]
     Config --> Proxy[Proxy 代理]
     Proxy --> Registry[Registry 注册发现]
-    Registry --> Cluster[Cluster 容错/负载/路由]
+    Registry --> Cluster["Cluster 容错/负载/路由"]
     Cluster --> Monitor[Monitor]
     Monitor --> Protocol[Protocol + Filter 链]
     Protocol --> Exchange[Exchange 请求响应]
