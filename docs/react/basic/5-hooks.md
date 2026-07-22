@@ -47,7 +47,52 @@ function Counter() {
   });
   ```
 
-### 2) useEffect：与外部系统同步
+### 2) useReducer：复杂状态与业务逻辑分离
+
+`useReducer` 适合管理更复杂的状态逻辑、多个子状态或状态转换规则。它将状态更新逻辑从组件中抽离到 reducer 函数，使业务状态更容易测试和维护。
+
+```tsx
+import { useReducer } from 'react';
+
+type State = { count: number };
+type Action =
+  | { type: 'increment' }
+  | { type: 'decrement' }
+  | { type: 'reset'; payload: number };
+
+function counterReducer(state: State, action: Action): State {
+  switch (action.type) {
+    case 'increment':
+      return { count: state.count + 1 };
+    case 'decrement':
+      return { count: state.count - 1 };
+    case 'reset':
+      return { count: action.payload };
+    default:
+      return state;
+  }
+}
+
+function Counter({ initialCount }: { initialCount: number }) {
+  const [state, dispatch] = useReducer(counterReducer, { count: initialCount });
+
+  return (
+    <div>
+      <button onClick={() => dispatch({ type: 'decrement' })}>-</button>
+      <span>{state.count}</span>
+      <button onClick={() => dispatch({ type: 'increment' })}>+</button>
+      <button onClick={() => dispatch({ type: 'reset', payload: initialCount })}>
+        重置
+      </button>
+    </div>
+  );
+}
+```
+
+- **何时用 `useReducer`**：当状态逻辑复杂、多个 state 变量相互依赖，或需要基于 action 更新状态时，`useReducer` 更清晰。
+- **何时用 `useState`**：当状态简单、只需要单个值或少量独立状态变量时，`useState` 更直观。
+
+### 3) useEffect：与外部系统同步
 
 `useEffect` 专门用来处理副作用（如数据请求、DOM 操作、事件订阅等）。它在组件渲染完成后异步执行。
 
@@ -101,7 +146,36 @@ useEffect(() => {
 }, []);
 ```
 
-### 3) useRef：跨渲染周期的共享引用
+### 4) useLayoutEffect：布局读取与同步 DOM
+
+`useLayoutEffect` 的调用时机早于 `useEffect`，它会在 DOM 更新后、浏览器绘制前同步执行。适用于测量节点、同步布局修正、或者在渲染结果显示前修改 DOM 状态。
+
+```tsx
+import { useRef, useState, useLayoutEffect } from 'react';
+
+function LayoutTracker() {
+  const ref = useRef<HTMLDivElement>(null);
+  const [width, setWidth] = useState(0);
+
+  useLayoutEffect(() => {
+    if (ref.current) {
+      setWidth(ref.current.offsetWidth);
+    }
+  }, []);
+
+  return (
+    <div>
+      <div ref={ref}>测量这个盒子的宽度</div>
+      <p>当前宽度：{width}px</p>
+    </div>
+  );
+}
+```
+
+- **适用场景**：DOM 尺寸测量、同步布局修正、避免闪烁的样式修改。
+- **慎用原因**：它会阻塞浏览器绘制，可能降低性能，因此除非确实需要同步布局，否则首选 `useEffect`。
+
+### 5) useRef：跨渲染周期的共享引用
 
 `useRef` 返回一个可变的 ref 对象，其 `.current` 属性被初始化为传入的参数。它有两个核心用途：
 
@@ -132,53 +206,61 @@ useEffect(() => {
 
    在 React 19 中，`ref` 会像普通的 prop 一样直接传递给子组件（无需 `forwardRef` 包装）。默认情况下，如果把 `ref` 绑定给子组件的原生 DOM，父组件将拥有该 DOM 的全部操作权限。
 
-   如果我们想**限制暴露的权限**，或者在函数式子组件中**向父组件暴露自定义的实例方法**，必须配合 `useImperativeHandle`：
+   如果我们想**限制暴露的权限**，或者在函数式子组件中**向父组件暴露自定义的实例方法**，可以使用 `useImperativeHandle`。
 
-   ```tsx
-   import { useRef, useImperativeHandle } from 'react';
+### 6) useImperativeHandle：限制暴露子组件实例方法
 
-   interface FancyInputRef {
-     focusAndClear: () => void;
-   }
+`useImperativeHandle` 让你在函数组件中自定义暴露给父组件的实例 API。它通常用于隐藏内部 DOM 或组件实现细节，只暴露必要的方法。
 
-   // 子组件（React 19 风格：直接接收 ref 属性）
-   function FancyInput({ label, ref }: { label: string; ref: React.Ref<FancyInputRef> }) {
-     const inputRef = useRef<HTMLInputElement>(null);
+```tsx
+import { useRef, useImperativeHandle } from 'react';
 
-     // 限制父组件通过 ref 能访问到的成员
-     useImperativeHandle(ref, () => ({
-       focusAndClear: () => {
-         inputRef.current?.focus();
-         if (inputRef.current) {
-           inputRef.current.value = '';
-         }
-       }
-     }), []); // 依赖项数组
+interface FancyInputRef {
+  focusAndClear: () => void;
+}
 
-     return (
-       <label>
-         {label}
-         <input ref={inputRef} type="text" />
-       </label>
-     );
-   }
+function FancyInput({ label, ref }: { label: string; ref: React.Ref<FancyInputRef> }) {
+  const inputRef = useRef<HTMLInputElement>(null);
 
-   // 父组件使用
-   function Parent() {
-     const fancyInputRef = useRef<FancyInputRef>(null);
+  useImperativeHandle(
+    ref,
+    () => ({
+      focusAndClear: () => {
+        inputRef.current?.focus();
+        if (inputRef.current) {
+          inputRef.current.value = '';
+        }
+      },
+    }),
+    []
+  );
 
-     return (
-       <div>
-         <FancyInput label="机密输入框" ref={fancyInputRef} />
-         <button onClick={() => fancyInputRef.current?.focusAndClear()}>
-           聚焦并清空
-         </button>
-       </div>
-     );
-   }
-   ```
+  return (
+    <label>
+      {label}
+      <input ref={inputRef} type="text" />
+    </label>
+  );
+}
 
-### 4) useContext：无感知的全局上下文
+function Parent() {
+  const fancyInputRef = useRef<FancyInputRef>(null);
+
+  return (
+    <div>
+      <FancyInput label="机密输入框" ref={fancyInputRef} />
+      <button onClick={() => fancyInputRef.current?.focusAndClear()}>
+        聚焦并清空
+      </button>
+    </div>
+  );
+}
+```
+
+- **使用场景**：当父组件需要调用子组件的特定方法，但你又不想直接暴露子组件内部 DOM。
+- **注意**：如果没有自定义实例 API，直接把 `ref` 传给子组件通常更简单。
+
+### 7) useContext：无感知的全局上下文
 
 `useContext` 用于跨越组件层级直接读取祖先组件共享的 Context 数据，避免了“Props Drill（层层透传）”。
 
@@ -206,7 +288,106 @@ function ThemeButton() {
 }
 ```
 
-### 5) useId：稳定唯一的标识符
+### 8) useMemo / useCallback：缓存值与稳定函数引用
+
+`useMemo` 用于缓存计算结果，避免每次渲染都重复执行昂贵计算。`useCallback` 用于缓存函数引用，避免传入子组件或依赖数组时因函数重新创建导致不必要的渲染。
+
+这两者的核心区别是：
+- `useMemo(() => value, deps)` 缓存的是计算结果 `value`。
+- `useCallback(fn, deps)` 缓存的是函数 `fn` 本身。
+
+从实现角度看，`useCallback(fn, deps)` 可以理解为 `useMemo(() => fn, deps)` 的语义糖。
+
+在 React 中，每次组件重新渲染时，函数都会重新创建。仅当这个函数被传给 `React.memo` 子组件、放入依赖数组、或在某些对象/数组缓存场景中被引用时，才有必要让它保持稳定。
+
+```tsx
+import { useState, useMemo, useCallback } from 'react';
+
+function SearchResults({ query, onSelect }) {
+  const results = useMemo(() => {
+    return expensiveSearch(query);
+  }, [query]);
+
+  const handleSelect = useCallback((item) => {
+    onSelect(item);
+  }, [onSelect]);
+
+  return (
+    <ul>
+      {results.map(item => (
+        <li key={item.id} onClick={() => handleSelect(item)}>{item.name}</li>
+      ))}
+    </ul>
+  );
+}
+```
+
+- **`useMemo`**：当计算结果依赖于稳定输入且计算成本较高时使用。
+- **`useCallback`**：当函数传给 `React.memo` 子组件、作为 `useEffect`/`useMemo`/`useCallback` 的依赖，或需要在渲染间保持引用稳定时使用。
+- **勿过度使用**：`useMemo` 和 `useCallback` 本身也会增加开销，只有在渲染成本或子组件 props 稳定性确实成为问题时才使用。
+
+#### 典型场景
+
+- 需要缓存计算出的对象、数组、派生数据
+- 需要避免将每次渲染中新建的回调函数传入 `React.memo` 子组件
+- 当依赖项列表清晰并且函数不应随每次渲染改变时
+
+#### 常见误区
+
+```tsx
+// ❌ 不必要地缓存简单值
+const value = useMemo(() => count + 1, [count]);
+
+// ✅ 直接计算更简单
+const value = count + 1;
+```
+
+```tsx
+// ❌ 不必要地缓存内部函数
+const onClick = useCallback(() => {
+  setCount(count + 1);
+}, [count]);
+```
+
+```tsx
+// ✅ 如果函数传给 memo 子组件才有意义
+const onClick = () => setCount(c => c + 1);
+```
+
+### 9) useDebugValue：自定义 Hook 状态调试
+
+`useDebugValue` 用于在 React DevTools 中显示自定义 Hook 的调试标签。它通常嵌入在自定义 Hook 内，帮助你在调试时快速观察 Hook 生成的派生值。
+
+```tsx
+import { useState, useEffect, useDebugValue } from 'react';
+
+function useOnlineStatus() {
+  const [isOnline, setIsOnline] = useState(navigator.onLine);
+
+  useEffect(() => {
+    const handleStatusChange = () => {
+      setIsOnline(navigator.onLine);
+    };
+
+    window.addEventListener('online', handleStatusChange);
+    window.addEventListener('offline', handleStatusChange);
+
+    return () => {
+      window.removeEventListener('online', handleStatusChange);
+      window.removeEventListener('offline', handleStatusChange);
+    };
+  }, []);
+
+  useDebugValue(isOnline ? '在线' : '离线');
+
+  return isOnline;
+}
+```
+
+- **仅用于调试**：`useDebugValue` 不影响组件渲染行为，只在 React DevTools 中可见。
+- **格式化显示**：可以传入第二个参数，将值格式化为更易读的内容，例如 `useDebugValue(value, v => v ? 'ON' : 'OFF')`。
+
+### 10) useId：稳定唯一的标识符
 
 `useId` 是 React 18 引入的 Hook，用于生成在服务端渲染（SSR）和客户端激活（Hydration）之间保持绝对稳定、唯一的 ID。
 
@@ -236,7 +417,7 @@ function LoginForm() {
 }
 ```
 
-### 6) 库级底层 Hooks：useSyncExternalStore 与 useInsertionEffect
+### 10) 库级底层 Hooks：useSyncExternalStore 与 useInsertionEffect
 
 这两个 Hook 主要面向**库（Libraries）开发者**，在日常业务开发中较少直接使用，但在现代 React 渲染引擎中起着关键支撑作用。
 
@@ -352,6 +533,11 @@ graph LR
 - [ ] **清理函数**：理解何时需要清理函数以及如何编写
 - [ ] **useRef 两种用途**：DOM引用和持久化变量的区别
 - [ ] **useContext 使用**：能够跨组件消费Context数据
+- [ ] **useMemo / useCallback**：理解何时缓存计算结果或函数引用
+- [ ] **useReducer**：理解复杂状态和 action 分发场景
+- [ ] **useLayoutEffect**：理解同步读取布局与 DOM 修改的场景
+- [ ] **useImperativeHandle**：理解如何限制 ref 暴露的实例 API
+- [ ] **useDebugValue**：理解如何为自定义 Hook 添加调试标签
 - [ ] **Hooks 规则**：理解为什么不能在条件语句中使用Hooks
 - [ ] **闭包陷阱**：理解Hooks闭包问题及解决方案
 
