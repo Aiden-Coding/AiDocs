@@ -136,6 +136,12 @@ const config: Config = {
         },
         {
           type: 'docSidebar',
+          sidebarId: 'hardwareSidebar',
+          position: 'left',
+          label: '硬件',
+        },
+        {
+          type: 'docSidebar',
           sidebarId: 'reactSidebar',
           position: 'left',
           label: 'React',
