@@ -1,4 +1,4 @@
-﻿---
+---
 title: Netty 高性能协议编解码：解决粘包拆包与实战私有协议
 hide_title: true
 sidebar_label: Netty 编解码实战
@@ -41,78 +41,162 @@ Netty 已经为我们封装好了应对这些问题的工具类：
 
 ---
 
-## 三、 实战：基于长度域的编解码
+## 三、 LengthFieldBasedFrameDecoder 5 大参数深度剖析
 
-这是目前生产环境中最常用的私有协议实现方案。
-
-### 1. 协议定义
-
-假设我们定义一个简单的协议：
-
-- **Header (4 bytes)**: 存放 Body 的长度（int）。
-- **Body**: 原始数据。
-
-### 2. 解码与编码实现
+`LengthFieldBasedFrameDecoder` 是 Netty 中最强大也最难掌握的解码器。它的构造函数包含 5 个关键参数：
 
 ```java
-public class MyProtocolInitializer extends ChannelInitializer<SocketChannel> {
+public LengthFieldBasedFrameDecoder(
+    int maxFrameLength,
+    int lengthFieldOffset,
+    int lengthFieldLength,
+    int lengthAdjustment,
+    int initialBytesToStrip
+)
+```
+
+| 参数名 | 含义 |
+| :--- | :--- |
+| `maxFrameLength` | 发送的数据帧最大长度，超过此值抛出 `TooLongFrameException` |
+| `lengthFieldOffset` | 长度域在报文头中的字节偏移量 |
+| `lengthFieldLength` | 长度域字段本身占用的字节数（如 2B / 4B / 8B） |
+| `lengthAdjustment` | 长度调节补偿值（如果长度字段包含/不包含 Header 长度时使用） |
+| `initialBytesToStrip` | 解码后跳过（剥离）的字节数（若业务 Handler 不需要 Header，可剥离） |
+
+### 典型场景参数推演
+
+#### 场景 A：标准 Header (4B 长度) + Body
+
+- 结构：`| Length(4B) | Body |`
+- 参数配置：
+  - `lengthFieldOffset` = 0
+  - `lengthFieldLength` = 4
+  - `lengthAdjustment` = 0
+  - `initialBytesToStrip` = 4（跳过 4B 长度头，直接将 Body 传递给后续 Handler）
+
+#### 场景 B：带魔数的 Header，且长度值等于 Header + Body 总长度
+
+- 结构：`| Magic(2B) | Length(4B) | HeaderOther(2B) | Body |`
+- 假设 `Length` 的数值代表整个数据包的总字节数（2 + 4 + 2 + Body）。
+- 参数配置：
+  - `lengthFieldOffset` = 2
+  - `lengthFieldLength` = 4
+  - `lengthAdjustment` = -6（因为 `Length` 值把前面的 6 字节也算进去了，需减去 6 才能算准 Body 结尾）
+  - `initialBytesToStrip` = 0（保留完整 Header 传给下游）
+
+---
+
+## 四、 ByteToMessageDecoder 累加器机制与半包处理
+
+所有入站解码器大都继承自 `ByteToMessageDecoder`。理解其内部机制对避免半包 Bug 至关重要。
+
+### 1. Cumulator 累加缓冲区
+
+`ByteToMessageDecoder` 内部维护了一个 `ByteBuf cumulation` 缓冲区：
+
+```mermaid
+flowchart TD
+    Inbound["收到 Socket 字节流"] --> Cumulate["追加到 cumulation 缓存"]
+    Cumulate --> DecodeLoop["循环调用 decode() 方法"]
+    DecodeLoop -->|可读取一帧| OutList["添加到 out 结果列表"]
+    DecodeLoop -->|数据不足| SaveCumulate["保留剩余字节等待下一次读事件"]
+```
+
+### 2. 手写解码器时的安全校验
+
+如果在 `ByteToMessageDecoder` 中手写解码逻辑，**必须校验 readableBytes**：
+
+```java
+public class MyByteDecoder extends ByteToMessageDecoder {
+
     @Override
-    protected void initChannel(SocketChannel ch) {
-        ChannelPipeline pipeline = ch.pipeline();
+    protected void decode(ChannelHandlerContext ctx, ByteBuf in, List<Object> out) {
+        // 1. 先检查头部字节是否足够（如头部 4 字节）
+        if (in.readableBytes() < 4) {
+            return; // 数据不足一帧头部，直接返回等待后续字节
+        }
 
-        // ---- 入站 (Inbound) 处理 ----
-        // 1. 解码：通过头部 4 字节读取长度，解决粘包拆包
-        pipeline.addLast(new LengthFieldBasedFrameDecoder(1024 * 1024, 0, 4, 0, 4));
-        // 2. 将 ByteBuf 转为 String（业务逻辑需要）
-        pipeline.addLast(new StringDecoder(CharsetUtil.UTF_8));
+        in.markReaderIndex();
+        int length = in.readInt();
 
-        // ---- 出站 (Outbound) 处理 ----
-        // 3. 编码：发包时自动在前面补充长度头
-        pipeline.addLast(new LengthFieldPrepender(4));
-        pipeline.addLast(new StringEncoder(CharsetUtil.UTF_8));
+        // 2. 再检查 Body 是否完整
+        if (in.readableBytes() < length) {
+            in.resetReaderIndex(); // 恢复读指针，等待完整 Body
+            return;
+        }
 
-        // 4. 最终业务处理器
-        pipeline.addLast(new MyBusinessHandler());
+        byte[] body = new byte[length];
+        in.readBytes(body);
+        out.add(new String(body, StandardCharsets.UTF_8));
     }
 }
 ```
 
 ---
 
-## 四、 序列化：从字节到对象 (Serialization)
+## 五、 MessageToMessageCodec 双向编解码实战
 
-简单的 `String` 无法承载复杂的业务模型。在高级开发中，我们需要将 `ByteBuf` 转化为 Java 对象。
+在一个自定义协议中，编码器（Outbound）和解码器（Inbound）通常成对出现。使用 `MessageToMessageCodec` 可以将双向逻辑收拢在单个类中。
 
-### 1. 常见的序列化选型对比
+```java
+import io.netty.buffer.ByteBuf;
+import io.netty.channel.ChannelHandlerContext;
+import io.netty.handler.codec.MessageToMessageCodec;
+import java.nio.charset.StandardCharsets;
+import java.util.List;
 
-| 方案 | 性能 | 体积 | 跨语言 | 推荐度 |
-| :--- | :--- | :--- | :--- | :--- |
-| **Java Native** | 极差 | 很大 | 不支持 | 0 |
-| **JSON (Jackson/Fastjson)** | 一般 | 较大 | 支持 | 适合中小型项目 |
-| **Protobuf** | **极佳** | **极小** | **全面支持** | **推荐（大厂首选）** |
-| **Hessian/Kryo** | 优秀 | 较小 | 较差 | 适合纯 Java RPC |
+public class MyProtocolCodec extends MessageToMessageCodec<ByteBuf, String> {
 
-### 2. Protobuf 整合建议
+    @Override
+    protected void encode(ChannelHandlerContext ctx, String msg, List<Object> out) {
+        ByteBuf buf = ctx.alloc().buffer();
+        byte[] body = msg.getBytes(StandardCharsets.UTF_8);
+        buf.writeInt(body.length);
+        buf.writeBytes(body);
+        out.add(buf);
+    }
 
-在 Netty 中使用 Protobuf，只需将 `ProtobufVarint32FrameDecoder` 和 `ProtobufDecoder` 加入 Pipeline 即可。这能大幅压缩传输体积并提升序列化速度。
+    @Override
+    protected void decode(ChannelHandlerContext ctx, ByteBuf msg, List<Object> out) {
+        if (msg.readableBytes() < 4) {
+            return;
+        }
+        msg.markReaderIndex();
+        int length = msg.readInt();
+        if (msg.readableBytes() < length) {
+            msg.resetReaderIndex();
+            return;
+        }
+        byte[] bytes = new byte[length];
+        msg.readBytes(bytes);
+        out.add(new String(bytes, StandardCharsets.UTF_8));
+    }
+}
+```
 
 ---
 
-## 五、 从协议到业务：实战落地建议
+## 六、 非法数据包防御与断路器机制
 
-在真实项目里，建议把编解码器按“协议层 → 业务对象层 → 业务处理层”三层拆开：
+在公网环境或跨系统通信中，可能会收到格式错乱或恶意攻击的畸形数据包。
 
-1. **协议层**：由 `LengthFieldBasedFrameDecoder` / `StringDecoder` 负责切包。
-2. **业务对象层**：将解码后的字节转成 Java 对象。
-3. **业务处理层**：在 Handler 里执行真正的业务逻辑。
+```java
+if (magic != EXPECTED_MAGIC) {
+    // 发现非法魔数，立即关闭通道，防范内存爆破攻击
+    ctx.close();
+    return;
+}
+```
 
-这套分层能显著降低后续扩展成本，尤其适合做 IM、消息网关和 Java 中间件。
+通过设置 `maxFrameLength` 与魔数校验，能在最早阶段阻断非法报文对 JVM 内存的消耗。
 
-## 六、 总结
+---
 
-1. **不要直接在 Handler 里处理裸 ByteBuf**，除非你正在编写非常底层的东西。
-2. **利用 Pipeline 的分层思想**：解码 -> 转化 -> 业务逻辑。
-3. **优先选择 `LengthFieldBasedFrameDecoder`** 作为你的私有协议底座。
-4. **将心跳、HTTP/WebSocket、RPC 这类场景与编解码器结合起来**，能形成完整的工程化 Netty 方案。
+## 七、 总结
 
-更多底层内存管理内容，请参考：[Netty 零拷贝与 ByteBuf 内存管理机制](2-netty-zero-copy-buf.md)。
+1. **绝对不要在 Handler 中直接处理未解包的裸 ByteBuf**。
+2. **优先掌握 `LengthFieldBasedFrameDecoder` 的 5 大参数**，可应对 99% 的私有协议。
+3. **理解 `ByteToMessageDecoder` 内部的 `cumulation` 机制**，手写解码时务必注意 `markReaderIndex()` 与 `resetReaderIndex()`。
+4. **结合 `MessageToMessageCodec` 做协议收拢**，保持 Pipeline 结构清晰干净。
+
+更多实战项目参考：[Netty 构建简易 RPC 框架](7-netty-rpc-practice.md)。
