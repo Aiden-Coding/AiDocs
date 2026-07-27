@@ -116,10 +116,11 @@ graph LR
 Grid 是一种功能极其强悍的二维多维矩阵系统，可同时将元素划分进按比例划分的行（Row）和列（Column）中。
 
 ```mermaid
-grid-layout
-    Header Header Header
-    Sidebar MainContent MainContent
-    Footer Footer Footer
+block-beta
+    columns 3
+    Header:3
+    Sidebar MainContent:2
+    Footer:3
 ```
 
 #### 📦 优秀实践：九宫格自适应 Dashboard 栅格系统
