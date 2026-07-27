@@ -49,6 +49,8 @@ sidebar_position: 4
    增益公式:  A_v = 1  (输入阻抗极高，输出阻抗极低，作缓冲隔离)
 ```
 
+![模拟信号链放大与 ADC 采样输入架构图解](/img/hardware/04-opamp-adc.png)
+
 ---
 
 ## 2. 采样与量化：ADC 核心参数与公式

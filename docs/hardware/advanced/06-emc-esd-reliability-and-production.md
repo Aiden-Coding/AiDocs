@@ -52,6 +52,8 @@ EMC (Electromagnetic Compatibility) 包含两大要求：
                   GND
 ```
 
+![外设接口 ESD 保护与防浪涌滤波电路图解](/img/hardware/06-esd-emc.png)
+
 ### 2.1 TVS 管选型四大黄金参数
 
 - **反向截止电压 $V_{RWM}$**：必须略大于线路正常工作的最大电压（如 3.3V 信号线选 $V_{RWM} = 5\text{V}$ 的 TVS）。

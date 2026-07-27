@@ -93,6 +93,8 @@ $$
                              GND
 ```
 
+![Buck 开关电源原理拓扑图](/img/hardware/03-buck-converter.png)
+
 ### 3.2 占空比与输出电压关系
 
 在连续导通模式 (CCM) 下：
