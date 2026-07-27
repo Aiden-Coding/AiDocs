@@ -7,13 +7,13 @@ sidebar_position: 100
 
 ## Netty 与 NIO 核心面试真题
 
-本专栏覆盖 JDK NIO 三件套、Reactor 模型、Netty 线程模型、ByteBuf、粘包拆包与 RPC 实战等高频题。建议先阅读 [JDK NIO](../../java/network/0-jdk-nio-fundamentals.md)、[Netty 底座](../../java/network/1-netty-io.md)、[ByteBuf](../../java/network/2-netty-zero-copy-buf.md)、[编解码](../../java/network/4-netty-codec-practice.md)。
+本专栏覆盖 JDK NIO 三件套、Reactor 模型、Netty 线程模型、ByteBuf、粘包拆包、性能调优、Pipeline 源码、内存池原理与 RPC 实战等高频题。建议先阅读 [JDK NIO](../../java/network/0-jdk-nio-fundamentals.md)、[Netty 底座](../../java/network/1-netty-io.md)、[ByteBuf](../../java/network/2-netty-zero-copy-buf.md)、[编解码](../../java/network/4-netty-codec-practice.md)、[性能调优](../../java/network/8-netty-performance-tuning.md)、[Pipeline 原理](../../java/network/9-netty-pipeline-eventloop-internals.md)、[内存池剖析](../../java/network/10-netty-memory-pool-internals.md)。
 
 ---
 
 ## 模块：高性能网络
 
-### Q1：BIO、NIO、AIO 的本质差异是什么？
+### Q1：BIO、NIO、AIO 的本质差异
 
 **答：**
 
@@ -27,7 +27,7 @@ Netty 在 Linux 上底层是 **epoll** 边缘/水平触发封装，对应用暴�
 
 ---
 
-### Q2：请画清 Reactor 单线程、多线程、主从多线程模型
+### Q2：Reactor 单线程、多线程与主从多线程模型
 
 **答：**
 
@@ -55,7 +55,7 @@ flowchart TB
 
 ---
 
-### Q3：Netty 的线程模型里 BossGroup 与 WorkerGroup 分别做什么？
+### Q3：BossGroup 与 WorkerGroup 职责分工
 
 **答：**
 
@@ -67,7 +67,7 @@ flowchart TB
 
 ---
 
-### Q4：什么是粘包/拆包？Netty 如何解决？
+### Q4：粘包与拆包原理及 Netty 解决方案
 
 **答：**
 
@@ -88,7 +88,7 @@ Netty 常用：
 
 ---
 
-### Q5：ByteBuf 相比 `ByteBuffer` 的优势？池化与泄漏检测怎么做？
+### Q5：ByteBuf 相比 ByteBuffer 的优势及池化泄漏检测
 
 **答：**
 
@@ -104,7 +104,7 @@ Netty 常用：
 
 ---
 
-### Q6：Netty 中的零拷贝指什么？和 OS 零拷贝是一回事吗？
+### Q6：Netty 零拷贝与操作系统零拷贝区别
 
 **答：**
 
@@ -117,7 +117,7 @@ Netty “零拷贝”更多强调 **避免不必要的 byte[] 复制**；真正�
 
 ---
 
-### Q7：Pipeline 入站出站顺序？编解码器如何放置？
+### Q7：Pipeline 入站出站顺序与 Handler 排布原则
 
 **答：**
 
@@ -135,7 +135,7 @@ Netty “零拷贝”更多强调 **避免不必要的 byte[] 复制**；真正�
 
 ---
 
-### Q8：Epoll 空轮询 Bug 是什么？Netty 如何规避？
+### Q8：Epoll 空轮询 Bug 及 Netty 规避方案
 
 **答：**
 
@@ -145,7 +145,7 @@ Netty 策略：统计 Selector 空轮询次数，超过阈值则重建 Selector�
 
 ---
 
-### Q9：如何设计 Netty 心跳与断线重连？
+### Q9：Netty 心跳检测与断线重连设计
 
 **答：**
 
@@ -158,7 +158,7 @@ Netty 策略：统计 Selector 空轮询次数，超过阈值则重建 Selector�
 
 ---
 
-### Q10：用 Netty 做 RPC，请求-响应如何匹配？如何避免阻塞 EventLoop？
+### Q10：Netty RPC 请求响应匹配与线程隔离
 
 **答：**
 
@@ -172,7 +172,7 @@ Netty 策略：统计 Selector 空轮询次数，超过阈值则重建 Selector�
 
 ---
 
-### Q11：`ChannelHandler` 是否需要 `@Sharable`？线程安全注意什么？
+### Q11：ChannelHandler 线程安全与 Sharable 注解
 
 **答：**
 
@@ -183,7 +183,7 @@ Netty 策略：统计 Selector 空轮询次数，超过阈值则重建 Selector�
 
 ---
 
-### Q12：Netty 与 Spring MVC / WebFlux 怎么选？
+### Q12：Netty 与 Spring MVC / WebFlux 选型对比
 
 **答：**
 
@@ -196,6 +196,38 @@ Netty 策略：统计 Selector 空轮询次数，超过阈值则重建 Selector�
 
 ---
 
+### Q13：PooledByteBufAllocator 内存池架构原理
+
+**答：**
+
+Netty 借鉴了 jemalloc 内存分配思想：
+
+1. **PoolArena**：避免多线程锁竞争，按线程分组分配。
+2. **PoolChunk**：默认 16MB 的大连续内存块，内部采用伙伴分配算法切分。
+3. **PoolPage / PoolSubpage**：Page 为 8KB，更小的内存切分为 Subpage。
+4. **PoolThreadCache**：线程本地缓存，分配与释放小内存无需加锁。
+
+详见 [内存池剖析](../../java/network/10-netty-memory-pool-internals.md)。
+
+---
+
+### Q14：Netty 生产调优关键参数有哪些
+
+**答：**
+
+1. **`SO_BACKLOG`**：提升三次握手已完成连接队列大小，建议设置为 1024 以上。
+2. **`TCP_NODELAY`**：禁用 Nagle 算法，减少网络实时延迟。
+3. **`EpollEventLoopGroup`**：Linux 环境启用 Native Epoll 边缘触发通道。
+4. **耗时隔离**：业务计算或 RPC 提交独立业务线程池，避免阻塞 EventLoop。
+5. **内存泄漏排查**：配置 `-Dio.netty.leakDetection.level=PARANOID`。
+
+详见 [性能调优](../../java/network/8-netty-performance-tuning.md)。
+
+---
+
 ## 总结
+
+Netty 的核心优势在于 **极致的性能、无锁化的线程模型、高扩展性的 Handler 链表与优秀的内存池管理**。掌握其基础与原理是构建高性能 Java 分布式系统的关键。
+
 
 面试抓三条主线：**多路复用与 Reactor 线程模型**、**ByteBuf/Pipeline 工程细节**、**协议边界（粘包）与 RPC 异步匹配**。能画出 Boss/Worker 与 requestId 时序，基本就站上中高级水位。
