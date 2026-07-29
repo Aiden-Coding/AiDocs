@@ -22,6 +22,7 @@ sidebar_position: 0
 - **[集合类型与 COW 写时复制](./0-basic/4-collections-and-cow.md)**：Array/Set/Dictionary 存储特征、COW 原理与 `isKnownUniquelyReferenced`。
 - **[结构体与类](./0-basic/5-structs-and-classes.md)**：值类型 vs 引用类型、栈与堆内存分配、深浅拷贝与 `mutating` 关键字。
 - **[错误处理与 Result 类型](./0-basic/6-error-handling.md)**：`throws`/`try`/`catch` 异常流、`rethrows`、`defer` 清理块与 `Result<Success, Failure>` 范式。
+- **[访问控制与编译优化](./0-basic/7-access-control-and-optimization.md)**：五级访问控制矩阵、`open` vs `public` 继承界限、`@inlinable` 跨模块内联与 WMO 全模块编译器优化。
 
 ### 2. 进阶篇 (Advanced)
 
@@ -31,6 +32,8 @@ sidebar_position: 0
 - **[ARC 与内存管理](./1-advanced/4-arc-and-memory-management.md)**：ARC 引用计数原理、强引用环、`weak`（侧表）与 `unowned` 对比及 Memory Graph 内存泄漏排查。
 - **[Actor 与结构化并发](./1-advanced/5-actors-and-structured-concurrency.md)**：`actor` 隔离防数据竞争、`TaskGroup` 结构化并发、`@MainActor` 与 `Sendable` 协议。
 - **[属性包装器与 Swift 宏](./1-advanced/6-property-wrappers-and-macros.md)**：`@propertyWrapper` 语法糖、`projectedValue` 与 Swift 5.9+ 编译期宏 (`#freestanding` / `@attached`)。
+- **[Unsafe Swift 与 C/C++ 互操作](./1-advanced/7-unsafe-swift-and-interop.md)**：Unsafe 指针体系与裸内存分配、`withUnsafeBytes` 安全闭包、Swift 5.9+ C++ Interop 原生双向桥接。
+- **[KeyPath、反射与 Result Builders](./1-advanced/8-keypath-reflection-and-result-builders.md)**：KeyPath 强类型属性引用与高阶函数应用、`@dynamicMemberLookup`、`Mirror` 动态反射及 `@resultBuilder` 自定义 DSL。
 
 ### 3. 生态与框架篇 (Frameworks)
 
@@ -39,3 +42,6 @@ sidebar_position: 0
 - **[SwiftUI 状态管理与数据流](./2-frameworks/3-swiftui-data-flow.md)**：`@State` / `@Binding` / `@StateObject` 全景矩阵与 iOS 17+ 现代 Observation 框架（`@Observable`）。
 - **[Combine 与 AsyncSequence](./2-frameworks/4-combine-and-async-sequence.md)**：Combine 响应式流水线（Publisher/Subscriber）与现代 `AsyncSequence` / `AsyncStream` 异步流。
 - **[Swift 应用架构与工程实战](./2-frameworks/5-app-architecture.md)**：MVVM 范式与现代单向数据流架构 TCA (The Composable Architecture) 落地解析。
+- **[SwiftUI 布局与 UIKit 桥接](./2-frameworks/6-swiftui-layout-and-uikit-interop.md)**：三步布局协商算法、iOS 16+ `Layout` 协议自定义容器、视图标识（结构/显式）及 `UIViewRepresentable` / `UIHostingController` 混编。
+- **[网络与持久化 (Codable & SwiftData)](./2-frameworks/7-networking-and-persistence.md)**：`Codable` 高级自定义序列化、`URLSession` + `async/await` 现代网络层拦截器，以及 iOS 17+ SwiftData (`@Model`) 关联关系与持久化。
+- **[现代测试与 Instruments 诊断调优](./2-frameworks/8-testing-and-diagnostics.md)**：Swift 6 现代测试框架 (`import Testing`) 与 XCTest 对比、`#expect` / `#require` 宏断言，及 Time Profiler / Leaks / SwiftUI Profiler 性能瓶颈排查。
