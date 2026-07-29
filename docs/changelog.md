@@ -33,7 +33,7 @@ sidebar_position: 2
 
 #### ⚡ [优化] MySQL & Redis 深度优化
 
-- **MySQL 专栏**：重构 [InnoDB MVCC 机制](database/mysql/core/2-mvcc-locks.md) 章节。补充 Read View 隔离算法决策树和 Undo Log 回滚段的物理存储拓扑图。
+- **MySQL 专栏**：重构 [InnoDB MVCC 机制](database/mysql/0-core/2-mvcc-locks.md) 章节。补充 Read View 隔离算法决策树和 Undo Log 回滚段的物理存储拓扑图。
 - **Redis 专栏**：优化 [Redis 哨兵与 Cluster 集群](cache/redis/3-highavailability.md) 的底层选举算法分析。
 
 ---
