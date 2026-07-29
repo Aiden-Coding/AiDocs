@@ -1,5 +1,5 @@
-import {themes as prismThemes} from 'prism-react-renderer';
-import type {Config} from '@docusaurus/types';
+import { themes as prismThemes } from 'prism-react-renderer';
+import type { Config } from '@docusaurus/types';
 import type * as Preset from '@docusaurus/preset-classic';
 import remarkMath from 'remark-math';
 import rehypeKatex from 'rehype-katex';
@@ -63,7 +63,7 @@ const config: Config = {
       } satisfies Preset.Options,
     ],
   ],
-  
+
   stylesheets: [
     {
       href: 'https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css',
@@ -135,7 +135,13 @@ const config: Config = {
           label: 'Rust',
         },
         {
-          type: 'docSidebar',
+          type: 'docSidebar', 
+          sidebarId: 'swiftSidebar',
+          position: 'left',
+          label: 'Swift',
+        },
+        {
+          type: 'docSidebar', 
           sidebarId: 'hardwareSidebar',
           position: 'left',
           label: '硬件',

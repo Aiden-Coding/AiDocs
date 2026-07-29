@@ -12,6 +12,6 @@ sidebar_position: 0
 - 希望更深一步了解 Swift 并发、并发模型、面向协议编程（POP）的进阶使用者。
 
 ## 核心章节概览
-- **[基础篇 (Basic)](./basic/1-variables-and-types)**: 变量与数据类型、控制流、函数与集合。
-- **[进阶篇 (Advanced)](./advanced/1-protocol-oriented-programming)**: 面向协议编程、泛型、ARC 内存管理以及现代并发 (async/await, Actor)。
-- **[生态与框架篇 (Frameworks)](./frameworks/1-swift-package-manager)**: SPM、SwiftUI 原理及常用应用架构模式 (MVVM, TCA)。
+- **[基础篇 (Basic)](./basic/variables-and-types)**: 变量与数据类型、控制流、函数与集合。
+- **[进阶篇 (Advanced)](./advanced/protocol-oriented-programming)**: 面向协议编程、泛型、ARC 内存管理以及现代并发 (async/await, Actor)。
+- **[生态与框架篇 (Frameworks)](./frameworks/swift-package-manager)**: SPM、SwiftUI 原理及常用应用架构模式 (MVVM, TCA)。
