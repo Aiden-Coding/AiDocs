@@ -42,7 +42,8 @@ struct ProfileCardView: View {
 }
 ```
 
-### 深入原理：Diff 算法与 `some View` 
+### 深入原理：Diff 算法与 `some View`
+
 在上文的 `some View` 定义中，通过不透明返回类型，Swift 编译器在底层追踪了一棵由泛型构成的巨大的严格类型树。
 （例如上例底层实际上可能是：`ModifiedContent<HStack<TupleView<(ModifiedContent<Image...>)>>, PaddingLayout...>` )
 正因为编译器**在编译期就明确掌握整个视图的结构骨架**，在状态发生变化时，它能快速定位那些需要重绘的特定层级并高效运用内置 Diff 引擎进行刷新，而非重建整个视图层树。

@@ -58,6 +58,7 @@ let package = Package(
 ```
 
 ### 深入原理：依赖解析与校验 (Resolution & graph)
+
 当你执行构建或通过 Xcode 打开包含 SPM 的项目时，工具链会执行图依赖解析（Dependency Resolution）。它会下载相关库，根据 `Package.swift` 指定的版本控制约束（如 `.upToNextMajor`）拉取并计算出一个安全且**无冲突的锁定图**（记录在 `Package.resolved` 文件中）。
 
 :::warning 永远不要把 Package.resolved 移出版本控制
@@ -85,4 +86,3 @@ MyApp/
 :::tip 二进制分发 (Binary Targets)
 如果你需要分发包含闭源核心算法的 SDK（如金融底层通信与加密），SPM 完全支持引入 `.xcframework`。只需使用 `.binaryTarget(name: "SecretLib", url: "https://...", checksum: "...")`，就能享受到与源码分发同样便捷的版本管理。
 :::
-

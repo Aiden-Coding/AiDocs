@@ -14,6 +14,15 @@ sidebar_position: 2
 
 ### 7 月
 
+#### ✨ [新增] Swift 原生开发专栏全体系重构与扩展
+
+- **影响/发布专题**：重构并新增 [Swift 专栏](swift/0-readme.md) 下全套系统化技术文档。
+- **核心升级与新章节**：
+  - [Swift 学习路线指南](swift/0-readme.md)：重新梳理并整理从基础、进阶到框架与架构的三层系统化学习图谱。
+  - **基础篇**：新增 [集合类型与 COW 写时复制](swift/0-basic/4-collections-and-cow.md)（深度解析 COW 原理与 `isKnownUniquelyReferenced`）、[结构体与类](swift/0-basic/5-structs-and-classes.md)（栈/堆分配、深浅拷贝与 `mutating`）与 [错误处理与 Result 类型](swift/0-basic/6-error-handling.md)（`throws`/`rethrows`/`defer` 与 `Result` 范式）。
+  - **进阶篇**：新增 [ARC 与内存管理](swift/1-advanced/4-arc-and-memory-management.md)（强引用环、`weak`/`unowned` 对比与 Memory Graph 排查）、[Actor 与结构化并发](swift/1-advanced/5-actors-and-structured-concurrency.md)（`actor` 隔离、`TaskGroup` 与 `@MainActor`）与 [属性包装器与 Swift 宏](swift/1-advanced/6-property-wrappers-and-macros.md)（`@propertyWrapper` 与 Swift 5.9+ 编译期宏）。
+  - **生态与框架篇**：新增 [SwiftUI 状态管理与数据流](swift/2-frameworks/3-swiftui-data-flow.md)（`@State`/`@Binding`/`@StateObject` 矩阵与 iOS 17+ `@Observable`）、[Combine 与 AsyncSequence](swift/2-frameworks/4-combine-and-async-sequence.md)（响应式流水线与 `AsyncStream`）以及 [Swift 应用架构与工程实战](swift/2-frameworks/5-app-architecture.md)（MVVM 范式与 TCA 架构落地）。
+
 #### ⚡ [重构] 全栈 AI 模块小白无痛入门全面重构与升级
 
 - **影响/发布专题**：重构 [docs/ai/](ai/0-readme.md) 下全部 AI 技术文档。

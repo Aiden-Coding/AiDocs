@@ -16,6 +16,7 @@ var currentLoginAttempt: Int = 0
 ```
 
 ### 深入原理：不可变性的优势
+
 Swift 极度推崇“不可变性（Immutability）”。使用 `let` 声明的值一旦被赋予初始值后，便会在内存中被封印，无法再次修改。
 - **线程安全**：由于值是不可变的，在并发或多线程环境下，你可以安全地共享常量而不用担心竞态条件（Race Conditions）。
 - **编译优化**：编译器完全知晓常量不会变化，因此能做深度的指令预读取和寄存器分配优化。
@@ -45,6 +46,7 @@ var userConfiguration: [String: Any] = [:]
 Swift 不存在传统意义上的 `null`，取而代之的是可选类型（Optionals）。它用来清晰地表达一个值**存在（Some）**或**缺失（None）**。
 
 ### 原理解析：Optional 本质上是 Enum
+
 当你写下 `String?` 时，其实你使用的是 Swift 标准库中的泛型枚举：
 
 ```swift
@@ -54,9 +56,11 @@ enum Optional<Wrapped> {
     case some(Wrapped)
 }
 ```
+
 这意味着，一个可选类型包裹了真实的值，在使用它之前，你必须**解包 (Unwrap)**。
 
 ### 工程实战：可选绑定与提前退出
+
 在实际开发中，处理 API 响应或字典解析时经常需要解包。我们推荐结合业务场景使用 `if let` 或 `guard let`。
 
 ```swift

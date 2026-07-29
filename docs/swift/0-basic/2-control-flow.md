@@ -28,6 +28,7 @@ for (name, age) in userAges where age >= 18 {
 Swift 的 `switch` 语句默认是不贯穿（fallthrough）的，且必须穷尽（Exhaustive）所有可能的情况。一旦枚举或条件有遗漏，**编译器会直接报错**，这在项目架构演进中简直是防止 Bug 的神器。
 
 ### 深入原理：基于抽象语法树的穷尽性检查
+
 Swift 编译器会在 AST (Abstract Syntax Tree) 层面对 `switch` 语句的每一个 `case` 进行分支树构建，检查是否覆盖了所有可能的输入域。如果你在后期迭代中给 `enum` 增加了一个新的 case，所有用到该枚举的 `switch` 都会编译失败，从而强制开发者处理新逻辑，避免在运行时陷入未知状态。
 
 ### 工程实战：结合元组与枚举的复杂业务流转

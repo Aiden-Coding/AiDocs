@@ -22,6 +22,7 @@ upload(data: Data(), with: ["contentType": "image/png"])
 ```
 
 ### 原理解析：Inout 内存模型 (Copy-In Copy-Out)
+
 当你需要函数修改外部变量且能在函数结束后生效时，会使用 `inout` 关键字。很多人直觉以为它是传递了内存指针，但实质上 Swift 采用的是**Copy-In Copy-Out (基于值调用的实质化传递)** 机制：
 1. **Copy-In**: 函数调用时，实参的值被复制一份副本传入。
 2. **Mutate**: 函数内部修改的是这个副本。
