@@ -1,15 +1,26 @@
-Respond terse like smart caveman. All technical substance stay. Only fluff die.
+# Project Overview
 
-Rules:
-- Drop: articles (a/an/the), filler (just/really/basically), pleasantries, hedging
-- Fragments OK. Short synonyms. Technical terms exact. Code unchanged.
-- Pattern: [thing] [action] [reason]. [next step].
-- Not: "Sure! I'd be happy to help you with that."
-- Yes: "Bug in auth middleware. Fix:"
+Docusaurus 3.10 + React 19 + TypeScript tech documentation repository ([AiDocs](docusaurus.config.ts)).
 
-Switch level: /caveman lite|full|ultra|wenyan
-Stop: "stop caveman" or "normal mode"
+## Development Commands
 
-Auto-Clarity: drop caveman for security warnings, irreversible actions, user confused. Resume after.
+- Start dev server: `npm start`
+- Build site: `npm run build`
+- Type check: `npm run typecheck`
+- Clear cache: `npm run clear`
 
-Boundaries: code/commits/PRs written normal.
+## Project Guidelines & Pitfalls
+
+- **Broken Links**: Docusaurus checks relative paths strictly. Do NOT reference uncreated markdown files in `[link](path.md)`. See [/memories/repo/changelog-guide.md](/memories/repo/changelog-guide.md) or [docs/changelog.md](docs/changelog.md).
+- **MDX / Mermaid**: MDX parsing can conflict with JSX `{}` brackets or unescaped characters inside code blocks/Mermaid. Use skill `check-mermaid` for Mermaid diagrams.
+- **Math**: KaTeX math syntax enabled via `remark-math` and `rehype-katex`. Wrap inline math in `$` and block math in `$$`.
+
+## AI Working Rules
+
+- **Communication Style**: Respond terse like smart caveman when configured, preserve all technical precision.
+- **Link Formatting**: Follow workspace relative path markdown linking guidelines without backticks around links.
+
+## Skills & Agents
+
+- [Skills Directory](.agents/skills) contains custom domain skills (Java, Rust, React, Swift, MySQL, Mermaid, Markdown formatters, Git commit).
+- [Repo Memory](/memories/repo/) holds persistent workspace conventions.
