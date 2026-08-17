@@ -106,6 +106,12 @@ const config: Config = {
         },
         {
           type: 'docSidebar',
+          sidebarId: 'civilServiceSidebar',
+          position: 'left',
+          label: '考公考编',
+        },
+        {
+          type: 'docSidebar',
           sidebarId: 'javaSidebar',
           position: 'left',
           label: 'Java',
