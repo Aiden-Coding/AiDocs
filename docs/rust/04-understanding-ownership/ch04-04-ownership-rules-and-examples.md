@@ -5,7 +5,7 @@ sidebar_position: 18
 
 # 所有权规则与代码案例
 
-本节把所有权规则整理成检查清单，并用可独立运行的程序演示移动、复制、函数传参、借用和切片。每个代码块都是独立示例；标为 `does_not_compile` 的代码用于观察编译器错误，不应与通过示例混在同一个程序中。
+本节把所有权规则整理成检查清单，并用可独立运行的程序演示移动、`move` 闭包、复制、函数传参、借用和切片。每个代码块都是独立示例；标为 `does_not_compile` 的代码用于观察编译器错误，不应与通过示例混在同一个程序中。
 
 ## 三条所有权规则
 
@@ -118,6 +118,105 @@ fn main() {
 ```
 
 `greeting` 移入函数，修改后再作为返回值移回调用方。若函数只需读取数据，不必通过“传入再返回”保留所有权；使用借用即可。
+
+## `move` 关键字：把捕获值移入闭包或异步块 {#move-keyword}
+
+赋值和函数传参中的移动是 Rust 的**所有权语义**，不需要也没有 `move` 关键字。`move` 关键字用于闭包和 `async` 块，要求它们按值捕获所使用的环境变量，而不是按引用借用。
+
+### 默认闭包按使用方式借用
+
+```rust
+fn main() {
+    let name = String::from("Rust");
+    let print_name = || println!("{name}");
+
+    print_name();
+    println!("still owned here: {name}");
+}
+```
+
+闭包只读取 `name`，所以默认不可变借用它；闭包调用后，外层仍可使用 `name`。
+
+### `move` 闭包获取捕获值
+
+```rust
+fn main() {
+    let name = String::from("Rust");
+    let print_name = move || println!("{name}");
+
+    print_name();
+    // println!("{name}"); // 编译失败：String 已移动到闭包
+}
+```
+
+`move` 使非 `Copy` 的 `String` 所有权进入闭包。闭包被丢弃时，仍由闭包拥有的 `name` 随之清理。
+
+### `move` 对 Copy 值的效果不同
+
+```rust
+fn main() {
+    let count = 3_u32;
+    let show_count = move || println!("{count}");
+
+    show_count();
+    println!("count remains usable: {count}");
+}
+```
+
+`move` 要求按值捕获，但 `u32` 实现 `Copy`，因此捕获时复制数值，外层的 `count` 仍有效。判断外层变量是否失效，要看捕获类型是否实现 `Copy`，不能只看有没有写 `move`。
+
+### `move` 与闭包调用 trait 不是一回事
+
+`move` 决定**如何捕获**环境；闭包实现 `Fn`、`FnMut` 还是仅 `FnOnce`，取决于闭包体如何使用捕获值。
+
+```rust
+fn call_twice<F: Fn()>(f: F) {
+    f();
+    f();
+}
+
+fn main() {
+    let label = String::from("ready");
+    let print_label = move || println!("{label}");
+
+    call_twice(print_label);
+}
+```
+
+这个 `move` 闭包只读取捕获值，仍实现 `Fn`，可以被调用多次。若闭包体消费捕获值，则通常只能实现 `FnOnce`。更多捕获规则见[闭包章节](../13-functional-features/ch13-01-closures.md)。
+
+### 在线程和 async 任务中的用途
+
+`std::thread::spawn` 要求线程闭包拥有或使用满足线程生命周期要求的数据，`move` 常用于把数据带入新线程：
+
+```rust
+use std::thread;
+
+fn main() {
+    let message = String::from("hello from another thread");
+    let handle = thread::spawn(move || {
+        println!("{message}");
+    });
+
+    handle.join().expect("thread panicked");
+}
+```
+
+同样，`async move` 会把使用到的变量按值捕获进 Future。Future 仍是惰性的，需 `.await` 或交给执行器驱动：
+
+```rust
+fn main() {
+    let message = String::from("owned by the future");
+    let future = async move {
+        println!("{message}");
+    };
+
+    // message 已移动进 Future；Future 在此被丢弃，所以闭包体没有运行。
+    drop(future);
+}
+```
+
+实际异步任务通常由运行时的 `spawn` 驱动；跨线程调度时，运行时还可能要求 Future 满足 `Send + 'static`。`move` 可以解决借用局部变量导致的生命周期问题，但不会自动让捕获值变成 `Send`，也不会改变其本身的线程安全属性。
 
 ## 两条借用规则
 
@@ -253,6 +352,8 @@ fn main() {
 | `function(value)` | 通常移动到参数 | 复制到参数 |
 | `function(&value)` | 不转移所有权，只读借用 | 不转移所有权 |
 | `function(&mut value)` | 不转移所有权，独占可变借用 | 同样受借用规则约束 |
+| `move || { ... value ... }` | 按值捕获，非 `Copy` 值移入闭包 | 按值捕获时复制，外层值仍可用 |
+| `async move { ... value ... }` | 按值捕获到 Future | 按值捕获时复制 |
 | 从函数返回 `value` | 所有权转移给调用方 | 复制值给调用方 |
 | `value.clone()` | 显式克隆，可能复制堆数据 | 显式复制，通常无必要 |
 

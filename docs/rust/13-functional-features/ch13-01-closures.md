@@ -25,7 +25,7 @@ fn simulated_expensive_calculation(intensity: u32) -> u32 {
     println!("calculating slowly...");
     thread::sleep(Duration::from_secs(2));
     intensity
-}
+}
 ```
 
 <span class="caption">示例 13-1：一个用来代替假定计算的函数，它大约会执行两秒钟</span>
@@ -537,6 +537,8 @@ error[E0434]: can't capture dynamic environment in a fn item; use the || { ...
 当创建一个闭包时，Rust 根据其如何使用环境中变量来推断我们希望如何引用环境。由于所有闭包都可以被调用至少一次，所以所有闭包都实现了 `FnOnce` 。那些并没有移动被捕获变量的所有权到闭包内的闭包也实现了 `FnMut` ，而不需要对被捕获的变量进行可变访问的闭包则也实现了 `Fn` 。 在示例 13-12 中，`equal_to_x` 闭包不可变的借用了 `x`（所以 `equal_to_x` 具有 `Fn` trait），因为闭包体只需要读取 `x` 的值。
 
 如果你希望强制闭包获取其使用的环境值的所有权，可以在参数列表前使用 `move` 关键字。这个技巧在将闭包传递给新线程以便将数据移动到新线程中时最为实用。
+
+关于 `move` 与普通所有权移动的区别、`Copy` 捕获、`Fn` trait 以及 `async move` 的独立示例，参见[所有权规则与代码案例](../04-understanding-ownership/ch04-04-ownership-rules-and-examples.md#move-keyword)。
 
 第 16 章讨论并发时会展示更多 `move` 闭包的例子，不过现在这里修改了示例 13-12 中的代码（作为演示），在闭包定义中增加 `move` 关键字并使用 vector 代替整型，因为整型可以被拷贝而不是移动；注意这些代码还不能编译：
 
