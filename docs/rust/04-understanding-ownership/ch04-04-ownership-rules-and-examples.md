@@ -64,6 +64,48 @@ fn main() {
 
 `clone()` 会复制字符串内容，可能分配内存；只读借用通常更便宜，见后文。
 
+## 案例二补充：部分移动与重新赋值
+
+### 移动结构体中的一个字段
+
+```rust
+struct User {
+    name: String,
+    email: String,
+    active: bool,
+}
+
+fn main() {
+    let user = User {
+        name: String::from("Lin"),
+        email: String::from("lin@example.com"),
+        active: true,
+    };
+
+    let name = user.name; // 只把 name 字段移动出来
+    println!("{name}");
+    println!("{} ({})", user.email, user.active); // 未移动字段仍可使用
+
+    // println!("{user:?}"); // 整个 user 已部分移动，不能再整体使用
+}
+```
+
+部分移动后，仍可使用未移动的字段；但不能再整体借用、传递或销毁该结构体。若类型实现了 `Drop`，通常不能从中单独移动字段，因为析构函数需要完整的 `self`。
+
+### 移动后给原绑定重新赋值
+
+```rust
+fn main() {
+    let mut current = String::from("old");
+    let previous = current; // 原 String 移动给 previous
+
+    current = String::from("new"); // 为 current 初始化一个新值
+    println!("previous = {previous}, current = {current}");
+}
+```
+
+移动后，绑定 `current` 暂时未初始化，不能读取；若它是可变绑定，可以在再次读取前重新赋值。新值与已移动的旧值无关。
+
 ## 案例三：Copy 类型赋值后仍可使用
 
 ```rust
@@ -218,6 +260,33 @@ fn main() {
 
 实际异步任务通常由运行时的 `spawn` 驱动；跨线程调度时，运行时还可能要求 Future 满足 `Send + 'static`。`move` 可以解决借用局部变量导致的生命周期问题，但不会自动让捕获值变成 `Send`，也不会改变其本身的线程安全属性。
 
+## `String`、`str` 与 `&str`
+
+| 类型 | 是否拥有数据 | 是否可变 | 常见来源/用途 |
+|---|---|---|---|
+| `String` | 拥有 UTF-8 缓冲区 | 绑定声明为 `mut` 时可修改 | 运行时创建、拼接或接收的文本 |
+| `str` | 本身不拥有数据，且是动态大小类型 | 不能直接作为普通局部值使用 | 通常通过引用访问 |
+| `&str` | 借用一段 UTF-8 文本 | 只读 | 字符串字面量、`String` 的视图、函数参数 |
+| `&mut str` | 可变借用一段文本切片 | 受独占可变借用规则约束 | 较少直接使用 |
+
+字符串字面量的类型是 `&'static str`；`String` 可通过解引用强制转换为 `&str`。因此函数若只需读取文本，通常接受 `&str`，既能接收字面量，也能接收 `String` 的借用：
+
+```rust
+fn greet(name: &str) {
+    println!("Hello, {name}");
+}
+
+fn main() {
+    let owned = String::from("Ada");
+    greet(&owned); // String 借用并转换为 &str，不转移所有权
+    greet("Grace"); // 字面量本身就是 &str
+
+    owned.push('!'); // greet 返回后，owned 仍由 main 拥有
+}
+```
+
+只有函数需要取得并保存文本所有权时，参数才通常使用 `String`；需要修改调用方字符串时可使用 `&mut String`。第 8 章详见[字符串与 UTF-8](../08-common-collections/ch08-02-strings.md)。
+
 ## 两条借用规则
 
 对同一份数据，引用必须遵守以下规则：
@@ -343,6 +412,52 @@ fn main() {
     println!("cleared: {text}");
 }
 ```
+
+## 生命周期直觉与所有权选择
+
+引用只能在其指向的数据有效期间使用。函数返回引用时，引用必须来自调用方提供且仍然有效的数据，不能指向函数内部创建后即被丢弃的局部值。
+
+```rust
+fn first_word(text: &str) -> &str {
+    match text.find(' ') {
+        Some(index) => &text[..index],
+        None => text,
+    }
+}
+
+fn main() {
+    let text = String::from("hello Rust");
+    let word = first_word(&text);
+    println!("{word}");
+}
+```
+
+此签名省略了生命周期标注；编译器会根据引用输入与输出的规则推断返回切片借用自 `text`。当函数有多个引用输入时，需要时可用生命周期参数明确它们与返回引用的关系，例如：
+
+```rust
+fn longer<'a>(left: &'a str, right: &'a str) -> &'a str {
+    if left.len() >= right.len() {
+        left
+    } else {
+        right
+    }
+}
+```
+
+`'a` 不会延长任何数据的存活时间；它表达调用者必须保证返回引用所依赖的数据至少在相应使用期间有效。完整规则见[生命周期语法](../10-generics-traits-lifetimes/ch10-03-lifetime-syntax.md)。
+
+### 该拥有、借用还是共享
+
+| 需求 | 常见选择 | 含义 |
+|---|---|---|
+| 只读使用数据，不需要留存 | `&T` 或针对文本的 `&str` | 临时借用，不转移所有权 |
+| 临时修改调用方的数据 | `&mut T` | 独占可变借用 |
+| 函数要消费、保存或返回这个值 | 按值传入 `T` | 转移所有权 |
+| 需要独立拥有一份相同内容 | `clone()` | 显式复制，可能产生分配 |
+| 单线程多个所有者 | `Rc<T>` | 引用计数共享所有权 |
+| 多线程多个所有者 | `Arc<T>` | 原子引用计数共享所有权 |
+
+先考虑借用是否能满足需求；只有所有权确实需要转移、复制或共享时，再选择对应方式。`Rc<T>` 和 `Arc<T>` 的完整用法见[引用计数智能指针](../15-smart-pointers/ch15-04-rc.md)。
 
 ## 常见操作规则速查
 
