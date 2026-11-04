@@ -143,23 +143,21 @@ fn main() {
 
 [clippy]: https://github.com/rust-lang/rust-clippy
 
-### 使用 Rust Language Server 的 IDE 集成
+### 使用 rust-analyzer 进行 IDE 集成
 
-为了帮助 IDE 集成，Rust 项目分发了 `rls`，其为 Rust Language Server 的缩写。这个工具采用 [Language Server Protocol][lsp]，这是一个 IDE 与编程语言沟通的规格说明。`rls` 可以用于不同的客户端，比如 [Visual Studio: Code 的 Rust 插件][vscode]。
+[rust-analyzer][rust-analyzer] 是 Rust 项目推荐的语言服务器实现，使用 [Language Server Protocol][lsp] 为编辑器提供补全、跳转、重命名、诊断和代码操作。它已取代早期的 Rust Language Server（RLS）工作流。
 
-[lsp]: http://langserver.org/
-[vscode]: https://marketplace.visualstudio.com/items?itemName=rust-lang.rust
+在 VS Code 中安装 rust-analyzer 扩展即可启用语言服务。其他编辑器可按 rust-analyzer 文档配置 LSP 客户端。通常不需要单独安装 RLS；工具链组件可用 `rustup component list --installed` 查看。
 
-`rls` 工具的质量还未达到发布 1.0 版本的水平，不过目前有一个可用的预览版。请尝试使用并告诉我们它如何！
-
-安装 `rls`：
+建议搭配 Cargo 命令使用：
 
 ```text
-$ rustup component add rls
+$ cargo check
+$ cargo test
+$ cargo clippy --all-targets
 ```
 
-接着为特定的 IDE 安装 language server 支持，如此便会获得如自动补全、跳转到定义和 inline error 之类的功能。
+IDE 诊断有助于快速反馈，但不能代替 Cargo 构建和测试。遇到编辑器与命令行结果不一致时，先确认编辑器打开的是 Cargo workspace 根目录，并检查所选工具链、target 和 features 是否一致。
 
-请查看 [其文档][rls] 来了解 `rls` 的更多信息。
-
-[rls]: https://github.com/rust-lang/rls
+[rust-analyzer]: https://rust-analyzer.github.io/
+[lsp]: https://microsoft.github.io/language-server-protocol/
