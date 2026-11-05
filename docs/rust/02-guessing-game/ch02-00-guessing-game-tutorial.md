@@ -229,6 +229,157 @@ Rust 警告我们没有使用 `read_line` 的返回值 `Result`，这表明程�
 
 消除警告的正确做法是实际编写错误处理代码，但在这个例子中，我们只希望程序在出现问题时立即崩溃，因此我们可以直接使用 `expect`。你将在[第 9 章][recover]<!-- ignore -->了解到如何从错误中恢复。
 
+### 补充：`Result`、`expect`、`unwrap` 和 `?`
+
+在 Rust 中，很多函数不仅会返回一个正常值，还可能返回错误信息。比如 `read_line()` 返回的是 `io::Result`，它本质上是一个枚举：
+
+```rust
+enum Result<T, E> {
+    Ok(T),
+    Err(E),
+}
+```
+
+这里的 `T` 表示成功时的返回值，`E` 表示错误值。也就是说：
+
+- `Ok(value)`：操作成功
+- `Err(error)`：操作失败
+
+这也是为什么 `read_line()` 后面要写 `.expect("Failed to read line")`：它让 Rust 在值是 `Err` 时直接中断程序，并打印一条错误信息。
+
+`expect` 的用法是：
+
+```rust
+let input = io::stdin().read_line(&mut guess).expect("Failed to read line");
+```
+
+如果 `read_line()` 返回的是 `Err`，程序会立刻崩溃，并输出你传入的错误消息；如果返回的是 `Ok`，则 `expect` 会把里面的值返回出来。
+
+还有一个更简短的写法，叫做 `unwrap()`：
+
+```rust
+let input = io::stdin().read_line(&mut guess).unwrap();
+```
+
+`unwrap()` 的效果和 `expect` 很像，只不过它不会自定义错误信息，失败时会打印一个默认的 panic 信息。它很方便，但在调试时不如 `expect` 清晰。
+
+还有一个非常常见的语法：`?`。它的意思是“如果返回的是 `Err`，就把错误向外传播；如果是 `Ok`，就继续取出其中的值”。例如：
+
+```rust
+use std::io;
+
+fn read_guess() -> io::Result<()> {
+    let mut guess = String::new();
+    io::stdin().read_line(&mut guess)?;
+    println!("You guessed: {}", guess);
+    Ok(())
+}
+```
+
+这里的 `?` 会把 `read_line()` 产生的错误直接返回给调用者，而不是在当前函数里直接 panic。这样更符合“函数返回 `Result`，上层负责处理错误”的 Rust 风格。
+
+简单记忆：
+
+- `expect(...)`：失败时直接 panic，并给出自定义提示
+- `unwrap()`：失败时直接 panic，但没有自定义提示
+- `?`：把错误传递给调用者，让更上层处理
+- `Result`：用来表达“成功或失败”的返回值
+
+在本例中，`expect` 是最适合教学的写法，因为它短、清晰，而且很容易让新手看到“这里有可能失败”。
+
+### `#[must_use]`：强制调用者处理返回值
+
+Rust 标准库中的很多类型都带有 `#[must_use]` 属性，例如 `Result`。这个属性的作用是：如果某个函数返回了一个“必须被使用”的值，而调用者没有对它做任何处理，编译器会发出 warning。
+
+例如：
+
+```rust
+fn read_line() -> Result<usize, std::io::Error> {
+    // ...
+}
+```
+
+如果你写了：
+
+```rust
+let mut guess = String::new();
+io::stdin().read_line(&mut guess);
+```
+
+编译器会提示：
+
+```console
+warning: unused `Result` that must be used
+```
+
+这是因为 `read_line()` 返回的是 `Result`，其中可能是 `Ok(...)` 或 `Err(...)`。如果你忽略它，就意味着你没有处理可能发生的错误。
+
+`#[must_use]` 的设计目的不是为了制造麻烦，而是为了让错误处理显式化。Rust 很强调“不要悄悄吞掉错误”。它鼓励程序员在调用可能失败的 API 时，必须写出以下几种处理方式中的一种：
+
+```rust
+.read_line(&mut guess).expect("Failed to read line");
+```
+
+```rust
+match io::stdin().read_line(&mut guess) {
+    Ok(_) => {}
+    Err(err) => println!("Error: {}", err),
+}
+```
+
+```rust
+let mut guess = String::new();
+io::stdin().read_line(&mut guess)?;
+```
+
+`#[must_use]` 也可以用于自定义类型。只要在定义处加上：
+
+```rust
+#[must_use]
+struct ImportantValue;
+```
+
+那么任何人调用这个函数返回 `ImportantValue` 时，如果没有使用它，编译器也会发出警告。它本质上是在提醒：这个返回值很重要，不能被忽略。
+
+`Result` 作为 Rust 中最典型的错误处理类型，正是 `#[must_use]` 的经典应用：它让“错误必须被处理”从理念变成了编译器层面的提醒。
+
+#### 哪些类型默认带有 `#[must_use]`？
+
+并不是所有返回值类型都默认带这个属性，而是一些“必须被显式处理”的类型被标准库或库作者标记成了 `#[must_use]`。最典型的例子是：
+
+- `Result<T, E>`
+- `Option<T>`
+- 一些表示可能失败、可能为空、可能需要显式检查的类型
+
+例如：
+
+```rust
+let maybe_number = Some(42);
+maybe_number;
+```
+
+如果你只是写了 `maybe_number;`，编译器也可能给出类似的 warning，提醒你：这个 `Option` 的值没有被处理。
+
+Rust 这样设计的目的，是让错误和缺失值不能悄悄消失。很多 API 的返回值代表“这可能失败”，如果调用者不处理，就相当于忽略了潜在问题。`#[must_use]` 就是一个编译器层面的提醒机制：
+
+- 你可以忽略它，但编译器会提醒你
+- 这是 Rust 在“显式错误处理”上的核心设计之一
+
+所以，`read_line()` 返回 `Result`，而 `Result` 带有 `#[must_use]`，于是编译器提示你不能无视它；而 `.expect(...)` 就是最直接的处理方式之一。
+
+不过，`#[must_use]` 不是“所有返回值都要处理”的意思。很多类型本身并不代表“必须显式处理的结果”，因此不会被标记。比如：
+
+- `Iterator`：`vec.iter()` 产生的是一个迭代器。丢掉它通常没什么问题，因为它本身并不代表失败，也不需要强制使用；它只是一个按需访问数据的对象。
+- `std::future::Ready`：它表示一个已经准备好的 future。像 `Ready` 这种类型本身并不是错误处理结果；它的关键在于“这个 future 是否被 poll/await”。如果你没有 await，它可能会被编译器提示为未使用的 future，但它不是 `Result` 那种“必须处理错误”的语义。
+
+也就是说，`#[must_use]` 主要用于这些场景：
+
+- 返回值很重要，忽略会掩盖错误
+- 返回值代表“可能失败”或“可能为空”
+- 返回值必须被消费才能产生正确行为
+
+而 `Iterator` 这类对象，通常只是“生成一个可遍历的值”，丢弃它不等于忽略错误，也不会让程序行为变得错误。因此它不需要像 `Result` 那样强制处理。
+
 ### 使用 `println!` 占位符打印值
 
 除了闭合花括号外，目前为止代码中只有一行需要讨论：
