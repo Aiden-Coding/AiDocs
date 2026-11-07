@@ -1,4 +1,5 @@
 ---
+sidebar_position: 15
 title: React 19 进阶：RSC 协议、流式渲染（Streaming HTML）与 Suspense 挂起底层机制
 hide_title: true
 sidebar_label: RSC 协议与流式渲染内核

@@ -1,5 +1,5 @@
 ---
-sidebar_position: 10
+sidebar_position: 13
 ---
 
 # Next.js App Router 与 Docusaurus 全栈实践

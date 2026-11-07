@@ -1,5 +1,5 @@
 ---
-sidebar_position: 0
+sidebar_position: 2
 ---
 
 # React 核心哲学
@@ -468,5 +468,5 @@ function LikeButton({ count, onLike }: { count: number; onLike: () => void }) {
 ## 🔗 下一步
 
 理解了 React 的核心哲学后，你已经准备好深入学习：
-1. [JSX 语法与规范](2-jsx-syntax.md)：学习如何用 JSX 描述 UI
-2. [组件与 Props](3-components-props.md)：深入掌握组件的设计与 Props 的用法
+1. [JSX 语法与规范](4-jsx-syntax.md)：学习如何用 JSX 描述 UI
+2. [组件与 Props](5-components-props.md)：深入掌握组件的设计与 Props 的用法

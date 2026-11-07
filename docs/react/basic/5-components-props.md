@@ -1,5 +1,5 @@
 ﻿---
-sidebar_position: 3
+sidebar_position: 5
 ---
 
 # 组件与 Props 数据流
@@ -680,6 +680,6 @@ export default Card;
 ## 🔗 下一步
 
 掌握了组件与 Props 后，你已经可以构建可复用的组件库了。建议继续学习：
-1. [State 与事件处理](4-state-events.md)：给组件添加交互能力
-2. [常用 Hooks 深度解析](5-hooks.md)：学习如何在组件中管理状态
-3. [组件设计模式](6-component-patterns.md)：设计企业级可复用组件
+1. [State 与事件处理](6-state-events.md)：给组件添加交互能力
+2. [常用 Hooks 深度解析](7-hooks.md)：学习如何在组件中管理状态
+3. [组件设计模式](8-component-patterns.md)：设计企业级可复用组件

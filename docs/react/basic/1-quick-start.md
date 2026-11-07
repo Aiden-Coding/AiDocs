@@ -432,10 +432,10 @@ const [count, setCount] = useState(0);  // 改成 10
 
 完成这个快速开始后，建议按以下顺序继续学习：
 
-1. **[React 核心哲学](0-philosophy.md)**：理解 React 设计的本质
-2. **[JSX 语法与规范](2-jsx-syntax.md)**：掌握 JSX 的规则与最佳实践
-3. **[组件与 Props](3-components-props.md)**：学习组件间的数据传递
-4. **[State 与事件处理](4-state-events.md)**：深入理解状态管理
+1. **[React 核心哲学](2-philosophy.md)**：理解 React 设计的本质
+2. **[JSX 语法与规范](4-jsx-syntax.md)**：掌握 JSX 的规则与最佳实践
+3. **[组件与 Props](5-components-props.md)**：学习组件间的数据传递
+4. **[State 与事件处理](6-state-events.md)**：深入理解状态管理
 
 ---
 
@@ -447,7 +447,7 @@ const [count, setCount] = useState(0);  // 改成 10
 
 ### Q: useState 的 `count + 1` 仅增加 1 的原因
 
-**A:** 这是一个常见的陷阱。如果你在一个事件处理函数中多次调用 `setCount(count + 1)`，React 会将多个状态更新合并（批处理）。详见 [State 与事件处理](4-state-events.md)。
+**A:** 这是一个常见的陷阱。如果你在一个事件处理函数中多次调用 `setCount(count + 1)`，React 会将多个状态更新合并（批处理）。详见 [State 与事件处理](6-state-events.md)。
 
 ### Q: 构建生产版本的步骤
 

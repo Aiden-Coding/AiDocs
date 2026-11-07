@@ -1,5 +1,5 @@
 ---
-sidebar_position: 1.5
+sidebar_position: 3
 ---
 
 # React 必备 JavaScript 常用语法
@@ -434,4 +434,4 @@ function UserList() {
 | **模块化导入** | 引用组件、工具函数、CSS 样式文件 | 默认导入不带大括号 `{}`，命名导入必须带大括号且名称完全一致 |
 | **async / await** | 在 `useEffect` 或事件处理中请求后端 API | `useEffect` 回调函数本身不能直接写成 `async`，须在内部声明 |
 
-掌握了这些现代 JavaScript 特性，你就能在 React 的学习旅程中游刃有余！下一章我们将开始进入 React 独创的 [JSX 语法与规范](2-jsx-syntax.md)。
+掌握了这些现代 JavaScript 特性，你就能在 React 的学习旅程中游刃有余！下一章我们将开始进入 React 独创的 [JSX 语法与规范](4-jsx-syntax.md)。

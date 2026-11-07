@@ -18,27 +18,33 @@ slug: /react/
 mindmap
   root((React 专家成长之路))
     核心基石
+      快速开始指南
       React 核心哲学
-      JSX 核心语法
+      JS 必备基础
+      JSX 语法与规范
       组件与 Props 数据流
       State 状态与事件绑定
-    进阶与常用 Hooks
+    应用开发与工程化
       常用 Hooks 详解
       组件设计模式
-      状态管理生态
+      客户端路由体系
+      Context 与状态管理
+      企业级表单与校验
+      样式方案与工程构建
+      TypeScript 类型系统
+      测试策略与 TDD
     底层渲染引擎
       Fiber 架构剖析
       Virtual DOM 与 Diff 算法
       并发模式与时间切片
-    性能优化与工程化
+    性能调优与编译优化
+      批量更新与渲染优化
       React Compiler 自动优化
-      useMemo 与 useCallback 契约
-      TypeScript 类型体系
-      测试策略与 TDD
     全栈与最新前沿
       SSR/SSG 架构与 Hydration
-      Next.js App Router 最佳实践
+      Next.js App Router 全栈实践
       React 19 全新特性
+      RSC 协议与流式渲染
 ```
 
 ---
@@ -53,7 +59,7 @@ mindmap
 
 ### 1.1 React 核心哲学
 
-- [React 核心哲学](basic/0-philosophy.md)：声明式 UI、组件化、单向数据流与 `UI = f(state)` 的数学映射模型。
+- [React 核心哲学](basic/2-philosophy.md)：声明式 UI、组件化、单向数据流与 `UI = f(state)` 的数学映射模型。
 
 #### 💡 核心示例：命令式 vs 声明式
 
@@ -78,7 +84,7 @@ function Counter() {
 
 ### 1.2 JavaScript 必备基础
 
-- [JavaScript 常用语法](basic/1.5-js-essentials.md)：现代 React 开发所需的 ES6+ 语法子集，包括解构赋值、展开运算符、常用数组方法、可选链操作符等。
+- [JavaScript 常用语法](basic/3-js-essentials.md)：现代 React 开发所需的 ES6+ 语法子集，包括解构赋值、展开运算符、常用数组方法、可选链操作符等。
 
 #### 💡 核心示例：解构赋值与属性展开
 
@@ -102,7 +108,7 @@ function InfoCard({ title, className = 'default-card', ...restProps }: Props) {
 
 ### 1.3 JSX 语法与规范
 
-- [JSX 语法与规范](basic/2-jsx-syntax.md)：探究 JSX 编译后的 JavaScript 本质；掌握闭合标签、单根节点、驼峰命名等书写规范；实战条件渲染与列表渲染。
+- [JSX 语法与规范](basic/4-jsx-syntax.md)：探究 JSX 编译后的 JavaScript 本质；掌握闭合标签、单根节点、驼峰命名等书写规范；实战条件渲染与列表渲染。
 
 #### 💡 核心示例：条件与列表渲染
 
@@ -135,7 +141,7 @@ function ListDemo({ items, showList }: { items: Item[]; showList: boolean }) {
 
 ### 1.4 组件与 Props 数据流
 
-- [组件与 Props 数据流](basic/3-components-props.md)：理解函数组件声明；掌握 Props 的传递与解构；探究 Props 的只读特性与单向数据流；利用 `children` 属性设计高复用布局组件。
+- [组件与 Props 数据流](basic/5-components-props.md)：理解函数组件声明；掌握 Props 的传递与解构；探究 Props 的只读特性与单向数据流；利用 `children` 属性设计高复用布局组件。
 
 #### 💡 核心示例：只读 Props 与布局容器
 
@@ -167,7 +173,7 @@ function App() {
 
 ### 1.5 State 状态与事件绑定
 
-- [State 状态与事件绑定](basic/4-state-events.md)：通过 `useState` 激活组件心跳；理解状态更新的异步性与批处理（Batching）机制；学习函数式更新解决旧状态依赖；掌握 React 合成事件与状态提升。
+- [State 状态与事件绑定](basic/6-state-events.md)：通过 `useState` 激活组件心跳；理解状态更新的异步性与批处理（Batching）机制；学习函数式更新解决旧状态依赖；掌握 React 合成事件与状态提升。
 
 #### 💡 核心示例：异步批处理与函数式更新
 
@@ -203,7 +209,7 @@ function BatchingDemo() {
 
 ### 2.1 常用 Hooks 深度解析
 
-- [常用 Hooks 深度解析](basic/5-hooks.md)：深入掌握 `useState` 惰性初始化、`useEffect`（含 `StrictMode` 开发环境双击行为与清理函数）、`useRef`（含 `useImperativeHandle` 限定暴露）、`useContext`、`useId`、以及 `useSyncExternalStore` 和 `useInsertionEffect` 等进阶 Hooks。
+- [常用 Hooks 深度解析](basic/7-hooks.md)：深入掌握 `useState` 惰性初始化、`useEffect`（含 `StrictMode` 开发环境双击行为与清理函数）、`useRef`（含 `useImperativeHandle` 限定暴露）、`useContext`、`useId`、以及 `useSyncExternalStore` 和 `useInsertionEffect` 等进阶 Hooks。
 
 #### 💡 核心示例：useEffect 清理函数与 useRef 操作 DOM
 
@@ -240,7 +246,7 @@ function TimerAndInput() {
 
 ### 2.2 组件设计模式
 
-- [组件设计模式与最佳实践](basic/6-component-patterns.md)：复合组件模式、Render Props、高阶组件 (HOC)、受控与非受控组件、ErrorBoundary（错误边界）模式、Portal（传送门）模式等企业级组件设计范式。
+- [组件设计模式与最佳实践](basic/8-component-patterns.md)：复合组件模式、Render Props、高阶组件 (HOC)、受控与非受控组件、ErrorBoundary（错误边界）模式、Portal（传送门）模式等企业级组件设计范式。
 
 #### 💡 核心示例：复合组件模式 (Compound Components)
 
@@ -292,14 +298,16 @@ function PatternDemo() {
 
 ### 2.3 客户端路由体系
 
-- [React Router 路由体系与架构实践](basic/7-react-router.md)：深入掌握 React Router v6/v7、嵌套路由 (`<Outlet />`)、数据加载 (`loader`/`action`)、路由守卫与动态导航。
+- [React Router 路由体系与架构实践](basic/9-react-router.md)：深入掌握 React Router v6/v7、嵌套路由 (`<Outlet />`)、数据加载 (`loader`/`action`)、路由守卫与动态导航。
 
 ### 2.4 状态管理与工程化
 
-- [Context 与 useReducer 模式](advanced/5-context-reducer.md)：Context API 的订阅更新机制、性能陷阱与优化方案；结合 `useReducer` 构建复杂可预测状态机。
-- [状态管理库选型与实践](advanced/6-state-management.md)：对比 Zustand 轻量方案、Redux Toolkit 经典方案、Jotai/Recoil 原子状态方案，以及 **TanStack Query (React Query)** 服务端状态与数据缓存同步。
-- [React 样式方案与工程化构建](advanced/13-styling-and-build.md)：Tailwind CSS / CSS Modules 样式方案、`ErrorBoundary` 异常捕获与 Vite 构建工程化实战。
-- [企业级表单与数据校验：React Hook Form 与 Zod 实战](advanced/14-complex-forms-validation.md)：非受控高性能表单、Zod Schema 驱动校验、动态嵌套字段数组与第三方受控组件无缝桥接。
+- [Context 与 useReducer 模式](advanced/1-context-reducer.md)：Context API 的订阅更新机制、性能陷阱与优化方案；结合 `useReducer` 构建复杂可预测状态机。
+- [状态管理库选型与实践](advanced/2-state-management.md)：对比 Zustand 轻量方案、Redux Toolkit 经典方案、Jotai/Recoil 原子状态方案，以及 **TanStack Query (React Query)** 服务端状态与数据缓存同步。
+- [企业级表单与数据校验：React Hook Form 与 Zod 实战](advanced/3-complex-forms-validation.md)：非受控高性能表单、Zod Schema 驱动校验、动态嵌套字段数组与第三方受控组件无缝桥接。
+- [React 样式方案与工程化构建](advanced/4-styling-and-build.md)：Tailwind CSS / CSS Modules 样式方案、`ErrorBoundary` 异常捕获与 Vite 构建工程化实战。
+- [TypeScript 类型体系与泛型约束](advanced/5-typescript-react.md)：`React.FC` 与普通组件对比、泛型组件设计、事件处理类型、自定义 Hooks 类型推导。
+- [测试驱动开发与测试策略](advanced/6-testing-strategy.md)：React Testing Library 最佳实践、组件单元测试、集成测试、Mock 策略与测试覆盖率管理。
 
 #### 💡 核心示例：Zustand 轻量化全局状态管理
 
@@ -339,7 +347,7 @@ function BearCounter() {
 
 ### 3.1 Fiber 架构剖析
 
-- [Fiber 架构剖析](advanced/0-fiber-architecture.md)：解析 Fiber 底层结构与双缓冲树机制；深度拆解 Reconciliation 两个核心阶段：Render 阶段与 Commit 阶段；详解时间切片调度机制。
+- [Fiber 架构剖析](advanced/7-fiber-architecture.md)：解析 Fiber 底层结构与双缓冲树机制；深度拆解 Reconciliation 两个核心阶段：Render 阶段与 Commit 阶段；详解时间切片调度机制。
 
 #### 💡 核心示例：模拟 Fiber 工作循环 (workLoop) 原理
 
@@ -382,7 +390,7 @@ function performUnitOfWork(fiber) {
 
 ### 3.2 虚拟 DOM 与 Diff 算法
 
-- [Virtual DOM 与 Diff 算法优化](advanced/1-virtual-dom-diff.md)：分析 React 的 $O(n)$ 复杂度 Diff 算法三大策略：树分层比较、组件类型判断、`key` 属性优化。
+- [Virtual DOM 与 Diff 算法优化](advanced/8-virtual-dom-diff.md)：分析 React 的 $O(n)$ 复杂度 Diff 算法三大策略：树分层比较、组件类型判断、`key` 属性优化。
 
 #### 💡 核心示例：Key 属性对于节点复用的重要性
 
@@ -401,7 +409,7 @@ function performUnitOfWork(fiber) {
 
 ### 3.3 并发模式与调度器
 
-- [并发模式与时间切片调度](advanced/2-concurrent-mode.md)：Concurrent Mode 的优先级调度机制、`startTransition` 与 `useDeferredValue` 的应用场景、Scheduler 包的任务中断恢复策略。
+- [并发模式与时间切片调度](advanced/9-concurrent-mode.md)：Concurrent Mode 的优先级调度机制、`startTransition` 与 `useDeferredValue` 的应用场景、Scheduler 包的任务中断恢复策略。
 
 #### 💡 核心示例：startTransition 分离非紧急任务
 
@@ -429,45 +437,11 @@ function SearchResults() {
 
 ---
 
-## 第四阶段：性能调优与企业级工程化 (Expert: Performance & Engineering)
+## 第四阶段：性能调优与编译优化 (Expert: Performance & Optimization)
 
-### 4.1 性能优化与 React Compiler
+### 4.1 渲染优化与批量更新
 
-- [性能优化与 React Compiler](advanced/3-performance-optimization.md)：React 19 自动 Memoization 编译器原理、`useMemo` 与 `useCallback` 的正确使用时机、React DevTools Profiler 性能分析。
-
-#### 💡 核心示例：React.memo 与 useCallback 避免不必要重渲染
-
-```tsx
-import React, { useState, useCallback } from 'react';
-
-// 使用 React.memo 包裹：只有 Props 发生浅比较变化时，子组件才会重渲染
-const ExpensiveButton = React.memo(({ onClick }: { onClick: () => void }) => {
-  console.log('按钮组件被渲染了！');
-  return <button onClick={onClick}>提交</button>;
-});
-
-function ParentContainer() {
-  const [text, setText] = useState('');
-  const [count, setCount] = useState(0);
-
-  // 使用 useCallback 缓存函数引用，防止 ParentContainer 渲染时重新生成新的 onClick 引用
-  const handleButtonClick = useCallback(() => {
-    setCount(c => c + 1);
-  }, []); // 依赖项为空，引用始终不变
-
-  return (
-    <div>
-      <input value={text} onChange={e => setText(e.target.value)} />
-      {/* 改变 input 的 text 触发父组件更新，但由于 useCallback 的存在，ExpensiveButton 不会重新渲染 */}
-      <ExpensiveButton onClick={handleButtonClick} />
-    </div>
-  );
-}
-```
-
-### 4.2 渲染优化与批量更新
-
-- [批量更新与渲染优化策略](advanced/4-render-optimization.md)：自动批处理 (Automatic Batching)、`flushSync` 强制同步渲染、避免不必要的重渲染。
+- [批量更新与渲染优化策略](advanced/10-render-optimization.md)：自动批处理 (Automatic Batching)、`flushSync` 强制同步渲染、避免不必要的重渲染。
 
 #### 💡 核心示例：flushSync 强制同步获取最新 DOM 状态
 
@@ -501,72 +475,38 @@ function ScrollToBottom() {
 }
 ```
 
-### 4.3 TypeScript + React 类型系统
+### 4.2 性能优化与 React Compiler
 
-- [TypeScript 类型体系与泛型约束](advanced/7-typescript-react.md)：`React.FC` 与普通组件对比、泛型组件设计、事件处理类型、自定义 Hooks 类型推导。
+- [性能优化与 React Compiler](advanced/11-performance-optimization.md)：React 19 自动 Memoization 编译器原理、`useMemo` 与 `useCallback` 的正确使用时机、React DevTools Profiler 性能分析。
 
-#### 💡 核心示例：通用泛型表格组件与事件类型
+#### 💡 核心示例：React.memo 与 useCallback 避免不必要重渲染
 
 ```tsx
-import React from 'react';
+import React, { useState, useCallback } from 'react';
 
-// 1. 定义泛型表格组件 Props
-interface TableProps<T> {
-  data: T[];
-  renderRow: (item: T) => React.ReactNode;
-}
+// 使用 React.memo 包裹：只有 Props 发生浅比较变化时，子组件才会重渲染
+const ExpensiveButton = React.memo(({ onClick }: { onClick: () => void }) => {
+  console.log('按钮组件被渲染了！');
+  return <button onClick={onClick}>提交</button>;
+});
 
-// 2. 泛型声明，使得传入不同的 data 可以自动推导 item 类型
-export function GenericTable<T>({ data, renderRow }: TableProps<T>) {
+function ParentContainer() {
+  const [text, setText] = useState('');
+  const [count, setCount] = useState(0);
+
+  // 使用 useCallback 缓存函数引用，防止 ParentContainer 渲染时重新生成新的 onClick 引用
+  const handleButtonClick = useCallback(() => {
+    setCount(c => c + 1);
+  }, []); // 依赖项为空，引用始终不变
+
   return (
-    <table>
-      <tbody>
-        {data.map((item, index) => (
-          <tr key={index}>{renderRow(item)}</tr>
-        ))}
-      </tbody>
-    </table>
+    <div>
+      <input value={text} onChange={e => setText(e.target.value)} />
+      {/* 改变 input 的 text 触发父组件更新，但由于 useCallback 的存在，ExpensiveButton 不会重新渲染 */}
+      <ExpensiveButton onClick={handleButtonClick} />
+    </div>
   );
 }
-
-// 3. 键盘事件类型标注
-function TypingInput() {
-  const handleKeyDown = (event: React.KeyboardEvent<HTMLInputElement>) => {
-    if (event.key === 'Enter') {
-      console.log('按下了回车键，提交值：', event.currentTarget.value);
-    }
-  };
-
-  return <input type="text" onKeyDown={handleKeyDown} />;
-}
-```
-
-### 4.4 测试策略与 TDD
-
-- [测试驱动开发与测试策略](advanced/8-testing-strategy.md)：React Testing Library 最佳实践、组件单元测试、集成测试、Mock 策略与测试覆盖率管理。
-
-#### 💡 核心示例：RTL 进行交互单元测试
-
-```tsx
-import { render, screen } from '@testing-library/react';
-import userEvent from '@testing-library/user-event';
-import Counter from './Counter';
-
-test('用户点击按钮，计数器应该递增', async () => {
-  // 1. 渲染待测试的组件
-  render(<Counter />);
-  
-  // 2. 寻找 DOM 元素
-  const button = screen.getByRole('button', { name: /点击/i });
-  const text = screen.getByText(/当前计数值: 0/i);
-  expect(text).toBeInTheDocument();
-
-  // 3. 模拟用户真实点击交互
-  await userEvent.click(button);
-
-  // 4. 断言验证期望结果
-  expect(screen.getByText(/当前计数值: 1/i)).toBeInTheDocument();
-});
 ```
 
 ---
@@ -575,7 +515,7 @@ test('用户点击按钮，计数器应该递增', async () => {
 
 ### 5.1 SSR/SSG 架构与 Hydration
 
-- [SSR/SSG 架构与 Hydration 机制](advanced/9-ssr-ssg.md)：服务端渲染 (SSR) 与静态站点生成 (SSG) 的区别与适用场景、Hydration 注水过程与常见错误、`<BrowserOnly>` 防空设计。
+- [SSR/SSG 架构与 Hydration 机制](advanced/12-ssr-ssg.md)：服务端渲染 (SSR) 与静态站点生成 (SSG) 的区别与适用场景、Hydration 注水过程与常见错误、`<BrowserOnly>` 防空设计。
 
 #### 💡 核心示例：BrowserOnly 规避服务端 Node.js 没有 window 对象的崩溃报错
 
@@ -597,7 +537,7 @@ function ResponsiveWidget() {
 
 ### 5.2 Next.js 与 Docusaurus 实践
 
-- [Next.js App Router 与 Docusaurus 定制](advanced/10-nextjs-docusaurus.md)：Next.js 14+ App Router 架构、Server Components vs Client Components、Docusaurus 主题定制。
+- [Next.js App Router 与 Docusaurus 定制](advanced/13-nextjs-docusaurus.md)：Next.js 14+ App Router 架构、Server Components vs Client Components、Docusaurus 主题定制。
 
 #### 💡 核心示例：RSC 服务端组件与客户端组件混合使用
 
@@ -630,8 +570,8 @@ export default async function ProductPage({ params }: { params: { id: string } }
 
 ### 5.3 React 19 全新特性与架构
 
-- [React 19 全新特性与 API](advanced/11-react19-features.md)：深入实践 React 19 异步 Action 管理器 `useActionState`、无感表单状态获取 `useFormStatus`、条件性解析 Resource 与 Context 的 `use` 关键字、`useOptimistic` 乐观更新 Hook、资源预加载核心 API（`preload` / `preinit`）与根实例错误处理体系。
-- [React 19 进阶：RSC 协议、流式渲染（Streaming HTML）与 Suspense 挂起底层机制](advanced/12-rsc-streaming-suspense.md)：精剖 React Server Components (RSC) 流式 Payload 协议字节级格式，详拆 Stream 分卷传输 Chunk 后台运行，以及 Suspense 抛出并捕获 Promise 时的 Fiber 断裂挂起自愈重建原理。
+- [React 19 全新特性与 API](advanced/14-react19-features.md)：深入实践 React 19 异步 Action 管理器 `useActionState`、无感表单状态获取 `useFormStatus`、条件性解析 Resource 与 Context 的 `use` 关键字、`useOptimistic` 乐观更新 Hook、资源预加载核心 API（`preload` / `preinit`）与根实例错误处理体系。
+- [React 19 进阶：RSC 协议、流式渲染（Streaming HTML）与 Suspense 挂起底层机制](advanced/15-rsc-streaming-suspense.md)：精剖 React Server Components (RSC) 流式 Payload 协议字节级格式，详拆 Stream 分卷传输 Chunk 后台运行，以及 Suspense 抛出并捕获 Promise 时的 Fiber 断裂挂起自愈重建原理。
 
 #### 💡 核心示例：useActionState 自动托管表单提交 Loading 与 Error 状态
 
@@ -679,9 +619,9 @@ function FeedbackForm() {
 
 每个阶段都配备了**循序渐进的练习题**，从简单到复杂逐步训练：
 
-- [初级练习题](practice/0-beginner-exercises.md)：组件声明、Props 传递、State 管理、列表渲染
-- [中级练习题](practice/1-intermediate-exercises.md)：自定义 Hooks、状态提升、Context 使用、表单处理
-- [高级练习题](practice/2-advanced-exercises.md)：性能优化、渲染调试、TypeScript 约束、单元测试
+- [初级练习题](practice/1-beginner-exercises.md)：组件声明、Props 传递、State 管理、列表渲染
+- [中级练习题](practice/2-intermediate-exercises.md)：自定义 Hooks、状态提升、Context 使用、表单处理
+- [高级练习题](practice/3-advanced-exercises.md)：性能优化、渲染调试、TypeScript 约束、单元测试
 
 > **💡 学习建议**：先理解理论，立刻动手做练习，在做题过程中调试与反思。
 
@@ -691,84 +631,68 @@ function FeedbackForm() {
 
 ### 第一阶段（2-3 周）：零基础到初级开发工程师
 
-| 步骤 | 内容 | 时间 | 先修条件 |
-| :--- | :--- | :--- | :--- |
-| 1.1 | React 核心哲学与声明式 UI | 3h | JavaScript 基础 |
-| 1.2 | JSX 语法、编译原理、条件/列表渲染 | 4h | 1.1 |
-| 1.3 | 函数组件、Props 与单向数据流 | 4h | 1.2 |
-| 1.4 | useState 与事件处理 | 4h | 1.3 |
-| 练习 | 初级练习题：5-8 个小项目 | 8h | 1.1-1.4 |
-| **验证** | ✅ 能独立构建简单的 TODO 应用 | - | - |
-
-**第一阶段达成目标**：
-- ✅ 理解 React 的核心设计哲学
-- ✅ 熟练使用 JSX 语法进行 UI 描述
-- ✅ 掌握组件组合与 Props 数据流
-- ✅ 能够用 `useState` 管理组件内部状态
-- ✅ 完成 5 个以上的小型项目（计数器、TODO、搜索过滤等）
+| 步骤 | 内容 | 对应文档 | 时间 | 先修条件 |
+| :--- | :--- | :--- | :--- | :--- |
+| 1.1 | 快速开始环境搭建与第一个组件 | [快速开始指南](basic/1-quick-start.md) | 2h | Node.js 基础 |
+| 1.2 | React 核心哲学与声明式 UI 模型 | [React 核心哲学](basic/2-philosophy.md) | 3h | 1.1 |
+| 1.3 | 现代 JavaScript 必备 ES6+ 语法 | [JavaScript 常用语法](basic/3-js-essentials.md) | 3h | JS 基础 |
+| 1.4 | JSX 语法规范与条件/列表渲染 | [JSX 语法与规范](basic/4-jsx-syntax.md) | 4h | 1.2-1.3 |
+| 1.5 | 函数组件、Props 与单向数据流 | [组件与 Props 数据流](basic/5-components-props.md) | 4h | 1.4 |
+| 1.6 | useState 状态管理与合成事件绑定 | [State 状态与事件绑定](basic/6-state-events.md) | 5h | 1.5 |
+| 练习 | 初级练习题：6 个递进小项目 | [初级练习题](practice/1-beginner-exercises.md) | 8h | 1.1-1.6 |
+| **验证** | ✅ 能独立使用 Vite 搭建并构建具有交互性的单页应用与待办系统 | - | - | - |
 
 ---
 
-### 第二阶段（3-4 周）：初级到中级开发工程师
+### 第二阶段（3-4 周）：初级到中级开发工程师（应用开发与企业工程化）
 
-| 步骤 | 内容 | 时间 | 先修条件 |
-| :--- | :--- | :--- | :--- |
-| 2.1 | useEffect 深度解析与副作用管理 | 5h | 1.4 |
-| 2.2 | useRef、useContext 与更多 Hooks | 5h | 2.1 |
-| 2.3 | 组件设计模式（复合组件、HOC、Render Props） | 6h | 2.1-2.2 |
-| 2.4 | 状态管理生态（Context API vs Zustand vs Redux） | 6h | 2.3 |
-| 2.5 | 表单处理与验证最佳实践 | 4h | 2.1-2.2 |
-| 练习 | 中级练习题：3-5 个中型项目 | 12h | 2.1-2.5 |
-| **验证** | ✅ 完成实战：用户管理系统、仪表板、电商购物车 | - | - |
-
-**第二阶段达成目标**：
-- ✅ 深入理解副作用与依赖项管理
-- ✅ 掌握 Hooks 的链表机制与闭包陷阱
-- ✅ 设计可复用、可维护的组件架构
-- ✅ 选择合适的状态管理方案
-- ✅ 完成 3+ 个中等规模的真实项目
+| 步骤 | 内容 | 对应文档 | 时间 | 先修条件 |
+| :--- | :--- | :--- | :--- | :--- |
+| 2.1 | 常用 Hooks 深度解析与副作用闭包管理 | [常用 Hooks 深度解析](basic/7-hooks.md) | 6h | 1.6 |
+| 2.2 | 复合组件、受控组件与错误边界模式 | [组件设计模式与最佳实践](basic/8-component-patterns.md) | 6h | 2.1 |
+| 2.3 | 客户端路由体系架构与权限守卫 | [React Router 路由体系](basic/9-react-router.md) | 5h | 2.2 |
+| 2.4 | Context API 与 useReducer 复杂状态机 | [Context 与 useReducer 模式](advanced/1-context-reducer.md) | 5h | 2.1 |
+| 2.5 | 全局状态管理库实战（Zustand / Redux / Query） | [状态管理库选型与实践](advanced/2-state-management.md) | 6h | 2.4 |
+| 2.6 | 企业级高性能表单与数据校验 | [React Hook Form 与 Zod 实战](advanced/3-complex-forms-validation.md) | 5h | 2.2 |
+| 2.7 | 样式方案、错误边界与 Vite 构建工程化 | [样式方案与工程化构建](advanced/4-styling-and-build.md) | 5h | 2.2 |
+| 2.8 | TypeScript + React 强类型与多态组件设计 | [TypeScript 类型体系与泛型约束](advanced/5-typescript-react.md) | 6h | 2.1-2.7 |
+| 2.9 | 测试驱动开发（Vitest / RTL / MSW） | [测试驱动开发与测试策略](advanced/6-testing-strategy.md) | 6h | 2.8 |
+| 练习 | 中级练习题：自定义 Hooks 与企业组件设计 | [中级练习题](practice/2-intermediate-exercises.md) | 12h | 2.1-2.9 |
+| **验证** | ✅ 完成高保真企业级管理后台或电商购物车完整交互系统 | - | - | - |
 
 ---
 
-### 第三阶段（4-5 周）：中级到高级开发工程师
+### 第三阶段（3-4 周）：中级到高级开发工程师（底层渲染引擎剖析）
 
-| 步骤 | 内容 | 时间 | 先修条件 |
-| :--- | :--- | :--- | :--- |
-| 3.1 | Fiber 架构与渲染机制 | 8h | 2.1-2.5 |
-| 3.2 | Virtual DOM 与 Diff 算法优化 | 6h | 3.1 |
-| 3.3 | 并发模式、时间切片与调度器 | 7h | 3.1 |
-| 3.4 | 性能分析与优化（React DevTools Profiler） | 6h | 3.1-3.3 |
-| 3.5 | React Compiler 原理与 useMemo/useCallback 契约 | 5h | 3.4 |
-| 练习 | 高级练习题：性能优化与底层调试 | 10h | 3.1-3.5 |
-| **验证** | ✅ 优化一个真实项目的首屏加载时间 | - | - |
-
-**第三阶段达成目标**：
-- ✅ 深入理解 React 底层的渲染机制
-- ✅ 能够诊断与解决性能问题
-- ✅ 掌握并发特性与任务优先级调度
-- ✅ 能够独立阅读与理解 React 源码
-- ✅ 解决真实项目中的复杂性能问题
+| 步骤 | 内容 | 对应文档 | 时间 | 先修条件 |
+| :--- | :--- | :--- | :--- | :--- |
+| 3.1 | Fiber 架构剖析与双缓冲树机制 | [Fiber 架构剖析](advanced/7-fiber-architecture.md) | 8h | 2.1-2.9 |
+| 3.2 | Virtual DOM 与 $O(n)$ 复杂度 Diff 算法优化 | [Virtual DOM 与 Diff 算法优化](advanced/8-virtual-dom-diff.md) | 6h | 3.1 |
+| 3.3 | 并发模式、Lane 调度模型与时间切片 | [并发模式与时间切片调度](advanced/9-concurrent-mode.md) | 7h | 3.1-3.2 |
+| **验证** | ✅ 能够向团队深度解密 React 内部协调时序与任务中断恢复机制 | - | - | - |
 
 ---
 
-### 第四阶段（3-4 周）：高级到专家级工程师
+### 第四阶段（2-3 周）：高级到专家级工程师（性能调优与编译优化）
 
-| 步骤 | 内容 | 时间 | 先修条件 |
-| :--- | :--- | :--- | :--- |
-| 4.1 | TypeScript + React 类型体系 | 6h | 3.1-3.5 |
-| 4.2 | 测试驱动开发（RTL、Jest、单元测试） | 7h | 3.1-3.5 |
-| 4.3 | SSR/SSG 架构与 Hydration 机制 | 6h | 3.1-3.5 |
-| 4.4 | Next.js 14+ App Router 深度应用 | 7h | 4.3 |
-| 4.5 | React 19 异步 Action 与新 Hooks | 5h | 4.4 |
-| 项目 | 全栈应用：Next.js 14 + TypeScript + TDD | 20h | 4.1-4.5 |
-| **验证** | ✅ 完成一个企业级全栈应用 | - | - |
+| 步骤 | 内容 | 对应文档 | 时间 | 先修条件 |
+| :--- | :--- | :--- | :--- | :--- |
+| 4.1 | 批量更新机制、flushSync 与渲染隔离 | [批量更新与渲染优化策略](advanced/10-render-optimization.md) | 5h | 3.3 |
+| 4.2 | 性能分析（Profiler）与 React Compiler 自动优化 | [性能优化与 React Compiler](advanced/11-performance-optimization.md) | 6h | 4.1 |
+| 练习 | 高级练习题：虚拟滚动、任务调度器与底层自研状态库 | [高级练习题](practice/3-advanced-exercises.md) | 12h | 3.1-4.2 |
+| **验证** | ✅ 能够诊断复杂单页应用的性能瓶颈并完成 Core Web Vitals 调优 | - | - | - |
 
-**第四阶段达成目标**：
-- ✅ 精通 TypeScript 与 React 的类型系统
-- ✅ 建立完善的测试体系与 TDD 工作流
-- ✅ 掌握 SSR/SSG 与 Next.js 生产环境实践
-- ✅ 跟进 React 19 的最新 API 与设计模式
-- ✅ 能够构建与维护企业级 React 应用
+---
+
+### 第五阶段（3-4 周）：技术专家与架构师（全栈架构与前沿）
+
+| 步骤 | 内容 | 对应文档 | 时间 | 先修条件 |
+| :--- | :--- | :--- | :--- | :--- |
+| 5.1 | SSR/SSG 架构与 Hydration 注水机制 | [SSR/SSG 架构与 Hydration 机制](advanced/12-ssr-ssg.md) | 6h | 4.1-4.2 |
+| 5.2 | Next.js 14+/15 App Router 全栈工程实践 | [Next.js App Router 与 Docusaurus 全栈实践](advanced/13-nextjs-docusaurus.md) | 8h | 5.1 |
+| 5.3 | React 19 全新特性与异步 Actions | [React 19 全新特性与 API](advanced/14-react19-features.md) | 6h | 5.2 |
+| 5.4 | RSC 协议、流式渲染（Streaming HTML）与 Suspense | [RSC 协议与流式渲染内核](advanced/15-rsc-streaming-suspense.md) | 8h | 5.3 |
+| **验证** | ✅ 独立主导企业级全栈应用架构选型，落地流式渲染与高可靠发布 | - | - | - |
 
 ---
 
@@ -844,7 +768,7 @@ export default function App() {
 ### 步骤 3：深入学习（按节奏推进）
 
 1. 完成 [第一阶段](#第一阶段零基础入门与核心基石-beginner-core-foundations) 的所有内容
-2. 做 [初级练习题](practice/0-beginner-exercises.md)
+2. 做 [初级练习题](practice/1-beginner-exercises.md)
 3. 根据时间与学习进度，逐步推进到后续阶段
 
 ---
@@ -877,84 +801,71 @@ State 与交互
   └─ React 合成事件
 ```
 
-### 第二阶段：应用开发
+### 第二阶段：应用开发与工程化
 
 ```text
-Hooks 体系
+Hooks 与组件设计
   ├─ useEffect 副作用与依赖项
   ├─ StrictMode 开发环境双重渲染
   ├─ useRef 与 useImperativeHandle 进阶控制
-  ├─ useContext 全局状态
-  ├─ useId 稳定标识符
-  ├─ useSyncExternalStore 外部状态订阅
-  ├─ useInsertionEffect 样式注入
-  └─ 自定义 Hooks 逻辑复用
-
-组件架构
-  ├─ 复合组件模式
-  ├─ HOC 与 Render Props
-  ├─ 受控与非受控组件
+  ├─ 自定义 Hooks 逻辑复用
+  ├─ 复合组件模式与受控组件
   ├─ Error Boundary 错误边界
-  ├─ Portal 传送门机制
-  └─ 状态提升
+  └─ React Router 路由体系与权限守卫
 
-状态管理
-  ├─ Context API
-  ├─ useReducer 复杂状态
-  ├─ Zustand 轻量级方案
-  └─ Redux Toolkit 标准方案
+状态管理与工程生态
+  ├─ Context API 与 useReducer
+  ├─ Zustand / Redux Toolkit 选型
+  ├─ React Hook Form 与 Zod 数据校验
+  ├─ Tailwind CSS 与 Vite 构建工程化
+  ├─ TypeScript 类型体系与泛型约束
+  └─ 测试驱动开发 (Vitest / RTL / MSW)
 ```
 
-### 第三阶段：原理与优化
+### 第三阶段：底层渲染引擎
 
 ```text
 渲染引擎
   ├─ Fiber 节点结构与链表树
   ├─ 双缓冲树与 alternate 指针
   ├─ Render 阶段与 Commit 阶段
-  └─ Virtual DOM Diff 算法
-
-性能调优
-  ├─ React.memo 与 useCallback 缓存
-  ├─ 自动批处理与 flushSync
-  ├─ React DevTools Profiler 分析
-  └─ React Compiler 自动优化
+  └─ Virtual DOM Diff 算法与 lastPlacedIndex
 
 并发特性
   ├─ Concurrent Mode 与时间切片
-  ├─ startTransition 分离优先级
-  ├─ useDeferredValue 延迟值
-  └─ Scheduler 包的工作原理
+  ├─ Lanes 优先级车道模型与任务饥饿补偿
+  ├─ startTransition / useTransition (支持异步 Transition)
+  └─ useDeferredValue 延迟值与 initialValue
 ```
 
-### 第四阶段：专家级技能
+### 第四阶段：性能调优与编译优化
 
 ```text
-类型系统
-  ├─ React.FC 与泛型组件
-  ├─ 事件处理类型
-  ├─ 自定义 Hooks 类型推导
-  └─ 约束条件与条件类型
+性能调优
+  ├─ 自动批处理 (Automatic Batching) 与 flushSync
+  ├─ 避免多余状态：利用纯计算派生状态
+  ├─ 状态就近声明与 children 性能隔离
+  ├─ React DevTools Profiler 火焰图诊断
+  └─ React Compiler 自动 Memoization 编译优化
+```
 
-测试与质量
-  ├─ React Testing Library 最佳实践
-  ├─ 组件单元测试
-  ├─ 集成测试与 Mock 策略
-  └─ 测试覆盖率管理
+### 第五阶段：全栈架构与前沿
 
+```text
 全栈开发
-  ├─ SSR/SSG 架构
-  ├─ Hydration 机制
+  ├─ SSR/SSG 架构与 Hydration 注水机制
   ├─ Next.js App Router (Route Handlers / Server Actions)
+  ├─ 四层缓存体系与 Middleware 鉴权
   └─ Server Components vs Client Components
 
 React 19
-  ├─ useActionState 表单管理
+  ├─ useActionState 表单异步管理
   ├─ useFormStatus 表单状态感知
-  ├─ use() 条件解析 Resource
+  ├─ use() 条件解析 Resource 与 Promise
   ├─ useOptimistic 乐观更新
   ├─ 资源预加载 API (preload / preinit)
-  └─ 根实例错误处理钩子 (onUncaughtError)
+  ├─ 根实例细粒度错误处理 (onUncaughtError)
+  └─ RSC 协议流式传输与 Suspense 挂起自愈内核
 ```
 
 ---
