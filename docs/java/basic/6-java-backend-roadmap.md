@@ -33,7 +33,7 @@ sidebar_position: 6
 - SQL 查询、表设计、索引、执行计划与常见慢查询。
 - 事务隔离级别、锁、并发更新和数据一致性基础。
 - JDBC 连接、参数绑定、事务控制及其与连接池的关系。
-- 学完后衔接现有的 MyBatis、连接池与 ShardingSphere 专题。
+- 先读[Java 后端数据库基础](../persistence/5-database-fundamentals.md)，再衔接现有的 MyBatis、连接池与 ShardingSphere 专题。
 
 ## 第四阶段：服务端通用能力
 
