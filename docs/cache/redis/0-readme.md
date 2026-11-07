@@ -19,10 +19,16 @@ mindmap
   root((Redis 专家成长之路))
     数据基石
       五大核心结构
+      JSON / Geo / Bitmap / HyperLogLog
       IO 多路复用
       高性能线程模型
       ZipList 到 Listpack 演进
       渐进式 Rehash 机制
+    命令与客户端
+      命令复杂度与键空间
+      事务 / Lua / Functions
+      RESP / Pipeline / 连接池
+      Cluster 重定向与重试
     高可用架构
       主从复制与缓冲区调优
       Sentinel 哨兵与脑裂防御
@@ -31,6 +37,10 @@ mindmap
       内存过期与淘汰策略
       数据持久化 AOF/RDB/混合
       双写一致性
+    安全与灾备
+      ACL / TLS / 网络隔离
+      配置与版本升级
+      备份恢复演练与 RPO/RTO
     生产实战
       缓存穿透/击穿/雪崩
       BigKey 与 HotKey 深度治理
@@ -43,6 +53,7 @@ mindmap
 
 - [数据结构与内核 I/O 深度解析](1-datastructures-io.md)：探究跳表、压缩列表到 Listpack 演进、渐进式 Rehash 及五大高级数据类型原理。
 - [一致性模型与淘汰机制](2-consistency-eviction.md)：深入 LRU/LFU 算法实现与写回策略。
+- [命令、事务、Lua 与客户端](6-commands-transactions-clients.md)：覆盖命令复杂度、事务和脚本原子性、RESP、Pipeline、连接池及 Cluster 客户端行为。
 
 ---
 
@@ -51,6 +62,7 @@ mindmap
 - [主从、哨兵与集群基础](3-highavailability.md)：解析持久化机制（RDB / AOF）、哨兵（Sentinel）工作原理与集群分片槽位基础理论。
 - [高可用集群实战与运维](ha-clustering.md)：实战演练 Cluster 动态扩缩容、主从同步 PSYNC2 优化与混合持久化故障恢复。
 - [性能调优与生产实战](5-performance-tuning.md)：企业级对齐 BigKey / HotKey 治理、脑裂规避、缓冲区与内存碎片率调优。
+- [安全、部署与灾备](7-security-deployment-dr.md)：覆盖 ACL、TLS、安全部署、升级、备份恢复及跨机房灾备目标。
 
 ---
 
