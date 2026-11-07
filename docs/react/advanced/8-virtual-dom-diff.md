@@ -22,6 +22,15 @@ Virtual DOM 是 React 高性能的核心基石之一。通过在内存中维护�
 2. **最小化 Diff**：通过高效的 Diff 算法计算出最小变更集，仅修改被改动的属性或节点。
 3. **跨平台抽象**：Virtual DOM 作为中间描述层，可以脱离浏览器渲染到 Native（React Native）、桌面端（Electron）或 Canvas。
 
+### Current 树与 WIP 树
+
+React 使用 Fiber 节点构建并维护两棵树：
+
+- **Current 树**：最近一次提交完成、当前对应屏幕内容的 Fiber 树。
+- **WIP 树**：Work In Progress（进行中）的 Fiber 树。状态更新后，React 在这棵树上协调新旧节点并计算需要提交的变更。
+
+计算过程属于 render 阶段，可以被暂停或放弃；这时屏幕仍由 Current 树对应的内容保持。WIP 树完成后，React 在 commit 阶段应用变更，再将它切换为新的 Current 树。两棵树中的对应 Fiber 通常通过 `alternate` 相互关联。
+
 ---
 
 ## 2. React 的 $O(n)$ 复杂度 Diff 策略
