@@ -50,6 +50,8 @@ mindmap
 - [Java 日常开发语言基础](basic/7-java-everyday-development.md)：类型与对象设计、异常和资源管理、字符串、日期时间、正则、集合与 Optional 的常用实践。
 - [Java 构建与测试实践](basic/8-java-build-and-testing.md)：Maven 项目结构、依赖管理、构建生命周期、JUnit/Mockito 测试分层与 CI 基础。
 - [Java 后端数据库基础](persistence/5-database-fundamentals.md)：SQL、索引与执行计划、事务并发控制及 JDBC 资源管理基础。
+- [Java 服务端通用设计实践](spring/mvc/24-backend-service-practices.md)：API 契约、参数校验、错误响应、幂等重试、日志、缓存与消息队列边界。
+- [Java 服务部署与运行基础](jvm/8-java-deployment-operations.md)：Linux 运行排障、Docker 容器、健康检查、JVM 资源和发布回滚。
 - [Java 后端知识体系补充路线](basic/6-java-backend-roadmap.md)：从日常语言基础、构建测试、数据库、服务端能力到部署运行，补足现有源码专题之间的工程实践路径。
 - [Java 集合框架底层源码深剖](basic/0-collection-framework.md)：探究 `ArrayList`、`LinkedList` 物理结构，深度解析 `LinkedHashMap` 构筑 LRU 及 `TreeMap` 红黑树旋转平衡。
 - [Java 核心基石：Object 方法、异常、反射、泛型与 SPI](basic/1-java-core-fundamentals.md)：剖析 `Object` 六大契约、异常体系、反射与 `MethodHandle`、泛型擦除与桥接方法、注解与 SPI 扩展。

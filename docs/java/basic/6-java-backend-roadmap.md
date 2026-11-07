@@ -42,7 +42,7 @@ sidebar_position: 6
 - REST API 设计、参数校验、统一错误响应、分页与幂等性。
 - 配置管理、结构化日志、缓存和消息队列的基础使用与常见故障。
 - 身份认证、权限控制、输入处理和常见 Web 安全问题。
-- 与现有的 Spring Security、Spring Cache、微服务治理和可观测性专题配合学习。
+- 先读[Java 服务端通用设计实践](../spring/mvc/24-backend-service-practices.md)，再与现有的 Spring Security、Spring Cache、微服务治理和可观测性专题配合学习。
 
 ## 第五阶段：部署与生产运行
 
@@ -51,7 +51,7 @@ sidebar_position: 6
 - Linux 进程、文件、端口、日志和网络排障常用操作。
 - Docker 镜像、容器运行、环境配置、健康检查与日志采集。
 - 服务启动与关闭、运行参数、基础监控和发布回滚流程。
-- 与现有的 JVM 调优和线上故障复盘专题配合学习。
+- 先读[Java 服务部署与运行基础](../jvm/8-java-deployment-operations.md)，再与现有的 JVM 调优和线上故障复盘专题配合学习。
 
 ## 推荐顺序
 
