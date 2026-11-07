@@ -2,7 +2,6 @@
 title: MySQL 高可用集群架构
 hide_title: true
 sidebar_label: 高可用集群架构
-sidebar_position: 4
 ---
 
 ## MySQL 高可用集群架构

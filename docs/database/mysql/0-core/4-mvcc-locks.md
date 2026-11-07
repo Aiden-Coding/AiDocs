@@ -240,3 +240,80 @@ Record lock, heap no 1 PHYSICAL RECORD: n_fields 1; compact format; info bits 0
    - 紧接着，事务 2 执行 `INSERT` 试图插入 `id=7`，同样需要获取该区间的插入意向锁。然而，这又与事务 1 占有的 Gap Lock **互斥**，导致事务 2 阻塞等待事务 1 释放间隙锁。
    - 两个事务形成闭环等待：**T1 等待 T2 释放 Gap Lock，T2 也在等待 T1 释放 Gap Lock**。
    - InnoDB 监测到该等待环，决定回滚持有锁较少的事务 1（`*** WE ROLL BACK TRANSACTION (1)`）。
+
+---
+
+## 六、 ACID 原理与底层实现映射
+
+事务必须具备 ACID 四大特性，它们在 InnoDB 底层的映射关系如下：
+
+```mermaid
+graph TD
+    ACID["事务 ACID 特性"] --> A["原子性 (Atomicity)<br/>事务全成功或全回滚"]
+    ACID --> C["一致性 (Consistency)<br/>数据从一个合法状态转为另一个合法状态"]
+    ACID --> I["隔离性 (Isolation)<br/>多个并发事务互不干扰"]
+    ACID --> D["持久性 (Durability)<br/>提交后修改永久生效，不惧宕机"]
+
+    A -->|实现依赖| UndoLog["Undo Log (回滚日志版本链)"]
+    D -->|实现依赖| RedoLog["Redo Log (WAL) + Doublewrite Buffer"]
+    I -->|实现依赖| Concurrency["锁机制 (行锁/间隙锁/表锁) + MVCC (一致性读)"]
+    C -->|最终目标| AID["A (原子) + I (隔离) + D (持久) + 业务完整性约束共同保障"]
+```
+
+- **原子性（Atomicity）**：通过 **Undo Log** 保障。任何事务在执行写操作前先记录逆向操作；一旦抛出异常或执行 `ROLLBACK`，引擎读取 Undo Log 反向恢复。
+- **持久性（Durability）**：通过 **Redo Log（WAL 机制）** 与 **Doublewrite Buffer（双写缓冲）** 保障。事务提交前先刷 Redo 日志，即使断电也能在重启时重放；双写缓冲则防止了 16KB 页的部分写失效。
+- **隔离性（Isolation）**：通过 **MVCC（快照读）** 与 **锁机制（当前读加行锁/间隙锁/表锁）** 共同协同实现。
+- **一致性（Consistency）**：**一致性是事务的最终目标**，其余三个特性（A、I、D）都是手段。数据库系统通过保证原子性、隔离性、持久性，结合业务应用层的合理逻辑与外键/唯一键等完整性约束，共同实现数据的一致性。
+
+---
+
+## 七、 元数据锁 (MDL) 与长事务治理
+
+除了行锁、表锁与意向锁之外，生产环境中最隐蔽、杀伤力最大的锁是 Server 层引入的 **元数据锁（Metadata Lock, MDL）**。
+
+### 1. MDL 锁的产生与互斥机制
+
+- **设计初衷**：为了防止在事务并发读写数据时，其他客户端执行 `ALTER TABLE` 或 `DROP TABLE` 突变表结构，导致读写数据的数据字典不一致。
+- **锁类型与互斥规则**：
+  - 对表执行 CRUD 语句时（如 `SELECT`、`UPDATE`），自动隐式加 **MDL 读锁（MDL Shared Read）**。读锁之间完全兼容，允许千万并发同时读写。
+  - 对表执行 DDL 语句时（如 `ALTER TABLE ADD COLUMN`），申请 **MDL 写锁（MDL Exclusive Write）**。写锁与读锁**强行互斥**。
+
+### 2. 经典生产事故：大表加字段为何打死整个数据库
+
+```mermaid
+sequenceDiagram
+    autonumber
+    actor T1 as 事务 1 (慢查或未提交事务)
+    actor T2 as 事务 2 (DBA 执行 DDL)
+    actor T3 as 事务 3 (正常线上业务查询)
+    participant DB as MySQL 实例
+
+    T1->>DB: 1. SELECT * FROM orders (开始事务，持有 MDL 读锁)
+    Note over T1: T1 长时间未提交 (慢查询或长事务)
+    T2->>DB: 2. ALTER TABLE orders ADD COLUMN ...
+    Note over DB: T2 申请 MDL 写锁，被 T1 的 MDL 读锁阻塞排队！
+    T3->>DB: 3. 正常业务发起 SELECT * FROM orders WHERE id = 1
+    Note over DB: 【致命关键】MySQL 优先保证写锁！<br/>排在 T2 之后的所有新 SELECT 全部被阻塞！
+    Note over DB: 几秒内应用服务连接池瞬间被打满，全站报超时错误！
+```
+
+### 3. 长事务与 MDL 锁排查与治理方案
+
+- **排查未提交的 MDL 阻塞源头**：
+
+  ```sql
+  -- 查看当前未提交的长事务
+  SELECT 
+      trx_id, 
+      trx_started, 
+      NOW() - trx_started AS duration_sec, 
+      trx_query, 
+      trx_mysql_thread_id 
+  FROM information_schema.innodb_trx
+  ORDER BY trx_started ASC;
+  ```
+
+- **生产安全 DDL 规范**：
+  - 在执行 `ALTER TABLE` 前，设置锁等待超时阈值（如 `SET lock_wait_timeout = 5;`），防止 DDL 长时间排队挂起。
+  - 严禁在业务高峰期执行 DDL。
+  - 百万级以上大表变更，强制使用 `gh-ost` 或 MySQL 8.0 的 Instant DDL 机制。

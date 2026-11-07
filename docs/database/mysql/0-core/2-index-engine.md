@@ -155,15 +155,90 @@ B+树即便只有 3~4 层，寻址一次依然要沿着树节点做 3~4 次二�
 
 ---
 
-## 六、 高可用集群架构概览
+## 六、 进阶索引优化技术
 
-在企业级生产环境中，单点数据库无法保证业务的连续性。为了实现 99.99% 的高可用性，通常需要构建数据库集群。
+### 1. 索引下推 (Index Condition Pushdown, ICP)
 
-MySQL 官方及业界提供了多种成熟的高可用方案：
-- **MGR (MySQL Group Replication)**：原生强一致性分布式事务集群，基于 Paxos 协议实现。
-- **InnoDB Cluster**：基于 MGR 构建的全栈自动化高可用运维方案，集成了 MySQL Shell 和 MySQL Router 代理层。
-- **ProxySQL / MySQL Router**：轻量级或高性能的数据库代理，负责实现高并发下的读写分离与流量治理。
+在 MySQL 5.6 之前，通过辅助索引检索数据时，存储引擎根据索引条件（最左匹配）定位到主键后，必须**先回表到聚簇索引读取完整行记录**，然后由 Server 层再对剩余的 `WHERE` 条件逐一比对过滤。
 
-> [!NOTE]
-> 关于高可用集群的架构组成、Paxos 共识机制、自动化部署及故障切换的详细实战步骤，请参考专属文档：
-> [MySQL 高可用集群架构](../2-ha/ha-clustering.md)。
+- **ICP 优化机制**：将原本必须在 Server 层过滤的条件，“下推”到**存储引擎层**。在遍历二级索引的过程中，如果 `WHERE` 条件中包含该二级索引的其他列，存储引擎直接在二级索引叶子节点上先做过滤，**只有满足所有索引列条件的记录，才发起回表（Look-up）**。
+- **效果**：回表次数通常可降低 $80\% \sim 95\%$，大幅减少磁盘随机 I/O 开销。
+- **执行计划标识**：`EXPLAIN` 中的 `Extra` 列输出 `Using index condition`。
+
+```mermaid
+graph TD
+    subgraph WithoutICP ["无 ICP 机制 (MySQL 5.6 前)"]
+        S1["二级索引匹配最左列"] -->|全部记录发起回表| H1["聚簇索引读取整行 (大量随机 I/O)"]
+        H1 -->|送至 Server 层| C1["Server 层比对后续过滤条件并丢弃"]
+    end
+
+    subgraph WithICP ["启用 ICP 索引下推 (MySQL 5.6+)"]
+        S2["二级索引匹配最左列"] --> S2_Filter["引擎层直接比对二级索引后续列"]
+        S2_Filter -->|仅满足条件的极少数记录| H2["聚簇索引回表读取 (极少 I/O)"]
+        H2 -->|送至 Server 层| C2["Server 层直接返回客户端"]
+    end
+```
+
+### 2. 多范围读优化 (Multi-Range Read, MRR)
+
+- **原理**：在通过二级索引进行范围查询或 `IN` 查询时，二级索引叶子节点中记录的主键 ID 往往是无序离散的。如果逐个回表，会产生大量随机磁盘 I/O。
+- **机制**：MRR 会将二级索引扫描出来的这一批主键 ID 先暂存到内存缓冲区（`read_rnd_buffer`）中，**按照主键从小到大进行物理顺序排序**，然后再去聚簇索引中按序读取数据行。
+- **收益**：将离散的随机 I/O 转化为高效的顺序 I/O，并提升 Buffer Pool 预读命中率。
+- **执行计划标识**：`Extra` 列输出 `Using MRR`。
+
+### 3. 前缀索引与长字符串设计
+
+对于高基数长字符串列（如 `email`、`url`、`identification_number`），直接建全列索引会造成 B+ 树体积庞大、内存能缓存的页数锐减。
+
+- **前缀区分度计算**：
+  选取最优前缀长度截取原则为“基数接近全列基数（一般区分度 $\ge 95\%$）”：
+
+  ```sql
+  SELECT 
+      COUNT(DISTINCT email) AS total_count,
+      COUNT(DISTINCT LEFT(email, 5)) / COUNT(DISTINCT email) AS len_5_ratio,
+      COUNT(DISTINCT LEFT(email, 7)) / COUNT(DISTINCT email) AS len_7_ratio,
+      COUNT(DISTINCT LEFT(email, 10)) / COUNT(DISTINCT email) AS len_10_ratio
+  FROM users;
+  ```
+
+- **核心代价与副作用**：
+  使用前缀索引后，**覆盖索引（Covering Index）机制彻底失效**。即使 `SELECT` 的字段就是该索引字段，MySQL 也必须回表到聚簇索引获取完整字段值进行验证。
+
+---
+
+## 七、 MySQL 8.0 索引新特性
+
+### 1. 隐藏索引 (Invisible Index)
+
+- **应用痛点**：线上某张亿级大表存在 5 个历史索引，DBA 怀疑其中某个索引已无业务使用，若直接 `DROP INDEX`，一旦误判，重新重建索引（`ADD INDEX`）将耗费数小时并导致锁表故障。
+- **解决方案**：MySQL 8.0 支持将索引设为“不可见”：
+
+  ```sql
+  ALTER TABLE orders ALTER INDEX idx_user_id INVISIBLE;
+  ```
+
+  不可见索引对优化器透明（不参与生成执行计划），但底层依然会随着业务写入同步维护数据。若观察 1 周无慢 SQL，可安全执行 `DROP INDEX`；若发生慢查询告警，执行 `VISIBLE` 命令可在 1 秒内无损恢复。
+
+### 2. 降序索引 (Descending Index)
+
+- **应用痛点**：在 MySQL 5.7 中，`CREATE INDEX idx_a_b ON t(a ASC, b DESC)` 中 `DESC` 语法会被解析器直接忽略，底层依然按升序存储。若执行 `ORDER BY a ASC, b DESC`，执行计划会出现 `Using filesort`。
+- **8.0 突破**：8.0 真正支持物理降序存储。双向有序索引让复合排序彻底摆脱内存排序，支持极致的逆向有序扫描。
+
+### 3. 函数索引与表达式索引 (Functional Index)
+
+- **应用场景**：生产中常有针对大小写转换后的字段查询，例如 `WHERE LOWER(username) = 'admin'`。在旧版本中对列加函数会导致索引失效。
+- **8.0 方案**：直接对表达式构建 B+ 树索引：
+
+  ```sql
+  CREATE INDEX idx_lower_username ON users ((LOWER(username)));
+  ```
+
+---
+
+## 八、 进阶高可用集群与架构导引
+
+在企业级生产环境中，单点索引设计只是单机调优的基础。构建具备容灾、读写分离和强一致性高可用能力的集群体系，请参考本专栏后续高可用进阶篇章：
+
+- [高可用与集群架构](../2-ha/11-ha-clustering.md)：深入 MGR 原生强一致组复制与 InnoDB Cluster 全栈方案。
+- [灾备恢复、GTID 复制与高可用架构](../2-ha/12-dr-backup-recovery.md)：深入 GTID 自动位点、从库多线程并行复制 MTS、物理备份与 PITR 灾难恢复。

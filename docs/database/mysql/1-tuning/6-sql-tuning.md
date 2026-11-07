@@ -101,3 +101,7 @@ EXPLAIN SELECT * FROM users WHERE age = 30 AND status = 1;
 - **利用索引进行排序 (Avoid filesort)**：
   如果查询既有 `WHERE` 过滤又有 `ORDER BY` 排序，可以通过将两者合并成一个联合索引来消除 `Using filesort` 排序。
   例如：针对 `SELECT * FROM user WHERE city = 'Beijing' ORDER BY age`，应当建立联合索引 `(city, age)`。MySQL 会利用 B+树 的天然顺序性直接输出。
+
+> [!NOTE]
+> 关于 MySQL 8.0 的窗口函数、递归 CTE、生成列索引与 Hash Join 优化机制，请参考专栏进阶文档：
+> [MySQL 8.0 现代核心特性全解](./10-mysql8-features.md)。

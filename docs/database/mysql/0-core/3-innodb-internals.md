@@ -154,3 +154,83 @@ sequenceDiagram
   - 页恢复完整后，再应用 Redo Log，顺利完成崩溃自愈。
 - 如果在**第一步**写 Doublewrite Buffer 时断电：
   - 此时真实的数据文件 `.ibd` 页完好无损，重启后直接使用 Redo Log 就可以成功恢复。
+
+---
+
+## 五、 CheckPoint 检查点机制与刷脏原理
+
+在 WAL（Write-Ahead Logging）机制下，事务提交时只要 Redo Log 落盘即可宣布成功，内存中的数据页（脏页）无需立即同步刷盘。但内存不能无限承载脏页，Redo Log 文件大小也是有限的。**CheckPoint（检查点）** 的核心作用就是将内存脏页刷入磁盘，并将对应的 Redo Log 空间标记为可循环复用。
+
+### 1. 为什么必须推进 CheckPoint
+
+- **缩短崩溃恢复时间**：重启恢复时，系统只需要从 CheckPoint 记录的 LSN 开始向后重放 Redo Log，CheckPoint 之前的脏页早已物理落盘，无需重复重放。
+- **缓冲池内存置换**：当 Buffer Pool 内存不足需要淘汰旧页时，若淘汰的是脏页，必须触发 CheckPoint 刷盘。
+- **防止 Redo Log 溢满**：Redo Log 采用环形写入，当最新写入的 LSN 快要追赶上最旧的 CheckPoint LSN 时，必须强制刷脏以释放日志空间。
+
+### 2. Sharp CheckPoint vs Fuzzy CheckPoint
+
+- **Sharp CheckPoint（尖锐检查点）**：
+  在数据库正常关闭（Shutdown）时触发，将 Buffer Pool 中**所有的脏页全部一次性强制刷回磁盘**。
+- **Fuzzy CheckPoint（模糊检查点）**：
+  数据库正常运行期间绝不能使用 Sharp CheckPoint，否则会导致瞬时剧烈的 I/O 停顿。因此系统只按需分批次、异步地刷写部分脏页：
+  - **Master Thread 检查点**：后台线程每隔 1 秒或 10 秒，异步从缓冲池的脏页列表中刷新一定比例的脏页。
+  - **`FLUSH_LRU_LIST` 检查点**：当 Buffer Pool 中可用空闲页低于 `innodb_lru_scan_depth` 阈值时，淘汰 LRU 尾部页面并触发刷盘。
+  - **脏页比例超标检查点**：当内存脏页占比超过 `innodb_max_dirty_pages_pct`（默认 75%）时，主动加速刷盘以腾挪空间。
+  - **Async/Sync Flush 检查点**：当 Redo Log 剩余可用空间不足（如已用 75% 以上），为防止日志覆盖，强制挂起部分写入并全力刷脏。
+
+```mermaid
+graph LR
+    subgraph RedoLogRing ["Redo Log 循环写缓冲环"]
+        CP["Last CheckPoint LSN<br/>(已落盘安全位点)"] -->|可安全覆盖重写的空间| W["Write Pos LSN<br/>(当前写入位点)"]
+        W -->|已写入尚未刷脏的脏数据| CP
+    end
+    CP -.->|后台 Fuzzy CheckPoint 持续推进| W
+```
+
+---
+
+## 六、 Undo Log 底层存储与 Purge 清理机制
+
+Undo Log 不仅用于事务失败时的回滚操作，更是支撑 MVCC（多版本并发控制）一致性非锁定读的底层基石。
+
+### 1. 回滚段（Rollback Segment）与 Undo 页
+
+InnoDB 默认支持 128 个 Rollback Segment，每个 Rollback Segment 包含 1024 个 Undo Slot（槽位），最多支持数万个事务同时并行写入 Undo。
+
+Undo Log 在物理层面分为两大类型：
+- **Insert Undo Log**：
+  记录插入语句产生的 Undo 记录。因为新插入的行仅对当前事务自身可见，一旦当前事务 `COMMIT`，没有任何其他并发事务可能需要读取该行的旧版本，因此 **Insert Undo Log 在事务提交后可被立即释放回收**。
+- **Update Undo Log**：
+  记录更新和删除产生的 Undo 记录。事务提交后，由于其他并发事务（根据 ReadView 活跃视界）仍可能需要沿着版本链读取该行的历史旧值，因此 **Update Undo Log 不能立即删除**，会被放入 Purge 队列中。
+
+### 2. 后台 Purge 线程的异步清理
+
+为了避免 Undo Log 无限膨胀拖垮磁盘，InnoDB 专门引入了后台 **Purge 线程**：
+
+1. **版本链判定**：Purge 线程定期扫描系统中当前最老的活跃 ReadView（`low_limit_id`）。
+2. **Undo 页物理回收**：如果某个 Update Undo Log 所属的事务 ID 已经早于系统内所有活跃事务，说明当前没有任何在线查询会再访问到该旧版本，Purge 线程将其从回滚段链表中彻底释放。
+3. **彻底清除标记行（`delete-mark`）**：在 SQL 执行 `DELETE` 时，InnoDB 并不会立即从 B+ 树上物理删除行，而只是将记录头部的 `deleted_flag` 标记为 1。Purge 线程确认该记录不再被任何事务需要后，才会将其从 B+ 树叶子节点中物理抹除并将其空间合并入 Page 的 `Free Space`。
+
+---
+
+## 七、 InnoDB 表空间体系结构
+
+从逻辑组织到物理磁盘，InnoDB 的存储组织分为五个递进层级：**表空间（Tablespace） $\to$ 段（Segment） $\to$ 区（Extent） $\to$ 页（Page） $\to$ 行（Row）**。
+
+```mermaid
+graph TD
+    TS["表空间 (Tablespace)"] --> Seg_Data["数据段 (Leaf node Segment)"]
+    TS --> Seg_Idx["索引段 (Non-Leaf node Segment)"]
+    TS --> Seg_Undo["回滚段 (Rollback Segment)"]
+
+    Seg_Data --> Ext["区 (Extent, 固定 1MB = 连续 64 个 Page)"]
+    Ext --> Page["页 (Page, 默认 16KB)"]
+    Page --> Row["行记录 (Compact / Dynamic 行格式)"]
+```
+
+- **独立表空间（`file-per-table`）**：
+  配置 `innodb_file_per_table=ON`（默认开启）。每张表拥有专属的 `表名.ibd` 文件，包含该表的数据、主键索引与二级索引。表删除（`DROP TABLE`）时操作系统可直接回收磁盘空间。
+- **系统表空间（`ibdata1`）**：
+  共享表空间，在 MySQL 5.7 之前存放数据字典、Doublewrite Buffer、Change Buffer 以及部分 Undo 日志。
+- **区（Extent）的设计巧思**：
+  为什么不按 Page 直接分配空间，而是引入 1MB（64 个连续页）的“区”？因为 B+ 树范围扫描时，若页在磁盘上完全离散，会产生可怕的随机 I/O；**按区分配能够保证 64 个页在物理磁盘柱面上严格连续，顺序预读性能提升数倍**。
