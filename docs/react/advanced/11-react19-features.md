@@ -253,8 +253,85 @@ function Component() {
     </div>
   );
 }
+```
 
-### 4) 自定义元素 (Custom Elements / Web Components) 的完美支持
+### 4) 资源加载核心 API (Asset Loading APIs)
+
+除了在 JSX 中声明式书写 `<link>` 和 `<script>`，React 19 在 `react-dom` 中提供了用于命令式预加载资源的专用函数，帮助开发者更早预取图片、字体、脚本与样式，进一步压榨首屏 LCP 性能：
+
+```tsx
+import { preload, preinit, prefetchDNS, preconnect } from 'react-dom';
+
+function ProductDetailPage({ productId, fontUrl, heroImageUrl }: { productId: string; fontUrl: string; heroImageUrl: string }) {
+  // 1. DNS 预解析与预连接，加速外部 CDN 建立 TCP/TLS 连接
+  prefetchDNS('https://cdn.example.com');
+  preconnect('https://cdn.example.com', { crossOrigin: 'anonymous' });
+
+  // 2. 预加载关键资源（如首屏 Hero 图片与字体）
+  preload(heroImageUrl, { as: 'image' });
+  preload(fontUrl, { as: 'font', type: 'font/woff2', crossOrigin: 'anonymous' });
+
+  // 3. 预初始化并执行关键脚本或样式表
+  preinit('https://cdn.example.com/analytics.js', { as: 'script' });
+
+  return (
+    <div className="product-detail">
+      <img src={heroImageUrl} alt="Product Hero" />
+      <h1>商品详情 #{productId}</h1>
+    </div>
+  );
+}
+```
+
+### 5) 根节点错误处理体系：告别全局 onError
+
+在 React 19 中，`createRoot` 和 `hydrateRoot` 引入了细粒度错误回调选项，取代了以往容易漏网的全局 `window.onerror`：
+
+```tsx
+import { createRoot } from 'react-dom/client';
+import App from './App';
+
+const container = document.getElementById('root')!;
+const root = createRoot(container, {
+  // 1. 未被任何 ErrorBoundary 捕获的致命错误
+  onUncaughtError: (error, errorInfo) => {
+    console.error('未捕获异常:', error);
+    reportToSentry({ type: 'uncaught', error, componentStack: errorInfo.componentStack });
+  },
+  // 2. 被组件树中的 ErrorBoundary 成功拦截的错误
+  onCaughtError: (error, errorInfo) => {
+    console.warn('已被边界拦截的错误:', error);
+    reportToSentry({ type: 'caught', error, componentStack: errorInfo.componentStack });
+  },
+  // 3. 客户端注水（Hydration）不匹配等可自动恢复的轻微错误
+  onRecoverableError: (error, errorInfo) => {
+    console.info('注水自愈错误:', error);
+  },
+});
+
+root.render(<App />);
+```
+
+### 6) Context 直接作为 Provider
+
+不再需要书写 `<ThemeContext.Provider>`，React 19 支持直接将 `<ThemeContext>` 作为 Provider 使用：
+
+```tsx
+import { createContext } from 'react';
+
+const ThemeContext = createContext('light');
+
+export function ThemeWrapper({ children }: { children: React.ReactNode }) {
+  // React 19 简写：直接使用 ThemeContext
+  return (
+    <ThemeContext value="dark">
+      {children}
+    </ThemeContext>
+  );
+}
+```
+
+### 7) 自定义元素 (Custom Elements / Web Components) 的完美支持
 
 在 React 19 之前，React 与原生 Web Components 的结合一直存在痛点：
 1.  **Properties 与 Attributes 的路由混乱**：React 会把绑定在自定义元素上的所有 Props 统一通过 `setAttribute` 设置为 HTML Attribute。对于那些只能通过 Property 接收的非字符串复杂对象（如 arrays 或 objects），这会导致绑定失效。
@@ -288,3 +365,129 @@ function App() {
   );
 }
 ```
+
+---
+
+## 6. React 19 全特性综合实战：端到端任务看板与乐观评论
+
+为了展示 React 19 各项 API 如何紧密配合，本节提供一个完整的工业级实战案例。综合应用 `useActionState`、`useOptimistic`、`useFormStatus`、以及 `use` 解析资源，实现一个包含即时反馈的评论系统。
+
+```tsx
+import React, { use, useActionState, useOptimistic, Suspense } from 'react';
+import { useFormStatus } from 'react-dom';
+
+interface Comment {
+  id: string;
+  author: string;
+  text: string;
+  pending?: boolean;
+}
+
+// 模拟异步服务端 API
+async function apiAddComment(text: string): Promise<Comment> {
+  await new Promise(resolve => setTimeout(resolve, 800));
+  if (text.includes('违禁词')) {
+    throw new Error('评论内容包含不当言论，已被安全网关拦截');
+  }
+  return {
+    id: String(Date.now()),
+    author: '当前用户',
+    text,
+  };
+}
+
+// 1. 提交按钮子组件：使用 useFormStatus 感知父表单状态
+function SubmitCommentButton() {
+  const { pending } = useFormStatus();
+
+  return (
+    <button type="submit" disabled={pending} className="submit-btn">
+      {pending ? '正在发送...' : '发表评论'}
+    </button>
+  );
+}
+
+// 2. 评论流容器：结合 useActionState 与 useOptimistic
+export function CommentFeed({ initialComments }: { initialComments: Comment[] }) {
+  // 乐观更新：在网络响应返回前优先展示新评论
+  const [optimisticComments, addOptimisticComment] = useOptimistic(
+    initialComments,
+    (state: Comment[], newText: string) => [
+      ...state,
+      {
+        id: `temp-${Date.now()}`,
+        author: '当前用户',
+        text: newText,
+        pending: true,
+      },
+    ]
+  );
+
+  // useActionState 托管异步状态与表单动作
+  const [formState, formAction] = useActionState(
+    async (previousState: { error: string | null }, formData: FormData) => {
+      const text = formData.get('comment') as string;
+      if (!text || text.trim() === '') {
+        return { error: '评论内容不能为空' };
+      }
+
+      // 触发乐观视图更新
+      addOptimisticComment(text);
+
+      try {
+        await apiAddComment(text);
+        return { error: null };
+      } catch (err: any) {
+        return { error: err.message || '发送失败，请重试' };
+      }
+    },
+    { error: null }
+  );
+
+  return (
+    <div className="comment-feed">
+      <h3>用户讨论区</h3>
+
+      <ul className="comment-list">
+        {optimisticComments.map((comment) => (
+          <li key={comment.id} style={{ opacity: comment.pending ? 0.6 : 1 }}>
+            <strong>{comment.author}</strong>: {comment.text}
+            {comment.pending && <span className="tag-pending">（发送中...）</span>}
+          </li>
+        ))}
+      </ul>
+
+      {/* 表单直接绑定 formAction */}
+      <form action={formAction} className="comment-form">
+        <textarea
+          name="comment"
+          placeholder="写下你的见解..."
+          rows={3}
+          required
+        />
+        <div className="form-footer">
+          <SubmitCommentButton />
+          {formState.error && <span className="error-tip">{formState.error}</span>}
+        </div>
+      </form>
+    </div>
+  );
+}
+```
+
+---
+
+## 7. React 19 破坏性变更与迁移速查表
+
+在从 React 18 升级至 React 19 时，需要关注以下重大调整与移除清单：
+
+| 变更项 | React 18 及更早版本 | React 19 规范 | 迁移建议 |
+| :--- | :--- | :--- | :--- |
+| **Ref 作为 Prop** | 函数组件必须使用 `forwardRef` 包装 | `ref` 直接作为组件 Prop 传递 | 移除 `forwardRef` 包裹，直接在参数解构 `({ ref, ...props })` |
+| **Context 提供者** | `<MyContext.Provider value={...}>` | `<MyContext value={...}>` | 将 `.Provider` 后缀省略，代码更精炼 |
+| **根节点挂载 API** | `ReactDOM.render` / `ReactDOM.hydrate` | 彻底移除，仅支持 `createRoot` / `hydrateRoot` | 全面使用 `react-dom/client` |
+| **函数组件 defaultProps** | 支持在函数组件上定义 `Component.defaultProps` | 彻底移除对函数组件 `defaultProps` 的支持 | 改用 ES6 默认参数语法：`function Card({ title = '默认标题' })` |
+| **propTypes 校验** | 运行时校验库支持 | 在 React 核心库中废弃并逐步剔除 | 全面转向 TypeScript 进行静态类型约束 |
+| **旧版 DOM 查找与引用** | `findDOMNode` 与字符串 Ref（`ref="myInput"`） | 彻底移除 | 改用 `useRef` 或回调 Ref |
+| **错误捕获钩子** | 依赖全局 `window.onerror` 或简略回调 | `createRoot` 支持 `onUncaughtError`、`onCaughtError`、`onRecoverableError` | 在应用初始化入口集中配置错误上报通道 |
+

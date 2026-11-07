@@ -143,6 +143,55 @@ export class ErrorBoundary extends Component<Props, State> {
 }
 ```
 
+### 2.2 错误边界无法捕获的场景与异步桥接技巧
+
+> [!WARNING]
+> **Error Boundary 的盲区**：错误边界**无法**直接捕获以下四类错误：
+> 1. 事件处理函数（如 `onClick`、`onChange`）内部抛出的异常；
+> 2. 异步回调（如 `setTimeout`、`Promise.catch`、`fetch` 网络错误）；
+> 3. 服务端渲染过程（SSR）中的未捕获错误；
+> 4. 错误边界组件自身的 `render` 函数报错。
+
+#### 💡 桥接技巧：将异步/事件错误转发至 Error Boundary
+
+如果希望在事件回调或异步请求失败时，也能自动触发最近的 `<ErrorBoundary>` 降级页面，可以使用 `useErrorBoundary`（来自 `react-error-boundary`）或手写状态抛出器：
+
+```tsx
+import { useState, useCallback } from 'react';
+
+// 封装自定义 Hook：将任意异步错误桥接给 React Error Boundary
+export function useAsyncError() {
+  const [, setError] = useState();
+
+  return useCallback(
+    (e: Error) => {
+      setError(() => {
+        // 在下一次 React 渲染周期中抛出，从而被 Error Boundary 拦截
+        throw e;
+      });
+    },
+    []
+  );
+}
+
+// 使用示例：
+export function AsyncDataTrigger() {
+  const throwAsyncError = useAsyncError();
+
+  const handleFetch = async () => {
+    try {
+      const res = await fetch('/api/unsafe-data');
+      if (!res.ok) throw new Error('接口致命异常 500');
+    } catch (err: any) {
+      // 捕获异步错误并转发给 ErrorBoundary
+      throwAsyncError(err);
+    }
+  };
+
+  return <button onClick={handleFetch}>触发异步加载</button>;
+}
+```
+
 ---
 
 ## 3. 现代化构建工具与 Fast Refresh (Vite)
@@ -183,6 +232,25 @@ export default defineConfig({
   },
 });
 ```
+
+### 3.2 环境变量管理与强类型补充
+
+在 Vite 项目中，环境变量使用 `import.meta.env.VITE_*` 获取。为了获得强类型提示与防止变量拼写错误，在 `src/vite-env.d.ts` 中进行接口扩展：
+
+```typescript
+/// <reference types="vite/client" />
+
+interface ImportMetaEnv {
+  readonly VITE_API_BASE_URL: string;
+  readonly VITE_APP_TITLE: string;
+  readonly VITE_ENABLE_ANALYTICS: string;
+}
+
+interface ImportMeta {
+  readonly env: ImportMetaEnv;
+}
+```
+
 
 ---
 

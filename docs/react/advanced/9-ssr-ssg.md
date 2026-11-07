@@ -99,7 +99,7 @@ sidebar_position: 9
 
 ## 2. Hydration 注水机制
 
-### 什么是 Hydration？
+### Hydration 核心概念
 
 Hydration 是指在服务端已经渲染好的 HTML 基础上，React 在客户端"激活"这些静态内容，绑定事件监听器和状态管理。
 

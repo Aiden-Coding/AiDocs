@@ -12,14 +12,14 @@ React 16 引入的 **Fiber 架构**是其底层渲染引擎的一次彻底重构
 
 在 React 15 及以前，React 的比对过程 (Reconciliation) 是基于类似操作系统的**同步函数调用栈 (Call Stack)** 进行的，被称为 **Stack Reconciler**。
 
-### 为什么 Stack Reconciler 会导致卡顿？
+### Stack Reconciler 导致卡顿的根因
 
 1. **递归过程无法中断**：一旦执行 `setState` 触发更新，React 会从根节点开始，通过深度优先遍历（DFS）递归地对整棵 Virtual DOM 树进行比对并同步更新 DOM。
 2. **主线程被独占**：如果页面非常复杂，组件层级过深，这个递归过程可能会持续几十甚至上百毫秒。在此期间，浏览器的主线程完全被 JavaScript 独占，无法响应用户的点击、输入事件，也无法进行帧重绘，导致界面出现明显的丢帧（掉下 `16.6ms` 的黄金及格线）和卡顿。
 
 ---
 
-## 2. 什么是 Fiber？
+## 2. Fiber 的本质与定义
 
 “Fiber” 这个词在英文里是“纤维”的意思。在 React 中，它代表着：
 1. **一个执行单元**：每次处理一个 Fiber 节点，React 会检查是否还有剩余时间，有则继续，无则把控制权交还给浏览器。
@@ -28,6 +28,24 @@ React 16 引入的 **Fiber 架构**是其底层渲染引擎的一次彻底重构
 ### Fiber 节点的数据结构
 
 React 将树状结构的 Virtual DOM 拍平，转换为以 `child`（第一个子节点）、`sibling`（右侧第一个兄弟节点）和 `return`（父节点）为指针连接的**单链表**结构：
+
+```mermaid
+flowchart TD
+    App["Fiber(App)"]
+    Header["Fiber(Header)"]
+    Main["Fiber(Main)"]
+    P["Fiber(p)"]
+    Span["Fiber(span)"]
+
+    App -->|"child"| Header
+    Header -->|"return"| App
+    Header -->|"sibling"| Main
+    Main -->|"return"| App
+    Main -->|"child"| P
+    P -->|"return"| Main
+    P -->|"sibling"| Span
+    Span -->|"return"| Main
+```
 
 ```typescript
 type Fiber = {
@@ -125,7 +143,35 @@ function workLoopConcurrent() {
   - 自底向上。
   - 当一个节点的所有子节点都处理完毕后，执行 `completeWork`。
   - 如果是原生 DOM 组件，会在此处创建对应的真实 DOM 节点（如果初次挂载），或者计算出属性的变化集（Update Queue）。
-  - 将子节点的副作用标记向上冒泡合并到父节点。
+  - 将子节点的副作用标记向上冒泡合并到父节点（在 React 18/19 中通过 `subtreeFlags` 位掩码快速冒泡）。
+
+#### 单步执行时序示例
+
+假设存在如下简单组件结构：
+
+```tsx
+<App>
+  <Header />
+  <Main>
+    <p>内容</p>
+  </Main>
+</App>
+```
+
+协调引擎遍历该 Fiber 树的执行轨迹如下表所示：
+
+| 步骤 | 操作类型 | 当前节点 | 产出与动作 |
+| :--- | :--- | :--- | :--- |
+| 1 | `beginWork` | `Fiber(App)` | 比较 Props，创建子节点 `Fiber(Header)`，返回子节点 |
+| 2 | `beginWork` | `Fiber(Header)` | 无子代，执行完毕准备返回 null |
+| 3 | `completeWork` | `Fiber(Header)` | 处理 Header 节点自身变更，由于存在兄弟节点，返回 `Fiber(Main)` |
+| 4 | `beginWork` | `Fiber(Main)` | 创建子节点 `Fiber(p)`，返回子节点 |
+| 5 | `beginWork` | `Fiber(p)` | 创建文本节点 Fiber，返回该文本节点 |
+| 6 | `beginWork` | `Fiber(Text)` | 叶子节点，无子代，返回 null |
+| 7 | `completeWork` | `Fiber(Text)` | 创建文本真实 DOM 实例，无兄弟节点，回溯至父节点 `Fiber(p)` |
+| 8 | `completeWork` | `Fiber(p)` | 创建 `<p>` 真实 DOM 并将文本 DOM `appendChild` 追加，回溯至 `Fiber(Main)` |
+| 9 | `completeWork` | `Fiber(Main)` | 创建 `<main>` 真实 DOM，收集子树 flags，回溯至 `Fiber(App)` |
+| 10 | `completeWork` | `Fiber(App)` | 收集整棵树的 `subtreeFlags`，完成 Render 阶段，移交 `commitRoot` |
 
 ### 2) Commit 阶段：执行变更（不可中断）
 

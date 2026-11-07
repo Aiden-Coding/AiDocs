@@ -1,4 +1,4 @@
----
+ ---
 title: React 19 现代化开发体系
 hide_title: true
 sidebar_label: 介绍 & 路线图
@@ -299,6 +299,7 @@ function PatternDemo() {
 - [Context 与 useReducer 模式](advanced/5-context-reducer.md)：Context API 的订阅更新机制、性能陷阱与优化方案；结合 `useReducer` 构建复杂可预测状态机。
 - [状态管理库选型与实践](advanced/6-state-management.md)：对比 Zustand 轻量方案、Redux Toolkit 经典方案、Jotai/Recoil 原子状态方案，以及 **TanStack Query (React Query)** 服务端状态与数据缓存同步。
 - [React 样式方案与工程化构建](advanced/13-styling-and-build.md)：Tailwind CSS / CSS Modules 样式方案、`ErrorBoundary` 异常捕获与 Vite 构建工程化实战。
+- [企业级表单与数据校验：React Hook Form 与 Zod 实战](advanced/14-complex-forms-validation.md)：非受控高性能表单、Zod Schema 驱动校验、动态嵌套字段数组与第三方受控组件无缝桥接。
 
 #### 💡 核心示例：Zustand 轻量化全局状态管理
 
@@ -629,7 +630,7 @@ export default async function ProductPage({ params }: { params: { id: string } }
 
 ### 5.3 React 19 全新特性与架构
 
-- [React 19 全新特性与 API](advanced/11-react19-features.md)：深入实践 React 19 异步 Action 管理器 `useActionState`、无感表单状态获取 `useFormStatus`、条件性解析 Resource 与 Context 的 `use` 关键字、`useOptimistic` 乐观更新 Hook。
+- [React 19 全新特性与 API](advanced/11-react19-features.md)：深入实践 React 19 异步 Action 管理器 `useActionState`、无感表单状态获取 `useFormStatus`、条件性解析 Resource 与 Context 的 `use` 关键字、`useOptimistic` 乐观更新 Hook、资源预加载核心 API（`preload` / `preinit`）与根实例错误处理体系。
 - [React 19 进阶：RSC 协议、流式渲染（Streaming HTML）与 Suspense 挂起底层机制](advanced/12-rsc-streaming-suspense.md)：精剖 React Server Components (RSC) 流式 Payload 协议字节级格式，详拆 Stream 分卷传输 Chunk 后台运行，以及 Suspense 抛出并捕获 Promise 时的 Fiber 断裂挂起自愈重建原理。
 
 #### 💡 核心示例：useActionState 自动托管表单提交 Loading 与 Error 状态
@@ -944,14 +945,16 @@ Hooks 体系
 全栈开发
   ├─ SSR/SSG 架构
   ├─ Hydration 机制
-  ├─ Next.js App Router
+  ├─ Next.js App Router (Route Handlers / Server Actions)
   └─ Server Components vs Client Components
 
 React 19
   ├─ useActionState 表单管理
   ├─ useFormStatus 表单状态感知
   ├─ use() 条件解析 Resource
-  └─ useOptimistic 乐观更新
+  ├─ useOptimistic 乐观更新
+  ├─ 资源预加载 API (preload / preinit)
+  └─ 根实例错误处理钩子 (onUncaughtError)
 ```
 
 ---

@@ -12,7 +12,7 @@ sidebar_position: 3
 
 在现代 React 中，组件主要以**函数 (Function Component)** 的形式存在。类组件 (Class Component) 已成为历史遗存，新项目应全面拥抱函数组件。
 
-### 什么是函数组件？
+### 函数组件的定义与特征
 
 函数组件本质上就是一个普通的 JavaScript 函数，它接收一个 `props` 对象，并返回一个 React 元素（通常是用 JSX 编写的）：
 
@@ -122,7 +122,7 @@ function UserProfile(props) {
 
 在 React 中，如果我们想在自定义组件内部嵌套其他内容，可以使用特殊的属性：`props.children`。
 
-### 什么是 `children`？
+### children 属性的本质与运用
 
 当你在使用一个组件时，在组件的开始标签和结束标签之间夹带的所有 JSX 内容，都会被自动放到该组件的 `props.children` 属性中。
 
@@ -546,7 +546,7 @@ function Card({ className = '', style, children }: CardProps) {
 3. **易于组合**：组件应该能够与其他组件灵活组合
 4. **易于测试**：Props 清晰的组件更容易进行单元测试
 
-### 什么时候应该拆分组件？
+### 拆分组件的决策时机
 
 - 代码行数超过 200-300 行
 - 组件承担了多个独立的职责

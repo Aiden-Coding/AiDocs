@@ -130,3 +130,108 @@ export function LazyLoadingApp() {
 5. **分析火焰图（Flamegraph Chart）**：
    - 柱子高度越高、颜色越偏向黄色，代表该组件在此次更新中占用的 CPU 渲染时间越长。
    - 双击变黄的组件，在右侧面板中，React Profiler 会清晰地告诉你：**“Why did this render? (为什么该组件会在此刻渲染？)”**，例如 `Props changed: [onClick]`，此时你就可以精准地去优化 `onClick` 的引用稳定性。
+
+---
+
+## 6. Core Web Vitals 核心指标优化 (LCP 与 INP)
+
+现代前端性能衡量已经从单纯的“页面加载完用了几秒”转变为以用户体感为核心的 **Core Web Vitals (CWV)**。在 React 应用中，最关键的两大指标是：
+
+1. **LCP (Largest Contentful Paint)**：最大内容绘制时间（标准：$\le 2.5\text{s}$）。衡量首屏大图或文字块出现的速度。
+2. **INP (Interaction to Next Paint)**：交互到下次绘制延迟（标准：$\le 200\text{ms}$，已正式取代旧指标 FID）。衡量用户在页面上点击按钮、切换标签、输入内容时界面的流畅程度。
+
+### 6.1 INP 交互卡顿优化实战
+
+如果点击按钮触发了一个耗时 300ms 的复杂重渲染计算，浏览器主线程会被长时间阻塞，无法及时将按下动效呈现给用户，导致 INP 严重劣化。
+
+优化手段：使用 `startTransition` 将状态更新降级为非阻塞过渡任务，优先保证点击瞬间的反馈绘制：
+
+```tsx
+import { useState, useTransition } from 'react';
+
+export function DataAnalysisFilter() {
+  const [filterText, setFilterText] = useState('');
+  const [isPending, startTransition] = useTransition();
+  const [filteredData, setFilteredData] = useState<any[]>([]);
+
+  const handleFilterChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const nextVal = e.target.value;
+    // 1. 紧急任务：立刻响应用户敲击键盘的绘制（保障 INP < 50ms）
+    setFilterText(nextVal);
+
+    // 2. 过渡任务：允许被打断的超大列表计算
+    startTransition(() => {
+      // 耗时过滤计算
+      setFilteredData([]);
+    });
+  };
+
+  return (
+    <div>
+      <input value={filterText} onChange={handleFilterChange} placeholder="输入过滤关键词" />
+      {isPending && <span className="spinner">数据过滤计算中...</span>}
+    </div>
+  );
+}
+```
+
+---
+
+## 7. 内存泄漏与隐蔽性能陷阱排查
+
+内存泄漏会导致单页应用运行时间越长越卡顿，甚至导致移动端浏览器崩溃白屏。
+
+### 7.1 常见内存泄漏场景与修复
+
+| 泄漏根因 | 常见表现 | 正确修复方案 |
+| :--- | :--- | :--- |
+| **未清理的定时器/事件监听** | `setInterval` 或 `window.addEventListener` 在组件卸载后继续运行 | 在 `useEffect` 的 cleanup 回调中调用 `clearInterval` 或 `removeEventListener` |
+| **异步 Promise 闭包滞留** | 请求返回时组件已卸载，试图 `setState` 并滞留大对象 | 使用 `AbortController` 取消请求，或引入局部布尔标记判断是否卸载 |
+| **全局 Store 观察者未解绑** | 手动订阅全局 EventBus 或自定义 Store 未清理 | 优先使用 `useSyncExternalStore`，由 React 自动管理订阅生命周期 |
+
+### 7.2 生产代码防御范式
+
+```tsx
+import { useEffect, useState } from 'react';
+
+export function SafeDataFetcher({ userId }: { userId: string }) {
+  const [data, setData] = useState<any | null>(null);
+
+  useEffect(() => {
+    // 1. 构造标准 AbortController 实例
+    const controller = new AbortController();
+
+    async function loadUser() {
+      try {
+        const res = await fetch(`/api/user/${userId}`, {
+          signal: controller.signal, // 关联 signal 信号
+        });
+        const json = await res.json();
+        setData(json);
+      } catch (err: any) {
+        if (err.name !== 'AbortError') {
+          console.error('业务请求失败:', err);
+        }
+      }
+    }
+
+    loadUser();
+
+    // 2. 组件卸载或 userId 切换时，立即中断未完成的网络请求，彻底释放内存
+    return () => {
+      controller.abort();
+    };
+  }, [userId]);
+
+  return <div>{data ? data.name : '加载中...'}</div>;
+}
+```
+
+### 7.3 Chrome DevTools Memory 面板排查
+
+1. 打开 Chrome 开发者工具 -> **Memory** 面板。
+2. 选取 **Heap snapshot (堆快照)**，点击 **Take snapshot** 记录基准快照 1。
+3. 在页面中反复打开、关闭目标弹窗或切换该路由 5 次。
+4. 再次点击记录快照 2。
+5. 在下拉筛选框中选择 **Objects allocated between Snapshot 1 and 2**，观察 Class Name 中是否存在 `Detached HTMLDivElement`（分离的 DOM 节点）。如果存在，说明该组件已被 React 卸载，但仍被全局变量或未解绑的闭包引用。
+

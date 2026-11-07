@@ -4,7 +4,7 @@ sidebar_position: 10
 
 # Next.js App Router 与 Docusaurus 全栈实践
 
-现代 React 已经从单纯的客户端渲染库进化为全栈渲染框架。本章我们将深入剖析 **Next.js 14+ App Router** 核心架构，详解 **React Server Components (RSC)** 与客户端组件的边界设计，并分享 **Docusaurus** 静态站点的工程化定制方案。
+现代 React 已经从单纯的客户端渲染库进化为全栈渲染框架。本章我们将深入剖析 **Next.js 14+ / 15 App Router** 核心架构，详解 **React Server Components (RSC)** 与客户端组件的边界设计、Server Actions 数据流，并分享 **Docusaurus** 静态站点的工程化定制方案。
 
 ---
 
@@ -33,67 +33,214 @@ Next.js 13+ 引入的 App Router 建立在 React Server Components (RSC) 基础�
 - **禁止的数据**：**函数**（如事件回调）、**类实例**（Class Instances）、**Symbol** 等。
 
 ```tsx
-// ❌ 错误示范：Server Component 试图向 Client Component 传递函数
+// ❌ 错误示范：Server Component 试图向 Client Component 传递非 Action 函数
 // app/product/page.tsx (Server Component)
 import LikeButton from './LikeButton';
 
 export default function Page() {
-  const handleLike = () => {
-    'use server';
-    console.log('点赞成功');
+  const handleClick = () => {
+    console.log('点击');
   };
 
-  // 报错：无法传递函数给客户端组件
-  return <LikeButton onLike={handleLike} />;
+  // 报错：无法传递普通函数给客户端组件
+  return <LikeButton onClick={handleClick} />;
 }
 ```
 
 ---
 
-## 3. Next.js 缓存机制：Data Cache 与 Full Route Cache
+## 3. Server Actions：全栈数据变更范式
 
-Next.js 14+ 提供了极其强悍且细粒度的缓存机制以压榨服务端响应极限。
+**Server Actions** 是在服务端执行的异步异步函数。可以通过 `'use server'` 指令在 Server Component 内部定义，或者在单独的模块顶部声明并导出给 Client Component 调用。
 
-### 1) Data Cache (数据缓存)
-
-Next.js 拦截并增强了原生的 `fetch` 方法。请求的数据会被自动持久化缓存到服务器硬盘中，即使服务器重启，下一次请求依然直接读取缓存。
+### 3.1 独立模块声明 Server Actions
 
 ```tsx
-// 默认缓存：无限期有效，直到手动清除 (revalidate)
-const res = await fetch('https://api.example.com/data', { cache: 'force-cache' });
+// app/actions/todos.ts
+'use server';
 
-// 增量失效 (ISR)：缓存 1 小时 (3600 秒)
-const res = await fetch('https://api.example.com/data', { next: { revalidate: 3600 } });
+import { revalidatePath } from 'next/cache';
+import { db } from '@/lib/db';
 
-// 禁用缓存：每次请求都走网络
-const res = await fetch('https://api.example.com/data', { cache: 'no-store' });
+export async function addTodo(formData: FormData) {
+  const title = formData.get('title') as string;
+  if (!title || title.trim().length === 0) {
+    return { error: '标题不能为空' };
+  }
+
+  // 服务端直接写库
+  await db.todo.create({ data: { title } });
+
+  // 精准按需失效当前路径的缓存，触发服务端重新渲染
+  revalidatePath('/todos');
+  return { success: true };
+}
 ```
 
-### 2) Full Route Cache (整页路由缓存)
+### 3.2 客户端组件调用 Server Action
 
-在构建期，Next.js 会自动分析所有路由。如果检测到某个路由只依赖静态数据（即整个路径上没有使用 headers、cookies、searchParams，且 fetch 请求均开启了缓存），Next.js 会直接**将整个路由编译为静态 HTML 和 JSON 缓存文件**。
-当用户请求时，服务器会以零计算开销、微秒级的速度直接从内存或文件缓存中返回该路由。
+```tsx
+// app/todos/TodoForm.tsx
+'use client';
+
+import { useActionState } from 'react';
+import { addTodo } from '@/app/actions/todos';
+
+export function TodoForm() {
+  const [state, formAction, isPending] = useActionState(
+    async (_prev: any, formData: FormData) => {
+      return await addTodo(formData);
+    },
+    null
+  );
+
+  return (
+    <form action={formAction}>
+      <input type="text" name="title" placeholder="添加待办事项" required />
+      <button type="submit" disabled={isPending}>
+        {isPending ? '正在保存...' : '添加'}
+      </button>
+      {state?.error && <p className="error">{state.error}</p>}
+    </form>
+  );
+}
+```
 
 ---
 
-## 4. Docusaurus 主题定制 (Swizzling)
+## 4. Route Handlers：构建 RESTful 与 Webhook API
+
+Next.js App Router 使用 `route.ts` 替代了 Pages Router 下的 `pages/api`，支持原生的 Web `Request` 和 `Response` 标准 API。
+
+```tsx
+// app/api/articles/route.ts
+import { NextRequest, NextResponse } from 'next/server';
+import { db } from '@/lib/db';
+
+// 处理 GET 请求
+export async function GET(request: NextRequest) {
+  const { searchParams } = new URL(request.url);
+  const tag = searchParams.get('tag');
+
+  const articles = await db.article.findMany({
+    where: tag ? { tag } : undefined,
+    take: 20,
+  });
+
+  return NextResponse.json({ code: 0, data: articles });
+}
+
+// 处理 POST 请求
+export async function POST(request: NextRequest) {
+  try {
+    const body = await request.json();
+    const newArticle = await db.article.create({ data: body });
+    return NextResponse.json({ code: 0, data: newArticle }, { status: 201 });
+  } catch (err: any) {
+    return NextResponse.json({ code: 500, message: err.message }, { status: 500 });
+  }
+}
+```
+
+---
+
+## 5. Next.js 缓存机制：四层缓存体系
+
+Next.js 14+ 提供了极其强悍且细粒度的缓存机制以压榨服务端响应极限：
+
+| 缓存类型 | 存储位置 | 生命周期 | 用途与策略 |
+| :--- | :--- | :--- | :--- |
+| **Request Memoization** | 服务端内存 | 单次请求渲染生命周期 | 同一渲染树中重复 `fetch` 自动去重 |
+| **Data Cache** | 服务端持久存储 | 跨请求持久有效 | `fetch(url, { next: { revalidate: 3600 } })` 缓存数据 |
+| **Full Route Cache** | 服务端持久存储 | 跨请求有效，直到部署或失效 | 静态路由预编译为 HTML 与 RSC Payload |
+| **Router Cache** | 客户端内存 | 用户会话期间 | 客户端导航时缓存访问过的页面段 |
+
+```tsx
+// 1. 默认持久缓存：无限期有效，直到手动清除 (revalidateTag / revalidatePath)
+const res = await fetch('https://api.example.com/data', { cache: 'force-cache' });
+
+// 2. 增量静态再生 (ISR)：缓存 1 小时 (3600 秒)
+const res = await fetch('https://api.example.com/data', { next: { revalidate: 3600, tags: ['articles'] } });
+
+// 3. 动态实时请求：禁用缓存
+const res = await fetch('https://api.example.com/data', { cache: 'no-store' });
+```
+
+---
+
+## 6. Middleware 中间件：全局鉴权与路由守卫
+
+中间件允许在请求到达页面或路由处理器之前拦截并处理请求，例如身份验证、国际化重定向与 A/B 测试：
+
+```tsx
+// middleware.ts
+import { NextResponse } from 'next/server';
+import type { NextRequest } from 'next/server';
+
+export function middleware(request: NextRequest) {
+  const token = request.cookies.get('auth_token')?.value;
+  const isDashboardRoute = request.nextUrl.pathname.startsWith('/dashboard');
+
+  // 未登录重定向至登录页
+  if (isDashboardRoute && !token) {
+    const loginUrl = new URL('/login', request.url);
+    loginUrl.searchParams.set('from', request.nextUrl.pathname);
+    return NextResponse.redirect(loginUrl);
+  }
+
+  // 正常放行，并可向请求头注入元数据
+  const response = NextResponse.next();
+  response.headers.set('x-user-authenticated', token ? 'true' : 'false');
+  return response;
+}
+
+// 仅在指定路由触发中间件
+export const config = {
+  matcher: ['/dashboard/:path*', '/profile/:path*'],
+};
+```
+
+---
+
+## 7. 高级路由模式：并行路由与拦截路由
+
+App Router 支持创建复杂交互体验（如弹窗路由与并行加载视窗）：
+
+- **并行路由 (`@slot`)**：允许在同一个父 Layout 下同时渲染多个不同路径的独立页面。例如 `@analytics` 与 `@team`。
+- **拦截路由 (`(.)route`)**：允许在客户端软导航时拦截特定路由并以模态框形式展现（如点击图片打开全屏预览弹窗），而在用户刷新或直接分享链接时渲染完整独立页面。
+
+```text
+app/
+├── feed/
+│   ├── page.tsx            # 信息流页面
+│   ├── @modal              # 并行插槽
+│   │   └── (.)photo/[id]/  # 拦截对 /photo/[id] 的点击，弹窗渲染
+│   │       └── page.tsx
+│   └── layout.tsx          # 接收 props: { children, modal }
+└── photo/[id]/
+    └── page.tsx            # 直接在浏览器访问链接时展示的完整页面
+```
+
+---
+
+## 8. Docusaurus 主题定制 (Swizzling)
 
 Docusaurus 是一款基于 React 驱动的极佳静态站点生成器。在深度开发文档时，我们需要定制一些默认的内置组件外观。这可以通过 **Swizzling** 技术实现。
 
 Swizzling 可以理解为“撬开”Docusaurus 内置的主题包，将指定组件暴露到项目的 `src/theme` 目录下进行覆盖重写。
 
-### Swizzling 操作命令
+### 8.1 Swizzling 操作命令
 
 在项目根目录下运行终端命令（以包装默认的 `DocItem` 组件为例）：
 
 ```bash
-# 自动生成 src/theme/DocItem 的代码副本，允许你自由修改
+# 自动生成 src/theme/DocItem 的代码副本，允许自由修改
 npm run swizzle @docusaurus/theme-classic DocItem -- --wrap
 ```
 
-### 💡 核心示例：安全使用路径映射与 Docusaurus 专属 Hooks
+### 8.2 💡 核心示例：安全使用路径映射与 Docusaurus 专属 Hooks
 
-Docusaurus 使用 `<Link>` 和 `useBaseUrl` 来智能管理不同静态资源在生产环境部署时的子路径映射，规避相对路径失效问题。
+Docusaurus 使用 `<Link>` 和 `useBaseUrl` 来智能管理不同静态资源在生产环境部署时的子路径映射，规避相对路径失效问题：
 
 ```tsx
 import useBaseUrl from '@docusaurus/useBaseUrl';
@@ -114,3 +261,4 @@ export function NavigationCard() {
   );
 }
 ```
+

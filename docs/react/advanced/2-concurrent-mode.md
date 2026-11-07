@@ -4,11 +4,11 @@ sidebar_position: 2
 
 # 并发模式与时间切片
 
-并发模式（Concurrent Mode）是现代 React（React 18+）最底层的运行架构。它颠覆了原本“一旦开始、必须同步完成”的渲染模式，让 React 能够“在多项任务之间切换调度”，并根据任务优先级来中断或恢复页面的更新，从而为用户提供极其流畅的交互体验。
+并发模式（Concurrent Mode）是现代 React（React 18 / 19）最底层的运行架构。它颠覆了原本“一旦开始、必须同步完成”的渲染模式，让 React 能够“在多项任务之间切换调度”，并根据任务优先级来中断或恢复页面的更新，从而为用户提供极其流畅的交互体验。
 
 ---
 
-## 1. 为什么需要并发模式？
+## 1. 并发模式的设计初衷
 
 在传统的同步更新模式下，如果执行了一个计算量极其庞大的页面重渲染：
 - 渲染线程一旦启动就会霸占主线程，直到所有组件渲染完毕。
@@ -54,6 +54,13 @@ const isLaneContained = (mergedLanes & SyncLane) !== 0;
 // 3. 提取出当前最高优先级的单个车道（获取二进制中最低位的 1：lanes & -lanes）
 const highestPriorityLane = mergedLanes & -mergedLanes;
 ```
+
+### 饥饿问题与车道过期机制 (Lane Starvation & Expiration)
+
+如果用户持续不断地快速打字输入，系统不断产生高优先级的 `SyncLane` 任务，处于低优先级的 `TransitionLane` 是否会被无限期延后、永远无法渲染？
+
+答案是**不会**。React 调度系统为每个 Lane 设置了过期时间戳（例如普通过渡任务的过期阈值约为 5000ms）。
+当低优先级任务在队列中等待超时后，Scheduler 会触发**任务饥饿补偿机制**，将该任务的车道标记直接强制提升为 `SyncLane`，强行插队同步执行，避免页面状态长期僵死。
 
 ---
 
@@ -104,65 +111,78 @@ sequenceDiagram
 - **`startTransition` 函数**：直接导入的独立函数。当你在非 React 组件树内部（例如在第三方状态管理器订阅中，或普通的 utility 函数里）想要触发过渡更新时使用。
 - **`useTransition` Hook**：在 React 函数组件内使用的首选 Hook，它不仅包含 `startTransition`，还能够智能返回过渡任务的执行状态。
 
-#### 💡 核心示例：useTransition 捕获加载状态
+#### 💡 核心示例：React 19 异步 Transition (Async Transitions)
 
-`useTransition` 返回一个包含两个成员的数组：
-1. `isPending`：布尔值，指示过渡更新的 Promise 或任务是否还在挂起、计算中。
-2. `startTransition`：用于启动过渡任务的函数包装器。
+> [!IMPORTANT]
+> **React 19 重磅改进**：在 React 18 中，`startTransition` 仅支持同步的状态更新回调。而在 **React 19** 中，`startTransition` 正式原生支持 **异步函数 (Async Function)**！
+> 当你在回调中执行 `await apiCall()` 时，`isPending` 会在整个异步网络等待与状态更新期间持续保持为 `true`，大大简化了异步加载态管理。
 
 ```tsx
 import { useState, useTransition } from 'react';
 
-function TabContainer() {
-  const [tab, setTab] = useState('about');
-  // isPending 会在非紧急更新渲染计算期间自动置为 true
+export function UserProfileEditor() {
+  const [name, setName] = useState('张三');
   const [isPending, startTransition] = useTransition();
 
-  const selectTab = (nextTab: string) => {
-    // 启动非紧急更新
-    startTransition(() => {
-      setTab(nextTab);
+  const handleSave = () => {
+    // React 19 原生支持异步 Transition
+    startTransition(async () => {
+      // 1. 发起真实服务端保存请求
+      const updatedUser = await fetch('/api/user', {
+        method: 'POST',
+        body: JSON.stringify({ name }),
+      }).then((r) => r.json());
+
+      // 2. 更新状态
+      setName(updatedUser.name);
     });
   };
 
   return (
     <div>
-      <div className="tab-buttons">
-        <button onClick={() => selectTab('about')}>关于</button>
-        <button onClick={() => selectTab('posts')}>
-          博客文章 (内含上万个 DOM 节点的重渲染)
-        </button>
-      </div>
-      
-      {/* 渲染 Pending 提示，避免页面完全假死且没有任何交互反馈 */}
-      {isPending && <div className="loading-spinner">正在渲染大数据视图中...</div>}
-      
-      <div style={{ opacity: isPending ? 0.6 : 1 }}>
-        {tab === 'about' && <AboutTab />}
-        {tab === 'posts' && <ExpensivePostsTab />}
-      </div>
+      <input value={name} onChange={(e) => setName(e.target.value)} />
+      <button onClick={handleSave} disabled={isPending}>
+        {isPending ? '保存并同步中...' : '保存修改'}
+      </button>
     </div>
   );
 }
 ```
 
-### 2) useDeferredValue 的应用与原理解析
+### 2) useDeferredValue 的应用与 initialValue
 
 `useDeferredValue` 接受一个值，并返回该值的一个“延迟版本”。它非常适用于：你无法直接控制状态修改的来源（如数据直接来自于 Props），但依然希望推迟其渲染以防页面假死的场景。
+
+在 **React 19** 中，`useDeferredValue` 新增了第二个参数 `initialValue`：
 
 ```tsx
 import { useState, useDeferredValue } from 'react';
 
-function ProductList({ rawData }: { rawData: string[] }) {
-  // 获取数据的延迟副本。当 rawData 频繁变化时，deferredData 会滞后更新，优先保证首屏渲染流畅
-  const deferredData = useDeferredValue(rawData);
+function SearchResults({ query }: { query: string }) {
+  // React 19 新特性：支持传递 initialValue，在首屏挂载阶段使用该初始值，推迟昂贵渲染
+  const deferredQuery = useDeferredValue(query, '');
 
   return (
-    <div className="list-container">
-      {deferredData.map((item, i) => (
-        <div key={i} className="list-item">{item}</div>
-      ))}
+    <div className="results-container">
+      <p>搜索目标：{deferredQuery}</p>
+      {/* 模拟大列表渲染 */}
+      <HeavyList query={deferredQuery} />
     </div>
   );
 }
 ```
+
+---
+
+## 5. useTransition 与防抖 (Debounce) 的深度对比
+
+很多开发者容易混淆 `useTransition` 与传统防抖函数（`debounce`）的应用边界。下表对比了两者的本质区别与选型策略：
+
+| 维度 | 传统防抖 (Debounce) | 并发过渡 (useTransition) |
+| :--- | :--- | :--- |
+| **核心机制** | 强制延迟固定毫秒数（如 300ms），时间未到坚决不执行 | **自适应设备算力**：高算力机器几乎零延迟瞬间完成，低端设备自动按帧让出主线程 |
+| **用户体验** | 在高性能电脑上依然存在机械式的 300ms 迟滞感 | 随时响应输入，输入停下即刻渲染，无任何人为延时 |
+| **可中断性** | 无法中断；一旦定时器到期触发渲染，依然可能卡死主线程 | **完全可中断**；渲染进行到 50% 时若有新输入，立刻放弃并重新开始 |
+| **网络请求控制** | 适用于控制向后端 API 发送请求的频次（避免高频刷接口） | 适用于解决客户端复杂组件树大计算量的渲染卡顿 |
+| **最佳实践** | 搜索输入建议请求用 Debounce | 纯前端过滤、Tab 大页面切换、复杂图表重绘首选 `useTransition` |
+

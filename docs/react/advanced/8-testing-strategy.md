@@ -152,3 +152,182 @@ test('接口报错时的异常捕获展示流程', async () => {
   });
 });
 ```
+
+---
+
+## 4. 自定义 Hook 测试实战：renderHook 与 act
+
+很多时候我们封装了纯逻辑的自定义 Hook（如计数器、分页、窗口监听、防抖等），并没有独立的 JSX 视图。使用 RTL 提供的 `renderHook` 可以直接对其进行单元测试，并通过 `act` 触发内部状态演进。
+
+### 4.1 待测自定义 Hook
+
+```tsx
+// useCounter.ts
+import { useState, useCallback } from 'react';
+
+export function useCounter(initialValue: number = 0, step: number = 1) {
+  const [count, setCount] = useState(initialValue);
+
+  const increment = useCallback(() => setCount((c) => c + step), [step]);
+  const decrement = useCallback(() => setCount((c) => c - step), [step]);
+  const reset = useCallback(() => setCount(initialValue), [initialValue]);
+
+  return { count, increment, decrement, reset };
+}
+```
+
+### 4.2 编写 Hook 单元测试
+
+```tsx
+// useCounter.test.ts
+import { renderHook, act } from '@testing-library/react';
+import { describe, it, expect } from 'vitest';
+import { useCounter } from './useCounter';
+
+describe('useCounter 自定义 Hook 测试', () => {
+  it('应正确使用初始值初始化', () => {
+    const { result } = renderHook(() => useCounter(10));
+    expect(result.current.count).toBe(10);
+  });
+
+  it('调用 increment 应按步长递增', () => {
+    const { result } = renderHook(() => useCounter(0, 5));
+
+    // 修改内部 React 状态的调用必须包裹在 act 中
+    act(() => {
+      result.current.increment();
+    });
+
+    expect(result.current.count).toBe(5);
+  });
+
+  it('支持响应 Props 动态更新 (rerender)', () => {
+    let step = 1;
+    const { result, rerender } = renderHook(() => useCounter(0, step));
+
+    act(() => {
+      result.current.increment();
+    });
+    expect(result.current.count).toBe(1);
+
+    // 改变参数并重新渲染 Hook
+    step = 10;
+    rerender();
+
+    act(() => {
+      result.current.increment();
+    });
+    expect(result.current.count).toBe(11);
+  });
+});
+```
+
+---
+
+## 5. 带全局状态与路由的自定义测试渲染器 (Custom Render)
+
+在真实业务开发中，大部分组件都会依赖外部环境（如 React Query、Redux、Zustand、React Router 或国际化 Provider）。如果每次写测试都手动包裹一堆 Provider，代码会极度臃肿。标准实践是封装一个统一的 `customRender`：
+
+```tsx
+// test-utils.tsx
+import React, { ReactElement } from 'react';
+import { render, RenderOptions } from '@testing-library/react';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { MemoryRouter } from 'react-router-dom';
+
+// 创建适合测试环境的纯净 QueryClient，关闭失败重试
+const createTestQueryClient = () =>
+  new QueryClient({
+    defaultOptions: {
+      queries: {
+        retry: false,
+      },
+    },
+  });
+
+interface AllTheProvidersProps {
+  children: React.ReactNode;
+  initialRoute?: string;
+}
+
+export function AllTheProviders({ children, initialRoute = '/' }: AllTheProvidersProps) {
+  const testQueryClient = createTestQueryClient();
+
+  return (
+    <QueryClientProvider client={testQueryClient}>
+      <MemoryRouter initialEntries={[initialRoute]}>
+        {children}
+      </MemoryRouter>
+    </QueryClientProvider>
+  );
+}
+
+// 导出的自定义 render 函数
+export const customRender = (
+  ui: ReactElement,
+  options?: Omit<RenderOptions, 'wrapper'> & { initialRoute?: string }
+) => {
+  return render(ui, {
+    wrapper: ({ children }) => (
+      <AllTheProviders initialRoute={options?.initialRoute}>
+        {children}
+      </AllTheProviders>
+    ),
+    ...options,
+  });
+};
+
+// 重新导出 RTL 所有方法，外部只引入 test-utils 即可
+export * from '@testing-library/react';
+export { default as userEvent } from '@testing-library/user-event';
+```
+
+---
+
+## 6. 表单交互与无障碍可访问性 (a11y) 深度断言
+
+```tsx
+import { screen } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
+import { customRender } from './test-utils';
+import { LoginForm } from './LoginForm';
+
+test('用户能通过键盘 Tab 与回车键完成完整无障碍表单流', async () => {
+  const user = userEvent.setup();
+  customRender(<LoginForm />);
+
+  // 1. 无障碍查询：确保输入框关联了 label 标签
+  const emailInput = screen.getByLabelText(/电子邮箱/i);
+  const passwordInput = screen.getByLabelText(/密码/i);
+  const submitButton = screen.getByRole('button', { name: /登录/i });
+
+  // 2. 模拟真实键盘输入
+  await user.type(emailInput, 'developer@example.com');
+  await user.type(passwordInput, 'Secret123456');
+
+  // 3. 验证值状态
+  expect(emailInput).toHaveValue('developer@example.com');
+  expect(passwordInput).toHaveValue('Secret123456');
+
+  // 4. 点击提交并验证状态
+  await user.click(submitButton);
+  expect(submitButton).toBeDisabled();
+});
+```
+
+---
+
+## 7. 测试分层与常见反模式避坑指南
+
+| 测试类型 | 覆盖比例 | 核心目标 | 推荐工具 |
+| :--- | :--- | :--- | :--- |
+| **单元测试 (Unit)** | 约 60% | 纯逻辑函数、通用 Hooks、基础 UI 基础原子组件 | Vitest / Jest |
+| **集成测试 (Integration)** | 约 30% | 业务组件树、表单提交流程、结合 MSW 的网络流 | Vitest + RTL + MSW |
+| **端到端测试 (E2E)** | 约 10% | 核心业务闭环（如注册、支付、结账） | Playwright / Cypress |
+
+### 常见反模式避坑
+
+1. **不要断言内部 State**：组件的 `useState` 是内部细节，测试应该断言屏幕上的文字或 DOM 属性，而不是检查内部变量。
+2. **避免盲目使用 `waitFor`**：`userEvent` 的很多操作（如输入、点击）已经是异步的，只有在断言真正需要等待的网络请求或定时器 DOM 时才使用 `waitFor`。
+3. **优先 `userEvent` 而非 `fireEvent`**：`fireEvent.click` 只会触发 click 事件，而 `userEvent.click` 会严格按照真实浏览器时序触发 hover、focus、pointerDown、mouseDown、click 等一系列完整事件链路。
+

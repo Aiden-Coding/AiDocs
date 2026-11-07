@@ -10,7 +10,7 @@ React 18+ 的架构演进在底层对重渲染的合并调度进行了重大升�
 
 ## 1. 自动批处理 (Automatic Batching)
 
-### 什么是批处理？
+### 批处理的定义与原理
 
 当用户点击一个事件，你触发了多个状态的修改，React 不会每一次修改都触发一次 UI 的重渲染，而是将这几个修改**“打包”**起来，只在最后触发**唯一一次** DOM 更新与重渲染。这就像你网购了多件衣服，商家打包寄送一个包裹，而不是分好几个快递寄给你。
 
@@ -151,3 +151,42 @@ function Page() {
   );
 }
 ```
+
+---
+
+## 4. 避免多余状态：利用纯计算派生状态 (Derived State)
+
+在实际开发中，最常见导致瀑布式多余重渲染的反模式是**将派生数据存入冗余的 State 并使用 useEffect 同步**：
+
+```tsx
+// ❌ 反模式：依赖 useEffect 同步两个状态，导致 1 次多余的级联渲染与时序不一致
+function BadSearchList({ items, filterText }: { items: string[]; filterText: string }) {
+  const [filteredItems, setFilteredItems] = useState<string[]>([]);
+
+  useEffect(() => {
+    // 渲染完成后才执行 effect，然后再触发一次新的渲染！
+    setFilteredItems(items.filter(item => item.includes(filterText)));
+  }, [items, filterText]);
+
+  return <List items={filteredItems} />;
+}
+
+//  正解：在渲染期直接计算派生结果（零多余渲染）
+function GoodSearchList({ items, filterText }: { items: string[]; filterText: string }) {
+  // 单纯的内存过滤无需 state，直接同步计算
+  const filteredItems = items.filter(item => item.includes(filterText));
+
+  return <List items={filteredItems} />;
+}
+```
+
+---
+
+## 5. React 19 编译器时代下的渲染优化思维升级
+
+随着 React Compiler 的普及，性能优化的重心已经从“到处包裹 `useMemo` 与 `useCallback`”转变为：
+
+1. **保持函数组件的绝对纯粹性**：渲染过程中绝不读写外部可变变量，绝不就地突变（mutate）已有数组或对象（始终返回新对象 `{...obj}`）。
+2. **状态就近声明（Colocation）**：状态尽量存放在距离消费它最近的组件树节点中，避免盲目提升到根 Context。
+3. **架构优先于微观语法糖**：善用“状态下沉”与“`children` 容器隔离”，不仅结构更清晰，而且对编译器和并发调度引擎极度友好。
+

@@ -10,7 +10,7 @@ sidebar_position: 1
 
 ## 前置条件
 
-- 已安装 **Node.js 16+** 和 **npm**（或 yarn、pnpm）
+- 已安装 **Node.js 18+**（强烈推荐 Node.js 20 LTS 或更高版本以完美支持 React 19）与 **npm**（或 pnpm、yarn）
 - 有一个文本编辑器（推荐 VS Code）
 - 基本 JavaScript 知识（变量、函数、数组方法）
 
@@ -19,21 +19,28 @@ sidebar_position: 1
 打开终端，运行以下命令验证 Node.js 已安装：
 
 ```bash
-node --version  # 应输出 v16.0.0 或更高版本
-npm --version   # 应输出 8.0.0 或更高版本
+node --version  # 应输出 v18.0.0 或更高版本（推荐 v20+）
+npm --version   # 应输出 9.0.0 或更高版本
 ```
 
 ---
 
 ## 步骤 1：创建项目（2 分钟）
 
-使用 Vite 快速创建一个 React + TypeScript 项目：
+使用 Vite 快速创建一个现代化的 React + TypeScript 项目：
 
 ```bash
 npm create vite@latest my-first-react-app -- --template react-ts
 cd my-first-react-app
 npm install
 ```
+
+> [!TIP]
+> **想体验 Next.js 全栈开发？**
+> 如果你计划构建包含服务端渲染与 API 路由的全栈应用，也可以使用官方命令创建 Next.js 项目：
+> ```bash
+> npx create-next-app@latest my-next-app --typescript --tailwind --app
+> ```
 
 项目结构会是这样的：
 
@@ -434,19 +441,19 @@ const [count, setCount] = useState(0);  // 改成 10
 
 ## 💡 常见问题
 
-### Q: 为什么修改代码后浏览器自动刷新了？
+### Q: 修改代码后浏览器自动刷新的机制
 
 **A:** 这叫 Hot Module Replacement (HMR)。Vite 的一个强大特性，可以在保留应用状态的情况下实时更新代码。
 
-### Q: useState 的 `count + 1` 为什么有时候只增加 1？
+### Q: useState 的 `count + 1` 仅增加 1 的原因
 
 **A:** 这是一个常见的陷阱。如果你在一个事件处理函数中多次调用 `setCount(count + 1)`，React 会将多个状态更新合并（批处理）。详见 [State 与事件处理](4-state-events.md)。
 
-### Q: 如何构建生产版本？
+### Q: 构建生产版本的步骤
 
 **A:** 运行 `npm run build`，产物会在 `dist/` 目录下。
 
-### Q: 如何部署我的应用？
+### Q: 部署生产应用的方案
 
 **A:** 你可以将 `dist/` 目录部署到任何静态服务（如 Netlify、Vercel、GitHub Pages）。
 

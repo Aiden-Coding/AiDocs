@@ -8,7 +8,7 @@ sidebar_position: 5
 
 ---
 
-## 1. 为什么是 Hooks？
+## 1. 引入 Hooks 的核心动因
 
 在 Hooks 诞生之前，React 组件的逻辑复用和状态管理存在若干痛点：
 - **`this` 绑定地狱**：在 class 组件中，需要频繁绑定 `this`。
@@ -563,7 +563,7 @@ graph LR
 - `queue`：该 Hook 所排队的更新队列。
 - `next`：指向下一个 Hook 对象的指针。
 
-### 2) 为什么 Hooks 严禁在 if/for 或嵌套函数中使用？
+### 2) Hooks 严禁在 if/for 或嵌套函数中使用的根因
 
 当 React 在进行渲染（Render Phase）时，有一个内部的全局工作指针叫 `workInProgressHook`。
 - **初次挂载（Mount）**：按代码调用顺序依次创建 Hook 节点并将其串联入链表：
@@ -943,7 +943,7 @@ function GoodComponent() {
 
 ## 📖 进阶思考
 
-### 为什么 Hooks 要设计成链表结构？
+### Hooks 设计为链表结构的考量
 
 1. **固定顺序保证稳定性**：通过严格的调用顺序，React 可以精准地复用上一次渲染的 Hook 状态
 2. **轻量级数据结构**：链表只需要一个 next 指针，内存开销小

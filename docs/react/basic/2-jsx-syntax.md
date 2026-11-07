@@ -8,7 +8,7 @@ JSX（JavaScript XML）是 React 独创的一种语法扩展，它允许我们�
 
 ---
 
-## 1. 什么是 JSX？
+## 1. JSX 的本质与定义
 
 在传统的 Web 开发中，HTML（结构）、CSS（样式）和 JavaScript（逻辑）是分离的。而 React 认为，渲染逻辑本质上与其他 UI 逻辑是内在耦合的。因此，React 引入了 JSX，将结构与逻辑合二为一。
 
@@ -239,7 +239,7 @@ function UserList() {
 }
 ```
 
-### 为什么必须指定 `key` 属性？
+### 必须指定 `key` 属性的原因
 
 `key` 是一个特殊的属性，用于帮助 React 识别哪些元素发生了改变、被添加或被移除。
 

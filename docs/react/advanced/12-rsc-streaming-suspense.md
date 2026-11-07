@@ -190,3 +190,83 @@ function renderWithHooks(current, workInProgress, Component, props, nextRenderLa
 ```
 
 这正是 React 19 彻底重构、最引以为傲的“零摩擦异步感知底座”。它让复杂的跨网络多级数据延迟加载，优雅地化简为在内核层面通过 Fiber 标志位进行挂起和 self-retry 唤醒。理解、掌握这套流式协议与 Selective Hydration 架构，是现代大前端平台工程师通往顶阶技术之巅的必备圣经。
+
+---
+
+## 五、 服务端流式渲染核心 API 实战：Node.js 与 Edge Runtime
+
+在底层基础设施或自研 SSR 框架中，流式渲染主要依赖 `react-dom/server` 提供的两个核心 API：
+
+### 1. Node.js 环境：renderToPipeableStream
+
+用于传统的 Node.js（Express、Koa、Fastify）服务。支持背压控制（Backpressure）与渐进式分块传输：
+
+```tsx
+// server-node.ts (Node.js Express 环境)
+import express from 'express';
+import { renderToPipeableStream } from 'react-dom/server';
+import App from './src/App';
+
+const app = express();
+
+app.get('*', (req, res) => {
+  let didError = false;
+
+  const { pipe, abort } = renderToPipeableStream(<App />, {
+    // 1. 骨架就绪回调：当根外壳组件（不含 Suspense 内部慢数据）完成渲染时触发
+    onShellReady() {
+      // 设置响应头并开始向客户端流式输出 HTML 骨架
+      res.statusCode = didError ? 500 : 200;
+      res.setHeader('Content-Type', 'text/html; charset=utf-8');
+      pipe(res);
+    },
+    // 2. 骨架致命错误：首屏最外层直接崩溃
+    onShellError(error) {
+      res.statusCode = 500;
+      res.send('<!doctype html><p>服务端骨架渲染崩溃</p>');
+    },
+    // 3. 所有悬挂 Suspense 异步任务全部完成时触发（适用于 SEO 爬虫完整生成）
+    onAllReady() {
+      // 可以在此处记录性能日志或缓存静态产物
+    },
+    // 4. 任意组件内部抛出的异常处理
+    onError(error) {
+      didError = true;
+      console.error('SSR 渲染流内部捕获到错误:', error);
+    },
+  });
+
+  // 超时防御：10 秒未完成则强制终止流
+  setTimeout(() => abort(), 10000);
+});
+```
+
+### 2. Edge / Web Streams 环境：renderToReadableStream
+
+用于 Cloudflare Workers、Deno、Bun 以及 Next.js Edge Runtime 等基于标准 Web Streams API 的边缘节点：
+
+```tsx
+// server-edge.ts (Web Streams 标准)
+import { renderToReadableStream } from 'react-dom/server';
+import App from './src/App';
+
+export default {
+  async fetch(request: Request): Promise<Response> {
+    try {
+      const stream = await renderToReadableStream(<App />, {
+        onError(error) {
+          console.error('Edge 流式渲染异常:', error);
+        },
+      });
+
+      // 直接基于标准 Web Response 返回流
+      return new Response(stream, {
+        headers: { 'Content-Type': 'text/html; charset=utf-8' },
+      });
+    } catch (err) {
+      return new Response('<!doctype html><p>边缘端渲染失败</p>', { status: 500 });
+    }
+  },
+};
+```
+
