@@ -1,0 +1,179 @@
+<!doctype html><html lang=zh-Hans dir=ltr class="docs-wrapper plugin-docs plugin-id-default docs-version-current docs-doc-page docs-doc-id-database/mysql/core/architecture" data-has-hydrated=false><head><meta charset=UTF-8><meta name=generator content="Docusaurus v3.10.2"><title data-rh=true>MySQL 体系架构与 SQL 执行链路 | Ai文档</title><meta data-rh=true name=viewport content="width=device-width, initial-scale=1.0"/><meta data-rh=true name=twitter:card content=summary_large_image /><meta data-rh=true property=og:image content=https://github.com/AiDocs/img/social-card.webp /><meta data-rh=true name=twitter:image content=https://github.com/AiDocs/img/social-card.webp /><meta data-rh=true property=og:url content=https://github.com/AiDocs/docs/database/mysql/core/architecture /><meta data-rh=true property=og:locale content=zh_Hans /><meta data-rh=true name=docusaurus_locale content=zh-Hans /><meta data-rh=true name=docsearch:language content=zh-Hans /><meta data-rh=true name=docusaurus_version content=current /><meta data-rh=true name=docusaurus_tag content=docs-default-current /><meta data-rh=true name=docsearch:version content=current /><meta data-rh=true name=docsearch:docusaurus_tag content=docs-default-current /><meta data-rh=true property=og:title content="MySQL 体系架构与 SQL 执行链路 | Ai文档"/><meta data-rh=true name=description content="MySQL 体系架构与 SQL 执行链路"/><meta data-rh=true property=og:description content="MySQL 体系架构与 SQL 执行链路"/><link data-rh=true rel=icon href=/AiDocs/img/favicon.ico /><link data-rh=true rel=canonical href=https://github.com/AiDocs/docs/database/mysql/core/architecture /><link data-rh=true rel=alternate href=https://github.com/AiDocs/docs/database/mysql/core/architecture hreflang=zh-Hans /><link data-rh=true rel=alternate href=https://github.com/AiDocs/docs/database/mysql/core/architecture hreflang=x-default /><script data-rh=true type=application/ld+json>{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","item":"https://github.com/AiDocs/docs/database/mysql/","name":"MySQL 关系型数据库","position":1},{"@type":"ListItem","item":"https://github.com/AiDocs/docs/category/核心原理","name":"核心原理","position":2},{"@type":"ListItem","item":"https://github.com/AiDocs/docs/database/mysql/core/architecture","name":"体系架构与执行链路","position":3}]}</script><link rel=stylesheet href=https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css type=text/css integrity=sha384-n8MVd4RsNIBMW3Zksd/cgGfpkkcg23OqxEnQl9o23PppNwe/eB84kLtyzzN3lft9 crossorigin=anonymous><link rel=stylesheet href=/AiDocs/assets/css/styles.ef21e8e7.css /><script src=/AiDocs/assets/js/runtime~main.88d5fa9d.js defer></script><script src=/AiDocs/assets/js/main.4650b099.js defer></script></head><body><svg style="display: none;"><defs>
+<symbol id=theme-svg-external-link viewBox="0 0 24 24"><path fill=currentColor d="M21 13v10h-21v-19h12v2h-10v15h17v-8h2zm3-12h-10.988l4.035 4-6.977 7.07 2.828 2.828 6.977-7.07 4.125 4.172v-11z"/></symbol>
+</defs></svg>
+<script>!function(){var t=function(){try{return new URLSearchParams(window.location.search).get("docusaurus-theme")}catch(t){}}()||function(){try{return window.localStorage.getItem("theme-92a")}catch(t){}}();document.documentElement.setAttribute("data-theme",t||(window.matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light")),document.documentElement.setAttribute("data-theme-choice",t||"system")}(),function(){try{for(var[t,e]of new URLSearchParams(window.location.search).entries())if(t.startsWith("docusaurus-data-")){var a=t.replace("docusaurus-data-","data-");document.documentElement.setAttribute(a,e)}}catch(t){}}()</script><div id=__docusaurus><link rel=preload as=image href=/AiDocs/img/logo.webp /><div role=region aria-label=跳到主要内容><a class=skipToContent_fXgn href=#__docusaurus_skipToContent_fallback>跳到主要内容</a></div><nav aria-label=主导航 class="theme-layout-navbar navbar navbar--fixed-top"><div class=navbar__inner><div class="theme-layout-navbar-left navbar__items"><button aria-label=切换导航栏 aria-expanded=false class="navbar__toggle clean-btn" type=button><svg width=30 height=30 viewBox="0 0 30 30" aria-hidden=true><path stroke=currentColor stroke-linecap=round stroke-miterlimit=10 stroke-width=2 d="M4 7h22M4 15h22M4 23h22"/></svg></button><a class=navbar__brand href=/AiDocs/><div class=navbar__logo><img src=/AiDocs/img/logo.webp alt="Ai文档 Logo" class="themedComponent_mlkZ themedComponent--light_NVdE"/><img src=/AiDocs/img/logo.webp alt="Ai文档 Logo" class="themedComponent_mlkZ themedComponent--dark_xIcU"/></div><b class="navbar__title text--truncate">Ai文档</b></a><a class="navbar__item navbar__link" href=/AiDocs/docs/>体系介绍</a><a class="navbar__item navbar__link" href=/AiDocs/docs/ai/0-readme>AI / 人工智能</a><a class="navbar__item navbar__link" href=/AiDocs/docs/category/java-后端>面试</a><a class="navbar__item navbar__link" href=/AiDocs/docs/civil-service/readme>考公考编</a><a class="navbar__item navbar__link" href=/AiDocs/docs/java/>Java</a><a aria-current=page class="navbar__item navbar__link navbar__link--active" href=/AiDocs/docs/database/mysql/>数据库</a><a class="navbar__item navbar__link" href=/AiDocs/docs/cache/redis/>缓存</a><a class="navbar__item navbar__link" href=/AiDocs/docs/distributed/system/>分布式</a><a class="navbar__item navbar__link" href=/AiDocs/docs/rust/title-page>Rust</a><a class="navbar__item navbar__link" href=/AiDocs/docs/swift/readme>Swift</a><a class="navbar__item navbar__link" href=/AiDocs/docs/hardware/>硬件</a><a class="navbar__item navbar__link" href=/AiDocs/docs/react/readme>React</a><a class="navbar__item navbar__link" href=/AiDocs/docs/web-basics/modern-javascript>Web 基础</a><a class="navbar__item navbar__link" href=/AiDocs/docs/linux/>Linux</a></div><div class="theme-layout-navbar-right navbar__items navbar__items--right"><a class="navbar__item navbar__link" href=/AiDocs/docs/changelog>更新记录</a><a href=https://github.com/Aiden-Coding/AiDocs target=_blank rel="noopener noreferrer" class="navbar__item navbar__link header-github-link"></a><div class="toggle_vylO colorModeToggle_DEke"><button class="clean-btn toggleButton_gllP toggleButtonDisabled_aARS" type=button disabled title="system mode" aria-label="切换浅色/暗黑模式（当前为system mode）"><svg viewBox="0 0 24 24" width=24 height=24 aria-hidden=true class="toggleIcon_g3eP lightToggleIcon_pyhR"><path fill=currentColor d="M12,9c1.65,0,3,1.35,3,3s-1.35,3-3,3s-3-1.35-3-3S10.35,9,12,9 M12,7c-2.76,0-5,2.24-5,5s2.24,5,5,5s5-2.24,5-5 S14.76,7,12,7L12,7z M2,13l2,0c0.55,0,1-0.45,1-1s-0.45-1-1-1l-2,0c-0.55,0-1,0.45-1,1S1.45,13,2,13z M20,13l2,0c0.55,0,1-0.45,1-1 s-0.45-1-1-1l-2,0c-0.55,0-1,0.45-1,1S19.45,13,20,13z M11,2v2c0,0.55,0.45,1,1,1s1-0.45,1-1V2c0-0.55-0.45-1-1-1S11,1.45,11,2z M11,20v2c0,0.55,0.45,1,1,1s1-0.45,1-1v-2c0-0.55-0.45-1-1-1C11.45,19,11,19.45,11,20z M5.99,4.58c-0.39-0.39-1.03-0.39-1.41,0 c-0.39,0.39-0.39,1.03,0,1.41l1.06,1.06c0.39,0.39,1.03,0.39,1.41,0s0.39-1.03,0-1.41L5.99,4.58z M18.36,16.95 c-0.39-0.39-1.03-0.39-1.41,0c-0.39,0.39-0.39,1.03,0,1.41l1.06,1.06c0.39,0.39,1.03,0.39,1.41,0c0.39-0.39,0.39-1.03,0-1.41 L18.36,16.95z M19.42,5.99c0.39-0.39,0.39-1.03,0-1.41c-0.39-0.39-1.03-0.39-1.41,0l-1.06,1.06c-0.39,0.39-0.39,1.03,0,1.41 s1.03,0.39,1.41,0L19.42,5.99z M7.05,18.36c0.39-0.39,0.39-1.03,0-1.41c-0.39-0.39-1.03-0.39-1.41,0l-1.06,1.06 c-0.39,0.39-0.39,1.03,0,1.41s1.03,0.39,1.41,0L7.05,18.36z"/></svg><svg viewBox="0 0 24 24" width=24 height=24 aria-hidden=true class="toggleIcon_g3eP darkToggleIcon_wfgR"><path fill=currentColor d="M9.37,5.51C9.19,6.15,9.1,6.82,9.1,7.5c0,4.08,3.32,7.4,7.4,7.4c0.68,0,1.35-0.09,1.99-0.27C17.45,17.19,14.93,19,12,19 c-3.86,0-7-3.14-7-7C5,9.07,6.81,6.55,9.37,5.51z M12,3c-4.97,0-9,4.03-9,9s4.03,9,9,9s9-4.03,9-9c0-0.46-0.04-0.92-0.1-1.36 c-0.98,1.37-2.58,2.26-4.4,2.26c-2.98,0-5.4-2.42-5.4-5.4c0-1.81,0.89-3.42,2.26-4.4C12.92,3.04,12.46,3,12,3L12,3z"/></svg><svg viewBox="0 0 24 24" width=24 height=24 aria-hidden=true class="toggleIcon_g3eP systemToggleIcon_QzmC"><path fill=currentColor d="m12 21c4.971 0 9-4.029 9-9s-4.029-9-9-9-9 4.029-9 9 4.029 9 9 9zm4.95-13.95c1.313 1.313 2.05 3.093 2.05 4.95s-0.738 3.637-2.05 4.95c-1.313 1.313-3.093 2.05-4.95 2.05v-14c1.857 0 3.637 0.737 4.95 2.05z"/></svg></button></div><div class=navbarSearchContainer_Bca1></div></div></div><div role=presentation class=navbar-sidebar__backdrop></div></nav><div id=__docusaurus_skipToContent_fallback class="theme-layout-main main-wrapper mainWrapper_z2l0"><div class=docsWrapper_hBAB><button aria-label=回到顶部 class="clean-btn theme-back-to-top-button backToTopButton_sjWU" type=button></button><div class=docRoot_UBD9><aside class="theme-doc-sidebar-container docSidebarContainer_YfHR"><div class=sidebarViewport_aRkj><div class=sidebar_njMd><nav aria-label=文档侧边栏 class="menu thin-scrollbar menu_SIkG"><ul class="theme-doc-sidebar-menu menu__list"><li class="theme-doc-sidebar-item-category theme-doc-sidebar-item-category-level-1 menu__list-item"><div class=menu__list-item-collapsible><a class="categoryLink_byQd menu__link menu__link--sublist menu__link--active" href=/AiDocs/docs/database/mysql/><span class=categoryLinkLabel_W154>MySQL 关系型数据库</span></a><button aria-label="折叠侧边栏分类 'MySQL 关系型数据库'" aria-expanded=true type=button class="clean-btn menu__caret"></button></div><ul class=menu__list><li class="theme-doc-sidebar-item-category theme-doc-sidebar-item-category-level-2 menu__list-item"><div class=menu__list-item-collapsible><a class="categoryLink_byQd menu__link menu__link--sublist menu__link--active" tabindex=0 href=/AiDocs/docs/category/核心原理><span class=categoryLinkLabel_W154>核心原理</span></a><button aria-label="折叠侧边栏分类 '核心原理'" aria-expanded=true type=button class="clean-btn menu__caret"></button></div><ul class=menu__list><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-3 menu__list-item"><a class="menu__link menu__link--active" aria-current=page tabindex=0 href=/AiDocs/docs/database/mysql/core/architecture><span class=linkLabel_WmDU>体系架构与执行链路</span></a><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-3 menu__list-item"><a class=menu__link tabindex=0 href=/AiDocs/docs/database/mysql/core/index-engine><span class=linkLabel_WmDU>索引与存储引擎</span></a><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-3 menu__list-item"><a class=menu__link tabindex=0 href=/AiDocs/docs/database/mysql/core/innodb-internals><span class=linkLabel_WmDU>InnoDB 内核原理</span></a><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-3 menu__list-item"><a class=menu__link tabindex=0 href=/AiDocs/docs/database/mysql/core/mvcc-locks><span class=linkLabel_WmDU>MVCC 与锁机制</span></a><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-3 menu__list-item"><a class=menu__link tabindex=0 href=/AiDocs/docs/database/mysql/core/logs-replication><span class=linkLabel_WmDU>日志系统与主从复制</span></a></ul><li class="theme-doc-sidebar-item-category theme-doc-sidebar-item-category-level-2 menu__list-item menu__list-item--collapsed"><div class=menu__list-item-collapsible><a class="categoryLink_byQd menu__link menu__link--sublist" tabindex=0 href=/AiDocs/docs/category/性能调优><span class=categoryLinkLabel_W154>性能调优</span></a><button aria-label="展开侧边栏分类 '性能调优'" aria-expanded=false type=button class="clean-btn menu__caret"></button></div><li class="theme-doc-sidebar-item-category theme-doc-sidebar-item-category-level-2 menu__list-item menu__list-item--collapsed"><div class=menu__list-item-collapsible><a class="categoryLink_byQd menu__link menu__link--sublist" tabindex=0 href=/AiDocs/docs/category/高可用><span class=categoryLinkLabel_W154>高可用</span></a><button aria-label="展开侧边栏分类 '高可用'" aria-expanded=false type=button class="clean-btn menu__caret"></button></div></ul><li class="theme-doc-sidebar-item-category theme-doc-sidebar-item-category-level-1 menu__list-item menu__list-item--collapsed"><div class=menu__list-item-collapsible><a class="categoryLink_byQd menu__link menu__link--sublist" href=/AiDocs/docs/database/postgresql/><span class=categoryLinkLabel_W154>PostgreSQL 数据库</span></a><button aria-label="展开侧边栏分类 'PostgreSQL 数据库'" aria-expanded=false type=button class="clean-btn menu__caret"></button></div></ul></nav></div></div></aside><main class=docMainContainer_TBSr><div class="container padding-top--md padding-bottom--lg"><div class=row><div class="col docItemCol_VOVn"><div class=docItemContainer_Djhp><article><nav class="theme-doc-breadcrumbs breadcrumbsContainer_Z_bl" aria-label=页面路径><ul class=breadcrumbs><li class=breadcrumbs__item><a aria-label=主页面 class=breadcrumbs__link href=/AiDocs/><svg viewBox="0 0 24 24" class=breadcrumbHomeIcon_YNFT><path d="M10 19v-5h4v5c0 .55.45 1 1 1h3c.55 0 1-.45 1-1v-7h1.7c.46 0 .68-.57.33-.87L12.67 3.6c-.38-.34-.96-.34-1.34 0l-8.36 7.53c-.34.3-.13.87.33.87H5v7c0 .55.45 1 1 1h3c.55 0 1-.45 1-1z" fill=currentColor /></svg></a><li class=breadcrumbs__item><a class=breadcrumbs__link href=/AiDocs/docs/database/mysql/><span>MySQL 关系型数据库</span></a><li class=breadcrumbs__item><a class=breadcrumbs__link href=/AiDocs/docs/category/核心原理><span>核心原理</span></a><li class="breadcrumbs__item breadcrumbs__item--active"><span class=breadcrumbs__link>体系架构与执行链路</span></ul></nav><div class="tocCollapsible_ETCw theme-doc-toc-mobile tocMobile_ITEo"><button type=button class="clean-btn tocCollapsibleButton_TO0P">本页总览</button></div><div class="theme-doc-markdown markdown"><h2 class="anchor anchorTargetStickyNavbar_Vzrq" id=mysql-体系架构与-sql-执行链路>MySQL 体系架构与 SQL 执行链路<a href=#mysql-体系架构与-sql-执行链路 class=hash-link aria-label="MySQL 体系架构与 SQL 执行链路的直接链接" title="MySQL 体系架构与 SQL 执行链路的直接链接" translate=no>​</a></h2>
+<p>理解 MySQL 的核心第一步，是建立宏观的架构认知。MySQL 采用了经典的**插件式存储引擎（Pluggable Storage Engine）**架构，将逻辑层（Server 层）与物理数据存取层（Storage Engine 层）彻底解耦。</p>
+<hr/>
+<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id=一-mysql-分层架构全景>一、 MySQL 分层架构全景<a href=#一-mysql-分层架构全景 class=hash-link aria-label="一、 MySQL 分层架构全景的直接链接" title="一、 MySQL 分层架构全景的直接链接" translate=no>​</a></h2>
+<p>MySQL 整体由 <strong>Server 层</strong> 和 <strong>存储引擎层（Storage Engine）</strong> 两大层次构成：</p>
+<!-- -->
+<h3 class="anchor anchorTargetStickyNavbar_Vzrq" id=1-连接器connectors>1. 连接器（Connectors）<a href=#1-连接器connectors class=hash-link aria-label="1. 连接器（Connectors）的直接链接" title="1. 连接器（Connectors）的直接链接" translate=no>​</a></h3>
+<p>连接器负责与客户端建立 TCP 连接、获取用户权限、维持并管理连接上下文。</p>
+<ul>
+<li class=""><strong>握手与认证</strong>：验证客户端用户名、密码与主机网段。</li>
+<li class=""><strong>权限快照</strong>：连接建立成功后，连接器会一次性读取该用户的权限并保存在连接会话内存中。后续只要该连接未断开，即使用管理员 <code>GRANT</code> 或 <code>REVOKE</code> 修改了权限，该连接的权限也不会即时改变。</li>
+<li class=""><strong>长连接与内存膨胀</strong>：MySQL 执行过程中使用的临时内存是在连接对象内部分配的。长连接累积使用可能导致内存占用过大，最终被操作系统 OOM Killer 杀掉。生产环境建议定期断开长连接，或在执行大操作后通过 <code>mysql_reset_connection()</code> 重置连接上下文。</li>
+<li class=""><strong>线程池（Thread Pool）</strong>：默认模式下一个连接对应一个 OS 线程（<code>one-thread-per-connection</code>），瞬时高并发会引发“连接风暴”导致线程上下文切换拖垮 CPU。生产高并发场景推荐开启商业版或 Percona/MariaDB 的线程池插件。</li>
+</ul>
+<h3 class="anchor anchorTargetStickyNavbar_Vzrq" id=2-查询缓存query-cache80-已彻底移除>2. 查询缓存（Query Cache，8.0 已彻底移除）<a href=#2-查询缓存query-cache80-已彻底移除 class=hash-link aria-label="2. 查询缓存（Query Cache，8.0 已彻底移除）的直接链接" title="2. 查询缓存（Query Cache，8.0 已彻底移除）的直接链接" translate=no>​</a></h3>
+<ul>
+<li class=""><strong>工作机制</strong>：MySQL 会将 <code>SELECT</code> 语句及其结果以 Key-Value 形式缓存在内存中。</li>
+<li class=""><strong>为什么在 MySQL 8.0 彻底被废除</strong>：
+<ul>
+<li class=""><strong>失效极其频繁</strong>：只要一张表发生了一次写入（<code>INSERT</code>/<code>UPDATE</code>/<code>DELETE</code>），该表所有关联的查询缓存立刻全部清空失效。在写多读少或中等写负载的业务库中，查询缓存的命中率极低，反而增加了锁竞争与内存维护开销。</li>
+<li class="">现代应用架构普遍将读缓存前置到 Redis/Memcached 集中式缓存层，由业务按需精准控制缓存失效与穿透。</li>
+</ul>
+</li>
+</ul>
+<h3 class="anchor anchorTargetStickyNavbar_Vzrq" id=3-分析器parser>3. 分析器（Parser）<a href=#3-分析器parser class=hash-link aria-label="3. 分析器（Parser）的直接链接" title="3. 分析器（Parser）的直接链接" translate=no>​</a></h3>
+<p>分析器负责将客户端传来的文本 SQL 字符串解析为内部结构：</p>
+<ul>
+<li class=""><strong>词法分析（Lexer）</strong>：识别 SQL 字符串中的关键字、表名、字段名、运算符，转化为一个个 Token。</li>
+<li class=""><strong>语法分析（Yacc Parser）</strong>：依据 SQL 语法规则检查 SQL 是否合法，并构建出一棵<strong>抽象语法树（Abstract Syntax Tree, AST）</strong>。若存在语法错误，在此阶段直接抛出 <code>You have an error in your SQL syntax</code>。</li>
+</ul>
+<h3 class="anchor anchorTargetStickyNavbar_Vzrq" id=4-预处理器preprocessor>4. 预处理器（Preprocessor）<a href=#4-预处理器preprocessor class=hash-link aria-label="4. 预处理器（Preprocessor）的直接链接" title="4. 预处理器（Preprocessor）的直接链接" translate=no>​</a></h3>
+<p>预处理器进一步对 AST 进行语义维度的深化审查：</p>
+<ul>
+<li class=""><strong>元数据校验</strong>：检查 AST 中引用的数据库表、字段是否存在。</li>
+<li class=""><strong>别名解析</strong>：展开通配符（如 <code>SELECT *</code> 展开为全字段列表）。</li>
+<li class=""><strong>权限初审</strong>：预先校验当前用户对目标表是否具备基本的查询/修改权限。</li>
+</ul>
+<h3 class="anchor anchorTargetStickyNavbar_Vzrq" id=5-查询优化器optimizer>5. 查询优化器（Optimizer）<a href=#5-查询优化器optimizer class=hash-link aria-label="5. 查询优化器（Optimizer）的直接链接" title="5. 查询优化器（Optimizer）的直接链接" translate=no>​</a></h3>
+<p>优化器的目标是将抽象语法树转化为一条<strong>执行成本最低、效率最高</strong>的物理执行计划。</p>
+<ul>
+<li class=""><strong>CBO（Cost-Based Optimizer）基于成本的优化模型</strong>：
+优化器会根据数据字典、表的统计信息（Cardinality 基数、页分布）计算不同执行方案的代价：
+<ul>
+<li class=""><strong>I/O 代价</strong>：从磁盘加载物理页到 Buffer Pool 的成本（默认一个页为 1.0）。</li>
+<li class=""><strong>CPU 代价</strong>：在内存中检索行记录、比对过滤条件的成本（默认处理一条记录为 0.2）。</li>
+</ul>
+</li>
+<li class=""><strong>优化器核心决策</strong>：
+<ul>
+<li class=""><strong>多索引选择</strong>：决定走哪个索引，还是直接走聚簇索引全表扫描。</li>
+<li class=""><strong>多表 Join 驱动顺序调整</strong>：在等值连接时，根据表规模与过滤条件自动选择“小表驱动大表”。</li>
+<li class=""><strong>子查询扁平化与半连接（Semi-Join）转换</strong>：将 <code>IN (SELECT ...)</code> 优化为关联查询或物化表。</li>
+</ul>
+</li>
+<li class=""><strong>为什么优化器会选错索引</strong>：
+<ul>
+<li class="">统计信息（<code>ANALYZE TABLE</code>）滞后导致基数估算失准。</li>
+<li class="">优化器认为主键回表的随机 I/O 成本高于全表扫描的顺序 I/O 成本。</li>
+</ul>
+</li>
+</ul>
+<h3 class="anchor anchorTargetStickyNavbar_Vzrq" id=6-执行器executor>6. 执行器（Executor）<a href=#6-执行器executor class=hash-link aria-label="6. 执行器（Executor）的直接链接" title="6. 执行器（Executor）的直接链接" translate=no>​</a></h3>
+<p>执行器是真正运转执行计划的核心控制器：</p>
+<ul>
+<li class=""><strong>权限复查</strong>：在正式调用引擎接口前，再次校验针对表或视图的操作权限。</li>
+<li class=""><strong>Handler API 调用</strong>：执行器并不关心数据底层是 B+ 树还是哈希表，它统一定义了一套标准的存储引擎接口规范（Handler API），例如 <code>ha_innobase::index_read</code>、<code>ha_innobase::rnd_next</code> 等。</li>
+<li class=""><strong>火山/迭代器模型（Iterator Model）</strong>：从根算子向下驱动，逐行拉取数据并判定过滤条件，满足条件的行写入结果缓冲区，流式返回客户端。</li>
+</ul>
+<hr/>
+<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id=二-一条查询-sql-的物理执行全流程>二、 一条查询 SQL 的物理执行全流程<a href=#二-一条查询-sql-的物理执行全流程 class=hash-link aria-label="二、 一条查询 SQL 的物理执行全流程的直接链接" title="二、 一条查询 SQL 的物理执行全流程的直接链接" translate=no>​</a></h2>
+<p>以简单查询语句 <code>SELECT username, age FROM users WHERE id = 10;</code> 为例，其端到端执行轨迹如下：</p>
+<!-- -->
+<hr/>
+<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id=三-一条更新-sql-的物理执行全流程事务与两阶段提交>三、 一条更新 SQL 的物理执行全流程（事务与两阶段提交）<a href=#三-一条更新-sql-的物理执行全流程事务与两阶段提交 class=hash-link aria-label="三、 一条更新 SQL 的物理执行全流程（事务与两阶段提交）的直接链接" title="三、 一条更新 SQL 的物理执行全流程（事务与两阶段提交）的直接链接" translate=no>​</a></h2>
+<p>以更新语句 <code>UPDATE account SET balance = balance - 100 WHERE id = 1;</code> 为例，该过程串联了 <strong>Buffer Pool、Undo Log、Redo Log 与 Binlog</strong>，是保证 ACID 和 Crash-Safe 的核心通路：</p>
+<!-- -->
+<h3 class="anchor anchorTargetStickyNavbar_Vzrq" id=崩溃恢复关键点说明>崩溃恢复关键点说明<a href=#崩溃恢复关键点说明 class=hash-link aria-label=崩溃恢复关键点说明的直接链接 title=崩溃恢复关键点说明的直接链接 translate=no>​</a></h3>
+<p>当数据库意外宕机重启时，根据两阶段提交的标志进行故障恢复判断：</p>
+<ol>
+<li class=""><strong>若 Redo Log 为 Prepare 状态且 Binlog 未写入完成</strong>：该事务判定为未提交，利用 Undo Log 执行回滚，保证原子性。</li>
+<li class=""><strong>若 Redo Log 为 Prepare 状态但 Binlog 已经完整写入</strong>：虽然 Redo 尚未变成 Commit，但由于 Binlog 已经落盘，从库可能已经同步该事务，因此奔溃恢复机制会将该事务在存储引擎层直接 Commit，保证主从数据严格一致。</li>
+</ol>
+<hr/>
+<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id=四-常见存储引擎深度横向对比>四、 常见存储引擎深度横向对比<a href=#四-常见存储引擎深度横向对比 class=hash-link aria-label="四、 常见存储引擎深度横向对比的直接链接" title="四、 常见存储引擎深度横向对比的直接链接" translate=no>​</a></h2>
+<p>MySQL 插件式架构支持灵活更换存储引擎。生产环境中主要接触 <strong>InnoDB</strong>、<strong>MyISAM</strong>、<strong>Memory</strong> 以及在大数据量追加写场景下的 <strong>RocksDB (MyRocks)</strong>。</p>
+<h3 class="anchor anchorTargetStickyNavbar_Vzrq" id=1-核心维度对比矩阵>1. 核心维度对比矩阵<a href=#1-核心维度对比矩阵 class=hash-link aria-label="1. 核心维度对比矩阵的直接链接" title="1. 核心维度对比矩阵的直接链接" translate=no>​</a></h3>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th style=text-align:left>特性维度<th style=text-align:left>InnoDB<th style=text-align:left>MyISAM<th style=text-align:left>Memory<th style=text-align:left>RocksDB (MyRocks)<tbody><tr><td style=text-align:left><strong>事务支持</strong><td style=text-align:left>完整支持（ACID）<td style=text-align:left>不支持<td style=text-align:left>不支持<td style=text-align:left>完整支持（ACID）<tr><td style=text-align:left><strong>锁粒度</strong><td style=text-align:left>行级锁（Row Lock）+ 间隙锁<td style=text-align:left>表级锁（Table Lock）<td style=text-align:left>表级锁（Table Lock）<td style=text-align:left>行级锁（Row Lock）<tr><td style=text-align:left><strong>MVCC 并发读</strong><td style=text-align:left>支持（一致性非锁定读）<td style=text-align:left>不支持<td style=text-align:left>不支持<td style=text-align:left>支持<tr><td style=text-align:left><strong>崩溃恢复能力</strong><td style=text-align:left>支持（Crash-Safe 依靠 Redo/双写）<td style=text-align:left>不支持（崩溃易损坏索引）<td style=text-align:left>重启数据彻底丢失<td style=text-align:left>支持（WAL 机制）<tr><td style=text-align:left><strong>底层数据结构</strong><td style=text-align:left>B+ 树（聚簇索引结构）<td style=text-align:left>B+ 树（堆表 + 独立索引）<td style=text-align:left>哈希表（Hash Index）/ B 树<td style=text-align:left>LSM 树（Log-Structured Merge-Tree）<tr><td style=text-align:left><strong>外键约束</strong><td style=text-align:left>完整支持<td style=text-align:left>不支持<td style=text-align:left>不支持<td style=text-align:left>不支持<tr><td style=text-align:left><strong>物理文件结构</strong><td style=text-align:left><code>.ibd</code>（数据与索引合一）<td style=text-align:left><code>.MYD</code>（数据）+ <code>.MYI</code>（索引）<td style=text-align:left>无独立磁盘数据文件<td style=text-align:left><code>.sst</code> 物理数据文件<tr><td style=text-align:left><strong>主键要求</strong><td style=text-align:left>必须有主键（无则自动生成隐藏主键）<td style=text-align:left>可无主键<td style=text-align:left>可无主键<td style=text-align:left>推荐有主键<tr><td style=text-align:left><strong><code>COUNT(*)</code> 效率</strong><td style=text-align:left>需扫描聚簇/辅助索引实时计算<td style=text-align:left>磁盘直接保存表总行数（无 <code>WHERE</code> 时 <span class=katex><span class=katex-mathml><math xmlns=http://www.w3.org/1998/Math/MathML><semantics><mrow><mi>O</mi><mo stretchy=false>(</mo><mn>1</mn><mo stretchy=false>)</mo></mrow><annotation encoding=application/x-tex>O(1)</annotation></semantics></math></span><span class=katex-html aria-hidden=true><span class=base><span class=strut style=height:1em;vertical-align:-0.25em></span><span class="mord mathnormal" style=margin-right:0.0278em>O</span><span class=mopen>(</span><span class=mord>1</span><span class=mclose>)</span></span></span></span>）<td style=text-align:left>实时计算<td style=text-align:left>估算或按需扫描</table>
+<h3 class="anchor anchorTargetStickyNavbar_Vzrq" id=2-myisam-与-innodb-核心差异底层剖析>2. MyISAM 与 InnoDB 核心差异底层剖析<a href=#2-myisam-与-innodb-核心差异底层剖析 class=hash-link aria-label="2. MyISAM 与 InnoDB 核心差异底层剖析的直接链接" title="2. MyISAM 与 InnoDB 核心差异底层剖析的直接链接" translate=no>​</a></h3>
+<h4 class="anchor anchorTargetStickyNavbar_Vzrq" id=1物理存储模型差异>（1）物理存储模型差异<a href=#1物理存储模型差异 class=hash-link aria-label=（1）物理存储模型差异的直接链接 title=（1）物理存储模型差异的直接链接 translate=no>​</a></h4>
+<ul>
+<li class=""><strong>MyISAM（非聚簇堆表）</strong>：
+数据与索引完全分离。<code>.MYD</code> 文件中各行记录按插入顺序堆叠存放；<code>.MYI</code> 索引文件中 B+ 树叶子节点存储的全部是<strong>指向数据行在 <code>.MYD</code> 文件中的物理字节偏移量（Pointer）</strong>。</li>
+<li class=""><strong>InnoDB（聚簇索引表）</strong>：
+数据本身就是索引的一部分。主键 B+ 树的叶子节点直接存放整行完整数据（Clustered Index）；辅助索引叶子节点存放的是主键值，需要经过一次<strong>主键回表</strong>。</li>
+</ul>
+<!-- -->
+<h4 class="anchor anchorTargetStickyNavbar_Vzrq" id=2为什么-innodb-的-count-无法像-myisam-一样瞬间返回>（2）为什么 InnoDB 的 <code>COUNT(*)</code> 无法像 MyISAM 一样瞬间返回<a href=#2为什么-innodb-的-count-无法像-myisam-一样瞬间返回 class=hash-link aria-label=2为什么-innodb-的-count-无法像-myisam-一样瞬间返回的直接链接 title=2为什么-innodb-的-count-无法像-myisam-一样瞬间返回的直接链接 translate=no>​</a></h4>
+<ul>
+<li class=""><strong>MyISAM 表</strong>：因为不支持事务，且整张表只能加表锁，表上的总行数对于所有客户端都是完全相同的确定值，因此引擎直接在元数据头里维护了 <code>row_count</code> 计数器，无过滤条件时读取时间复杂度为 <span class=katex><span class=katex-mathml><math xmlns=http://www.w3.org/1998/Math/MathML><semantics><mrow><mi>O</mi><mo stretchy=false>(</mo><mn>1</mn><mo stretchy=false>)</mo></mrow><annotation encoding=application/x-tex>O(1)</annotation></semantics></math></span><span class=katex-html aria-hidden=true><span class=base><span class=strut style=height:1em;vertical-align:-0.25em></span><span class="mord mathnormal" style=margin-right:0.0278em>O</span><span class=mopen>(</span><span class=mord>1</span><span class=mclose>)</span></span></span></span>。</li>
+<li class=""><strong>InnoDB 表</strong>：由于支持 MVCC 与多版本并发事务，在某一具体时刻，不同事务由于隔离级别不同（如 Read View 活跃事务不同），所能读取到的行数是不一样的。因此，InnoDB 必须通过遍历索引树（通常优先挑选体积最小的二级辅助索引全量遍历）逐行比对事务可见性，无法维护一个静态全局计数器。</li>
+</ul></div><footer class="theme-doc-footer docusaurus-mt-lg"><div class="row margin-top--sm theme-doc-footer-edit-meta-row"><div class="col noPrint_WFHX"><a href=https://github.com/Aiden-Coding/AiDocs/tree/main/docs/database/mysql/0-core/1-architecture.md target=_blank rel="noopener noreferrer" class=theme-edit-this-page><svg fill=currentColor height=20 width=20 viewBox="0 0 40 40" class=iconEdit_Z9Sw aria-hidden=true><g><path d="m34.5 11.7l-3 3.1-6.3-6.3 3.1-3q0.5-0.5 1.2-0.5t1.1 0.5l3.9 3.9q0.5 0.4 0.5 1.1t-0.5 1.2z m-29.5 17.1l18.4-18.5 6.3 6.3-18.4 18.4h-6.3v-6.2z"/></g></svg>编辑此页</a></div><div class="col lastUpdated_JAkA"></div></div></footer></article><nav class="docusaurus-mt-lg pagination-nav" aria-label=文件选项卡><a class="pagination-nav__link pagination-nav__link--prev" href=/AiDocs/docs/category/核心原理><div class=pagination-nav__sublabel>上一页</div><div class=pagination-nav__label>核心原理</div></a><a class="pagination-nav__link pagination-nav__link--next" href=/AiDocs/docs/database/mysql/core/index-engine><div class=pagination-nav__sublabel>下一页</div><div class=pagination-nav__label>索引与存储引擎</div></a></nav></div></div><div class="col col--3"><div class="tableOfContents_bqdL thin-scrollbar theme-doc-toc-desktop"><ul class="table-of-contents table-of-contents__left-border"><li><a href=#mysql-体系架构与-sql-执行链路 class="table-of-contents__link toc-highlight">MySQL 体系架构与 SQL 执行链路</a><li><a href=#一-mysql-分层架构全景 class="table-of-contents__link toc-highlight">一、 MySQL 分层架构全景</a><ul><li><a href=#1-连接器connectors class="table-of-contents__link toc-highlight">1. 连接器（Connectors）</a><li><a href=#2-查询缓存query-cache80-已彻底移除 class="table-of-contents__link toc-highlight">2. 查询缓存（Query Cache，8.0 已彻底移除）</a><li><a href=#3-分析器parser class="table-of-contents__link toc-highlight">3. 分析器（Parser）</a><li><a href=#4-预处理器preprocessor class="table-of-contents__link toc-highlight">4. 预处理器（Preprocessor）</a><li><a href=#5-查询优化器optimizer class="table-of-contents__link toc-highlight">5. 查询优化器（Optimizer）</a><li><a href=#6-执行器executor class="table-of-contents__link toc-highlight">6. 执行器（Executor）</a></ul><li><a href=#二-一条查询-sql-的物理执行全流程 class="table-of-contents__link toc-highlight">二、 一条查询 SQL 的物理执行全流程</a><li><a href=#三-一条更新-sql-的物理执行全流程事务与两阶段提交 class="table-of-contents__link toc-highlight">三、 一条更新 SQL 的物理执行全流程（事务与两阶段提交）</a><ul><li><a href=#崩溃恢复关键点说明 class="table-of-contents__link toc-highlight">崩溃恢复关键点说明</a></ul><li><a href=#四-常见存储引擎深度横向对比 class="table-of-contents__link toc-highlight">四、 常见存储引擎深度横向对比</a><ul><li><a href=#1-核心维度对比矩阵 class="table-of-contents__link toc-highlight">1. 核心维度对比矩阵</a><li><a href=#2-myisam-与-innodb-核心差异底层剖析 class="table-of-contents__link toc-highlight">2. MyISAM 与 InnoDB 核心差异底层剖析</a></ul></ul></div></div></div></div></main></div></div></div><footer class="theme-layout-footer footer footer--dark"><div class="container container-fluid"><div class="footer__bottom text--center"><div class=footer__copyright>Copyright © 2026 AiDocs 架构知识库. 基于 Docusaurus 驱动.</div></div></div></footer></div></body>

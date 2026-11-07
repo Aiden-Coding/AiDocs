@@ -1,0 +1,173 @@
+<!doctype html><html lang=zh-Hans dir=ltr class="docs-wrapper plugin-docs plugin-id-default docs-version-current docs-doc-page docs-doc-id-database/mysql/ha/dr-backup-recovery" data-has-hydrated=false><head><meta charset=UTF-8><meta name=generator content="Docusaurus v3.10.2"><title data-rh=true>MySQL 灾备恢复、GTID 复制与高可用架构 | Ai文档</title><meta data-rh=true name=viewport content="width=device-width, initial-scale=1.0"/><meta data-rh=true name=twitter:card content=summary_large_image /><meta data-rh=true property=og:image content=https://github.com/AiDocs/img/social-card.webp /><meta data-rh=true name=twitter:image content=https://github.com/AiDocs/img/social-card.webp /><meta data-rh=true property=og:url content=https://github.com/AiDocs/docs/database/mysql/ha/dr-backup-recovery /><meta data-rh=true property=og:locale content=zh_Hans /><meta data-rh=true name=docusaurus_locale content=zh-Hans /><meta data-rh=true name=docsearch:language content=zh-Hans /><meta data-rh=true name=docusaurus_version content=current /><meta data-rh=true name=docusaurus_tag content=docs-default-current /><meta data-rh=true name=docsearch:version content=current /><meta data-rh=true name=docsearch:docusaurus_tag content=docs-default-current /><meta data-rh=true property=og:title content="MySQL 灾备恢复、GTID 复制与高可用架构 | Ai文档"/><meta data-rh=true name=description content="MySQL 灾备恢复、GTID 复制与高可用架构"/><meta data-rh=true property=og:description content="MySQL 灾备恢复、GTID 复制与高可用架构"/><link data-rh=true rel=icon href=/AiDocs/img/favicon.ico /><link data-rh=true rel=canonical href=https://github.com/AiDocs/docs/database/mysql/ha/dr-backup-recovery /><link data-rh=true rel=alternate href=https://github.com/AiDocs/docs/database/mysql/ha/dr-backup-recovery hreflang=zh-Hans /><link data-rh=true rel=alternate href=https://github.com/AiDocs/docs/database/mysql/ha/dr-backup-recovery hreflang=x-default /><script data-rh=true type=application/ld+json>{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","item":"https://github.com/AiDocs/docs/database/mysql/","name":"MySQL 关系型数据库","position":1},{"@type":"ListItem","item":"https://github.com/AiDocs/docs/category/高可用","name":"高可用","position":2},{"@type":"ListItem","item":"https://github.com/AiDocs/docs/database/mysql/ha/dr-backup-recovery","name":"灾备恢复与高可用拓扑","position":3}]}</script><link rel=stylesheet href=https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css type=text/css integrity=sha384-n8MVd4RsNIBMW3Zksd/cgGfpkkcg23OqxEnQl9o23PppNwe/eB84kLtyzzN3lft9 crossorigin=anonymous><link rel=stylesheet href=/AiDocs/assets/css/styles.ef21e8e7.css /><script src=/AiDocs/assets/js/runtime~main.88d5fa9d.js defer></script><script src=/AiDocs/assets/js/main.4650b099.js defer></script></head><body><svg style="display: none;"><defs>
+<symbol id=theme-svg-external-link viewBox="0 0 24 24"><path fill=currentColor d="M21 13v10h-21v-19h12v2h-10v15h17v-8h2zm3-12h-10.988l4.035 4-6.977 7.07 2.828 2.828 6.977-7.07 4.125 4.172v-11z"/></symbol>
+</defs></svg>
+<script>!function(){var t=function(){try{return new URLSearchParams(window.location.search).get("docusaurus-theme")}catch(t){}}()||function(){try{return window.localStorage.getItem("theme-92a")}catch(t){}}();document.documentElement.setAttribute("data-theme",t||(window.matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light")),document.documentElement.setAttribute("data-theme-choice",t||"system")}(),function(){try{for(var[t,e]of new URLSearchParams(window.location.search).entries())if(t.startsWith("docusaurus-data-")){var a=t.replace("docusaurus-data-","data-");document.documentElement.setAttribute(a,e)}}catch(t){}}()</script><div id=__docusaurus><link rel=preload as=image href=/AiDocs/img/logo.webp /><div role=region aria-label=跳到主要内容><a class=skipToContent_fXgn href=#__docusaurus_skipToContent_fallback>跳到主要内容</a></div><nav aria-label=主导航 class="theme-layout-navbar navbar navbar--fixed-top"><div class=navbar__inner><div class="theme-layout-navbar-left navbar__items"><button aria-label=切换导航栏 aria-expanded=false class="navbar__toggle clean-btn" type=button><svg width=30 height=30 viewBox="0 0 30 30" aria-hidden=true><path stroke=currentColor stroke-linecap=round stroke-miterlimit=10 stroke-width=2 d="M4 7h22M4 15h22M4 23h22"/></svg></button><a class=navbar__brand href=/AiDocs/><div class=navbar__logo><img src=/AiDocs/img/logo.webp alt="Ai文档 Logo" class="themedComponent_mlkZ themedComponent--light_NVdE"/><img src=/AiDocs/img/logo.webp alt="Ai文档 Logo" class="themedComponent_mlkZ themedComponent--dark_xIcU"/></div><b class="navbar__title text--truncate">Ai文档</b></a><a class="navbar__item navbar__link" href=/AiDocs/docs/>体系介绍</a><a class="navbar__item navbar__link" href=/AiDocs/docs/ai/0-readme>AI / 人工智能</a><a class="navbar__item navbar__link" href=/AiDocs/docs/category/java-后端>面试</a><a class="navbar__item navbar__link" href=/AiDocs/docs/civil-service/readme>考公考编</a><a class="navbar__item navbar__link" href=/AiDocs/docs/java/>Java</a><a aria-current=page class="navbar__item navbar__link navbar__link--active" href=/AiDocs/docs/database/mysql/>数据库</a><a class="navbar__item navbar__link" href=/AiDocs/docs/cache/redis/>缓存</a><a class="navbar__item navbar__link" href=/AiDocs/docs/distributed/system/>分布式</a><a class="navbar__item navbar__link" href=/AiDocs/docs/rust/title-page>Rust</a><a class="navbar__item navbar__link" href=/AiDocs/docs/swift/readme>Swift</a><a class="navbar__item navbar__link" href=/AiDocs/docs/hardware/>硬件</a><a class="navbar__item navbar__link" href=/AiDocs/docs/react/readme>React</a><a class="navbar__item navbar__link" href=/AiDocs/docs/web-basics/modern-javascript>Web 基础</a><a class="navbar__item navbar__link" href=/AiDocs/docs/linux/>Linux</a></div><div class="theme-layout-navbar-right navbar__items navbar__items--right"><a class="navbar__item navbar__link" href=/AiDocs/docs/changelog>更新记录</a><a href=https://github.com/Aiden-Coding/AiDocs target=_blank rel="noopener noreferrer" class="navbar__item navbar__link header-github-link"></a><div class="toggle_vylO colorModeToggle_DEke"><button class="clean-btn toggleButton_gllP toggleButtonDisabled_aARS" type=button disabled title="system mode" aria-label="切换浅色/暗黑模式（当前为system mode）"><svg viewBox="0 0 24 24" width=24 height=24 aria-hidden=true class="toggleIcon_g3eP lightToggleIcon_pyhR"><path fill=currentColor d="M12,9c1.65,0,3,1.35,3,3s-1.35,3-3,3s-3-1.35-3-3S10.35,9,12,9 M12,7c-2.76,0-5,2.24-5,5s2.24,5,5,5s5-2.24,5-5 S14.76,7,12,7L12,7z M2,13l2,0c0.55,0,1-0.45,1-1s-0.45-1-1-1l-2,0c-0.55,0-1,0.45-1,1S1.45,13,2,13z M20,13l2,0c0.55,0,1-0.45,1-1 s-0.45-1-1-1l-2,0c-0.55,0-1,0.45-1,1S19.45,13,20,13z M11,2v2c0,0.55,0.45,1,1,1s1-0.45,1-1V2c0-0.55-0.45-1-1-1S11,1.45,11,2z M11,20v2c0,0.55,0.45,1,1,1s1-0.45,1-1v-2c0-0.55-0.45-1-1-1C11.45,19,11,19.45,11,20z M5.99,4.58c-0.39-0.39-1.03-0.39-1.41,0 c-0.39,0.39-0.39,1.03,0,1.41l1.06,1.06c0.39,0.39,1.03,0.39,1.41,0s0.39-1.03,0-1.41L5.99,4.58z M18.36,16.95 c-0.39-0.39-1.03-0.39-1.41,0c-0.39,0.39-0.39,1.03,0,1.41l1.06,1.06c0.39,0.39,1.03,0.39,1.41,0c0.39-0.39,0.39-1.03,0-1.41 L18.36,16.95z M19.42,5.99c0.39-0.39,0.39-1.03,0-1.41c-0.39-0.39-1.03-0.39-1.41,0l-1.06,1.06c-0.39,0.39-0.39,1.03,0,1.41 s1.03,0.39,1.41,0L19.42,5.99z M7.05,18.36c0.39-0.39,0.39-1.03,0-1.41c-0.39-0.39-1.03-0.39-1.41,0l-1.06,1.06 c-0.39,0.39-0.39,1.03,0,1.41s1.03,0.39,1.41,0L7.05,18.36z"/></svg><svg viewBox="0 0 24 24" width=24 height=24 aria-hidden=true class="toggleIcon_g3eP darkToggleIcon_wfgR"><path fill=currentColor d="M9.37,5.51C9.19,6.15,9.1,6.82,9.1,7.5c0,4.08,3.32,7.4,7.4,7.4c0.68,0,1.35-0.09,1.99-0.27C17.45,17.19,14.93,19,12,19 c-3.86,0-7-3.14-7-7C5,9.07,6.81,6.55,9.37,5.51z M12,3c-4.97,0-9,4.03-9,9s4.03,9,9,9s9-4.03,9-9c0-0.46-0.04-0.92-0.1-1.36 c-0.98,1.37-2.58,2.26-4.4,2.26c-2.98,0-5.4-2.42-5.4-5.4c0-1.81,0.89-3.42,2.26-4.4C12.92,3.04,12.46,3,12,3L12,3z"/></svg><svg viewBox="0 0 24 24" width=24 height=24 aria-hidden=true class="toggleIcon_g3eP systemToggleIcon_QzmC"><path fill=currentColor d="m12 21c4.971 0 9-4.029 9-9s-4.029-9-9-9-9 4.029-9 9 4.029 9 9 9zm4.95-13.95c1.313 1.313 2.05 3.093 2.05 4.95s-0.738 3.637-2.05 4.95c-1.313 1.313-3.093 2.05-4.95 2.05v-14c1.857 0 3.637 0.737 4.95 2.05z"/></svg></button></div><div class=navbarSearchContainer_Bca1></div></div></div><div role=presentation class=navbar-sidebar__backdrop></div></nav><div id=__docusaurus_skipToContent_fallback class="theme-layout-main main-wrapper mainWrapper_z2l0"><div class=docsWrapper_hBAB><button aria-label=回到顶部 class="clean-btn theme-back-to-top-button backToTopButton_sjWU" type=button></button><div class=docRoot_UBD9><aside class="theme-doc-sidebar-container docSidebarContainer_YfHR"><div class=sidebarViewport_aRkj><div class=sidebar_njMd><nav aria-label=文档侧边栏 class="menu thin-scrollbar menu_SIkG"><ul class="theme-doc-sidebar-menu menu__list"><li class="theme-doc-sidebar-item-category theme-doc-sidebar-item-category-level-1 menu__list-item"><div class=menu__list-item-collapsible><a class="categoryLink_byQd menu__link menu__link--sublist menu__link--active" href=/AiDocs/docs/database/mysql/><span class=categoryLinkLabel_W154>MySQL 关系型数据库</span></a><button aria-label="折叠侧边栏分类 'MySQL 关系型数据库'" aria-expanded=true type=button class="clean-btn menu__caret"></button></div><ul class=menu__list><li class="theme-doc-sidebar-item-category theme-doc-sidebar-item-category-level-2 menu__list-item menu__list-item--collapsed"><div class=menu__list-item-collapsible><a class="categoryLink_byQd menu__link menu__link--sublist" tabindex=0 href=/AiDocs/docs/category/核心原理><span class=categoryLinkLabel_W154>核心原理</span></a><button aria-label="展开侧边栏分类 '核心原理'" aria-expanded=false type=button class="clean-btn menu__caret"></button></div><li class="theme-doc-sidebar-item-category theme-doc-sidebar-item-category-level-2 menu__list-item menu__list-item--collapsed"><div class=menu__list-item-collapsible><a class="categoryLink_byQd menu__link menu__link--sublist" tabindex=0 href=/AiDocs/docs/category/性能调优><span class=categoryLinkLabel_W154>性能调优</span></a><button aria-label="展开侧边栏分类 '性能调优'" aria-expanded=false type=button class="clean-btn menu__caret"></button></div><li class="theme-doc-sidebar-item-category theme-doc-sidebar-item-category-level-2 menu__list-item"><div class=menu__list-item-collapsible><a class="categoryLink_byQd menu__link menu__link--sublist menu__link--active" tabindex=0 href=/AiDocs/docs/category/高可用><span class=categoryLinkLabel_W154>高可用</span></a><button aria-label="折叠侧边栏分类 '高可用'" aria-expanded=true type=button class="clean-btn menu__caret"></button></div><ul class=menu__list><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-3 menu__list-item"><a class=menu__link tabindex=0 href=/AiDocs/docs/database/mysql/ha/ha-clustering><span class=linkLabel_WmDU>高可用集群架构</span></a><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-3 menu__list-item"><a class="menu__link menu__link--active" aria-current=page tabindex=0 href=/AiDocs/docs/database/mysql/ha/dr-backup-recovery><span class=linkLabel_WmDU>灾备恢复与高可用拓扑</span></a></ul></ul><li class="theme-doc-sidebar-item-category theme-doc-sidebar-item-category-level-1 menu__list-item menu__list-item--collapsed"><div class=menu__list-item-collapsible><a class="categoryLink_byQd menu__link menu__link--sublist" href=/AiDocs/docs/database/postgresql/><span class=categoryLinkLabel_W154>PostgreSQL 数据库</span></a><button aria-label="展开侧边栏分类 'PostgreSQL 数据库'" aria-expanded=false type=button class="clean-btn menu__caret"></button></div></ul></nav></div></div></aside><main class=docMainContainer_TBSr><div class="container padding-top--md padding-bottom--lg"><div class=row><div class="col docItemCol_VOVn"><div class=docItemContainer_Djhp><article><nav class="theme-doc-breadcrumbs breadcrumbsContainer_Z_bl" aria-label=页面路径><ul class=breadcrumbs><li class=breadcrumbs__item><a aria-label=主页面 class=breadcrumbs__link href=/AiDocs/><svg viewBox="0 0 24 24" class=breadcrumbHomeIcon_YNFT><path d="M10 19v-5h4v5c0 .55.45 1 1 1h3c.55 0 1-.45 1-1v-7h1.7c.46 0 .68-.57.33-.87L12.67 3.6c-.38-.34-.96-.34-1.34 0l-8.36 7.53c-.34.3-.13.87.33.87H5v7c0 .55.45 1 1 1h3c.55 0 1-.45 1-1z" fill=currentColor /></svg></a><li class=breadcrumbs__item><a class=breadcrumbs__link href=/AiDocs/docs/database/mysql/><span>MySQL 关系型数据库</span></a><li class=breadcrumbs__item><a class=breadcrumbs__link href=/AiDocs/docs/category/高可用><span>高可用</span></a><li class="breadcrumbs__item breadcrumbs__item--active"><span class=breadcrumbs__link>灾备恢复与高可用拓扑</span></ul></nav><div class="tocCollapsible_ETCw theme-doc-toc-mobile tocMobile_ITEo"><button type=button class="clean-btn tocCollapsibleButton_TO0P">本页总览</button></div><div class="theme-doc-markdown markdown"><h2 class="anchor anchorTargetStickyNavbar_Vzrq" id=mysql-灾备恢复gtid-复制与高可用架构>MySQL 灾备恢复、GTID 复制与高可用架构<a href=#mysql-灾备恢复gtid-复制与高可用架构 class=hash-link aria-label="MySQL 灾备恢复、GTID 复制与高可用架构的直接链接" title="MySQL 灾备恢复、GTID 复制与高可用架构的直接链接" translate=no>​</a></h2>
+<p>高可用（High Availability, HA）与灾难恢复（Disaster Recovery, DR）是生产级数据库运维的底线保障。数据复制是构建高可用集群的技术底座，而完备的备份恢复与自动故障转移机制则是防止数据丢失与业务瘫痪的关键防线。</p>
+<hr/>
+<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id=一-gtid-复制机制与主从切换>一、 GTID 复制机制与主从切换<a href=#一-gtid-复制机制与主从切换 class=hash-link aria-label="一、 GTID 复制机制与主从切换的直接链接" title="一、 GTID 复制机制与主从切换的直接链接" translate=no>​</a></h2>
+<p>在传统 MySQL 复制中，从库依赖主库的 <code>binlog_file_name</code> 和 <code>binlog_position</code>（二进制日志文件名和偏移量位点）来定位同步点。在大规模集群和级联复制中，位点维护容易出错，主从故障切换难度极大。MySQL 5.6 引入、并在 5.7/8.0 成为标准的 <strong>GTID（Global Transaction Identifier，全局事务标识符）</strong> 彻底改变了这一现状。</p>
+<h3 class="anchor anchorTargetStickyNavbar_Vzrq" id=1-gtid-的构成与生命周期>1. GTID 的构成与生命周期<a href=#1-gtid-的构成与生命周期 class=hash-link aria-label="1. GTID 的构成与生命周期的直接链接" title="1. GTID 的构成与生命周期的直接链接" translate=no>​</a></h3>
+<p>一个 GTID 代表一个在主库上提交的全局唯一事务，其标准格式为：</p>
+<div class="language-text codeBlockContainer_Ckt0 theme-code-block" style=--prism-color:#393A34;--prism-background-color:#f6f8fa><div class=codeBlockContent_QJqH><pre tabindex=0 class="prism-code language-text codeBlock_bY9V thin-scrollbar" style=color:#393A34;background-color:#f6f8fa><code class=codeBlockLines_e6Vv><div class=token-line style=color:#393A34><span class="token plain">GTID = source_id:transaction_id</span><br/></div></code></pre></div></div>
+<ul>
+<li class=""><strong><code>source_id</code></strong>：发起该事务的原生节点的唯一 UUID（即 <code>server_uuid</code>）。</li>
+<li class=""><strong><code>transaction_id</code></strong>：一个在该节点上严格自增的 64 位整数（也称 GNO, Group Number），从 1 开始递增。</li>
+<li class=""><strong>示例</strong>：<code>3E11FA47-71CA-11E1-9E33-C80AA9429562:1-5</code> 表示源节点连续提交的第 1 到第 5 个全局事务。</li>
+</ul>
+<h3 class="anchor anchorTargetStickyNavbar_Vzrq" id=2-gtid-自动定位auto-positioning原理>2. GTID 自动定位（Auto-Positioning）原理<a href=#2-gtid-自动定位auto-positioning原理 class=hash-link aria-label="2. GTID 自动定位（Auto-Positioning）原理的直接链接" title="2. GTID 自动定位（Auto-Positioning）原理的直接链接" translate=no>​</a></h3>
+<p>开启 GTID 复制后，从库连接主库无需手动指定文件偏移量，只需声明：</p>
+<div class="language-sql codeBlockContainer_Ckt0 theme-code-block" style=--prism-color:#393A34;--prism-background-color:#f6f8fa><div class=codeBlockContent_QJqH><pre tabindex=0 class="prism-code language-sql codeBlock_bY9V thin-scrollbar" style=color:#393A34;background-color:#f6f8fa><code class=codeBlockLines_e6Vv><div class=token-line style=color:#393A34><span class="token plain">CHANGE MASTER </span><span class="token keyword" style=color:#00009f>TO</span><span class="token plain"> </span><br/></div><div class=token-line style=color:#393A34><span class="token plain">    MASTER_HOST</span><span class="token operator" style=color:#393A34>=</span><span class="token string" style=color:#e3116c>'192.168.1.10'</span><span class="token punctuation" style=color:#393A34>,</span><span class="token plain"></span><br/></div><div class=token-line style=color:#393A34><span class="token plain">    MASTER_PORT</span><span class="token operator" style=color:#393A34>=</span><span class="token number" style=color:#36acaa>3306</span><span class="token punctuation" style=color:#393A34>,</span><span class="token plain"></span><br/></div><div class=token-line style=color:#393A34><span class="token plain">    MASTER_USER</span><span class="token operator" style=color:#393A34>=</span><span class="token string" style=color:#e3116c>'repl'</span><span class="token punctuation" style=color:#393A34>,</span><span class="token plain"></span><br/></div><div class=token-line style=color:#393A34><span class="token plain">    MASTER_PASSWORD</span><span class="token operator" style=color:#393A34>=</span><span class="token string" style=color:#e3116c>'ReplPassword123!'</span><span class="token punctuation" style=color:#393A34>,</span><span class="token plain"></span><br/></div><div class=token-line style=color:#393A34><span class="token plain">    MASTER_AUTO_POSITION</span><span class="token operator" style=color:#393A34>=</span><span class="token number" style=color:#36acaa>1</span><span class="token punctuation" style=color:#393A34>;</span><br/></div></code></pre></div></div>
+<!-- -->
+<h3 class="anchor anchorTargetStickyNavbar_Vzrq" id=3-gtid-相比传统位点复制的核心优势>3. GTID 相比传统位点复制的核心优势<a href=#3-gtid-相比传统位点复制的核心优势 class=hash-link aria-label="3. GTID 相比传统位点复制的核心优势的直接链接" title="3. GTID 相比传统位点复制的核心优势的直接链接" translate=no>​</a></h3>
+<ul>
+<li class=""><strong>主从故障转移极度简化</strong>：当主库宕机时，新主库选举完毕后，其他所有从库直接将 <code>MASTER_HOST</code> 指向新主并开启 <code>MASTER_AUTO_POSITION=1</code>，MySQL 会自动比对并补齐差集事务，彻底消除人工计算位点的失误。</li>
+<li class=""><strong>幂等性与防止重复执行</strong>：若从库的 <code>gtid_executed</code> 集合中已经包含某 GTID，无论 Binlog 重放多少次，从库都会自动跳过该事务，从根本上防止事务重复回放导致的主键冲突或脏数据。</li>
+</ul>
+<hr/>
+<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id=二-从库多线程并行复制演进>二、 从库多线程并行复制演进<a href=#二-从库多线程并行复制演进 class=hash-link aria-label="二、 从库多线程并行复制演进的直接链接" title="二、 从库多线程并行复制演进的直接链接" translate=no>​</a></h2>
+<p>传统主从复制最大的痛点是<strong>主从延迟（Replication Lag）</strong>。其本质根因在于：<strong>主库是高并发多线程并行写入，而早期从库仅有一个 SQL Thread 单线程串行回放 Binlog</strong>。随着吞吐量上升，从库积压势不可挡。</p>
+<p>MySQL 经历三个阶段的架构重构，彻底突破了单线程瓶颈：</p>
+<!-- -->
+<h3 class="anchor anchorTargetStickyNavbar_Vzrq" id=1-mysql-56基于库级别的并行复制>1. MySQL 5.6：基于库级别的并行复制<a href=#1-mysql-56基于库级别的并行复制 class=hash-link aria-label="1. MySQL 5.6：基于库级别的并行复制的直接链接" title="1. MySQL 5.6：基于库级别的并行复制的直接链接" translate=no>​</a></h3>
+<ul>
+<li class=""><strong>原理</strong>：为每个数据库（Schema）分配一个独立的 Worker 线程回放事务。</li>
+<li class=""><strong>局限</strong>：大部分现代微服务业务库均为单库（Single Database），所有的表都在同一个库内，导致依然退化为单线程 Worker，无法解决实际业务延迟。</li>
+</ul>
+<h3 class="anchor anchorTargetStickyNavbar_Vzrq" id=2-mysql-57基于-group-commitlogical-clock的并行复制>2. MySQL 5.7：基于 Group Commit（Logical Clock）的并行复制<a href=#2-mysql-57基于-group-commitlogical-clock的并行复制 class=hash-link aria-label="2. MySQL 5.7：基于 Group Commit（Logical Clock）的并行复制的直接链接" title="2. MySQL 5.7：基于 Group Commit（Logical Clock）的并行复制的直接链接" translate=no>​</a></h3>
+<ul>
+<li class=""><strong>原理</strong>：主库执行阶段，如果多个事务能够被纳入同一个 <strong>Group Commit（组提交）</strong> 进行刷盘，说明这些事务在锁阶段互不冲突、没有并发写冲突。</li>
+<li class=""><strong>核心标识</strong>：在 Binlog 中记录两个逻辑时钟字段：
+<ul>
+<li class=""><code>last_committed</code>：上一个已经提交事务的序号（Commit Parent）。</li>
+<li class=""><code>sequence_number</code>：当前事务的递增编号。</li>
+</ul>
+</li>
+<li class=""><strong>从库策略</strong>：从库检查只要多个事务的 <code>last_committed</code> 相同，就代表它们在主库是并发执行的，Worker 线程池可以同时并发回放这批事务。</li>
+</ul>
+<h3 class="anchor anchorTargetStickyNavbar_Vzrq" id=3-mysql-80基于-writeset写集合的极致并行复制>3. MySQL 8.0：基于 Writeset（写集合）的极致并行复制<a href=#3-mysql-80基于-writeset写集合的极致并行复制 class=hash-link aria-label="3. MySQL 8.0：基于 Writeset（写集合）的极致并行复制的直接链接" title="3. MySQL 8.0：基于 Writeset（写集合）的极致并行复制的直接链接" translate=no>​</a></h3>
+<ul>
+<li class="">
+<p><strong>原理</strong>：不局限于事务是否属于同一个组提交，而是更底层地去追踪事务实际修改了哪些行。</p>
+</li>
+<li class="">
+<p><strong>机制</strong>：</p>
+<ul>
+<li class="">主库利用每行数据的主键或唯一键计算一个 64 位的哈希值（Writeset）。</li>
+<li class="">维护一个全局 Writeset 历史追踪表。如果事务 B 修改的行哈希值与正在执行的事务 A 没有重叠，即使事务 B 较晚发起，也可以安全地与事务 A 并发执行。</li>
+</ul>
+</li>
+<li class="">
+<p><strong>生产配置</strong>：</p>
+<div class="language-ini codeBlockContainer_Ckt0 theme-code-block" style=--prism-color:#393A34;--prism-background-color:#f6f8fa><div class=codeBlockContent_QJqH><pre tabindex=0 class="prism-code language-ini codeBlock_bY9V thin-scrollbar" style=color:#393A34;background-color:#f6f8fa><code class=codeBlockLines_e6Vv><div class=token-line style=color:#393A34><span class="token plain"># 主库开启 Writeset 追踪</span><br/></div><div class=token-line style=color:#393A34><span class="token plain">binlog_transaction_dependency_tracking = WRITESET</span><br/></div><div class=token-line style=color:#393A34><span class="token plain">transaction_write_set_extraction = XXHASH64</span><br/></div><div class=token-line style=color:#393A34><span class="token plain" style=display:inline-block></span><br/></div><div class=token-line style=color:#393A34><span class="token plain"># 从库开启多线程并行回放</span><br/></div><div class=token-line style=color:#393A34><span class="token plain">slave_parallel_type = LOGICAL_CLOCK</span><br/></div><div class=token-line style=color:#393A34><span class="token plain">slave_parallel_workers = 16</span><br/></div><div class=token-line style=color:#393A34><span class="token plain">slave_preserve_commit_order = ON</span><br/></div></code></pre></div></div>
+</li>
+</ul>
+<hr/>
+<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id=三-备份与容灾机制>三、 备份与容灾机制<a href=#三-备份与容灾机制 class=hash-link aria-label="三、 备份与容灾机制的直接链接" title="三、 备份与容灾机制的直接链接" translate=no>​</a></h2>
+<p>备份是保障数据安全不丢失的最后底线。在发生误删库（如 <code>DROP TABLE</code>）、勒索软件攻击或物理存储损坏时，备份体系决定了企业的存亡。</p>
+<h3 class="anchor anchorTargetStickyNavbar_Vzrq" id=1-逻辑备份-vs-物理备份横向对比>1. 逻辑备份 vs 物理备份横向对比<a href=#1-逻辑备份-vs-物理备份横向对比 class=hash-link aria-label="1. 逻辑备份 vs 物理备份横向对比的直接链接" title="1. 逻辑备份 vs 物理备份横向对比的直接链接" translate=no>​</a></h3>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th style=text-align:left>对比维度<th style=text-align:left>逻辑备份（mysqldump / mydumper）<th style=text-align:left>物理备份（Percona XtraBackup / MEB）<tbody><tr><td style=text-align:left><strong>备份原理</strong><td style=text-align:left>通过客户端协议执行 <code>SELECT</code> 导出建表与 <code>INSERT</code> SQL 文本<td style=text-align:left>直接拷贝底层物理文件（<code>.ibd</code>、页数据、Redo Log 块）<tr><td style=text-align:left><strong>备份速度</strong><td style=text-align:left>较慢（受限于 CPU 序列化与网络传输），适用于 50GB 以下<td style=text-align:left>极快（直接顺序读写磁盘块），TB 级库标配<tr><td style=text-align:left><strong>恢复速度</strong><td style=text-align:left>极慢（需要重新执行建表、插入、构建 B+ 树索引与重做日志）<td style=text-align:left>极快（应用 Redo 日志追平后直接挂载启动服务）<tr><td style=text-align:left><strong>锁表影响</strong><td style=text-align:left>配合 <code>--single-transaction</code> 可实现 InnoDB 无锁备份<td style=text-align:left>无锁备份（基于 LSN 持续追随 Redo 日志）<tr><td style=text-align:left><strong>灵活性</strong><td style=text-align:left>高（可直接文本编辑 SQL、支持跨操作系统/版本迁移）<td style=text-align:left>低（必须相同大版本、相同操作系统架构）</table>
+<h3 class="anchor anchorTargetStickyNavbar_Vzrq" id=2-mysqldump-的---single-transaction-运行机理>2. <code>mysqldump</code> 的 <code>--single-transaction</code> 运行机理<a href=#2-mysqldump-的---single-transaction-运行机理 class=hash-link aria-label=2-mysqldump-的---single-transaction-运行机理的直接链接 title=2-mysqldump-的---single-transaction-运行机理的直接链接 translate=no>​</a></h3>
+<p>很多工程师疑惑：为什么执行 <code>mysqldump --single-transaction --master-data=2</code> 可以在备份百万行大表时<strong>完全不阻塞业务的读写操作</strong>？</p>
+<!-- -->
+<blockquote>
+<p>[!WARNING]
+<code>--single-transaction</code> 仅对 <strong>InnoDB 表</strong> 生效。若库内混杂 MyISAM 表，导出过程中针对 MyISAM 依然会施加全局锁或者导致导出的 MyISAM 数据不一致。</p>
+</blockquote>
+<hr/>
+<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id=四-基于-pitr时间点恢复的生产实操全流程>四、 基于 PITR（时间点恢复）的生产实操全流程<a href=#四-基于-pitr时间点恢复的生产实操全流程 class=hash-link aria-label="四、 基于 PITR（时间点恢复）的生产实操全流程的直接链接" title="四、 基于 PITR（时间点恢复）的生产实操全流程的直接链接" translate=no>​</a></h2>
+<p>生产环境最常见的灾难是<strong>误操作（如开发人员写错 <code>WHERE</code> 条件执行了清表操作）</strong>。时间点恢复（Point-in-Time Recovery, PITR）的核心思路是：<strong>全量物理/逻辑备份 + Binlog 增量重放到故障发生的前一秒</strong>。</p>
+<!-- -->
+<h3 class="anchor anchorTargetStickyNavbar_Vzrq" id=1-步骤一恢复最近一次全量备份>1. 步骤一：恢复最近一次全量备份<a href=#1-步骤一恢复最近一次全量备份 class=hash-link aria-label="1. 步骤一：恢复最近一次全量备份的直接链接" title="1. 步骤一：恢复最近一次全量备份的直接链接" translate=no>​</a></h3>
+<p>在临时应急实例上解压并恢复基准物理备份（以 XtraBackup 为例）：</p>
+<div class="language-bash codeBlockContainer_Ckt0 theme-code-block" style=--prism-color:#393A34;--prism-background-color:#f6f8fa><div class=codeBlockContent_QJqH><pre tabindex=0 class="prism-code language-bash codeBlock_bY9V thin-scrollbar" style=color:#393A34;background-color:#f6f8fa><code class=codeBlockLines_e6Vv><div class=token-line style=color:#393A34><span class="token plain"># 准备物理备份 (Prepare 阶段应用 Redo 日志保证 Crash-Safe 一致)</span><br/></div><div class=token-line style=color:#393A34><span class="token plain">xtrabackup --prepare --target-dir=/data/backup/base_20261101</span><br/></div><div class=token-line style=color:#393A34><span class="token plain" style=display:inline-block></span><br/></div><div class=token-line style=color:#393A34><span class="token plain"># 将备份数据恢复到新实例数据目录</span><br/></div><div class=token-line style=color:#393A34><span class="token plain">xtrabackup --copy-back --target-dir=/data/backup/base_20261101 --datadir=/var/lib/mysql_recovery</span><br/></div><div class=token-line style=color:#393A34><span class="token plain">chown -R mysql:mysql /var/lib/mysql_recovery</span><br/></div></code></pre></div></div>
+<h3 class="anchor anchorTargetStickyNavbar_Vzrq" id=2-步骤二从-binlog-中定位故障事务与安全位点>2. 步骤二：从 Binlog 中定位故障事务与安全位点<a href=#2-步骤二从-binlog-中定位故障事务与安全位点 class=hash-link aria-label="2. 步骤二：从 Binlog 中定位故障事务与安全位点的直接链接" title="2. 步骤二：从 Binlog 中定位故障事务与安全位点的直接链接" translate=no>​</a></h3>
+<p>通过 <code>mysqlbinlog</code> 工具分析误操作发生前后的事务：</p>
+<div class="language-bash codeBlockContainer_Ckt0 theme-code-block" style=--prism-color:#393A34;--prism-background-color:#f6f8fa><div class=codeBlockContent_QJqH><pre tabindex=0 class="prism-code language-bash codeBlock_bY9V thin-scrollbar" style=color:#393A34;background-color:#f6f8fa><code class=codeBlockLines_e6Vv><div class=token-line style=color:#393A34><span class="token plain"># 搜索误操作语句所在的位置</span><br/></div><div class=token-line style=color:#393A34><span class="token plain">mysqlbinlog --no-defaults -v --base64-output=DECODE-ROWS \</span><br/></div><div class=token-line style=color:#393A34><span class="token plain">    /var/log/mysql/binlog.000120 | grep -B 5 -A 10 "DROP TABLE"</span><br/></div></code></pre></div></div>
+<p>假设输出确定误操作发生的时间点为 <code>2026-11-02 12:00:00</code>，停止位点为 <code>stop-position=458921</code>。</p>
+<h3 class="anchor anchorTargetStickyNavbar_Vzrq" id=3-步骤三导出并重放增量-binlog>3. 步骤三：导出并重放增量 Binlog<a href=#3-步骤三导出并重放增量-binlog class=hash-link aria-label="3. 步骤三：导出并重放增量 Binlog的直接链接" title="3. 步骤三：导出并重放增量 Binlog的直接链接" translate=no>​</a></h3>
+<p>从全量备份记录的位点（或 GTID）开始，导出截止到误操作之前的纯净 SQL：</p>
+<div class="language-bash codeBlockContainer_Ckt0 theme-code-block" style=--prism-color:#393A34;--prism-background-color:#f6f8fa><div class=codeBlockContent_QJqH><pre tabindex=0 class="prism-code language-bash codeBlock_bY9V thin-scrollbar" style=color:#393A34;background-color:#f6f8fa><code class=codeBlockLines_e6Vv><div class=token-line style=color:#393A34><span class="token plain"># 按时间点精准截取 Binlog 并导入应急实例</span><br/></div><div class=token-line style=color:#393A34><span class="token plain">mysqlbinlog --no-defaults \</span><br/></div><div class=token-line style=color:#393A34><span class="token plain">    --start-datetime="2026-11-01 02:00:00" \</span><br/></div><div class=token-line style=color:#393A34><span class="token plain">    --stop-datetime="2026-11-02 11:59:59" \</span><br/></div><div class=token-line style=color:#393A34><span class="token plain">    /var/log/mysql/binlog.000118 \</span><br/></div><div class=token-line style=color:#393A34><span class="token plain">    /var/log/mysql/binlog.000119 \</span><br/></div><div class=token-line style=color:#393A34><span class="token plain">    /var/log/mysql/binlog.000120 | mysql -u root -p -S /var/run/mysqld/mysql_recovery.sock</span><br/></div></code></pre></div></div>
+<p>验证表数据完整无误后，将受损表导回生产库或执行实例流量切流。</p>
+<hr/>
+<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id=五-主流开源高可用架构全景对比>五、 主流开源高可用架构全景对比<a href=#五-主流开源高可用架构全景对比 class=hash-link aria-label="五、 主流开源高可用架构全景对比的直接链接" title="五、 主流开源高可用架构全景对比的直接链接" translate=no>​</a></h2>
+<p>生产环境要求数据库具备 <span class=katex><span class=katex-mathml><math xmlns=http://www.w3.org/1998/Math/MathML><semantics><mrow><mn>99.99</mn><mi mathvariant=normal>%</mi></mrow><annotation encoding=application/x-tex>99.99\%</annotation></semantics></math></span><span class=katex-html aria-hidden=true><span class=base><span class=strut style=height:0.8056em;vertical-align:-0.0556em></span><span class=mord>99.99%</span></span></span></span> 以上的高可用性，当主库硬件故障或机房断电时，系统必须自动完成主从选举与流量漂移。</p>
+<h3 class="anchor anchorTargetStickyNavbar_Vzrq" id=1-核心高可用方案横向对比>1. 核心高可用方案横向对比<a href=#1-核心高可用方案横向对比 class=hash-link aria-label="1. 核心高可用方案横向对比的直接链接" title="1. 核心高可用方案横向对比的直接链接" translate=no>​</a></h3>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th style=text-align:left>方案<th style=text-align:left>核心选主机制<th style=text-align:left>脑裂防范机制<th style=text-align:left>数据一致性能力<th style=text-align:left>部署与运维复杂度<th style=text-align:left>生产应用画像<tbody><tr><td style=text-align:left><strong>MHA (Master High Availability)</strong><td style=text-align:left>外部 Perl 脚本监控检测，SSH 登录从库比较 LSN 选主<td style=text-align:left>依赖自定义二次脚本（如 Power Off 物理电源隔离）<td style=text-align:left>异步/半同步复制，主崩时尝试远程拉取残留 Binlog 补偿<td style=text-align:left>需打通节点间 SSH 免密信任，脚本维护成本高<td style=text-align:left>互联网早期主流，目前已逐步进入归档/维护期<tr><td style=text-align:left><strong>Orchestrator</strong><td style=text-align:left>外部 Raft 集群通过协议定期拉取拓扑，全局视角裁决<td style=text-align:left>内置 HTTP/Raft 仲裁机制，避免单点误判<td style=text-align:left>支持 GTID + 伪 GTID，自动重构级联复制拓扑<td style=text-align:left>独立部署服务，具备现代 Web UI 与丰富 REST API<td style=text-align:left>当前互联网大厂与云原生架构的事实标准拓扑管理利器<tr><td style=text-align:left><strong>MGR / InnoDB Cluster</strong><td style=text-align:left>原生 Paxos 变体（GCS 组通信系统）协议内核自治<td style=text-align:left>多数派法定票数（Quorum），少数派自动分区降级只读<td style=text-align:left>强一致事务同步，认证阶段（Certify）冲突回滚<td style=text-align:left>原生官方方案，需统一网络环境，对长事务与大事务敏感<td style=text-align:left>官方主推方案，适用于纯金融/交易强一致场景</table>
+<!-- -->
+<h3 class="anchor anchorTargetStickyNavbar_Vzrq" id=2-高可用选型决策建议>2. 高可用选型决策建议<a href=#2-高可用选型决策建议 class=hash-link aria-label="2. 高可用选型决策建议的直接链接" title="2. 高可用选型决策建议的直接链接" translate=no>​</a></h3>
+<ul>
+<li class=""><strong>传统大规模微服务、分库分表海量拓扑</strong>：首选 <strong>Orchestrator + VIP/ProxySQL/Consul</strong>。Orchestrator 只做拓扑发现与决策，不直接侵入数据库内核通信，对长事务兼容性好，主从拓扑可视化与自动化修复能力极强。</li>
+<li class=""><strong>核心金融、资产账户记账、轻量关键业务</strong>：首选 <strong>官方 InnoDB Cluster（MGR + MySQL Router）</strong>。具备官方端到端原生支持，事务无需担心丢失，节点状态由内核 Paxos 自动裁决，免去外部第三方的部署与版本冲突。</li>
+</ul></div><footer class="theme-doc-footer docusaurus-mt-lg"><div class="row margin-top--sm theme-doc-footer-edit-meta-row"><div class="col noPrint_WFHX"><a href=https://github.com/Aiden-Coding/AiDocs/tree/main/docs/database/mysql/2-ha/12-dr-backup-recovery.md target=_blank rel="noopener noreferrer" class=theme-edit-this-page><svg fill=currentColor height=20 width=20 viewBox="0 0 40 40" class=iconEdit_Z9Sw aria-hidden=true><g><path d="m34.5 11.7l-3 3.1-6.3-6.3 3.1-3q0.5-0.5 1.2-0.5t1.1 0.5l3.9 3.9q0.5 0.4 0.5 1.1t-0.5 1.2z m-29.5 17.1l18.4-18.5 6.3 6.3-18.4 18.4h-6.3v-6.2z"/></g></svg>编辑此页</a></div><div class="col lastUpdated_JAkA"></div></div></footer></article><nav class="docusaurus-mt-lg pagination-nav" aria-label=文件选项卡><a class="pagination-nav__link pagination-nav__link--prev" href=/AiDocs/docs/database/mysql/ha/ha-clustering><div class=pagination-nav__sublabel>上一页</div><div class=pagination-nav__label>高可用集群架构</div></a><a class="pagination-nav__link pagination-nav__link--next" href=/AiDocs/docs/database/postgresql/><div class=pagination-nav__sublabel>下一页</div><div class=pagination-nav__label>介绍 & 路线图</div></a></nav></div></div><div class="col col--3"><div class="tableOfContents_bqdL thin-scrollbar theme-doc-toc-desktop"><ul class="table-of-contents table-of-contents__left-border"><li><a href=#mysql-灾备恢复gtid-复制与高可用架构 class="table-of-contents__link toc-highlight">MySQL 灾备恢复、GTID 复制与高可用架构</a><li><a href=#一-gtid-复制机制与主从切换 class="table-of-contents__link toc-highlight">一、 GTID 复制机制与主从切换</a><ul><li><a href=#1-gtid-的构成与生命周期 class="table-of-contents__link toc-highlight">1. GTID 的构成与生命周期</a><li><a href=#2-gtid-自动定位auto-positioning原理 class="table-of-contents__link toc-highlight">2. GTID 自动定位（Auto-Positioning）原理</a><li><a href=#3-gtid-相比传统位点复制的核心优势 class="table-of-contents__link toc-highlight">3. GTID 相比传统位点复制的核心优势</a></ul><li><a href=#二-从库多线程并行复制演进 class="table-of-contents__link toc-highlight">二、 从库多线程并行复制演进</a><ul><li><a href=#1-mysql-56基于库级别的并行复制 class="table-of-contents__link toc-highlight">1. MySQL 5.6：基于库级别的并行复制</a><li><a href=#2-mysql-57基于-group-commitlogical-clock的并行复制 class="table-of-contents__link toc-highlight">2. MySQL 5.7：基于 Group Commit（Logical Clock）的并行复制</a><li><a href=#3-mysql-80基于-writeset写集合的极致并行复制 class="table-of-contents__link toc-highlight">3. MySQL 8.0：基于 Writeset（写集合）的极致并行复制</a></ul><li><a href=#三-备份与容灾机制 class="table-of-contents__link toc-highlight">三、 备份与容灾机制</a><ul><li><a href=#1-逻辑备份-vs-物理备份横向对比 class="table-of-contents__link toc-highlight">1. 逻辑备份 vs 物理备份横向对比</a><li><a href=#2-mysqldump-的---single-transaction-运行机理 class="table-of-contents__link toc-highlight">2. <code>mysqldump</code> 的 <code>--single-transaction</code> 运行机理</a></ul><li><a href=#四-基于-pitr时间点恢复的生产实操全流程 class="table-of-contents__link toc-highlight">四、 基于 PITR（时间点恢复）的生产实操全流程</a><ul><li><a href=#1-步骤一恢复最近一次全量备份 class="table-of-contents__link toc-highlight">1. 步骤一：恢复最近一次全量备份</a><li><a href=#2-步骤二从-binlog-中定位故障事务与安全位点 class="table-of-contents__link toc-highlight">2. 步骤二：从 Binlog 中定位故障事务与安全位点</a><li><a href=#3-步骤三导出并重放增量-binlog class="table-of-contents__link toc-highlight">3. 步骤三：导出并重放增量 Binlog</a></ul><li><a href=#五-主流开源高可用架构全景对比 class="table-of-contents__link toc-highlight">五、 主流开源高可用架构全景对比</a><ul><li><a href=#1-核心高可用方案横向对比 class="table-of-contents__link toc-highlight">1. 核心高可用方案横向对比</a><li><a href=#2-高可用选型决策建议 class="table-of-contents__link toc-highlight">2. 高可用选型决策建议</a></ul></ul></div></div></div></div></main></div></div></div><footer class="theme-layout-footer footer footer--dark"><div class="container container-fluid"><div class="footer__bottom text--center"><div class=footer__copyright>Copyright © 2026 AiDocs 架构知识库. 基于 Docusaurus 驱动.</div></div></div></footer></div></body>
